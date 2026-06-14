@@ -1,0 +1,39 @@
+{
+  "name": "@mfo/core",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Shared Markdown rendering, MPS parsing, and presentation logic for AI Markdown Studio.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "build:browser": "node build-browser.mjs",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.1",
+    "highlight.js": "^11.11.1",
+    "jsdom": "^26.0.0",
+    "katex": "^0.16.22",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.2.0",
+    "markdown-it-emoji": "^3.0.0",
+    "markdown-it-footnote": "^4.0.0",
+    "markdown-it-task-lists": "^2.1.1",
+    "markdown-it-texmath": "^1.0.0",
+    "sanitize-html": "^2.17.3",
+    "yaml": "^2.8.3"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/markdown-it": "^14.1.2",
+    "@types/sanitize-html": "^2.16.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.18"
+  }
+}

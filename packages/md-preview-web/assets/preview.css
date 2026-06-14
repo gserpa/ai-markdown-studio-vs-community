@@ -1,0 +1,2735 @@
+/* ── Bundled fonts ──────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/inter-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/inter-latin-500-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./fonts/inter-latin-600-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/inter-latin-700-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/fraunces-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/fraunces-latin-500-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./fonts/fraunces-latin-600-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/fraunces-latin-700-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/jetbrains-mono-latin-700-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  /* --md-preview-* custom properties define the document content theme.
+     Themes inject overrides via body.document-theme-<name> rules.
+     These defaults fall back to VS Code CSS variables so "auto" mode
+     is visually identical to the previous behaviour. */
+  /* Page + typography */
+  --md-preview-body-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --md-preview-code-font: ui-monospace, SFMono-Regular, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  --md-preview-heading-font: var(--md-preview-body-font);
+  --md-preview-base-font-size: 18px;
+  --md-preview-line-height: 1.5;
+  --md-preview-body-color: var(--vscode-editor-foreground);
+  --md-preview-border-color: var(--vscode-panel-border);
+  --md-preview-muted-color: var(--vscode-descriptionForeground);
+  --md-preview-link-color: var(--vscode-textLink-foreground);
+  --md-preview-link-hover-color: var(--vscode-textLink-activeForeground);
+
+  /* Blockquotes */
+  --md-preview-blockquote-border: var(--vscode-textBlockQuote-border);
+  --md-preview-blockquote-color: var(--vscode-descriptionForeground);
+  --md-preview-blockquote-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 94%, var(--md-preview-link-color) 6%);
+  --md-preview-blockquote-nested-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 90%, var(--md-preview-link-color) 10%);
+
+  /* Code + syntax highlighting */
+  --md-preview-code-bg: color-mix(in srgb, var(--vscode-editor-background) 96%, var(--vscode-editor-foreground) 4%);
+  --md-preview-code-color: var(--vscode-editor-foreground);
+  --md-preview-code-comment-color: #6e7781;
+  --md-preview-code-keyword-color: #cf222e;
+  --md-preview-code-number-color: #0550ae;
+  --md-preview-code-string-color: #0a3069;
+  --md-preview-code-title-color: #8250df;
+  --md-preview-code-type-color: #953800;
+  --md-preview-code-attribute-color: #116329;
+  --md-preview-code-meta-color: #1f6feb;
+  --md-preview-code-symbol-color: #bc4c00;
+  --md-preview-code-addition-color: #116329;
+  --md-preview-code-addition-bg: #dafbe1;
+  --md-preview-code-deletion-color: #cf222e;
+  --md-preview-code-deletion-bg: #ffebe9;
+
+  /* Headings */
+  --md-preview-heading-color: var(--vscode-editor-foreground);
+  --md-preview-heading-surface-color: var(--md-preview-heading-color);
+  --md-preview-heading-surface-color-h1: var(--md-preview-heading-surface-color);
+  --md-preview-heading-surface-color-h2: var(--md-preview-heading-surface-color);
+  --md-preview-heading-divider-color: var(--md-preview-border-color);
+  --md-preview-heading-divider-color-h1: var(--md-preview-heading-divider-color);
+  --md-preview-heading-divider-color-h2: var(--md-preview-heading-divider-color);
+  --md-preview-heading-radius: 0px;
+  --md-preview-heading-radius-h1: var(--md-preview-heading-radius);
+  --md-preview-heading-radius-h2: var(--md-preview-heading-radius);
+  --md-preview-heading-padding-block: 0;
+  --md-preview-heading-padding-block-h1: var(--md-preview-heading-padding-block);
+  --md-preview-heading-padding-block-h2: var(--md-preview-heading-padding-block);
+  --md-preview-heading-padding-inline: 0;
+  --md-preview-heading-padding-inline-h1: var(--md-preview-heading-padding-inline);
+  --md-preview-heading-padding-inline-h2: var(--md-preview-heading-padding-inline);
+  --md-preview-heading-shadow: none;
+  --md-preview-heading-shadow-h1: var(--md-preview-heading-shadow);
+  --md-preview-heading-shadow-h2: var(--md-preview-heading-shadow);
+  --md-preview-heading-offset-inline-h1: 0px;
+  --md-preview-heading-offset-inline-h2: 0px;
+  --md-preview-heading-bg-h1: transparent;
+  --md-preview-heading-bg-h2: transparent;
+  --md-preview-heading-bg-h3: transparent;
+  --md-preview-heading-bg-h4: transparent;
+  --md-preview-heading-bg-h5: transparent;
+  --md-preview-heading-bg-h6: transparent;
+  --md-preview-subheading-divider-width: 0px;
+  --md-preview-subheading-divider-color: transparent;
+  --md-preview-subheading-divider-width-h3: var(--md-preview-subheading-divider-width);
+  --md-preview-subheading-divider-width-h4: var(--md-preview-subheading-divider-width);
+  --md-preview-subheading-divider-width-h5: var(--md-preview-subheading-divider-width);
+  --md-preview-subheading-divider-width-h6: var(--md-preview-subheading-divider-width);
+  --md-preview-subheading-divider-color-h3: var(--md-preview-subheading-divider-color);
+  --md-preview-subheading-divider-color-h4: var(--md-preview-subheading-divider-color);
+  --md-preview-subheading-divider-color-h5: var(--md-preview-subheading-divider-color);
+  --md-preview-subheading-divider-color-h6: var(--md-preview-subheading-divider-color);
+
+  /* Tables */
+  --md-preview-table-border: color-mix(in srgb, var(--md-preview-border-color) 80%, transparent);
+  --md-preview-table-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 98%, var(--md-preview-body-color) 2%);
+  --md-preview-table-shadow: 0 8px 24px color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 70%, black 30%);
+  --md-preview-table-cell-border: color-mix(in srgb, var(--md-preview-border-color) 72%, transparent);
+  --md-preview-table-header-color: var(--md-preview-heading-color);
+  --md-preview-table-header-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 90%, var(--md-preview-body-color) 10%);
+  --md-preview-table-cell-color: var(--md-preview-body-color);
+  --md-preview-table-row-bg: var(--vscode-editor-background, light-dark(#ffffff, #0d1117));
+  --md-preview-table-row-alt-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 96%, var(--md-preview-body-color) 4%);
+  --md-preview-table-row-hover-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 88%, var(--md-preview-link-color) 12%);
+  --md-preview-table-strong-color: var(--md-preview-heading-color);
+
+  /* Content surface */
+  --md-preview-content-bg: transparent;
+  --md-preview-content-border: transparent;
+  --md-preview-content-shadow: none;
+  --md-preview-content-radius: 0px;
+  --md-preview-content-padding-block: 32px;
+  --md-preview-content-padding-inline: 40px;
+
+  /* Interactive hover states */
+  --md-preview-hover-accent: var(--md-preview-link-color);
+  --md-preview-hover-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 84%, var(--md-preview-link-color) 16%);
+  --md-preview-hover-bg-soft: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 90%, var(--md-preview-link-color) 10%);
+  --md-preview-hover-border: color-mix(in srgb, var(--md-preview-link-color) 35%, transparent);
+
+  /* Lightbox */
+  --md-preview-lightbox-backdrop-bg: rgba(0, 0, 0, 0.72);
+  --md-preview-lightbox-border: color-mix(in srgb, var(--md-preview-border-color) 78%, transparent);
+  --md-preview-lightbox-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 94%, black 6%);
+  --md-preview-lightbox-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  --md-preview-lightbox-button-border: color-mix(in srgb, var(--md-preview-border-color) 82%, transparent);
+  --md-preview-lightbox-button-color: var(--md-preview-body-color);
+  --md-preview-lightbox-button-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 86%, var(--md-preview-body-color) 14%);
+  --md-preview-lightbox-button-hover-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 72%, var(--md-preview-link-color) 28%);
+  --md-preview-lightbox-zoom-color: var(--md-preview-muted-color);
+  --md-preview-lightbox-viewport-bg: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 92%, var(--md-preview-body-color) 8%);
+  --md-preview-lightbox-scrollbar-track: color-mix(in srgb, var(--md-preview-lightbox-viewport-bg) 86%, transparent);
+  --md-preview-lightbox-scrollbar-thumb: color-mix(in srgb, var(--md-preview-body-color) 28%, var(--md-preview-lightbox-viewport-bg) 72%);
+  --md-preview-lightbox-scrollbar-thumb-hover: color-mix(in srgb, var(--md-preview-body-color) 40%, var(--md-preview-lightbox-viewport-bg) 60%);
+  --md-preview-lightbox-shell-gap: clamp(10px, 1.4vmin, 18px);
+  --md-preview-lightbox-shell-radius: clamp(14px, 2.1vmin, 22px);
+
+  margin: 0;
+  padding: 0;
+  color: var(--md-preview-body-color);
+  background-color: var(--vscode-editor-background, light-dark(#ffffff, #0d1117));
+  background-image: none;
+  font-family: var(--md-preview-body-font);
+  font-size: var(--md-preview-base-font-size);
+  line-height: var(--md-preview-line-height);
+}
+
+/* =========================================================
+   Document Preview: Base Layout + Content Primitives
+   ========================================================= */
+
+.markdown-body {
+  box-sizing: border-box;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: var(--md-preview-content-padding-block) var(--md-preview-content-padding-inline);
+  word-wrap: break-word;
+  background: var(--md-preview-content-bg);
+  border: 1px solid var(--md-preview-content-border);
+  border-radius: var(--md-preview-content-radius);
+  box-shadow: var(--md-preview-content-shadow);
+}
+
+body.preview-mode-document[data-preview-page-width='full'] .markdown-body {
+  max-width: none;
+}
+
+.markdown-body > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-body > *:last-child {
+  margin-bottom: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--md-preview-heading-color);
+  font-family: var(--md-preview-heading-font);
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  padding: var(--md-preview-heading-padding-block) var(--md-preview-heading-padding-inline);
+  border-radius: var(--md-preview-heading-radius);
+  box-shadow: var(--md-preview-heading-shadow);
+}
+
+h1,
+h2 {
+  border-bottom: 1px solid var(--md-preview-heading-divider-color);
+  padding-bottom: calc(0.3em + var(--md-preview-heading-padding-block));
+}
+
+h1 {
+  font-size: 2em;
+  margin-left: calc(var(--md-preview-heading-offset-inline-h1) * -1);
+  margin-right: calc(var(--md-preview-heading-offset-inline-h1) * -1);
+  padding: var(--md-preview-heading-padding-block-h1) var(--md-preview-heading-padding-inline-h1);
+  border-bottom-color: var(--md-preview-heading-divider-color-h1);
+  border-radius: var(--md-preview-heading-radius-h1);
+  box-shadow: var(--md-preview-heading-shadow-h1);
+  color: var(--md-preview-heading-surface-color-h1);
+  background: var(--md-preview-heading-bg-h1);
+}
+
+h2 {
+  font-size: 1.5em;
+  margin-left: calc(var(--md-preview-heading-offset-inline-h2) * -1);
+  margin-right: calc(var(--md-preview-heading-offset-inline-h2) * -1);
+  padding: var(--md-preview-heading-padding-block-h2) var(--md-preview-heading-padding-inline-h2);
+  border-bottom-color: var(--md-preview-heading-divider-color-h2);
+  border-radius: var(--md-preview-heading-radius-h2);
+  box-shadow: var(--md-preview-heading-shadow-h2);
+  color: var(--md-preview-heading-surface-color-h2);
+  background: var(--md-preview-heading-bg-h2);
+}
+
+h3 {
+  font-size: 1.25em;
+  padding-bottom: calc(0.2em + var(--md-preview-heading-padding-block));
+  border-bottom: var(--md-preview-subheading-divider-width-h3) solid var(--md-preview-subheading-divider-color-h3);
+  background: var(--md-preview-heading-bg-h3);
+}
+
+h4 {
+  font-size: 1em;
+  padding-bottom: calc(0.2em + var(--md-preview-heading-padding-block));
+  border-bottom: var(--md-preview-subheading-divider-width-h4) solid var(--md-preview-subheading-divider-color-h4);
+  background: var(--md-preview-heading-bg-h4);
+}
+
+h5 {
+  font-size: 0.875em;
+  padding-bottom: calc(0.2em + var(--md-preview-heading-padding-block));
+  border-bottom: var(--md-preview-subheading-divider-width-h5) solid var(--md-preview-subheading-divider-color-h5);
+  background: var(--md-preview-heading-bg-h5);
+}
+
+h6 {
+  font-size: 0.85em;
+  padding-bottom: calc(0.2em + var(--md-preview-heading-padding-block));
+  border-bottom: var(--md-preview-subheading-divider-width-h6) solid var(--md-preview-subheading-divider-color-h6);
+  background: var(--md-preview-heading-bg-h6);
+}
+
+p,
+ul,
+ol,
+pre,
+blockquote,
+table {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdown-body p code,
+.markdown-body li code,
+.markdown-body td code,
+.markdown-body th code {
+  font-size: 85%;
+}
+
+ul,
+ol {
+  padding-left: 2em;
+}
+
+li + li {
+  margin-top: 0.25em;
+}
+
+li > p {
+  margin-top: 16px;
+}
+
+ul ul,
+ul ol,
+ol ol,
+ol ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* =========================================================
+   Document Preview: Code, Links, and Blockquotes
+   ========================================================= */
+
+code,
+pre {
+  font-family: var(--md-preview-code-font);
+  font-size: 85%;
+}
+
+pre {
+  padding: 16px;
+  overflow-x: auto;
+  line-height: 1.45;
+  border: 1px solid var(--md-preview-border-color);
+  border-radius: 6px;
+  background: var(--md-preview-code-bg);
+  color: var(--md-preview-code-color);
+}
+
+code {
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  background: var(--md-preview-code-bg);
+  color: var(--md-preview-code-color);
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+blockquote {
+  margin-left: 0;
+  padding: 0 1em;
+  border-left: 4px solid var(--md-preview-blockquote-border);
+  color: var(--md-preview-blockquote-color);
+  background: var(--md-preview-blockquote-bg);
+  border-radius: 0 10px 10px 0;
+}
+
+.markdown-body blockquote > :first-child {
+  margin-top: 0;
+}
+
+.markdown-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body blockquote blockquote {
+  margin-top: 12px;
+  background: var(--md-preview-blockquote-nested-bg);
+}
+
+a {
+  color: var(--md-preview-link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--md-preview-link-hover-color);
+  text-decoration: underline;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: 6px;
+}
+
+/* =========================================================
+   Document Preview: Mermaid + Lightbox
+   ========================================================= */
+
+.mermaid-rendered {
+  position: relative;
+}
+
+.mermaid-rendered svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-rendered svg.mermaid-background-transparent {
+  background: transparent !important;
+}
+
+.mermaid-zoom-trigger {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  appearance: none;
+  border: 1px solid var(--md-preview-lightbox-button-border);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  color: var(--md-preview-lightbox-button-color);
+  background: color-mix(in srgb, var(--md-preview-lightbox-button-bg) 88%, transparent);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 140ms ease, transform 140ms ease, background-color 140ms ease;
+}
+
+.mermaid-rendered:hover .mermaid-zoom-trigger,
+.mermaid-rendered:focus-within .mermaid-zoom-trigger {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mermaid-zoom-trigger:hover {
+  background: var(--md-preview-lightbox-button-hover-bg);
+}
+
+@media (pointer: coarse) {
+  .mermaid-rendered .mermaid-zoom-trigger {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body.mermaid-lightbox-open {
+  overflow: hidden;
+}
+
+body.preview-mode-document {
+  overflow-x: hidden;
+}
+
+body.preview-mode-document .markdown-body {
+  overflow-x: hidden;
+}
+
+.frontmatter-shell {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 0;
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  font-size: var(--vscode-font-size, 13px);
+  line-height: normal;
+}
+
+.frontmatter-grid {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr);
+  border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, transparent));
+}
+
+.frontmatter-grid-key,
+.frontmatter-grid-value {
+  min-width: 0;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, transparent));
+}
+
+.frontmatter-grid-key {
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  font-weight: 600;
+}
+
+.frontmatter-grid-value {
+  overflow-wrap: anywhere;
+  color: var(--vscode-editor-foreground, var(--vscode-foreground));
+  background: var(--vscode-editor-background);
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
+.frontmatter-grid > :nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.table-scroll-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 24px 0;
+  border-radius: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll-wrapper table {
+  margin: 0;
+}
+
+.mermaid-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--md-preview-lightbox-shell-gap);
+  box-sizing: border-box;
+}
+
+.mermaid-lightbox[hidden] {
+  display: none;
+}
+
+.mermaid-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--md-preview-lightbox-backdrop-bg);
+  backdrop-filter: blur(6px);
+}
+
+.mermaid-lightbox-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  width: min(100%, 2200px);
+  height: min(100%, 1400px);
+  max-width: calc(100vw - (var(--md-preview-lightbox-shell-gap) * 2));
+  max-height: calc(100dvh - (var(--md-preview-lightbox-shell-gap) * 2));
+  padding: 18px;
+  box-sizing: border-box;
+  border: 1px solid var(--md-preview-lightbox-border);
+  border-radius: var(--md-preview-lightbox-shell-radius);
+  background: var(--md-preview-lightbox-bg);
+  box-shadow: var(--md-preview-lightbox-shadow);
+  outline: none;
+}
+
+.link-hover-tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1200;
+  max-width: min(38rem, calc(100vw - 24px));
+  padding: 0.45rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--md-preview-border-color, #d0d7de) 88%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--vscode-editorHoverWidget-background, #f6f8fa) 94%, white);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+  color: var(--vscode-editor-foreground, #24292f);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.link-hover-tooltip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mermaid-lightbox-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mermaid-lightbox-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mermaid-lightbox-button {
+  appearance: none;
+  border: 1px solid var(--md-preview-lightbox-button-border);
+  border-radius: 999px;
+  min-width: 44px;
+  padding: 0.45rem 0.9rem;
+  color: var(--md-preview-lightbox-button-color);
+  background: var(--md-preview-lightbox-button-bg);
+  cursor: pointer;
+}
+
+.mermaid-lightbox-button:hover {
+  background: var(--md-preview-lightbox-button-hover-bg);
+}
+
+.mermaid-lightbox-zoom {
+  min-width: 4.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-preview-lightbox-zoom-color);
+}
+
+.mermaid-lightbox-viewport {
+  min-height: 0;
+  overflow: auto;
+  border-radius: 16px;
+  background: var(--md-preview-lightbox-viewport-bg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-preview-lightbox-scrollbar-thumb) var(--md-preview-lightbox-scrollbar-track);
+  user-select: none;
+  cursor: zoom-in;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.mermaid-lightbox-viewport::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.mermaid-lightbox-viewport::-webkit-scrollbar-track {
+  background: var(--md-preview-lightbox-scrollbar-track);
+  border-radius: 999px;
+}
+
+.mermaid-lightbox-viewport::-webkit-scrollbar-thumb {
+  background: var(--md-preview-lightbox-scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--md-preview-lightbox-scrollbar-track);
+}
+
+.mermaid-lightbox-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--md-preview-lightbox-scrollbar-thumb-hover);
+}
+
+.mermaid-lightbox-viewport[data-pan-active='true'] {
+  cursor: grabbing;
+}
+
+.mermaid-lightbox-stage-wrap {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-width: 100%;
+  min-height: 100%;
+  padding: 24px;
+}
+
+.mermaid-lightbox-stage {
+  flex: 0 0 auto;
+}
+
+.mermaid-lightbox-diagram {
+  display: block;
+}
+
+.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--md-preview-border-color);
+  border-radius: 6px;
+  background: var(--md-preview-table-row-bg, var(--md-preview-code-bg));
+}
+
+.vscode-dark .mermaid,
+.vscode-high-contrast .mermaid {
+  filter: none;
+}
+
+/* =========================================================
+   Document Preview: Tables + Utilities
+   ========================================================= */
+
+table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  border: 1px solid var(--md-preview-table-border);
+  border-radius: 12px;
+  background: var(--md-preview-table-bg);
+  box-shadow: var(--md-preview-table-shadow);
+}
+
+th,
+td {
+  padding: 12px 16px;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 1px solid var(--md-preview-table-cell-border);
+}
+
+thead th,
+table > tbody > tr:first-child > th {
+  font-weight: 600;
+  text-align: left;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--md-preview-table-header-color);
+  background: var(--md-preview-table-header-bg);
+  border-top: 0;
+}
+
+tbody td,
+tbody th,
+table > tbody > tr > td,
+table > tbody > tr > th {
+  color: var(--md-preview-table-cell-color);
+  background: var(--md-preview-table-row-bg);
+}
+
+tbody tr {
+  transition: background-color 120ms ease-in-out;
+}
+
+tbody tr:nth-child(2n) > :is(td, th) {
+  background: var(--md-preview-table-row-alt-bg);
+}
+
+tbody tr:hover > :is(td, th) {
+  background: var(--md-preview-table-row-hover-bg);
+}
+
+tbody tr:last-child > :is(td, th) {
+  border-bottom: 0;
+}
+
+thead th:first-child,
+table > tbody > tr:first-child > th:first-child {
+  border-top-left-radius: 12px;
+}
+
+thead th:last-child,
+table > tbody > tr:first-child > th:last-child {
+  border-top-right-radius: 12px;
+}
+
+td strong {
+  color: var(--md-preview-table-strong-color);
+}
+
+.vscode-dark table,
+.vscode-high-contrast table {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--md-preview-border-color);
+  margin: 2rem 0;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 11px;
+  line-height: 10px;
+  color: var(--md-preview-body-color);
+  vertical-align: middle;
+  background: color-mix(in srgb, var(--md-preview-code-bg) 88%, var(--md-preview-body-color) 12%);
+  border: 1px solid var(--md-preview-border-color);
+  border-radius: 6px;
+  box-shadow: inset 0 -1px 0 var(--md-preview-border-color);
+}
+
+input[type='checkbox'] {
+  margin: 0 0.5em 0.2em 0;
+  vertical-align: middle;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.contains-task-list {
+  padding-left: 0;
+}
+
+.task-list-item {
+  list-style: none;
+}
+
+.task-list-item label {
+  cursor: default;
+  pointer-events: none;
+}
+
+.footnotes {
+  margin-top: 32px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+}
+
+sup.footnote-ref,
+.footnote-ref {
+  vertical-align: super;
+  font-size: 0.75em;
+  line-height: 0;
+}
+
+.footnote-ref a,
+a.footnote-backref {
+  text-decoration: none;
+}
+
+.footnote-ref a:hover,
+a.footnote-backref:hover {
+  text-decoration: underline;
+}
+
+.footnotes hr,
+hr.footnotes-sep {
+  margin-bottom: 16px;
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+.hljs {
+  color: var(--md-preview-code-color, #24292f);
+}
+
+.hljs-comment,
+.hljs-quote,
+.hljs-code,
+.hljs-formula {
+  color: var(--md-preview-code-comment-color, #6e7781);
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst,
+.hljs-template-tag,
+.hljs-variable.language_ {
+  color: var(--md-preview-code-keyword-color, #cf222e);
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag .hljs-attr,
+.hljs-operator,
+.hljs-selector-attr {
+  color: var(--md-preview-code-number-color, #0550ae);
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: var(--md-preview-code-string-color, #0a3069);
+}
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_,
+.hljs-section,
+.hljs-selector-id {
+  color: var(--md-preview-code-title-color, #8250df);
+}
+
+.hljs-type,
+.hljs-class .hljs-title {
+  color: var(--md-preview-code-type-color, #953800);
+}
+
+.hljs-attribute,
+.hljs-name,
+.hljs-regexp,
+.hljs-link,
+.hljs-selector-pseudo {
+  color: var(--md-preview-code-attribute-color, #116329);
+}
+
+.hljs-meta,
+.hljs-built_in,
+.hljs-builtin-name {
+  color: var(--md-preview-code-meta-color, #1f6feb);
+}
+
+.hljs-bullet,
+.hljs-symbol,
+.hljs-selector-class {
+  color: var(--md-preview-code-symbol-color, #bc4c00);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
+}
+
+.hljs-addition {
+  color: var(--md-preview-code-addition-color, #116329);
+  background-color: var(--md-preview-code-addition-bg, #dafbe1);
+}
+
+.hljs-deletion {
+  color: var(--md-preview-code-deletion-color, #cf222e);
+  background-color: var(--md-preview-code-deletion-bg, #ffebe9);
+}
+
+.vscode-dark .hljs,
+.vscode-high-contrast .hljs {
+  color: #c9d1d9;
+}
+
+.vscode-dark .hljs-comment,
+.vscode-dark .hljs-quote,
+.vscode-dark .hljs-code,
+.vscode-dark .hljs-formula,
+.vscode-high-contrast .hljs-comment,
+.vscode-high-contrast .hljs-quote,
+.vscode-high-contrast .hljs-code,
+.vscode-high-contrast .hljs-formula {
+  color: #8b949e;
+}
+
+.vscode-dark .hljs-keyword,
+.vscode-dark .hljs-selector-tag,
+.vscode-dark .hljs-subst,
+.vscode-dark .hljs-template-tag,
+.vscode-dark .hljs-variable.language_,
+.vscode-high-contrast .hljs-keyword,
+.vscode-high-contrast .hljs-selector-tag,
+.vscode-high-contrast .hljs-subst,
+.vscode-high-contrast .hljs-template-tag,
+.vscode-high-contrast .hljs-variable.language_ {
+  color: #ff7b72;
+}
+
+.vscode-dark .hljs-number,
+.vscode-dark .hljs-literal,
+.vscode-dark .hljs-variable,
+.vscode-dark .hljs-template-variable,
+.vscode-dark .hljs-tag .hljs-attr,
+.vscode-dark .hljs-operator,
+.vscode-dark .hljs-selector-attr,
+.vscode-high-contrast .hljs-number,
+.vscode-high-contrast .hljs-literal,
+.vscode-high-contrast .hljs-variable,
+.vscode-high-contrast .hljs-template-variable,
+.vscode-high-contrast .hljs-tag .hljs-attr,
+.vscode-high-contrast .hljs-operator,
+.vscode-high-contrast .hljs-selector-attr {
+  color: #79c0ff;
+}
+
+.vscode-dark .hljs-string,
+.vscode-dark .hljs-doctag,
+.vscode-high-contrast .hljs-string,
+.vscode-high-contrast .hljs-doctag {
+  color: #a5d6ff;
+}
+
+.vscode-dark .hljs-title,
+.vscode-dark .hljs-title.class_,
+.vscode-dark .hljs-title.class_.inherited__,
+.vscode-dark .hljs-title.function_,
+.vscode-dark .hljs-section,
+.vscode-dark .hljs-selector-id,
+.vscode-high-contrast .hljs-title,
+.vscode-high-contrast .hljs-title.class_,
+.vscode-high-contrast .hljs-title.class_.inherited__,
+.vscode-high-contrast .hljs-title.function_,
+.vscode-high-contrast .hljs-section,
+.vscode-high-contrast .hljs-selector-id {
+  color: #d2a8ff;
+}
+
+.vscode-dark .hljs-type,
+.vscode-dark .hljs-class .hljs-title,
+.vscode-high-contrast .hljs-type,
+.vscode-high-contrast .hljs-class .hljs-title {
+  color: #ffa657;
+}
+
+.vscode-dark .hljs-attribute,
+.vscode-dark .hljs-name,
+.vscode-dark .hljs-regexp,
+.vscode-dark .hljs-link,
+.vscode-dark .hljs-selector-pseudo,
+.vscode-high-contrast .hljs-attribute,
+.vscode-high-contrast .hljs-name,
+.vscode-high-contrast .hljs-regexp,
+.vscode-high-contrast .hljs-link,
+.vscode-high-contrast .hljs-selector-pseudo {
+  color: #7ee787;
+}
+
+.vscode-dark .hljs-meta,
+.vscode-dark .hljs-built_in,
+.vscode-dark .hljs-builtin-name,
+.vscode-high-contrast .hljs-meta,
+.vscode-high-contrast .hljs-built_in,
+.vscode-high-contrast .hljs-builtin-name {
+  color: #79c0ff;
+}
+
+.vscode-dark .hljs-bullet,
+.vscode-dark .hljs-symbol,
+.vscode-dark .hljs-selector-class,
+.vscode-high-contrast .hljs-bullet,
+.vscode-high-contrast .hljs-symbol,
+.vscode-high-contrast .hljs-selector-class {
+  color: #ffa657;
+}
+
+.vscode-dark .hljs-emphasis,
+.vscode-high-contrast .hljs-emphasis {
+  font-style: italic;
+}
+
+.vscode-dark .hljs-strong,
+.vscode-high-contrast .hljs-strong {
+  font-weight: 700;
+}
+
+.vscode-dark .hljs-addition,
+.vscode-high-contrast .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+
+.vscode-dark .hljs-deletion,
+.vscode-high-contrast .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre.hljs,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre code.hljs {
+  background: var(--md-preview-code-bg) !important;
+  color: var(--md-preview-code-color) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-comment,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-quote,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-code,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-formula {
+  color: var(--md-preview-code-comment-color, #59636e) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-keyword,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-tag,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-subst,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-template-tag,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-variable.language_ {
+  color: var(--md-preview-code-keyword-color, #cf222e) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-number,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-literal,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-variable,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-template-variable,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-tag .hljs-attr,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-operator,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-attr {
+  color: var(--md-preview-code-number-color, #0550ae) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-string,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-doctag {
+  color: var(--md-preview-code-string-color, #0a3069) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title.class_,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title.class_.inherited__,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title.function_,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-section,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-id {
+  color: var(--md-preview-code-title-color, #6639ba) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-type,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-class .hljs-title {
+  color: var(--md-preview-code-type-color, #953800) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-attribute,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-name,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-regexp,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-link,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-pseudo {
+  color: var(--md-preview-code-attribute-color, #116329) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-meta,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-built_in,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-builtin-name {
+  color: var(--md-preview-code-meta-color, #0969da) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-bullet,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-symbol,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-class {
+  color: var(--md-preview-code-symbol-color, #9a3d00) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-emphasis {
+  font-style: italic;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-strong {
+  font-weight: 700;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-addition {
+  color: var(--md-preview-code-addition-color, #116329) !important;
+  background-color: var(--md-preview-code-addition-bg, #dafbe1) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-deletion {
+  color: var(--md-preview-code-deletion-color, #cf222e) !important;
+  background-color: var(--md-preview-code-deletion-bg, #ffebe9) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre {
+  background: var(--md-preview-code-bg);
+  border-color: var(--md-preview-border-color);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body code {
+  background: var(--md-preview-code-bg);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre code {
+  background: transparent !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre:hover {
+  background: var(--md-hover-bg);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre.hljs,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre code.hljs {
+  background: var(--md-preview-code-bg) !important;
+  color: var(--md-preview-code-color) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-comment,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-quote,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-code,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-formula {
+  color: #8b949e !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-keyword,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-tag,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-subst,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-template-tag,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-variable.language_ {
+  color: #ff7b72 !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-number,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-literal,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-variable,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-template-variable,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-tag .hljs-attr,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-operator,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-attr {
+  color: #79c0ff !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-string,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-doctag {
+  color: #a5d6ff !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.class_,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.class_.inherited__,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.function_,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-section,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-id {
+  color: #d2a8ff !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-type,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-class .hljs-title {
+  color: #ffa657 !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-attribute,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-name,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-regexp,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-link,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-pseudo {
+  color: #7ee787 !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-meta,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-built_in,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-builtin-name {
+  color: #79c0ff !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-bullet,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-symbol,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-class {
+  color: #ffa657 !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-emphasis {
+  font-style: italic;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-strong {
+  font-weight: 700;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-addition {
+  color: #aff5b4 !important;
+  background-color: #033a16;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-deletion {
+  color: #ffdcd7 !important;
+  background-color: #67060c;
+}
+
+/* =========================================================
+   Document Preview: Interactive States
+   ========================================================= */
+
+:root {
+  --md-hover-accent: var(--md-preview-hover-accent, var(--md-preview-link-color, var(--vscode-focusBorder)));
+  --md-hover-bg: var(--md-preview-hover-bg, color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 84%, var(--md-preview-link-color) 16%));
+  --md-hover-bg-soft: var(--md-preview-hover-bg-soft, color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 90%, var(--md-preview-link-color) 10%));
+  --md-hover-border: var(--md-preview-hover-border, color-mix(in srgb, var(--md-preview-link-color) 35%, transparent));
+}
+
+.markdown-body table tbody tr,
+.markdown-body table tbody td,
+.markdown-body pre,
+.markdown-body blockquote,
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease;
+}
+
+.markdown-body table tbody tr:hover > td {
+  background: var(--md-hover-bg-soft);
+}
+
+.markdown-body table tbody tr:hover > td:first-child {
+  box-shadow: inset 3px 0 0 var(--md-hover-accent);
+}
+
+.markdown-body table tbody tr:hover > td:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.markdown-body table tbody tr:hover > td:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.markdown-body pre {
+  position: relative;
+  border: 1px solid transparent;
+}
+
+.markdown-body pre:hover {
+  background: var(--md-hover-bg);
+  border-color: var(--md-hover-border);
+  box-shadow: inset 3px 0 0 var(--md-hover-accent);
+}
+
+.markdown-body pre code {
+  background: transparent !important;
+}
+
+.markdown-body blockquote {
+  position: relative;
+  border-left-width: 4px;
+}
+
+.markdown-body blockquote:hover {
+  background: var(--md-hover-bg-soft);
+  border-left-color: var(--md-hover-accent);
+}
+
+.markdown-body h1:hover,
+.markdown-body h2:hover,
+.markdown-body h3:hover,
+.markdown-body h4:hover,
+.markdown-body h5:hover,
+.markdown-body h6:hover {
+  box-shadow:
+    var(--md-preview-heading-shadow),
+    inset 4px 0 0 var(--md-hover-accent),
+    0 0 0 1px var(--md-hover-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .markdown-body table tbody tr,
+  .markdown-body table tbody td,
+  .markdown-body pre,
+  .markdown-body blockquote,
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    transition: none;
+  }
+}
+
+/* =========================================================
+   Presentation Preview
+   ========================================================= */
+
+body.preview-mode-presentation {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--vscode-textLink-foreground) 12%, transparent), transparent 36%),
+    linear-gradient(180deg, color-mix(in srgb, var(--vscode-editor-background) 90%, black 10%), var(--vscode-editor-background));
+}
+
+.preview-mode-presentation .presentation-preview {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
+  margin: 0 auto;
+  padding: 20px 24px;
+  --md-hover-accent: var(--presentation-hover-accent, var(--presentation-accent, var(--vscode-focusBorder)));
+  --md-hover-bg: var(--presentation-hover-bg, color-mix(in srgb, var(--presentation-panel-bg-soft, var(--vscode-editorHoverWidget-background)) 74%, var(--presentation-accent) 26%));
+  --md-hover-bg-soft: var(--presentation-hover-bg-soft, color-mix(in srgb, var(--presentation-panel-bg-soft, var(--vscode-editorHoverWidget-background)) 82%, var(--presentation-accent) 18%));
+  --md-hover-border: var(--presentation-hover-border, color-mix(in srgb, var(--presentation-accent) 26%, transparent));
+}
+
+.presentation-preview {
+  --presentation-accent: #4f46d8;
+  --presentation-accent-soft: #c7d2fe;
+  --presentation-body-bg: rgba(255, 255, 255, 0.42);
+  --presentation-body-border: rgba(79, 70, 216, 0.1);
+  --presentation-body-color: #1f2937;
+  --presentation-contrast: #ffffff;
+  --presentation-divider-overlay-bg: linear-gradient(90deg, rgba(16, 24, 40, 0.18), rgba(16, 24, 40, 0.58));
+  --presentation-emphasis-color: #475569;
+  --presentation-link-color: #3730a3;
+  --presentation-media-bg: linear-gradient(160deg, #c7d2fe, #635bff);
+  --presentation-media-frame-bg: rgba(255, 255, 255, 0.9);
+  --presentation-muted-color: #475569;
+  --presentation-panel-bg: #ffffff;
+  --presentation-panel-bg-soft: #f8faff;
+  --presentation-panel-border: rgba(79, 70, 216, 0.14);
+  --presentation-pill-bg: rgba(255, 255, 255, 0.7);
+  --presentation-pill-border: rgba(79, 70, 216, 0.16);
+  --presentation-pill-color: #312e81;
+  --presentation-standard-content-bg: #ffffff;
+  --presentation-standard-header-bg: linear-gradient(180deg, #5046d8, #4237c6);
+  --presentation-surface-bg: linear-gradient(180deg, #eef2ff, #dde6ff);
+  --presentation-surface-border: rgba(79, 70, 216, 0.16);
+  --presentation-surface-shadow: 0 28px 80px rgba(44, 52, 105, 0.28);
+  --presentation-title-color: #f8fafc;
+}
+
+.presentation-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  margin-left: 36px;
+  margin-right: 36px;
+}
+
+.presentation-header-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.presentation-header-title {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--vscode-editor-foreground);
+}
+
+.presentation-header-author {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground);
+}
+
+.presentation-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.presentation-status {
+  padding: 6px 10px;
+  border: 1px solid var(--presentation-pill-border, #d1d5db);
+  border-radius: 999px;
+  background: var(--presentation-pill-bg, #f3f4f6);
+  color: var(--presentation-pill-color, #1f2937);
+  font-size: 0.8rem;
+}
+
+.presentation-stage {
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.presentation-slide {
+  display: none;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.presentation-slide.is-active {
+  display: block;
+}
+
+.presentation-slide-shell {
+  display: grid;
+  grid-template-rows: 1fr;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.presentation-frame {
+  position: relative;
+  flex: 0 0 auto;
+  display: block;
+  height: auto;
+  max-width: 100%;
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+  overflow: hidden;
+}
+
+.presentation-stage {
+  touch-action: none;
+}
+
+.presentation-slide-shell,
+.presentation-frame {
+  touch-action: manipulation;
+}
+
+.presentation-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 18px;
+  line-height: 1.55;
+  transform-origin: top left;
+}
+
+.is-slide-zoomed .presentation-slide,
+.is-slide-zoomed .presentation-slide-shell,
+.is-slide-zoomed .presentation-frame {
+  overflow: visible;
+}
+
+.is-slide-zoomed .presentation-canvas {
+  will-change: transform;
+}
+
+.presentation-ratio-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.presentation-ratio-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.presentation-surface {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-radius: 28px;
+  border: 0;
+  background: var(--presentation-surface-bg, linear-gradient(180deg, color-mix(in srgb, var(--vscode-editor-background) 96%, white 4%), color-mix(in srgb, var(--vscode-editor-background) 88%, black 12%)));
+  box-shadow: var(--presentation-surface-shadow, 0 28px 80px color-mix(in srgb, var(--vscode-editor-background) 48%, black 52%));
+  overflow: hidden;
+}
+
+.presentation-slide-body.markdown-body {
+  flex: 1;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--presentation-body-color, inherit);
+  font-size: 1.4rem;
+  line-height: 1.55;
+}
+
+.presentation-slide-body img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.presentation-slide-body h1 {
+  font-size: 2.35em;
+  margin-bottom: 0.45em;
+}
+
+.presentation-slide-body h2 {
+  font-size: 1.6em;
+}
+
+.presentation-slide-body h3 {
+  font-size: 1.2em;
+}
+
+.presentation-slide-body a {
+  color: var(--presentation-link-color, var(--vscode-textLink-foreground));
+}
+
+.presentation-slide-body blockquote,
+.presentation-slide-body h2,
+.presentation-slide-body h3,
+.presentation-slide-body h4 {
+  color: var(--presentation-emphasis-color, var(--presentation-body-color, inherit));
+}
+
+.presentation-slide-body table {
+  font-size: 1rem;
+}
+
+.presentation-slide-body pre {
+  font-size: 0.96em;
+}
+
+.presentation-slide-body code {
+  color: var(--presentation-inline-code-color, inherit);
+  border: 1px solid var(--presentation-inline-code-border, transparent);
+  background: var(--presentation-inline-code-bg, color-mix(in srgb, var(--presentation-panel-bg, var(--vscode-editor-background)) 88%, var(--presentation-accent) 12%));
+}
+
+.presentation-slide-body pre {
+  border-color: var(--presentation-code-border, var(--presentation-panel-border, var(--vscode-panel-border)));
+  background: var(--presentation-code-bg, color-mix(in srgb, var(--presentation-panel-bg, var(--vscode-editor-background)) 92%, var(--presentation-accent) 8%));
+  color: var(--presentation-code-text-color, var(--presentation-body-color, inherit));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.presentation-slide-body pre:hover {
+  background: var(--presentation-code-hover-bg, var(--presentation-code-bg, color-mix(in srgb, var(--presentation-panel-bg, var(--vscode-editor-background)) 92%, var(--presentation-accent) 8%)));
+  border-color: var(--presentation-code-hover-border, var(--presentation-code-border, var(--presentation-panel-border, var(--vscode-panel-border))));
+  box-shadow: inset 3px 0 0 var(--presentation-code-hover-accent, var(--presentation-accent-soft, var(--presentation-accent)));
+}
+
+.presentation-slide-body pre code {
+  color: inherit;
+  border: 0;
+  background: transparent !important;
+}
+
+.presentation-slide-body pre .hljs,
+.presentation-slide-body pre code {
+  color: var(--presentation-code-text-color, var(--presentation-body-color, inherit));
+}
+
+.presentation-slide-body pre .hljs-comment,
+.presentation-slide-body pre .hljs-quote {
+  color: var(--presentation-code-comment-color, #5b6778);
+}
+
+.presentation-slide-body pre .hljs-keyword,
+.presentation-slide-body pre .hljs-selector-tag,
+.presentation-slide-body pre .hljs-subst {
+  color: var(--presentation-code-keyword-color, #b4235a);
+}
+
+.presentation-slide-body pre .hljs-number,
+.presentation-slide-body pre .hljs-literal,
+.presentation-slide-body pre .hljs-variable,
+.presentation-slide-body pre .hljs-template-variable,
+.presentation-slide-body pre .hljs-tag .hljs-attr {
+  color: var(--presentation-code-number-color, #0b56b5);
+}
+
+.presentation-slide-body pre .hljs-string,
+.presentation-slide-body pre .hljs-doctag {
+  color: var(--presentation-code-string-color, #11467f);
+}
+
+.presentation-slide-body pre .hljs-title,
+.presentation-slide-body pre .hljs-section,
+.presentation-slide-body pre .hljs-selector-id {
+  color: var(--presentation-code-title-color, #4338ca);
+}
+
+.presentation-slide-body pre .hljs-type,
+.presentation-slide-body pre .hljs-class .hljs-title {
+  color: var(--presentation-code-type-color, #9a3412);
+}
+
+.presentation-slide-body pre .hljs-attribute,
+.presentation-slide-body pre .hljs-name,
+.presentation-slide-body pre .hljs-regexp,
+.presentation-slide-body pre .hljs-link,
+.presentation-slide-body pre .hljs-meta,
+.presentation-slide-body pre .hljs-built_in,
+.presentation-slide-body pre .hljs-builtin-name {
+  color: var(--presentation-code-meta-color, #0f766e);
+}
+
+.presentation-slide-body table {
+  border-color: var(--presentation-table-border, var(--vscode-panel-border));
+  background: var(--presentation-table-bg, transparent);
+}
+
+.presentation-slide-body table th,
+.presentation-slide-body table td {
+  border-color: var(--presentation-table-border, var(--vscode-panel-border));
+}
+
+.presentation-slide-body table th {
+  color: var(--presentation-table-header-color, var(--presentation-body-color, inherit));
+  background: var(--presentation-table-header-bg, color-mix(in srgb, var(--presentation-panel-bg, var(--vscode-editor-background)) 82%, var(--presentation-accent) 18%));
+}
+
+.presentation-slide-body table td {
+  color: var(--presentation-table-cell-color, var(--presentation-body-color, inherit));
+  background: var(--presentation-table-cell-bg, transparent);
+}
+
+.presentation-slide-body table tbody tr:nth-child(even) td {
+  background: var(--presentation-table-row-alt-bg, transparent);
+}
+
+.presentation-slide-body table tr,
+.presentation-slide-body table tr:nth-child(2n) {
+  background: transparent;
+}
+
+.presentation-slide-body table tbody tr:hover {
+  background: var(--presentation-hover-bg, rgba(0, 0, 0, 0.04));
+}
+
+.presentation-slide-body blockquote {
+  font-style: italic;
+  background: var(--presentation-blockquote-bg, transparent);
+  border-left-color: var(--presentation-blockquote-border, var(--vscode-textBlockQuote-border));
+}
+
+.presentation-slide-body li + li {
+  margin-top: 0.35em;
+}
+
+.presentation-layout-title {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  line-height: 1.04;
+}
+
+.presentation-standard-layout {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
+  height: 100%;
+}
+
+.presentation-standard-header {
+  padding: 24px 28px 18px;
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  background: var(--presentation-standard-header-bg, var(--presentation-accent));
+  color: var(--presentation-title-color, var(--presentation-contrast));
+}
+
+.presentation-standard-title {
+  font-size: clamp(2.35rem, 4.1vw, 3.8rem);
+  color: inherit;
+}
+
+.presentation-standard-content {
+  min-height: 0;
+  overflow: auto;
+  padding: 24px 28px 28px;
+  border: 0;
+  border-radius: 0 0 28px 28px;
+  background: var(--presentation-standard-content-bg, var(--presentation-panel-bg, #ffffff));
+}
+
+.presentation-standard-content > :first-child,
+.presentation-image-right-copy > :first-child,
+.presentation-standard-content .presentation-two-column-header > :first-child,
+.presentation-default-side-content > :first-child,
+.presentation-side-banner-content > :first-child,
+.presentation-side-picture-content > :first-child,
+.presentation-table-legend-copy > :first-child,
+.presentation-table-legend-table > :first-child {
+  margin-top: 0;
+}
+
+.presentation-standard-content > :last-child,
+.presentation-image-right-copy > :last-child,
+.presentation-default-side-content > :last-child,
+.presentation-side-banner-content > :last-child,
+.presentation-side-picture-content > :last-child,
+.presentation-table-legend-copy > :last-child,
+.presentation-table-legend-table > :last-child {
+  margin-bottom: 0;
+}
+
+.presentation-standard-layout-image-right .presentation-standard-content,
+.presentation-standard-layout-two-columns .presentation-standard-content {
+  padding-top: 24px;
+}
+
+.presentation-standard-layout-table .presentation-standard-content {
+  padding: 16px 20px 20px;
+}
+
+.presentation-standard-layout-table .presentation-standard-content table {
+  width: 100%;
+  margin: 0;
+}
+
+.presentation-template-cover .presentation-slide-body,
+.presentation-template-side-banner .presentation-slide-body,
+.presentation-template-side-picture .presentation-slide-body,
+.presentation-template-default-side .presentation-slide-body,
+.presentation-template-table-legend .presentation-slide-body,
+.presentation-template-divider .presentation-slide-body,
+.presentation-template-divider-b .presentation-slide-body,
+.presentation-template-divider-c .presentation-slide-body,
+.presentation-template-thanks .presentation-slide-body {
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  border: 0;
+}
+
+.presentation-two-column-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  height: 100%;
+}
+
+.presentation-column {
+  min-width: 0;
+}
+
+.presentation-column-heading {
+  margin-top: 0;
+}
+
+.presentation-image-right-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+  gap: 28px;
+  align-items: stretch;
+  height: 100%;
+}
+
+.presentation-image-right-grid.is-text-only {
+  grid-template-columns: 1fr;
+}
+
+.presentation-image-right-copy,
+.presentation-image-right-media {
+  min-width: 0;
+}
+
+.presentation-image-right-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.presentation-image-frame {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  max-height: 100%;
+  padding: 12px;
+  border: 1px solid var(--presentation-panel-border, color-mix(in srgb, var(--vscode-panel-border) 78%, transparent));
+  border-radius: 18px;
+  background: var(--presentation-media-frame-bg, color-mix(in srgb, var(--vscode-editor-background) 86%, var(--vscode-editor-foreground) 14%));
+}
+
+.presentation-image-right-media img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.presentation-cover-layout,
+.presentation-side-banner-layout,
+.presentation-side-picture-layout,
+.presentation-default-side-layout,
+.presentation-table-legend-layout,
+.presentation-divider-layout {
+  height: 100%;
+}
+
+.presentation-cover-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
+  background: color-mix(in srgb, var(--vscode-editor-background) 94%, white 6%);
+}
+
+.presentation-cover-copy {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 26px;
+  padding: 64px 62px 54px;
+  background: linear-gradient(180deg, var(--presentation-accent), color-mix(in srgb, var(--presentation-accent) 82%, black 18%));
+  color: var(--presentation-contrast);
+}
+
+.presentation-cover-title {
+  max-width: 13ch;
+  font-size: clamp(3.5rem, 5.4vw, 5.4rem);
+  color: inherit;
+}
+
+.presentation-cover-copy-foot {
+  align-self: end;
+}
+
+.presentation-cover-subtitle {
+  max-width: 78%;
+  padding: 22px 24px;
+  border: 1px solid var(--presentation-cover-caption-border, rgba(255, 255, 255, 0.16));
+  background: var(--presentation-cover-caption-bg, rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(6px);
+}
+
+.presentation-cover-subtitle blockquote {
+  margin: 0;
+  padding: 0;
+  border-left: 0;
+  color: inherit;
+  background: transparent;
+}
+
+.presentation-cover-subtitle > :first-child,
+.presentation-side-banner-content > :first-child,
+.presentation-side-picture-content > :first-child,
+.presentation-default-side-content > :first-child,
+.presentation-table-legend-copy > :first-child,
+.presentation-table-legend-table > :first-child {
+  margin-top: 0;
+}
+
+.presentation-cover-subtitle > :last-child,
+.presentation-side-banner-content > :last-child,
+.presentation-side-picture-content > :last-child,
+.presentation-default-side-content > :last-child,
+.presentation-table-legend-copy > :last-child,
+.presentation-table-legend-table > :last-child {
+  margin-bottom: 0;
+}
+
+.presentation-cover-media,
+.presentation-side-banner-media,
+.presentation-side-picture-media,
+.presentation-divider-background {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  background: var(--presentation-media-bg, linear-gradient(160deg, color-mix(in srgb, var(--presentation-accent) 32%, white 68%), color-mix(in srgb, var(--presentation-accent) 78%, black 22%)));
+}
+
+.presentation-layout-media-shell {
+  width: 100%;
+  height: 100%;
+}
+
+.presentation-layout-media-shell.is-image img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+.presentation-image-frame .presentation-layout-media-shell.is-image img {
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.presentation-layout-media-shell.is-diagram {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--presentation-panel-bg-soft, #ffffff) 86%, white 14%);
+}
+
+.presentation-layout-media-shell.is-diagram .mermaid,
+.presentation-layout-media-shell.is-diagram .mermaid-rendered {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.presentation-layout-media-shell.is-diagram .mermaid svg,
+.presentation-layout-media-shell.is-diagram .mermaid-rendered svg {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  background: transparent !important;
+}
+
+.presentation-layout-media-fill {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.42), transparent 32%),
+    var(--presentation-media-bg, linear-gradient(160deg, color-mix(in srgb, var(--presentation-accent) 24%, white 76%), color-mix(in srgb, var(--presentation-accent) 86%, black 14%)));
+}
+
+.presentation-side-banner-layout,
+.presentation-side-picture-layout,
+.presentation-default-side-layout {
+  display: grid;
+  height: 100%;
+  background: var(--presentation-panel-bg, color-mix(in srgb, var(--vscode-editor-background) 96%, white 4%));
+}
+
+.presentation-side-banner-layout,
+.presentation-side-picture-layout {
+  grid-template-columns: 0.74fr 1.16fr;
+}
+
+.presentation-side-banner-sidebar,
+.presentation-side-picture-sidebar,
+.presentation-default-side-sidebar {
+  display: flex;
+  align-items: center;
+  padding: 52px 40px 44px;
+  background: var(--presentation-standard-header-bg, linear-gradient(180deg, var(--presentation-accent), color-mix(in srgb, var(--presentation-accent) 80%, black 20%)));
+  color: var(--presentation-contrast);
+}
+
+.presentation-side-banner-title,
+.presentation-side-picture-title,
+.presentation-default-side-title {
+  font-size: clamp(2.4rem, 4.1vw, 3.9rem);
+  color: inherit;
+}
+
+.presentation-side-banner-main,
+.presentation-side-picture-main {
+  display: grid;
+  min-width: 0;
+}
+
+.presentation-side-banner-main {
+  grid-template-rows: 0.42fr 0.58fr;
+}
+
+.presentation-side-picture-main {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.presentation-side-banner-content,
+.presentation-side-picture-content,
+.presentation-default-side-content {
+  min-width: 0;
+  padding: 36px 40px 34px;
+  overflow: auto;
+  background: var(--presentation-panel-bg, color-mix(in srgb, var(--vscode-editor-background) 98%, white 2%));
+}
+
+.presentation-default-side-layout {
+  grid-template-columns: minmax(0, 1.55fr) minmax(240px, 0.78fr);
+}
+
+.presentation-default-side-sidebar {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.presentation-table-legend-layout {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--presentation-panel-bg, color-mix(in srgb, var(--vscode-editor-background) 98%, white 2%));
+}
+
+.presentation-table-legend-header {
+  padding: 34px 48px 28px;
+  background: var(--presentation-standard-header-bg, linear-gradient(180deg, var(--presentation-accent), color-mix(in srgb, var(--presentation-accent) 82%, black 18%)));
+  color: var(--presentation-contrast);
+}
+
+.presentation-table-legend-title {
+  font-size: clamp(2.45rem, 4.2vw, 4rem);
+  color: inherit;
+}
+
+.presentation-table-legend-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.68fr);
+  gap: 28px;
+  min-height: 0;
+  padding: 30px 34px 34px;
+}
+
+.presentation-table-legend-copy,
+.presentation-table-legend-table {
+  min-width: 0;
+  overflow: auto;
+}
+
+.presentation-table-legend-table table {
+  margin: 0;
+}
+
+.presentation-divider-layout {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 56px 76px;
+  background: linear-gradient(135deg, var(--presentation-accent), color-mix(in srgb, var(--presentation-accent) 78%, black 22%));
+  color: var(--presentation-contrast);
+}
+
+.presentation-divider-background,
+.presentation-divider-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.presentation-divider-overlay {
+  background: var(--presentation-divider-overlay-bg, linear-gradient(90deg, rgba(8, 14, 28, 0.18), rgba(8, 14, 28, 0.62)));
+}
+
+.presentation-divider-content {
+  position: relative;
+  z-index: 1;
+  width: min(44%, 470px);
+  text-align: right;
+}
+
+.presentation-divider-title {
+  font-size: clamp(2.6rem, 4.4vw, 4.2rem);
+  color: inherit;
+}
+
+.presentation-divider-subtitle {
+  margin-top: 22px;
+  color: color-mix(in srgb, var(--presentation-contrast) 90%, transparent);
+}
+
+/* ── Divider-B: full-bleed background image, title overlaid on right ── */
+
+.presentation-divider-b-layout {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  padding: 56px 76px;
+  background: var(--presentation-standard-header-bg, var(--presentation-accent));
+  color: var(--presentation-contrast);
+}
+
+.presentation-divider-b-background {
+  position: absolute;
+  inset: 0;
+}
+
+.presentation-divider-b-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--presentation-divider-overlay-bg, linear-gradient(90deg, rgba(8, 14, 28, 0.12), rgba(8, 14, 28, 0.52)));
+}
+
+.presentation-divider-b-content {
+  position: relative;
+  z-index: 1;
+  width: min(44%, 470px);
+  text-align: right;
+}
+
+.presentation-divider-b-title {
+  font-size: clamp(2.6rem, 4.4vw, 4.2rem);
+  color: inherit;
+}
+
+.presentation-divider-b-subtitle {
+  margin-top: 22px;
+  color: color-mix(in srgb, var(--presentation-contrast) 90%, transparent);
+}
+
+/* ── Divider-C: left image panel, right accent panel with title + body ── */
+
+.presentation-divider-c-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  height: 100%;
+}
+
+.presentation-divider-c-media {
+  position: relative;
+  overflow: hidden;
+  background: var(--presentation-media-bg);
+}
+
+.presentation-divider-c-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 52px 52px 46px;
+  background: var(--presentation-standard-header-bg, linear-gradient(180deg, var(--presentation-accent), color-mix(in srgb, var(--presentation-accent) 80%, black 20%)));
+  color: var(--presentation-contrast);
+}
+
+.presentation-divider-c-title {
+  font-size: clamp(2.6rem, 4.4vw, 4.2rem);
+  color: inherit;
+}
+
+.presentation-divider-c-subtitle {
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  overflow: auto;
+  color: color-mix(in srgb, var(--presentation-contrast) 86%, transparent);
+}
+
+.presentation-divider-c-subtitle > :first-child {
+  margin-top: 0;
+}
+
+.presentation-divider-c-subtitle > :last-child {
+  margin-bottom: 0;
+}
+
+/* ── Thanks: top image+note strip, bottom accent bar with title ── */
+
+.presentation-thanks-layout {
+  display: grid;
+  grid-template-rows: minmax(0, 1.4fr) minmax(0, 1fr);
+  height: 100%;
+  background: var(--presentation-panel-bg);
+}
+
+.presentation-thanks-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  min-height: 0;
+}
+
+.presentation-thanks-media {
+  position: relative;
+  overflow: hidden;
+  background: var(--presentation-media-bg);
+}
+
+.presentation-thanks-note {
+  padding: 32px 36px;
+  overflow: auto;
+  background: var(--presentation-panel-bg);
+  color: var(--presentation-muted-color, var(--presentation-body-color));
+}
+
+.presentation-thanks-note.is-empty {
+  background: var(--presentation-panel-bg-soft);
+}
+
+.presentation-thanks-note > :first-child {
+  margin-top: 0;
+}
+
+.presentation-thanks-note > :last-child {
+  margin-bottom: 0;
+}
+
+.presentation-thanks-bottom {
+  display: flex;
+  align-items: center;
+  padding: 28px 52px;
+  background: var(--presentation-standard-header-bg, linear-gradient(180deg, var(--presentation-accent), color-mix(in srgb, var(--presentation-accent) 80%, black 20%)));
+  color: var(--presentation-contrast);
+}
+
+.presentation-thanks-title {
+  font-size: clamp(2.6rem, 4.6vw, 4.5rem);
+  color: inherit;
+}
+
+.presentation-slide-body h1,
+.presentation-slide-body h2 {
+  border-bottom-color: color-mix(in srgb, var(--vscode-panel-border) 86%, transparent);
+}
+
+.presentation-two-column-header {
+  margin-bottom: 24px;
+}
+
+.presentation-two-column-header > :first-child {
+  margin-top: 0;
+}
+
+.presentation-control {
+  appearance: none;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--vscode-button-border, var(--vscode-panel-border)) 80%, transparent);
+  border-radius: 999px;
+  display: inline-flex;
+  justify-content: center;
+  min-width: 9rem;
+  padding: 10px 18px;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  cursor: pointer;
+}
+
+.presentation-control-icon {
+  min-width: 0;
+  width: 36px;
+  height: 36px;
+}
+
+.presentation-control:hover:not(:disabled) {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.presentation-control.is-active {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.presentation-control:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.presentation-icon {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.presentation-icon-chevron::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+}
+
+.presentation-icon-chevron-left::before {
+  transform: translate(-35%, -50%) rotate(-135deg);
+}
+
+.presentation-icon-chevron-right::before {
+  transform: translate(-65%, -50%) rotate(45deg);
+}
+
+.presentation-icon-notes::before,
+.presentation-icon-slides::before,
+.presentation-icon-info::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/* Speaker notes icon: horizontal lines representing text */
+.presentation-icon-notes::before {
+  background:
+    linear-gradient(currentColor, currentColor) 0 2px / 100% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 7px / 80% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 12px / 90% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 17px / 60% 2px no-repeat;
+}
+
+/* Slide list icon: stacked rectangles */
+.presentation-icon-slides::before {
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / 100% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 0 / 2px 100% no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / 100% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 0 / 2px 100% no-repeat,
+    linear-gradient(currentColor, currentColor) 3px 6px / calc(100% - 6px) 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 3px 11px / calc(100% - 6px) 2px no-repeat;
+}
+
+/* Slide info icon: circle with vertical details lines */
+.presentation-icon-info::before {
+  background:
+    radial-gradient(circle at center, transparent 6px, currentColor 6px, currentColor 8px, transparent 8px),
+    linear-gradient(currentColor, currentColor) center 4px / 2px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) center 8px / 2px 6px no-repeat;
+}
+
+.presentation-icon-fullscreen::before,
+.presentation-icon-fullscreen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.presentation-icon-fullscreen::before {
+  background:
+    linear-gradient(currentColor, currentColor) left top / 6px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) left top / 2px 6px no-repeat,
+    linear-gradient(currentColor, currentColor) right top / 6px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) right top / 2px 6px no-repeat,
+    linear-gradient(currentColor, currentColor) left bottom / 6px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) left bottom / 2px 6px no-repeat,
+    linear-gradient(currentColor, currentColor) right bottom / 6px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) right bottom / 2px 6px no-repeat;
+}
+
+.presentation-control.is-active .presentation-icon-fullscreen::before {
+  background:
+    linear-gradient(currentColor, currentColor) 4px 4px / 5px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 4px 4px / 2px 5px no-repeat,
+    linear-gradient(currentColor, currentColor) calc(100% - 4px) 4px / 5px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) calc(100% - 4px) 4px / 2px 5px no-repeat,
+    linear-gradient(currentColor, currentColor) 4px calc(100% - 4px) / 5px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 4px calc(100% - 4px) / 2px 5px no-repeat,
+    linear-gradient(currentColor, currentColor) calc(100% - 4px) calc(100% - 4px) / 5px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) calc(100% - 4px) calc(100% - 4px) / 2px 5px no-repeat;
+}
+
+.presentation-status {
+  min-width: 70px;
+  text-align: center;
+  border: 1px solid var(--presentation-pill-border, #d1d5db);
+  background: var(--presentation-pill-bg, #f3f4f6);
+  color: var(--presentation-pill-color, #1f2937);
+}
+
+.presentation-bottom-bar {
+  border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 82%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--vscode-editor-background) 92%, var(--vscode-editor-foreground) 8%);
+  overflow: hidden;
+}
+
+.presentation-bottom-bar-tabs {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.presentation-bottom-bar:has(.presentation-bottom-panel:not([hidden])) .presentation-bottom-bar-tabs {
+  border-bottom: 1px solid color-mix(in srgb, var(--vscode-panel-border) 70%, transparent);
+}
+
+.presentation-tab {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.presentation-tab:hover {
+  color: var(--vscode-editor-foreground);
+  background: color-mix(in srgb, var(--vscode-editor-foreground) 6%, transparent);
+}
+
+.presentation-tab.is-active {
+  color: var(--vscode-editor-foreground);
+  border-bottom-color: var(--vscode-textLink-foreground);
+  font-weight: 600;
+}
+
+.presentation-bottom-panel {
+  padding: 12px 14px;
+  overflow-y: auto;
+  max-height: 180px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%) color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-bottom-panel[data-panel="slides"] {
+  padding: 10px 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-height: none;
+}
+
+.presentation-bottom-panel::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.presentation-bottom-panel::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-bottom-panel::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%);
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-bottom-panel::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 40%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 60%);
+}
+
+.presentation-bottom-panel[hidden] {
+  display: none;
+}
+
+.presentation-bottom-panel-notes.markdown-body {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.presentation-bottom-panel-info.markdown-body {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.presentation-info-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.presentation-info-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 120px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--vscode-panel-border) 72%, transparent);
+}
+
+.presentation-info-row:last-child {
+  border-bottom: 0;
+}
+
+.presentation-info-row dt,
+.presentation-info-row dd {
+  margin: 0;
+}
+
+.presentation-info-row dt {
+  color: var(--vscode-descriptionForeground);
+  text-transform: lowercase;
+}
+
+.presentation-info-row dd {
+  color: var(--vscode-editor-foreground);
+  word-break: break-word;
+}
+
+.presentation-filmstrip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 2px 2px 8px;
+}
+
+.presentation-thumb {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 150px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 82%, transparent);
+  background: color-mix(in srgb, var(--vscode-editor-background) 90%, var(--vscode-editor-foreground) 10%);
+  color: inherit;
+  cursor: pointer;
+}
+
+.presentation-thumb:hover {
+  border-color: var(--vscode-textLink-foreground);
+}
+
+.presentation-thumb.is-active {
+  outline: 2px solid color-mix(in srgb, var(--vscode-textLink-foreground) 78%, transparent);
+  outline-offset: 1px;
+}
+
+img.image-load-failed {
+  opacity: 0.45;
+}
+
+.presentation-thumb-index {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  color: var(--vscode-descriptionForeground);
+}
+
+.presentation-thumb-title {
+  display: -webkit-box;
+  overflow: hidden;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-weight: 600;
+}
+
+body.presentation-is-immersive .presentation-header,
+body.presentation-is-immersive .presentation-bottom-bar {
+  display: none;
+}
+
+body.presentation-is-immersive .presentation-preview {
+  grid-template-rows: minmax(0, 1fr);
+  padding: 0;
+}
+
+body.presentation-is-immersive .presentation-stage,
+body.presentation-is-immersive .presentation-slide,
+body.presentation-is-immersive .presentation-slide-shell,
+body.presentation-is-immersive .presentation-frame {
+  height: 100vh;
+  height: 100dvh;
+}
+
+body.presentation-is-immersive .presentation-frame {
+  max-width: 100vw;
+}
+
+body.presentation-is-immersive .presentation-surface {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+}
+
+/* =========================================================
+   Presentation Preview: Responsive Layout
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .presentation-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .presentation-header-heading {
+    align-items: baseline;
+    flex-direction: row;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .presentation-header-title {
+    font-size: clamp(0.95rem, 4vw, 1.2rem);
+    line-height: 1.1;
+  }
+
+  .presentation-header-author {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+  }
+
+  .presentation-header-controls {
+    justify-content: flex-end;
+    align-self: start;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .presentation-status {
+    padding: 4px 8px;
+    font-size: 0.74rem;
+    border: 1px solid var(--presentation-pill-border, #d1d5db);
+    background: var(--presentation-pill-bg, #f3f4f6);
+    color: var(--presentation-pill-color, #1f2937);
+  }
+
+  .preview-mode-presentation .presentation-preview {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .presentation-header {
+    margin-left: 0;
+    margin-right: 0;
+    gap: 8px;
+  }
+
+  .presentation-header-author {
+    display: none;
+  }
+
+  .presentation-header-controls {
+    gap: 6px;
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "ai-markdown-studio-vs-community-workspace",
+  "version": "0.2.0",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "sync:manifest-config": "node scripts/sync-manifest-config.mjs",
+    "sync:preview-assets": "node scripts/sync-preview-assets.mjs",
+    "clean": "node -e \"require('node:fs').rmSync('apps/ai-markdown-studio-vs-community/out', { recursive: true, force: true })\"",
+    "compile": "npm run clean && npm run build --workspace=packages/md-core && npm run build --workspace=packages/md-preview-web && npm run sync:preview-assets && tsc -p ./apps/ai-markdown-studio-vs-community/tsconfig.json",
+    "pretest": "npm run compile",
+    "test": "vitest run",
+    "package": "npm run compile && node scripts/package-vsix.mjs",
+    "check:boundary": "node scripts/check-community-boundary.mjs",
+    "check:vsix": "node scripts/check-vsix.mjs",
+    "verify": "npm run check:boundary && npm test && npm run package"
+  },
+  "workspaces": ["packages/*"],
+  "dependencies": {
+    "@mfo/community-api": "*",
+    "@mfo/core": "*",
+    "@mfo/preview-web": "*",
+    "html-to-docx": "^1.8.0",
+    "jsdom": "^26.0.0",
+    "katex": "^0.16.22",
+    "mermaid": "^11.14.0"
+  },
+  "devDependencies": {
+    "@types/html-to-docx": "^1.8.0",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.10.2",
+    "@types/vscode": "^1.104.0",
+    "@vscode/vsce": "^3.9.1",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.18"
+  },
+  "repository": { "type": "git", "url": "https://github.com/gserpa/ai-markdown-studio-vs-community" }
+}

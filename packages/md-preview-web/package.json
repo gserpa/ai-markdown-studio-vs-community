@@ -1,0 +1,32 @@
+{
+  "name": "@mfo/preview-web",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Shared browser-based Markdown and presentation preview for AI Markdown Studio.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "assets"
+  ],
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "build:browser": "node build-browser.mjs",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fontsource/fraunces": "^5.2.8",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@mfo/core": "*",
+    "dompurify": "^3.4.1",
+    "jsdom": "^26.0.0"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.18"
+  }
+}

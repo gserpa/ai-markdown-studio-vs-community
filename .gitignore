@@ -1,0 +1,25 @@
+# Package manager and build output
+node_modules/
+out/
+packages/*/dist/
+*.tsbuildinfo
+
+# Packaged artifacts
+*.vsix
+.vsix-stage/
+examples/exports/
+
+# Local samples and coverage
+.sampledocs/
+coverage/
+
+# Dotnet build output
+**/bin/
+**/obj/
+
+# Generated assets — do not commit
+assets/preview/
+
+# Common OS/editor noise
+.DS_Store
+Thumbs.db

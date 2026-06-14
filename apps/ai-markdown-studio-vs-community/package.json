@@ -1,0 +1,270 @@
+{
+  "name": "markdown-ai-studio",
+  "displayName": "AI Markdown Studio Community",
+  "description": "Open-source Markdown authoring with AI-assisted document and MPS generation, live previews, HTML export, and basic DOCX export.",
+  "version": "0.2.0",
+  "license": "MIT",
+  "publisher": "GustavoSerpa",
+  "author": "Gustavo Serpa",
+  "icon": "assets/media/markdown-ai-studio-icon-v2.png",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "Formatters",
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "markdown",
+    "preview",
+    "mermaid",
+    "katex",
+    "presentation",
+    "slides",
+    "themes",
+    "table formatter",
+    "html export",
+    "docx export"
+  ],
+  "homepage": "https://github.com/gserpa/ai-markdown-studio-vs-community#readme",
+  "bugs": {
+    "url": "https://github.com/gserpa/ai-markdown-studio-vs-community/issues"
+  },
+  "galleryBanner": {
+    "color": "#1e1e2e",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onCustomEditor:markdownAiStudio.markdownPreview",
+    "onCommand:markdownAiStudio.generateDocument",
+    "onCommand:markdownAiStudio.generatePresentation",
+    "onCommand:markdownAiStudio.pasteAsMarkdown",
+    "onCommand:markdownAiStudio.enableAiFeatures",
+    "onCommand:markdownAiStudio.exportDocxBasic"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "markdownAiStudio.openPreview",
+        "title": "Preview Markdown",
+        "category": "AI Markdown Studio",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "markdownAiStudio.editAsText",
+        "title": "Edit Markdown",
+        "category": "AI Markdown Studio",
+        "icon": "$(pencil)"
+      },
+      {
+        "command": "markdownAiStudio.formatTables",
+        "title": "Format Markdown Tables",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.exportHtml",
+        "title": "Export Markdown as HTML",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.exportDocxBasic",
+        "title": "Export Markdown as DOCX (Basic)",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.generateDocument",
+        "title": "Generate Document (AI)",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.generatePresentation",
+        "title": "Generate Presentation (AI)",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.pasteAsMarkdown",
+        "title": "Paste as New Markdown File",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.enableAiFeatures",
+        "title": "Enable AI Features...",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.openGlobalDocumentThemeFolder",
+        "title": "Open Global Document Theme Folder",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.openSettings",
+        "title": "Change Settings...",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.showCommandList",
+        "title": "Show AI Markdown Studio Commands",
+        "category": "AI Markdown Studio",
+        "icon": {
+          "light": "media/command-list-light.svg",
+          "dark": "media/command-list-dark.svg"
+        }
+      },
+      {
+        "command": "markdownAiStudio.toggleFrontMatter",
+        "title": "Toggle Frontmatter",
+        "category": "AI Markdown Studio",
+        "icon": "$(list-tree)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "markdownAiStudio.enableAiFeatures",
+          "when": "markdownAiStudio.copilotConfigured && markdownAiStudio.aiAuthorizationDenied"
+        },
+        {
+          "command": "markdownAiStudio.generateDocument",
+          "when": "markdownAiStudio.copilotConfigured && !markdownAiStudio.aiAuthorizationDenied"
+        },
+        {
+          "command": "markdownAiStudio.generatePresentation",
+          "when": "markdownAiStudio.copilotConfigured && !markdownAiStudio.aiAuthorizationDenied"
+        },
+        {
+          "command": "markdownAiStudio.pasteAsMarkdown",
+          "when": "markdownAiStudio.copilotConfigured && !markdownAiStudio.aiAuthorizationDenied"
+        },
+        {
+          "command": "markdownAiStudio.exportDocxBasic",
+          "when": "!markdownAiStudio.proInstalled"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "markdownAiStudio.pasteAsMarkdown",
+          "when": "explorerResourceIsFolder",
+          "group": "z_markdownAiStudio@999"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "markdownAiStudio.openPreview",
+          "when": "resourceExtname == .md && activeCustomEditorId != 'markdownAiStudio.markdownPreview'",
+          "group": "navigation"
+        },
+        {
+          "command": "markdownAiStudio.editAsText",
+          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview'",
+          "group": "navigation@1"
+        },
+        {
+          "command": "markdownAiStudio.toggleFrontMatter",
+          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' && markdownAiStudio.activePreviewHasFrontMatter",
+          "group": "navigation@2",
+          "toggled": "markdownAiStudio.activePreviewFrontMatterVisible"
+        },
+        {
+          "command": "markdownAiStudio.showCommandList",
+          "when": "resourceExtname == .md",
+          "group": "navigation@3"
+        }
+      ]
+    },
+    "customEditors": [
+      {
+        "viewType": "markdownAiStudio.markdownPreview",
+        "displayName": "Markdown Preview",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "AI Markdown Studio Community",
+        "properties": {
+          "markdownAiStudio.previewPageWidth": {
+            "type": "string",
+            "default": "full",
+            "enum": [
+              "readable",
+              "full"
+            ],
+            "description": "Controls standard Markdown preview width."
+          },
+          "markdownAiStudio.documentPreviewTheme": {
+            "type": "string",
+            "default": "auto",
+            "description": "Default document preview theme.",
+            "enum": [
+              "auto",
+              "dark-aurora-noir",
+              "dark",
+              "light",
+              "dark-modern-aurora",
+              "light-modern-blue",
+              "night-sky"
+            ],
+            "enumDescriptions": [
+              "Follows VS Code's dark or light theme automatically.",
+              "Aurora Noir — bundled dark document theme.",
+              "Dark — bundled dark document theme.",
+              "Light — bundled light document theme.",
+              "Modern Aurora — bundled document theme.",
+              "Modern Blue — bundled light document theme.",
+              "Night Sky — bundled dark document theme."
+            ]
+          },
+          "markdownAiStudio.globalDocumentThemeDirectory": {
+            "type": "string",
+            "default": "",
+            "scope": "machine",
+            "description": "Absolute path to a global document theme folder."
+          },
+          "markdownAiStudio.previewThemeDirectory": {
+            "type": "string",
+            "default": "",
+            "scope": "machine",
+            "description": "Absolute path to a global presentation theme folder."
+          },
+        "markdownAiStudio.allowRemoteResources": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow remote resources in previews and installed feature contributions."
+        },
+        "markdownAiStudio.aiFeaturesEnabled": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "By turning this on, you accept that AI Markdown Studio may use the GitHub Copilot service already configured in VS Code for AI-supported functionality, such as AI-assisted document generation, presentation generation, and AI Paste to Markdown. For those AI-supported features, the content you provide may be shared with that configured Copilot service for processing. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. Only enable this setting if you are authorized to share that content through the GitHub Copilot service already configured in VS Code. Disable at any time to revoke AI Markdown Studio AI access."
+        },
+        "markdownAiStudio.aiAuthorizationDenied": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "Tracks whether the user explicitly denied AI Markdown Studio AI authorization. When true, AI-supported commands stay hidden except for Enable AI Features...."
+        }
+        }
+      }
+    ]
+  },
+  "dependencies": {
+    "@mfo/core": "*",
+    "@mfo/preview-web": "*",
+    "html-to-docx": "^1.8.0",
+    "jsdom": "^26.0.0",
+    "katex": "^0.16.22",
+    "mermaid": "^11.14.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gserpa/ai-markdown-studio-vs-community"
+  }
+}

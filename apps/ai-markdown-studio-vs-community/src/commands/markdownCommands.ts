@@ -1,0 +1,225 @@
+import * as path from 'node:path';
+import * as vscode from 'vscode';
+import { formatMarkdownTables, isMarkdownPresentationSource } from '@mfo/core';
+import { listFeatureContributions } from '../api/featureContributions';
+import { isAiAuthorizationDenied } from '../ai/aiConsent';
+import { hasConfiguredCopilotAccount } from '../ai/copilotAvailability';
+import { getConfiguredGlobalDocumentThemeDirectory } from '../document/documentThemeSupport';
+import { exportMarkdownAsBasicDocx } from '../export/docx/docxExporter';
+import { exportMarkdownAsHtml } from '../export/html/htmlExporter';
+import { MarkdownPreviewCustomEditor } from '../panel/MarkdownPreviewCustomEditor';
+import { MarkdownPreviewPanel } from '../panel/MarkdownPreviewPanel';
+import { commandEntries } from './generatedCommandEntries';
+
+type CommandListEntry = {
+  command: string;
+  title: string;
+};
+
+type CommandListContext = {
+  documentUri: vscode.Uri;
+  isPreviewMode: boolean;
+  isPresentation: boolean;
+  copilotConfigured: boolean;
+};
+
+const QUICK_PICK_COMMAND_ORDER = [
+  'markdownAiStudio.openPreview',
+  'markdownAiStudio.editAsText',
+  'markdownAiStudio.formatTables',
+  'markdownAiStudio.generateDocument',
+  'markdownAiStudio.generatePresentation',
+  'markdownAiStudio.enableAiFeatures',
+  'markdownAiStudio.generateDocumentTheme',
+  'markdownAiStudio.generatePresentationTheme',
+  'markdownAiStudio.exportHtml',
+  'markdownAiStudio.exportDocxBasic',
+  'markdownAiStudio.exportDocx',
+  'markdownAiStudio.exportPptx',
+  'markdownAiStudio.exportPdf',
+  'markdownAiStudio.validatePptxTemplate',
+  'markdownAiStudio.generatePptxTemplateManifest',
+  'markdownAiStudio.openSettings',
+] as const;
+
+const AI_DEPENDENT_COMMANDS = new Set<string>([
+  'markdownAiStudio.enableAiFeatures',
+  'markdownAiStudio.generateDocument',
+  'markdownAiStudio.generatePresentation',
+  'markdownAiStudio.pasteAsMarkdown',
+  'markdownAiStudio.generateDocumentTheme',
+  'markdownAiStudio.generatePresentationTheme',
+]);
+
+export function createMarkdownTableFormattingProvider(): vscode.DocumentFormattingEditProvider {
+  return {
+    provideDocumentFormattingEdits(document): vscode.TextEdit[] {
+      const original = document.getText();
+      const formatted = formatMarkdownTables(original);
+      return formatted === original ? [] : [vscode.TextEdit.replace(new vscode.Range(document.positionAt(0), document.positionAt(original.length)), formatted)];
+    },
+  };
+}
+
+export async function openPreviewCommand(extensionUri: vscode.Uri, _previews: Map<string, MarkdownPreviewPanel>, targetUri?: vscode.Uri): Promise<void> {
+  const uri = targetUri ?? vscode.window.activeTextEditor?.document.uri;
+  if (!uri) {
+    void vscode.window.showInformationMessage('Open a Markdown file to preview it.');
+    return;
+  }
+  const document = await vscode.workspace.openTextDocument(uri);
+  await vscode.commands.executeCommand('vscode.openWith', document.uri, MarkdownPreviewCustomEditor.viewType);
+}
+
+export async function formatTablesCommand(resource?: vscode.Uri): Promise<void> {
+  const document = await resolveMarkdownDocument(resource);
+  if (!document) return;
+  const original = document.getText();
+  const formatted = formatMarkdownTables(original);
+  if (formatted === original) return;
+  const edit = new vscode.WorkspaceEdit();
+  edit.replace(document.uri, new vscode.Range(document.positionAt(0), document.positionAt(original.length)), formatted);
+  await vscode.workspace.applyEdit(edit);
+}
+
+export async function exportHtmlCommand(extensionUri: vscode.Uri, resource?: vscode.Uri): Promise<void> {
+  const document = await resolveMarkdownDocument(resource);
+  if (!document) return;
+  const target = await exportMarkdownAsHtml(extensionUri, document);
+  if (target) void vscode.window.showInformationMessage(`Exported HTML to ${target.fsPath}`);
+}
+
+export async function exportDocxBasicCommand(extensionUri: vscode.Uri, resource?: vscode.Uri): Promise<void> {
+  const document = await resolveMarkdownDocument(resource);
+  if (!document) return;
+  const target = await exportMarkdownAsBasicDocx(extensionUri, document);
+  if (target) void vscode.window.showInformationMessage(`Exported basic DOCX to ${target.fsPath}`);
+}
+
+export async function openSettingsCommand(): Promise<void> {
+  await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:GustavoSerpa.markdown-ai-studio markdownAiStudio');
+}
+
+export async function openGlobalDocumentThemeFolderCommand(): Promise<void> {
+  const directory = getConfiguredGlobalDocumentThemeDirectory();
+  if (!directory || !path.isAbsolute(directory)) {
+    void vscode.window.showWarningMessage('Set markdownAiStudio.globalDocumentThemeDirectory to an absolute path first.');
+    return;
+  }
+  const uri = vscode.Uri.file(directory);
+  await vscode.workspace.fs.createDirectory(uri);
+  await vscode.commands.executeCommand('revealFileInOS', uri);
+}
+
+export async function showCommandListCommand(resource?: vscode.Uri): Promise<void> {
+  const context = await resolveCommandListContext(resource);
+  if (!context) {
+    return;
+  }
+
+  const availableEntries = collectAvailableCommandEntries();
+  const selected = await vscode.window.showQuickPick(
+    buildOrderedQuickPickEntries(availableEntries, context).map((entry) => ({
+      label: entry.title,
+      command: entry.command,
+    })),
+    {
+      placeHolder: 'Select a AI Markdown Studio command',
+    },
+  );
+  if (selected) await vscode.commands.executeCommand(selected.command, context.documentUri);
+}
+
+async function resolveMarkdownDocument(resource?: vscode.Uri): Promise<vscode.TextDocument | undefined> {
+  const uri = resource?.scheme === 'file'
+    ? resource
+    : MarkdownPreviewCustomEditor.getActiveDocumentUri()
+      ?? MarkdownPreviewPanel.getActivePreviewDocumentUri()
+      ?? vscode.window.activeTextEditor?.document.uri;
+  if (!uri) {
+    void vscode.window.showInformationMessage('Open a Markdown file first.');
+    return undefined;
+  }
+  return vscode.workspace.openTextDocument(uri);
+}
+
+async function resolveCommandListContext(resource?: vscode.Uri): Promise<CommandListContext | undefined> {
+  const document = await resolveMarkdownDocument(resource);
+  if (!document) {
+    return undefined;
+  }
+
+  const copilotConfigured = await hasConfiguredCopilotAccount();
+  const documentUri = document.uri;
+  const activePreviewUri = MarkdownPreviewCustomEditor.getActiveDocumentUri() ?? MarkdownPreviewPanel.getActivePreviewDocumentUri();
+  return {
+    documentUri,
+    isPreviewMode: activePreviewUri?.toString() === documentUri.toString(),
+    isPresentation: isMarkdownPresentationSource(document.getText()),
+    copilotConfigured,
+  };
+}
+
+function collectAvailableCommandEntries(): Map<string, string> {
+  const entries = new Map<string, string>();
+  for (const entry of commandEntries) {
+    entries.set(entry.command, entry.title);
+  }
+
+  for (const feature of listFeatureContributions()) {
+    for (const command of feature.commands) {
+      entries.set(command.command, command.title);
+    }
+  }
+
+  return entries;
+}
+
+function buildOrderedQuickPickEntries(entries: Map<string, string>, context: CommandListContext): CommandListEntry[] {
+  const orderedEntries: CommandListEntry[] = [];
+  const proDocxInstalled = entries.has('markdownAiStudio.exportDocx');
+  for (const command of QUICK_PICK_COMMAND_ORDER) {
+    if (!shouldShowCommand(command, context, proDocxInstalled)) {
+      continue;
+    }
+
+    const title = entries.get(command);
+    if (title) {
+      orderedEntries.push({ command, title });
+    }
+  }
+
+  return orderedEntries;
+}
+
+function shouldShowCommand(command: string, context: CommandListContext, proDocxInstalled: boolean): boolean {
+  if (AI_DEPENDENT_COMMANDS.has(command)) {
+    if (!context.copilotConfigured) {
+      return false;
+    }
+
+    if (command === 'markdownAiStudio.enableAiFeatures') {
+      return isAiAuthorizationDenied();
+    }
+
+    return !isAiAuthorizationDenied();
+  }
+
+  if (command === 'markdownAiStudio.openPreview') {
+    return !context.isPreviewMode;
+  }
+
+  if (command === 'markdownAiStudio.editAsText') {
+    return context.isPreviewMode;
+  }
+
+  if (command === 'markdownAiStudio.exportPptx') {
+    return context.isPresentation;
+  }
+
+  if (command === 'markdownAiStudio.exportDocxBasic') {
+    return !proDocxInstalled;
+  }
+
+  return true;
+}
