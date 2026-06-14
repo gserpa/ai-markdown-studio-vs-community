@@ -1,0 +1,21 @@
+{
+  "name": "@mfo/ai-core",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Host-neutral AI prompt building and content validation for AI Markdown Studio.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mfo/core": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.18"
+  }
+}

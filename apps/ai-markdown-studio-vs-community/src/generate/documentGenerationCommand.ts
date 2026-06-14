@@ -1,17 +1,24 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { createDocumentPrompt, type DocumentGenerationRequest } from '../ai/presentationGenerationPrompts';
+import { createDocumentPrompt } from '@mfo/ai-core';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
 import { shouldGenerateWithLanguageModel } from './generationMode';
 
 const LENGTHS = ['Short', 'Standard', 'Detailed'] as const;
 const THEMES = ['auto', 'light-modern-blue', 'dark-modern-aurora', 'night-sky'] as const;
+type DocumentGenerationRequest = {
+  brief: string;
+  audience: string;
+  tone: string;
+  length: string;
+  theme: string;
+};
 
 export async function generateDocumentCommand(resource?: vscode.Uri): Promise<void> {
   const request = await collectRequest();
   if (!request) return;
 
-  const prompt = createDocumentPrompt(request);
+  const prompt = createDocumentPrompt({ ...request, documentTheme: request.theme });
   if (!(await shouldGenerateWithLanguageModel(prompt))) return;
 
   const folder = await resolveOutputFolder(resource);

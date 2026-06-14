@@ -17,6 +17,8 @@ import { JSDOM } from 'jsdom';
 import { resolveDocumentResource } from '../util/documentResourceResolver';
 import { registerFeatureContribution, listFeatureContributions } from './featureContributions';
 import { buildExportHtmlString } from '../export/html/htmlExporter';
+import { assertAiFeaturesEnabled, ensureAiFeaturesEnabled, isAiAuthorizationDenied } from '../ai/aiConsent';
+import { hasConfiguredCopilotAccount, refreshCopilotConfiguredContext } from '../ai/copilotAvailability';
 
 export function createCommunityApi(extensionVersion: string, extensionUri: vscode.Uri, documentThemeDirectory: string, presentationThemeDirectory: string): CommunityApiV1 {
   const renderMarkdown = (markdown: string): string => sanitizeRenderedHtml(createMarkdownRenderer().render(markdown));
@@ -45,6 +47,13 @@ export function createCommunityApi(extensionVersion: string, extensionUri: vscod
     formatting: Object.freeze({ formatMarkdownTables }),
     resources: Object.freeze({ resolveDocumentResource }),
     commands: Object.freeze({ registerFeatureContribution, listFeatureContributions }),
+    ai: Object.freeze({
+      hasConfiguredCopilotAccount,
+      refreshCopilotConfiguredContext,
+      ensureFeaturesEnabled: ensureAiFeaturesEnabled,
+      assertFeaturesEnabled: assertAiFeaturesEnabled,
+      isAuthorizationDenied: isAiAuthorizationDenied,
+    }),
   });
 }
 

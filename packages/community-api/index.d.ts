@@ -3,6 +3,10 @@ import type * as vscode from 'vscode';
 export interface FeatureCommandContribution {
   readonly command: string;
   readonly title: string;
+  readonly order?: number;
+  readonly requiresAi?: boolean;
+  readonly presentationOnly?: boolean;
+  readonly replaces?: readonly string[];
 }
 
 export interface FeatureContribution {
@@ -50,5 +54,12 @@ export interface CommunityApiV1 {
   readonly commands: {
     registerFeatureContribution(contribution: FeatureContribution): vscode.Disposable;
     listFeatureContributions(): readonly FeatureContribution[];
+  };
+  readonly ai: {
+    hasConfiguredCopilotAccount(): Promise<boolean>;
+    refreshCopilotConfiguredContext(): Promise<boolean>;
+    ensureFeaturesEnabled(): Promise<boolean>;
+    assertFeaturesEnabled(): void;
+    isAuthorizationDenied(): boolean;
   };
 }

@@ -32,6 +32,7 @@ try {
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/docs', 'docs');
 
   copyExternalNodeModules();
+  copyWorkspacePackage('packages/ai-core', path.join('node_modules', '@mfo', 'ai-core'));
   copyWorkspacePackage('packages/md-core', path.join('node_modules', '@mfo', 'core'));
   copyWorkspacePackage('packages/md-preview-web', path.join('node_modules', '@mfo', 'preview-web'));
 
@@ -149,6 +150,7 @@ function pruneStageNodeModulesToRuntimeDependencies() {
 function verifyBuildOutputs() {
   const requiredEntries = [
     path.join(repoRoot, 'apps', 'ai-markdown-studio-vs-community', 'out', 'extension.js'),
+    path.join(repoRoot, 'packages', 'ai-core', 'dist', 'index.js'),
     path.join(repoRoot, 'packages', 'md-core', 'dist', 'index.js'),
     path.join(repoRoot, 'packages', 'md-preview-web', 'dist', 'index.js'),
   ];

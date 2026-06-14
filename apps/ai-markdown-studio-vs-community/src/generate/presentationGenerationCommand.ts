@@ -1,18 +1,33 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { createPresentationPrompt, createPresentationRepairPrompt, type PresentationGenerationRequest } from '../ai/presentationGenerationPrompts';
+import { createPresentationPrompt, createPresentationRepairPrompt } from '@mfo/ai-core';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
 import { validatePresentation } from '../ai/presentationValidation';
 import { shouldGenerateWithLanguageModel } from './generationMode';
 
 const THEMES = ['auto', 'default', 'galaxy', 'modern-blue', 'black'] as const;
 const RATIOS = ['16:9', '4:3'] as const;
+type PresentationGenerationRequest = {
+  brief: string;
+  audience: string;
+  tone: string;
+  slideCount: number;
+  theme: string;
+  ratio: '16:9' | '4:3';
+};
 
 export async function generatePresentationCommand(resource?: vscode.Uri): Promise<void> {
   const request = await collectRequest();
   if (!request) return;
 
-  const prompt = createPresentationPrompt(request);
+  const prompt = createPresentationPrompt({
+    brief: request.brief,
+    audience: request.audience,
+    tone: request.tone,
+    length: `${request.slideCount} slides`,
+    presentationTheme: request.theme,
+    presentationRatio: request.ratio,
+  });
   if (!(await shouldGenerateWithLanguageModel(prompt))) return;
 
   const folder = await resolveOutputFolder(resource);

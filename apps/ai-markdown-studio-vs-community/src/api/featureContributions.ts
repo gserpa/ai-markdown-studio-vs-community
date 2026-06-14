@@ -10,7 +10,10 @@ export function registerFeatureContribution(contribution: FeatureContribution): 
 
   const frozen = Object.freeze({
     ...contribution,
-    commands: Object.freeze(contribution.commands.map((command) => Object.freeze({ ...command }))),
+    commands: Object.freeze(contribution.commands.map((command) => Object.freeze({
+      ...command,
+      replaces: command.replaces ? Object.freeze([...command.replaces]) : undefined,
+    }))),
   });
   contributions.set(frozen.id, frozen);
 

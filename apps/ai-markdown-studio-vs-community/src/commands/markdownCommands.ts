@@ -14,6 +14,10 @@ import { commandEntries } from './generatedCommandEntries';
 type CommandListEntry = {
   command: string;
   title: string;
+  order: number;
+  requiresAi?: boolean;
+  presentationOnly?: boolean;
+  replaces?: readonly string[];
 };
 
 type CommandListContext = {
@@ -30,15 +34,8 @@ const QUICK_PICK_COMMAND_ORDER = [
   'markdownAiStudio.generateDocument',
   'markdownAiStudio.generatePresentation',
   'markdownAiStudio.enableAiFeatures',
-  'markdownAiStudio.generateDocumentTheme',
-  'markdownAiStudio.generatePresentationTheme',
   'markdownAiStudio.exportHtml',
   'markdownAiStudio.exportDocxBasic',
-  'markdownAiStudio.exportDocx',
-  'markdownAiStudio.exportPptx',
-  'markdownAiStudio.exportPdf',
-  'markdownAiStudio.validatePptxTemplate',
-  'markdownAiStudio.generatePptxTemplateManifest',
   'markdownAiStudio.openSettings',
 ] as const;
 
@@ -47,8 +44,6 @@ const AI_DEPENDENT_COMMANDS = new Set<string>([
   'markdownAiStudio.generateDocument',
   'markdownAiStudio.generatePresentation',
   'markdownAiStudio.pasteAsMarkdown',
-  'markdownAiStudio.generateDocumentTheme',
-  'markdownAiStudio.generatePresentationTheme',
 ]);
 
 export function createMarkdownTableFormattingProvider(): vscode.DocumentFormattingEditProvider {
@@ -160,40 +155,42 @@ async function resolveCommandListContext(resource?: vscode.Uri): Promise<Command
   };
 }
 
-function collectAvailableCommandEntries(): Map<string, string> {
-  const entries = new Map<string, string>();
-  for (const entry of commandEntries) {
-    entries.set(entry.command, entry.title);
+function collectAvailableCommandEntries(): Map<string, CommandListEntry> {
+  const entries = new Map<string, CommandListEntry>();
+  for (const [order, entry] of commandEntries.entries()) {
+    entries.set(entry.command, {
+      command: entry.command,
+      title: entry.title,
+      order: QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number]) >= 0
+        ? QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number])
+        : 100 + order,
+      requiresAi: AI_DEPENDENT_COMMANDS.has(entry.command),
+    });
   }
 
   for (const feature of listFeatureContributions()) {
-    for (const command of feature.commands) {
-      entries.set(command.command, command.title);
+    for (const [index, command] of feature.commands.entries()) {
+      entries.set(command.command, {
+        ...command,
+        order: command.order ?? 200 + index,
+      });
     }
   }
 
   return entries;
 }
 
-function buildOrderedQuickPickEntries(entries: Map<string, string>, context: CommandListContext): CommandListEntry[] {
-  const orderedEntries: CommandListEntry[] = [];
-  const proDocxInstalled = entries.has('markdownAiStudio.exportDocx');
-  for (const command of QUICK_PICK_COMMAND_ORDER) {
-    if (!shouldShowCommand(command, context, proDocxInstalled)) {
-      continue;
-    }
-
-    const title = entries.get(command);
-    if (title) {
-      orderedEntries.push({ command, title });
-    }
-  }
-
-  return orderedEntries;
+function buildOrderedQuickPickEntries(entries: Map<string, CommandListEntry>, context: CommandListContext): CommandListEntry[] {
+  const replacedCommands = new Set([...entries.values()].flatMap((entry) => [...(entry.replaces ?? [])]));
+  return [...entries.values()]
+    .filter((entry) => !replacedCommands.has(entry.command))
+    .filter((entry) => shouldShowCommand(entry, context))
+    .sort((left, right) => left.order - right.order || left.title.localeCompare(right.title));
 }
 
-function shouldShowCommand(command: string, context: CommandListContext, proDocxInstalled: boolean): boolean {
-  if (AI_DEPENDENT_COMMANDS.has(command)) {
+function shouldShowCommand(entry: CommandListEntry, context: CommandListContext): boolean {
+  const command = entry.command;
+  if (entry.requiresAi) {
     if (!context.copilotConfigured) {
       return false;
     }
@@ -213,12 +210,8 @@ function shouldShowCommand(command: string, context: CommandListContext, proDocx
     return context.isPreviewMode;
   }
 
-  if (command === 'markdownAiStudio.exportPptx') {
+  if (entry.presentationOnly) {
     return context.isPresentation;
-  }
-
-  if (command === 'markdownAiStudio.exportDocxBasic') {
-    return !proDocxInstalled;
   }
 
   return true;

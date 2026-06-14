@@ -7,7 +7,7 @@
     "sync:manifest-config": "node scripts/sync-manifest-config.mjs",
     "sync:preview-assets": "node scripts/sync-preview-assets.mjs",
     "clean": "node -e \"require('node:fs').rmSync('apps/ai-markdown-studio-vs-community/out', { recursive: true, force: true })\"",
-    "compile": "npm run clean && npm run build --workspace=packages/md-core && npm run build --workspace=packages/md-preview-web && npm run sync:preview-assets && tsc -p ./apps/ai-markdown-studio-vs-community/tsconfig.json",
+    "compile": "npm run clean && npm run build --workspace=packages/md-core && npm run build --workspace=packages/ai-core && npm run build --workspace=packages/md-preview-web && npm run sync:preview-assets && tsc -p ./apps/ai-markdown-studio-vs-community/tsconfig.json",
     "pretest": "npm run compile",
     "test": "vitest run",
     "package": "npm run compile && node scripts/package-vsix.mjs",
@@ -17,6 +17,7 @@
   },
   "workspaces": ["packages/*"],
   "dependencies": {
+    "@mfo/ai-core": "*",
     "@mfo/community-api": "*",
     "@mfo/core": "*",
     "@mfo/preview-web": "*",

@@ -18,21 +18,6 @@ const proRuntimeTokens = [
   'require("sharp")', "require('sharp')", '@resvg/resvg-js', 'puppeteer-core', 'pptxgenjs', 'pptx-automizer', 'pdf-parse',
 ];
 const proDependencyPaths = ['sharp', '@resvg/resvg-js', 'puppeteer-core', 'pptxgenjs', 'pptx-automizer', 'pdf-parse'];
-const allowedCommunityIntegrationFiles = new Set([
-  'apps/ai-markdown-studio-vs-community/src/commands/markdownCommands.ts',
-  'apps/ai-markdown-studio-vs-community/test/commands/showCommandListCommand.test.ts',
-]);
-const allowedCommunityIntegrationTokens = new Set([
-  'markdownAiStudio.exportDocx',
-  'markdownAiStudio.exportPdf',
-  'markdownAiStudio.exportPptx',
-  'markdownAiStudio.generateDocument',
-  'markdownAiStudio.generatePresentation',
-  'markdownAiStudio.generateDocumentTheme',
-  'markdownAiStudio.generatePresentationTheme',
-  'markdownAiStudio.validatePptxTemplate',
-  'markdownAiStudio.generatePptxTemplateManifest',
-]);
 const maxCommunityCompressedBytes = 58 * 1024 * 1024;
 const failures = [];
 
@@ -65,9 +50,6 @@ function checkSourceTree() {
       const relative = path.relative(repoRoot, file).replaceAll('\\', '/');
       const content = readFileSync(file, 'utf8');
       for (const token of proTokens) {
-        if (isAllowedCommunityIntegrationReference(relative, token)) {
-          continue;
-        }
         if (containsForbiddenToken(relative, token) || containsForbiddenToken(content, token)) failures.push(`${relative} contains Pro token: ${token}`);
       }
     }
@@ -108,7 +90,7 @@ function checkVsix(filePath) {
           stream.on('end', () => {
             const content = Buffer.concat(chunks).toString('utf8');
             for (const token of proRuntimeTokens) {
-              if (!isAllowedPackagedIntegrationReference(name, token) && containsForbiddenToken(content, token)) {
+              if (containsForbiddenToken(content, token)) {
                 failures.push(`VSIX runtime file ${name} contains Pro token: ${token}`);
               }
             }
@@ -135,15 +117,6 @@ function containsForbiddenToken(content, token) {
   }
 
   return true;
-}
-
-function isAllowedCommunityIntegrationReference(relativePath, token) {
-  return allowedCommunityIntegrationFiles.has(relativePath) && allowedCommunityIntegrationTokens.has(token);
-}
-
-function isAllowedPackagedIntegrationReference(entryName, token) {
-  return entryName === 'extension/out/commands/markdownCommands.js'
-    && allowedCommunityIntegrationTokens.has(token);
 }
 
 function escapeRegExp(value) {

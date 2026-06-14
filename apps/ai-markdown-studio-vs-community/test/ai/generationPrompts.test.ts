@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createDocumentPrompt, createPresentationPrompt } from '../../src/ai/presentationGenerationPrompts';
+import { createDocumentPrompt, createPresentationPrompt } from '@mfo/ai-core';
 
 describe('Community generation prompts', () => {
   it('builds a standard Markdown document prompt', () => {
@@ -8,9 +8,9 @@ describe('Community generation prompts', () => {
       audience: 'Product leadership',
       tone: 'Executive',
       length: 'Short',
-      theme: 'auto',
+      documentTheme: 'auto',
     });
-    expect(prompt).toContain('complete Markdown document');
+    expect(prompt).toContain('Create a complete .md file');
     expect(prompt).toContain('Do not set document: presentation');
     expect(prompt).toContain('Brief: Write a launch memo');
   });
@@ -20,12 +20,12 @@ describe('Community generation prompts', () => {
       brief: 'Present the architecture',
       audience: 'Architecture review board',
       tone: 'Technical',
-      slideCount: 9,
-      theme: 'galaxy',
-      ratio: '16:9',
+      length: '9 slides',
+      presentationTheme: 'galaxy',
+      presentationRatio: '16:9',
     });
     expect(prompt).toContain('document: presentation');
-    expect(prompt).toContain('approximately 9 slides');
+    expect(prompt).toContain('9 slides');
     expect(prompt).toContain('Use ratio: 16:9');
   });
 });
