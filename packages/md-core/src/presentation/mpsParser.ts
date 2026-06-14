@@ -23,7 +23,8 @@ export type MarkdownDocumentKind = 'text' | 'presentation';
 const DEFAULT_TEMPLATE = 'default';
 const SLIDE_DIRECTIVE_PATTERN = /^<!--\s*slide\s*:\s*([^>]+?)\s*-->\s*/u;
 const ANY_SLIDE_DIRECTIVE_PATTERN = /<!--\s*slide\s*:\s*[^>]+?\s*-->/gu;
-const HTML_COMMENT_PATTERN = /<!--([\s\S]*?)-->/gu;
+const HTML_COMMENT_START = '<!--';
+const HTML_COMMENT_END = '-->';
 
 export function parseMarkdownPresentation(source: string): MarkdownPresentation {
   const normalized = stripBom(source);
@@ -268,25 +269,79 @@ function trimOuterBlankLines(value: string): string {
 const SPEAKER_NOTES_PATTERN = /^\s*(notes|speaker\s+notes)\s*:\s*([\s\S]*)$/iu;
 function extractSpeakerNotes(source: string): { body: string; notes: string[] } {
   const notes: string[] = [];
-  const body = source.replace(HTML_COMMENT_PATTERN, (fullMatch, rawContent: string) => {
+  const bodyParts: string[] = [];
+  let cursor = 0;
+
+  while (cursor < source.length) {
+    const commentStart = source.indexOf(HTML_COMMENT_START, cursor);
+    if (commentStart < 0) {
+      bodyParts.push(source.slice(cursor));
+      break;
+    }
+
+    bodyParts.push(source.slice(cursor, commentStart));
+
+    const commentEnd = findHtmlCommentEnd(source, commentStart + HTML_COMMENT_START.length);
+    if (commentEnd < 0) {
+      bodyParts.push(source.slice(commentStart));
+      break;
+    }
+
+    const rawContent = source.slice(commentStart + HTML_COMMENT_START.length, commentEnd - HTML_COMMENT_END.length);
     const content = trimOuterBlankLines(rawContent);
-    if (!content) {
-      return '';
+    if (content) {
+      const match = content.match(SPEAKER_NOTES_PATTERN);
+      if (match) {
+        notes.push(match[2].trim());
+      }
     }
 
-    const match = content.match(SPEAKER_NOTES_PATTERN);
-    if (match) {
-      notes.push(match[2].trim());
-      return '';
-    }
-
-    return '';
-  });
+    cursor = commentEnd;
+  }
 
   return {
-    body,
+    body: bodyParts.join(''),
     notes,
   };
+}
+
+function findHtmlCommentEnd(source: string, fromIndex: number): number {
+  let index = fromIndex;
+  let inlineCodeFenceLength = 0;
+
+  while (index < source.length - 2) {
+    const current = source[index];
+
+    if (current === '`') {
+      const runLength = countRepeatedCharacters(source, index, '`');
+      if (inlineCodeFenceLength === 0) {
+        inlineCodeFenceLength = runLength;
+      } else if (runLength === inlineCodeFenceLength) {
+        inlineCodeFenceLength = 0;
+      }
+
+      index += runLength;
+      continue;
+    }
+
+    if (inlineCodeFenceLength === 0 && source[index] === '-' && source[index + 1] === '-' && source[index + 2] === '>') {
+      return index + HTML_COMMENT_END.length;
+    }
+
+    index += 1;
+  }
+
+  return -1;
+}
+
+function countRepeatedCharacters(source: string, fromIndex: number, character: string): number {
+  let index = fromIndex;
+
+  while (index < source.length && source[index] === character) {
+    index += 1;
+  }
+
+  return index - fromIndex;
 }
 
 function isDirectiveComment(content: string): boolean {

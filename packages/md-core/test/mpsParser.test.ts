@@ -162,6 +162,16 @@ Visible body text.
     expect(presentation.slides[0].notes).toContain('Presenter note four.');
   });
 
+  it('keeps backticked comment markers inside speaker notes without truncating the note', () => {
+    const presentation = parseMarkdownPresentation(`# Title
+
+<!--notes: Title slide. No \`<!--slide:-->\` marker is set, so this should render using the default/cover layout derived from the front matter title, subtitle, and author.-->
+`);
+
+    expect(presentation.slides[0].notes).toContain('No \`<!--slide:-->\` marker is set');
+    expect(presentation.slides[0].body).not.toContain('marker is set, so this should render');
+  });
+
   it('ignores other HTML comments and Marp directives as speaker notes', () => {
     const presentation = parseMarkdownPresentation(`# Title
 
