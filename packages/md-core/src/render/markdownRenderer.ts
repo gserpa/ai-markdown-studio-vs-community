@@ -11,11 +11,12 @@ const markdownItTexmath = require('markdown-it-texmath');
 
 type LinkRewriteResult = {
   href?: string;
+  removeHref?: boolean;
   attributes?: Record<string, string>;
 };
 
 type MarkdownRendererOptions = {
-  resolveImageSrc?: (rawPath: string) => string | undefined;
+  resolveImageSrc?: (rawPath: string) => string | null | undefined;
   rewriteLink?: (href: string) => LinkRewriteResult | undefined;
 };
 
@@ -61,6 +62,42 @@ export function createMarkdownRenderer(options: MarkdownRendererOptions = {}): M
     },
   });
 
+  md.core.ruler.after('linkify', 'suppress-file-like-autolinks', (state) => {
+    for (const token of state.tokens) {
+      if (token.type !== 'inline' || !token.children?.length) {
+        continue;
+      }
+
+      const rewrittenChildren: typeof token.children = [];
+      for (let index = 0; index < token.children.length; index += 1) {
+        const openToken = token.children[index];
+        const textToken = token.children[index + 1];
+        const closeToken = token.children[index + 2];
+
+        if (
+          openToken?.type === 'link_open'
+          && openToken.markup === 'linkify'
+          && openToken.info === 'auto'
+          && textToken?.type === 'text'
+          && closeToken?.type === 'link_close'
+          && closeToken.markup === 'linkify'
+          && closeToken.info === 'auto'
+          && isFileLikeAutoLinkText(textToken.content)
+        ) {
+          const plainTextToken = new state.Token('text', '', 0);
+          plainTextToken.content = textToken.content;
+          rewrittenChildren.push(plainTextToken);
+          index += 2;
+          continue;
+        }
+
+        rewrittenChildren.push(openToken);
+      }
+
+      token.children = rewrittenChildren;
+    }
+  });
+
   const defaultFence = md.renderer.rules.fence?.bind(md.renderer.rules);
   md.renderer.rules.fence = (tokens, idx, renderOptions, env, self) => {
     const token = tokens[idx];
@@ -85,7 +122,19 @@ export function createMarkdownRenderer(options: MarkdownRendererOptions = {}): M
         token.attrSet('data-source-src', originalSrc);
       }
       const resolvedSrc = originalSrc ? options.resolveImageSrc?.(originalSrc) : undefined;
-      if (resolvedSrc) {
+      if (resolvedSrc === null) {
+        const altText = md.utils.escapeHtml(self.renderInlineAsText(token.children ?? [], renderOptions, env));
+        const escapedSource = md.utils.escapeHtml(originalSrc ?? '');
+        return [
+          `<span class="remote-resource-placeholder" role="img" aria-label="${altText || 'Remote image blocked'}" data-source-src="${escapedSource}" data-remote-resource-blocked="true">`,
+          '  <span class="remote-resource-placeholder-icon" aria-hidden="true"></span>',
+          '  <span class="remote-resource-placeholder-copy">',
+          `    <span class="remote-resource-placeholder-title">${altText || 'Remote image blocked'}</span>`,
+          '    <span class="remote-resource-placeholder-message">Extension settings restrict access to remote resources.</span>',
+          '  </span>',
+          '</span>',
+        ].join('\n');
+      } else if (resolvedSrc !== undefined) {
         token.attrs![srcIndex][1] = resolvedSrc;
       }
     }
@@ -102,11 +151,12 @@ export function createMarkdownRenderer(options: MarkdownRendererOptions = {}): M
     const href = hrefIndex >= 0 ? token.attrs?.[hrefIndex]?.[1] : undefined;
 
     if (href) {
-      token.attrSet('title', href);
       const rewriteResult = options.rewriteLink?.(href);
-      if (rewriteResult?.href) {
+      if (rewriteResult?.removeHref) {
+        token.attrSet('data-href', rewriteResult.attributes?.['data-href'] ?? href);
+        token.attrSet('href', '');
+      } else if (rewriteResult?.href) {
         token.attrSet('href', rewriteResult.href);
-        token.attrSet('title', rewriteResult.href);
       }
 
       if (rewriteResult?.attributes) {
@@ -122,6 +172,10 @@ export function createMarkdownRenderer(options: MarkdownRendererOptions = {}): M
   };
 
   return md;
+}
+
+function isFileLikeAutoLinkText(text: string): boolean {
+  return /^(?:[\p{L}\p{N}._-]+\/)*[\p{L}\p{N}._-]+\.(?:md|markdown)$/iu.test(text.trim());
 }
 
 export function sanitizeRenderedHtml(html: string): string {

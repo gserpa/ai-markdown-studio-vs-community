@@ -4,6 +4,7 @@ const vscodeMocks = vi.hoisted(() => ({
   executeCommand: vi.fn(),
   openTextDocument: vi.fn(),
   showInformationMessage: vi.fn(),
+  showTextDocument: vi.fn(),
   activeTextEditor: undefined as { document: { uri: { fsPath: string } } } | undefined,
 }));
 
@@ -14,6 +15,7 @@ vi.mock('vscode', () => ({
   window: {
     activeTextEditor: vscodeMocks.activeTextEditor,
     showInformationMessage: vscodeMocks.showInformationMessage,
+    showTextDocument: vscodeMocks.showTextDocument,
   },
   workspace: {
     openTextDocument: vscodeMocks.openTextDocument,
@@ -21,11 +23,15 @@ vi.mock('vscode', () => ({
   Uri: {
     file: vi.fn((fsPath: string) => ({ fsPath, scheme: 'file' })),
   },
+  ViewColumn: {
+    Beside: -2,
+  },
 }));
 
 import * as vscode from 'vscode';
-import { openPreviewCommand } from '../../src/commands/markdownCommands';
+import { openOppositeViewBesideCommand, openPreviewCommand } from '../../src/commands/markdownCommands';
 import { MarkdownPreviewCustomEditor } from '../../src/panel/MarkdownPreviewCustomEditor';
+import { MarkdownPreviewPanel } from '../../src/panel/MarkdownPreviewPanel';
 
 describe('openPreviewCommand', () => {
   beforeEach(() => {
@@ -48,5 +54,47 @@ describe('openPreviewCommand', () => {
     await openPreviewCommand(vscode.Uri.file('C:/extension'), new Map());
 
     expect(vscodeMocks.showInformationMessage).toHaveBeenCalledWith('Open a Markdown file to preview it.');
+  });
+
+  it('opens the preview beside when editing', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    vscodeMocks.openTextDocument.mockResolvedValue({
+      uri: documentUri,
+      languageId: 'markdown',
+    });
+    vi.spyOn(MarkdownPreviewCustomEditor, 'getActiveDocumentUri').mockReturnValue(undefined);
+    vi.spyOn(MarkdownPreviewPanel, 'getActivePreviewDocumentUri').mockReturnValue(undefined);
+
+    await openOppositeViewBesideCommand(documentUri);
+
+    expect(vscodeMocks.executeCommand).toHaveBeenCalledWith(
+      'vscode.openWith',
+      documentUri,
+      MarkdownPreviewCustomEditor.viewType,
+      {
+        preview: false,
+        preserveFocus: false,
+        viewColumn: vscode.ViewColumn.Beside,
+      },
+    );
+  });
+
+  it('opens the text editor beside when previewing', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    const document = {
+      uri: documentUri,
+      languageId: 'markdown',
+    };
+    vscodeMocks.openTextDocument.mockResolvedValue(document);
+    vi.spyOn(MarkdownPreviewCustomEditor, 'getActiveDocumentUri').mockReturnValue(documentUri);
+    vi.spyOn(MarkdownPreviewPanel, 'getActivePreviewDocumentUri').mockReturnValue(undefined);
+
+    await openOppositeViewBesideCommand(documentUri);
+
+    expect(vscodeMocks.showTextDocument).toHaveBeenCalledWith(document, {
+      preview: false,
+      preserveFocus: false,
+      viewColumn: vscode.ViewColumn.Beside,
+    });
   });
 });

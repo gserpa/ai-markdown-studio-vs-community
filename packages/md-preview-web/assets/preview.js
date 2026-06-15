@@ -45,6 +45,7 @@
         startOnLoad: false,
         theme: previewThemeState.mermaidTheme,
         securityLevel: 'strict',
+        suppressErrorRendering: true,
         htmlLabels: true,
         fontFamily: 'Segoe UI, Arial, sans-serif',
         flowchart: {
@@ -61,8 +62,8 @@
           continue;
         }
 
+        const renderId = `preview-mermaid-${index + 1}`;
         try {
-          const renderId = `preview-mermaid-${index + 1}`;
           const renderResult = await mermaid.render(renderId, source);
           const svg = typeof renderResult === 'string' ? renderResult : renderResult?.svg;
           if (typeof svg === 'string' && svg.trim()) {
@@ -70,18 +71,17 @@
             block.classList.remove('mermaid');
             block.classList.add('mermaid-rendered');
             block.setAttribute('data-mermaid-source', source);
+            neutralizeStrictMermaidInteractivity(block);
             normalizeRenderedMermaidSvgSizing(block);
             if (previewThemeState.mermaidTransparentBackground) {
               patchTransparentMermaidBackground(block);
             }
             decorateRenderedMermaid(block);
           }
-
-          if (typeof renderResult?.bindFunctions === 'function') {
-            renderResult.bindFunctions(block);
-          }
         } catch (diagramError) {
           console.warn('[preview] Failed to render Mermaid diagram:', diagramError);
+          cleanupMermaidRenderArtifacts(renderId);
+          renderMermaidError(block, source, diagramError);
         }
       }
     };
@@ -140,12 +140,17 @@
     }
 
     const linkedHref = anchor.getAttribute('data-href') ?? anchor.getAttribute('href');
-    if (!linkedHref || linkedHref === '#' || linkedHref.startsWith('#')) {
+    if (!linkedHref || linkedHref === '#') {
       return;
     }
 
     event.preventDefault();
     linkTooltips.hide();
+
+    if (linkedHref.startsWith('#')) {
+      scrollToPreviewFragment(linkedHref);
+      return;
+    }
 
     bridge.openLink(linkedHref);
   });
@@ -187,6 +192,9 @@
 
   window.addEventListener('resize', () => {
     mermaidLightbox.handleResize();
+    requestAnimationFrame(() => {
+      repositionMermaidZoomTriggers();
+    });
   });
 
   if (previewMode === 'presentation') {
@@ -262,6 +270,23 @@ function wrapTablesForScroll() {
   }
 }
 
+function scrollToPreviewFragment(href) {
+  let fragment;
+  try {
+    fragment = decodeURIComponent(href.slice(1));
+  } catch {
+    fragment = href.slice(1);
+  }
+
+  if (!fragment) {
+    return;
+  }
+
+  const target = document.getElementById(fragment)
+    || Array.from(document.getElementsByName(fragment)).find((element) => element instanceof HTMLElement);
+  target?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
 function initializeLinkHoverTooltips(rootDocument) {
   const delayMs = 1000;
   let tooltipEl = null;
@@ -294,11 +319,11 @@ function initializeLinkHoverTooltips(rootDocument) {
 
   const resolveTooltipText = (anchor) => {
     const href = anchor?.getAttribute('data-href')?.trim()
-      || anchor?.getAttribute('href')?.trim()
+      || getAnchorLinkTarget(anchor)
       || anchor?.getAttribute('title')?.trim()
       || '';
 
-    if (!href || href === '#' || href.startsWith('#')) {
+    if (!href || href === '#') {
       return null;
     }
 
@@ -362,7 +387,7 @@ function initializeLinkHoverTooltips(rootDocument) {
     const anchor = event.target instanceof Element
       ? event.target.closest('a[href], a[data-href]')
       : null;
-    if (!(anchor instanceof HTMLAnchorElement)) {
+    if (!(anchor instanceof Element)) {
       hoveredAnchor = null;
       hide();
       return;
@@ -370,7 +395,7 @@ function initializeLinkHoverTooltips(rootDocument) {
 
     pointerX = event.clientX;
     pointerY = event.clientY;
-    schedule(anchor, event.ctrlKey || event.metaKey);
+    schedule(anchor, event.ctrlKey || event.metaKey || isMermaidLink(anchor));
   });
 
   rootDocument.addEventListener('mousemove', (event) => {
@@ -383,14 +408,14 @@ function initializeLinkHoverTooltips(rootDocument) {
     const anchor = event.target instanceof Element
       ? event.target.closest('a[href], a[data-href]')
       : null;
-    if (!(anchor instanceof HTMLAnchorElement)) {
+    if (!(anchor instanceof Element)) {
       hoveredAnchor = null;
       hide();
       return;
     }
 
     if (anchor !== hoveredAnchor) {
-      schedule(anchor, event.ctrlKey || event.metaKey);
+      schedule(anchor, event.ctrlKey || event.metaKey || isMermaidLink(anchor));
       return;
     }
 
@@ -403,7 +428,7 @@ function initializeLinkHoverTooltips(rootDocument) {
     const anchor = event.target instanceof Element
       ? event.target.closest('a[href], a[data-href]')
       : null;
-    if (!(anchor instanceof HTMLAnchorElement)) {
+    if (!(anchor instanceof Element)) {
       return;
     }
 
@@ -458,6 +483,157 @@ function decorateRenderedMermaid(block) {
   trigger.setAttribute('aria-label', 'Zoom Mermaid diagram');
   trigger.textContent = 'Zoom';
   block.append(trigger);
+  positionMermaidZoomTrigger(trigger, block);
+}
+
+function isStrictMermaidSecurityLevel() {
+  return true;
+}
+
+function neutralizeStrictMermaidInteractivity(block) {
+  if (!(block instanceof HTMLElement) || !isStrictMermaidSecurityLevel()) {
+    return;
+  }
+
+  for (const anchor of block.querySelectorAll('a')) {
+    const linkTarget = getAnchorLinkTarget(anchor);
+    if (linkTarget) {
+      anchor.setAttribute('data-href', linkTarget);
+    }
+    anchor.removeAttribute('href');
+    anchor.removeAttribute('xlink:href');
+    anchor.removeAttribute('target');
+    anchor.removeAttribute('rel');
+    anchor.removeAttribute('title');
+  }
+
+  for (const element of block.querySelectorAll('[onclick]')) {
+    element.removeAttribute('onclick');
+  }
+}
+
+function isMermaidLink(anchor) {
+  return anchor instanceof Element && anchor.closest('.mermaid-rendered') instanceof Element;
+}
+
+function getAnchorLinkTarget(anchor) {
+  if (!(anchor instanceof Element)) {
+    return '';
+  }
+
+  const namespacedHref = anchor.getAttribute('href')
+    || anchor.getAttribute('xlink:href')
+    || anchor.getAttributeNS?.('http://www.w3.org/1999/xlink', 'href')
+    || anchor.getAttribute('data-href');
+  if (typeof namespacedHref === 'string' && namespacedHref.trim()) {
+    return namespacedHref.trim();
+  }
+
+  const hrefObject = anchor.href;
+  if (typeof hrefObject === 'string' && hrefObject.trim()) {
+    return hrefObject.trim();
+  }
+
+  if (hrefObject && typeof hrefObject === 'object') {
+    const baseVal = typeof hrefObject.baseVal === 'string' ? hrefObject.baseVal.trim() : '';
+    if (baseVal) {
+      return baseVal;
+    }
+
+    const animVal = typeof hrefObject.animVal === 'string' ? hrefObject.animVal.trim() : '';
+    if (animVal) {
+      return animVal;
+    }
+  }
+
+  return '';
+}
+
+function positionMermaidZoomTrigger(trigger, block) {
+  if (!(trigger instanceof HTMLElement) || !(block instanceof HTMLElement)) {
+    return;
+  }
+
+  trigger.style.left = '';
+  trigger.style.right = '';
+
+  const blockRect = block.getBoundingClientRect();
+  const triggerWidth = trigger.offsetWidth || 72;
+  const viewportWidth = document.documentElement?.clientWidth || window.innerWidth || 0;
+  const outsideGap = 8;
+  const viewportPadding = 12;
+  const availableOutsideWidth = viewportWidth - blockRect.right - viewportPadding;
+
+  if (availableOutsideWidth >= triggerWidth + outsideGap) {
+    trigger.style.left = `${blockRect.width + outsideGap}px`;
+    trigger.style.right = 'auto';
+  } else {
+    trigger.style.left = 'auto';
+    trigger.style.right = '0';
+  }
+
+  const triggerRect = trigger.getBoundingClientRect();
+  if (triggerRect.right > viewportWidth - viewportPadding) {
+    trigger.style.left = 'auto';
+    trigger.style.right = '0';
+  }
+}
+
+function repositionMermaidZoomTriggers() {
+  for (const block of document.querySelectorAll('.mermaid-rendered')) {
+    if (!(block instanceof HTMLElement)) {
+      continue;
+    }
+
+    const trigger = block.querySelector('.mermaid-zoom-trigger');
+    if (!(trigger instanceof HTMLElement)) {
+      continue;
+    }
+
+    positionMermaidZoomTrigger(trigger, block);
+  }
+}
+
+function cleanupMermaidRenderArtifacts(renderId) {
+  if (!renderId) {
+    return;
+  }
+
+  for (const elementId of [renderId, `d${renderId}`, `i${renderId}`]) {
+    document.getElementById(elementId)?.remove();
+  }
+}
+
+function renderMermaidError(block, source, error) {
+  if (!(block instanceof HTMLElement)) {
+    return;
+  }
+
+  block.classList.remove('mermaid', 'mermaid-rendered');
+  block.classList.add('mermaid-render-error');
+  block.removeAttribute('tabindex');
+  block.innerHTML = [
+    '<div class="mermaid-error-panel" role="alert">',
+    '  <div class="mermaid-error-title">Mermaid diagram could not be rendered.</div>',
+    `  <pre class="mermaid-error-source"><code>${escapeHtml(source)}</code></pre>`,
+    `  <p class="mermaid-error-detail">${escapeHtml(formatMermaidError(error))}</p>`,
+    '</div>',
+  ].join('\n');
+}
+
+function formatMermaidError(error) {
+  if (typeof error === 'string' && error.trim()) {
+    return error.trim();
+  }
+
+  if (error && typeof error === 'object') {
+    const message = typeof error.message === 'string' ? error.message.trim() : '';
+    if (message) {
+      return message;
+    }
+  }
+
+  return 'Check the Mermaid syntax in this block.';
 }
 
 function normalizeRenderedMermaidSvgSizing(block) {
@@ -524,6 +700,15 @@ function parseSvgViewBox(value) {
     width: parts[2],
     height: parts[3],
   };
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/gu, '&amp;')
+    .replace(/</gu, '&lt;')
+    .replace(/>/gu, '&gt;')
+    .replace(/"/gu, '&quot;')
+    .replace(/'/gu, '&#39;');
 }
 
 function isMermaidBackgroundElement(element, viewBox) {

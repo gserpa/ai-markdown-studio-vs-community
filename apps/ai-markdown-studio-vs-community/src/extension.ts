@@ -6,6 +6,7 @@ import {
   exportHtmlCommand,
   formatTablesCommand,
   openGlobalDocumentThemeFolderCommand,
+  openOppositeViewBesideCommand,
   openSettingsCommand,
   openPreviewCommand,
   showCommandListCommand,
@@ -50,6 +51,9 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
     vscode.languages.registerDocumentFormattingEditProvider({ language: 'markdown' }, markdownTableFormattingProvider),
     vscode.commands.registerCommand('markdownAiStudio.openPreview', async (resource?: vscode.Uri) => {
       await openPreviewCommand(context.extensionUri, previews, resource);
+    }),
+    vscode.commands.registerCommand('markdownAiStudio.openOppositeViewBeside', async (resource?: vscode.Uri) => {
+      await openOppositeViewBesideCommand(resource);
     }),
     vscode.commands.registerCommand('markdownAiStudio.formatTables', async (resource?: vscode.Uri) => {
       await formatTablesCommand(resource);

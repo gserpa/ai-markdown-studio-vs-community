@@ -88,6 +88,23 @@ describe('sanitizeRenderedHtml', () => {
       expect(result).toContain('href="https://example.com"');
     });
 
+    it('does not inject title attributes while rewriting safe links', () => {
+      const renderer = createMarkdownRenderer({
+        rewriteLink: (href) => href.startsWith('docs/')
+          ? {
+              removeHref: true,
+              attributes: {
+                'data-href': href,
+              },
+            }
+          : undefined,
+      });
+      const result = sanitizeRenderedHtml(renderer.render('[Docs](docs/guide.md)'));
+      expect(result).toContain('data-href="docs/guide.md"');
+      expect(result).not.toContain('href="#"');
+      expect(result).not.toContain('title=');
+    });
+
     it('preserves anchor tags with mailto href', () => {
       const input = '<a href="mailto:test@example.com">Email</a>';
       const result = sanitizeRenderedHtml(input);
@@ -108,6 +125,16 @@ describe('sanitizeRenderedHtml', () => {
       });
       const result = sanitizeRenderedHtml(renderer.render('![Alt](https://example.com/img.png)'));
       expect(result).toContain('data-source-src="https://example.com/img.png"');
+    });
+
+    it('can blank image src while preserving the original source for gated fallback handling', () => {
+      const renderer = createMarkdownRenderer({
+        resolveImageSrc: () => null,
+      });
+      const result = sanitizeRenderedHtml(renderer.render('![Alt](https://example.com/img.png)'));
+      expect(result).toContain('class="remote-resource-placeholder"');
+      expect(result).toContain('data-source-src="https://example.com/img.png"');
+      expect(result).toContain('Extension settings restrict access to remote resources.');
     });
 
     it('preserves table structure', () => {
@@ -187,6 +214,15 @@ describe('createMarkdownRenderer Mermaid handling', () => {
     expect(html).toContain('<li>architecture overview</li>');
     expect(html).toContain('<li>gantt schedule</li>');
     expect(html).not.toContain('<div class="mermaid">');
+  });
+
+  it('does not auto-link bare markdown filenames', () => {
+    const renderer = createMarkdownRenderer();
+    const html = renderer.render('The flowchart and sequence diagram above already demonstrate independent rendering and zoom controls (markdown-rendering.md TC13) when both are open in the same preview.');
+
+    expect(html).toContain('markdown-rendering.md');
+    expect(html).not.toContain('http://markdown-rendering.md');
+    expect(html).not.toContain('<a href="http://markdown-rendering.md"');
   });
 
   it('leaves architecture-beta text alone when it is not fenced', () => {

@@ -32,29 +32,32 @@ export function buildPreviewHtml(
   const source = document.getText();
   const isPresentation = isMarkdownPresentationSource(source);
   const previewPageWidth = getPreviewPageWidth(document);
+  const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const showFrontMatter = isFrontMatterVisible(document.uri);
   const renderer = createMarkdownRenderer({
-    resolveImageSrc: (rawPath) => resolvePreviewResource(rawPath),
-    rewriteLink: (href): { href?: string; attributes?: Record<string, string> } | undefined => {
-      if (/^https?:/i.test(href)) {
-        return {
-          attributes: {
-            target: '_blank',
-            rel: 'noopener noreferrer',
-          },
-        };
+    resolveImageSrc: (rawPath) => {
+      if (/^https?:/i.test(rawPath)) {
+        return allowRemoteResources ? rawPath : null;
       }
 
-      if (!href.startsWith('#')) {
+      return resolvePreviewResource(rawPath);
+    },
+    rewriteLink: (href): { href?: string; removeHref?: boolean; attributes?: Record<string, string> } | undefined => {
+      if (/^https?:/i.test(href)) {
         return {
-          href: '#',
+          removeHref: true,
           attributes: {
             'data-href': href,
           },
         };
       }
 
-      return undefined;
+      return {
+        removeHref: true,
+        attributes: {
+          'data-href': href,
+        },
+      };
     },
   });
   const renderMarkdown = (markdown: string): string => sanitizeRenderedHtml(renderer.render(markdown));
@@ -112,13 +115,16 @@ export function buildPreviewHtml(
     : `preview-mode-document ${documentThemeBodyClass} ${documentThemeModeClass}`;
   const title = getPreviewTitle(document, isPresentation);
   const combinedThemeStylesheet = [previewThemeStylesheet, documentThemeStylesheet].filter(Boolean).join('\n\n');
+  const imgSrcPolicy = allowRemoteResources
+    ? `${webview.cspSource} https: data:`
+    : `${webview.cspSource} data:`;
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'nonce-${nonce}'; font-src ${webview.cspSource};" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${imgSrcPolicy}; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'nonce-${nonce}'; font-src ${webview.cspSource};" />
   ${combinedThemeStylesheet ? `<style>${combinedThemeStylesheet}</style>` : ''}
   <link rel="stylesheet" href="${stylesheetUri}" />
   <link rel="stylesheet" href="${katexStylesheetUri}" />

@@ -88,13 +88,15 @@ code --install-extension markdown-ai-studio-0.2.0.vsix
 - Opening a Markdown file uses the `markdownAiStudio.markdownPreview` custom editor by default.
 - **Preview Markdown** is available from the editor title bar and command list when a Markdown text editor is active.
 - **Edit Markdown** is available from the preview title bar and the command list. Switching modes closes the other surface for that file.
+- **Open Opposite View Beside** opens the preview beside the editor, or the editor beside the preview, without replacing the current surface.
 
 All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and the most common ones appear as icons in the **editor title bar** when a `.md` file is open.
 
 | Command | Description | Where |
 | --- | --- | --- |
 | **Preview Markdown** | Opens or focuses preview for the current Markdown file | Title bar, command palette, command list |
-| **Edit Markdown** | Switches the current file to the text editor, closing the preview surface first | Preview title bar, command palette, command list |
+| **Edit Markdown** | Switches the current file to the text editor, closing the preview surface first | Preview title bar, Explorer file context menu, command palette, command list |
+| **Open Opposite View Beside** | Opens the other surface beside the current one without closing the current tab | Title bar, command palette, command list |
 | **Format Markdown Tables** | Auto-aligns all tables in the active file | Command palette, command list, Format Document |
 | **Generate Document (AI)** | Creates a new Markdown document from a prompt | Command palette, command list |
 | **Generate Presentation (AI)** | Creates a presentation-style Markdown deck from a prompt | Command palette, command list |
@@ -116,7 +118,8 @@ The live preview renders your Markdown document in real time as you edit. By def
 To switch between preview and edit modes:
 
 - Use **Preview Markdown** from the editor title bar or command list when a Markdown text editor is active.
-- Use the pencil icon (**Edit Markdown**) in the preview tab's title bar to switch to edit mode.
+- Use the pencil icon (**Edit Markdown**) in the preview tab's title bar, or the Explorer file context menu, to switch to edit mode.
+- Use **Open Opposite View Beside** from the title bar or command list to keep preview and editing open side by side.
 - Use the command list (**Show AI Markdown Studio Commands**) to switch modes from anywhere.
 
 The preview supports:

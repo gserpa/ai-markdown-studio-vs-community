@@ -30,6 +30,7 @@ type CommandListContext = {
 const QUICK_PICK_COMMAND_ORDER = [
   'markdownAiStudio.openPreview',
   'markdownAiStudio.editAsText',
+  'markdownAiStudio.openOppositeViewBeside',
   'markdownAiStudio.formatTables',
   'markdownAiStudio.generateDocument',
   'markdownAiStudio.generatePresentation',
@@ -64,6 +65,32 @@ export async function openPreviewCommand(extensionUri: vscode.Uri, _previews: Ma
   }
   const document = await vscode.workspace.openTextDocument(uri);
   await vscode.commands.executeCommand('vscode.openWith', document.uri, MarkdownPreviewCustomEditor.viewType);
+}
+
+export async function openOppositeViewBesideCommand(targetUri?: vscode.Uri): Promise<void> {
+  const uri = await resolveCurrentMarkdownUri(targetUri);
+  if (!uri) {
+    void vscode.window.showInformationMessage('Open a Markdown file first.');
+    return;
+  }
+
+  const isPreviewMode = isPreviewModeForUri(uri);
+  if (isPreviewMode) {
+    const document = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(document, {
+      preview: false,
+      preserveFocus: false,
+      viewColumn: vscode.ViewColumn.Beside,
+    });
+    return;
+  }
+
+  const document = await vscode.workspace.openTextDocument(uri);
+  await vscode.commands.executeCommand('vscode.openWith', document.uri, MarkdownPreviewCustomEditor.viewType, {
+    preview: false,
+    preserveFocus: false,
+    viewColumn: vscode.ViewColumn.Beside,
+  });
 }
 
 export async function formatTablesCommand(resource?: vscode.Uri): Promise<void> {
@@ -126,16 +153,28 @@ export async function showCommandListCommand(resource?: vscode.Uri): Promise<voi
 }
 
 async function resolveMarkdownDocument(resource?: vscode.Uri): Promise<vscode.TextDocument | undefined> {
+  const uri = await resolveCurrentMarkdownUri(resource);
+  if (!uri) {
+    void vscode.window.showInformationMessage('Open a Markdown file first.');
+    return undefined;
+  }
+  return vscode.workspace.openTextDocument(uri);
+}
+
+async function resolveCurrentMarkdownUri(resource?: vscode.Uri): Promise<vscode.Uri | undefined> {
   const uri = resource?.scheme === 'file'
     ? resource
     : MarkdownPreviewCustomEditor.getActiveDocumentUri()
       ?? MarkdownPreviewPanel.getActivePreviewDocumentUri()
       ?? vscode.window.activeTextEditor?.document.uri;
   if (!uri) {
-    void vscode.window.showInformationMessage('Open a Markdown file first.');
     return undefined;
   }
-  return vscode.workspace.openTextDocument(uri);
+
+  const document = await vscode.workspace.openTextDocument(uri);
+  return document.languageId && document.languageId !== 'markdown'
+    ? undefined
+    : document.uri;
 }
 
 async function resolveCommandListContext(resource?: vscode.Uri): Promise<CommandListContext | undefined> {
@@ -186,6 +225,11 @@ function buildOrderedQuickPickEntries(entries: Map<string, CommandListEntry>, co
     .filter((entry) => !replacedCommands.has(entry.command))
     .filter((entry) => shouldShowCommand(entry, context))
     .sort((left, right) => left.order - right.order || left.title.localeCompare(right.title));
+}
+
+function isPreviewModeForUri(uri: vscode.Uri): boolean {
+  const activePreviewUri = MarkdownPreviewCustomEditor.getActiveDocumentUri() ?? MarkdownPreviewPanel.getActivePreviewDocumentUri();
+  return activePreviewUri?.toString() === uri.toString();
 }
 
 function shouldShowCommand(entry: CommandListEntry, context: CommandListContext): boolean {

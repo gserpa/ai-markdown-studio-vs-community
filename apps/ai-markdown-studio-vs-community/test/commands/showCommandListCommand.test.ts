@@ -91,13 +91,14 @@ describe('showCommandListCommand', () => {
 
     expect(capturedLabels).toEqual([
       'Open Preview',
+      'Open Opposite View Beside',
       'Format Tables',
       'AI: Generate Document',
-      'AI: Generate Presentation',
       'AI: Generate Document Theme',
       'AI: Generate Presentation Theme',
-      'Export: HTML',
+      'AI: Generate Presentation',
       'Export: DOCX',
+      'Export: HTML',
       'Export: PDF',
       'PPTX Tools: Validate Template',
       'PPTX Tools: Generate Template Manifest',
@@ -127,6 +128,7 @@ describe('showCommandListCommand', () => {
     await showCommandListCommand(documentUri);
 
     expect(capturedLabels[0]).toBe('Edit Markdown');
+    expect(capturedLabels[1]).toBe('Open Opposite View Beside');
     expect(capturedLabels).toContain('Export: PPTX');
     expect(capturedLabels).not.toContain('Open Preview');
   });

@@ -431,6 +431,10 @@ a:hover {
   text-decoration: underline;
 }
 
+a[data-href] {
+  cursor: pointer;
+}
+
 img {
   display: block;
   max-width: 100%;
@@ -444,6 +448,9 @@ img {
 
 .mermaid-rendered {
   position: relative;
+  display: inline-block;
+  max-width: 100%;
+  overflow: visible;
 }
 
 .mermaid-rendered svg {
@@ -458,15 +465,16 @@ img {
 
 .mermaid-zoom-trigger {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 0;
+  left: calc(100% + 8px);
   z-index: 1;
   appearance: none;
   border: 1px solid var(--md-preview-lightbox-button-border);
   border-radius: 999px;
   padding: 0.35rem 0.75rem;
   color: var(--md-preview-lightbox-button-color);
-  background: color-mix(in srgb, var(--md-preview-lightbox-button-bg) 88%, transparent);
+  background: var(--md-preview-lightbox-button-bg);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.24);
   cursor: pointer;
   opacity: 0;
   transform: translateY(-4px);
@@ -488,6 +496,108 @@ img {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.mermaid-render-error {
+  margin: 1rem 0;
+}
+
+.mermaid-error-panel {
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--md-preview-border-color) 88%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 94%, var(--md-preview-body-color) 6%);
+}
+
+.mermaid-error-title {
+  font-weight: 700;
+  color: var(--md-preview-heading-color);
+}
+
+.mermaid-error-source {
+  margin: 0.75rem 0 0;
+  padding: 0.85rem 0.95rem;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--md-preview-border-color) 76%, transparent);
+  background: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 82%, black 18%);
+  color: var(--md-preview-body-color);
+}
+
+.mermaid-error-detail {
+  margin: 0.75rem 0 0;
+  color: var(--md-preview-muted-color);
+}
+
+.mermaidTooltip {
+  display: none !important;
+}
+
+.remote-resource-placeholder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.95rem;
+  max-width: min(42rem, 100%);
+  margin: 0.35rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--md-preview-border-color) 84%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 94%, var(--md-preview-body-color) 6%);
+  color: var(--md-preview-body-color);
+  text-align: left;
+}
+
+p > .remote-resource-placeholder:only-child {
+  display: flex;
+}
+
+.remote-resource-placeholder-icon {
+  position: relative;
+  flex: 0 0 2.35rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--vscode-textLink-foreground, #0969da) 16%, var(--vscode-editor-background, #ffffff));
+  border: 1px solid color-mix(in srgb, var(--vscode-textLink-foreground, #0969da) 35%, transparent);
+}
+
+.remote-resource-placeholder-icon::before,
+.remote-resource-placeholder-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.remote-resource-placeholder-icon::before {
+  width: 1rem;
+  height: 0.78rem;
+  border: 2px solid var(--vscode-textLink-foreground, #0969da);
+  border-radius: 999px;
+}
+
+.remote-resource-placeholder-icon::after {
+  width: 1.3rem;
+  height: 2px;
+  background: var(--vscode-textLink-foreground, #0969da);
+  transform: translate(-50%, -50%) rotate(-35deg);
+}
+
+.remote-resource-placeholder-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.remote-resource-placeholder-title {
+  font-weight: 700;
+  color: var(--md-preview-heading-color);
+}
+
+.remote-resource-placeholder-message {
+  color: var(--md-preview-muted-color);
 }
 
 body.mermaid-lightbox-open {

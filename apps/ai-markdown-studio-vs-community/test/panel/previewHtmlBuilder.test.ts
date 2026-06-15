@@ -17,6 +17,8 @@ vi.mock('vscode', () => ({
 }));
 
 import { buildDocumentPreviewBody, buildFrontMatterPanel } from '../../src/panel/previewHtmlBuilder';
+import { buildPreviewHtml } from '../../src/panel/previewHtmlBuilder';
+import * as vscode from 'vscode';
 
 describe('buildFrontMatterPanel', () => {
   it('renders frontmatter as a plain escaped metadata grid', () => {
@@ -55,5 +57,52 @@ describe('buildFrontMatterPanel', () => {
     expect(html.indexOf('frontmatter-shell')).toBeLessThan(html.indexOf('<main class="markdown-body">'));
     expect(html).toContain('</aside><main class="markdown-body">');
     expect(html).toContain('<p># Body</p>');
+  });
+});
+
+describe('buildPreviewHtml', () => {
+  it('blocks remote image loads in the webview when allowRemoteResources is false', () => {
+    vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+      get: vi.fn((key: string, fallback: unknown) => key === 'allowRemoteResources' ? false : fallback),
+      inspect: vi.fn(() => undefined),
+    });
+
+    const html = buildPreviewHtml(
+      { fsPath: 'C:/extension', scheme: 'file' } as never,
+      {
+        cspSource: 'vscode-resource:',
+        asWebviewUri: (value: { fsPath?: string; toString: () => string }) => ({ toString: () => value.toString(), fsPath: value.fsPath }),
+      } as never,
+      {
+        uri: { fsPath: 'C:/docs/example.md', scheme: 'file', toString: () => 'file:///C:/docs/example.md' },
+        fileName: 'C:/docs/example.md',
+        getText: () => '![Remote](https://example.com/image.png)',
+      } as never,
+      (rawPath) => rawPath,
+    );
+
+    expect(html).toContain('img-src vscode-resource: data:;');
+    expect(html).toContain('class="remote-resource-placeholder"');
+    expect(html).toContain('data-source-src="https://example.com/image.png"');
+    expect(html).toContain('Extension settings restrict access to remote resources.');
+  });
+
+  it('renders local fragment links as controlled links for consistent branded tooltips', () => {
+    const html = buildPreviewHtml(
+      { fsPath: 'C:/extension', scheme: 'file' } as never,
+      {
+        cspSource: 'vscode-resource:',
+        asWebviewUri: (value: { fsPath?: string; toString: () => string }) => ({ toString: () => value.toString(), fsPath: value.fsPath }),
+      } as never,
+      {
+        uri: { fsPath: 'C:/docs/example.md', scheme: 'file', toString: () => 'file:///C:/docs/example.md' },
+        fileName: 'C:/docs/example.md',
+        getText: () => '# Section\n\n[Jump to section](#section)',
+      } as never,
+      (rawPath) => rawPath,
+    );
+
+    expect(html).toContain('data-href="#section"');
+    expect(html).not.toMatch(/<a\s+href="#section"/u);
   });
 });

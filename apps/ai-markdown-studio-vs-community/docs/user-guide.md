@@ -43,8 +43,10 @@ Opening a Markdown file shows the rendered preview first. Switching between prev
 You can switch modes in several ways:
 
 - **Editor title bar** — the eye icon (**Preview Markdown**) when editing, and the pencil icon (**Edit Markdown**) when previewing.
+- **Editor title bar** — the split icon (**Open Opposite View Beside**) keeps the current surface open and opens the other one beside it.
 - **Command Palette** (`Ctrl+Shift+P`) — run **Preview Markdown** or **Edit Markdown**.
 - **Command launcher** — run **Show AI Markdown Studio Commands** and pick a mode.
+- **Explorer file context menu** — right-click a Markdown file and choose **Edit Markdown** to open it directly as text.
 
 ## Commands
 
@@ -54,6 +56,7 @@ All commands are available from the Command Palette (`Ctrl+Shift+P`). The most c
 | --- | --- |
 | **Preview Markdown** | Opens or focuses the rendered preview for the current file. |
 | **Edit Markdown** | Switches the current file to the text editor. |
+| **Open Opposite View Beside** | Opens the preview beside the editor, or the editor beside the preview. |
 | **Format Markdown Tables** | Aligns every Markdown table in the active file. Also runs via **Format Document**. |
 | **Export Markdown as HTML** | Saves the rendered document as a standalone `.html` file. |
 | **Export Markdown as DOCX (Basic)** | Saves the current document as a basic Word file. Pro automatically replaces this with its advanced DOCX export. |

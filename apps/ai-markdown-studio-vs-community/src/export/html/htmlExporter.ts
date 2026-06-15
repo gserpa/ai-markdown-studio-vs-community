@@ -13,8 +13,15 @@ export async function buildExportHtmlString(extensionUri: vscode.Uri, document: 
     readFile(resolveExtensionNodeModulesUri(extensionUri, 'mermaid', 'dist', 'mermaid.min.js').fsPath, 'utf8'),
   ]);
 
+  const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const renderer = createMarkdownRenderer({
-    resolveImageSrc: (rawPath) => resolveDocumentResource(document, rawPath)?.toString(),
+    resolveImageSrc: (rawPath) => {
+      if (/^https?:/i.test(rawPath)) {
+        return allowRemoteResources ? rawPath : null;
+      }
+
+      return resolveDocumentResource(document, rawPath)?.toString();
+    },
     rewriteLink: (href) => {
       if (/^https?:/i.test(href) || href.startsWith('#')) {
         return /^https?:/i.test(href)
@@ -171,6 +178,7 @@ function getMermaidBootstrapScript(): string {
     startOnLoad: false,
     theme: isDark ? 'dark' : 'default',
     securityLevel: 'strict',
+    suppressErrorRendering: true,
     htmlLabels: false,
     fontFamily: 'Segoe UI, Arial, sans-serif',
     flowchart: {
