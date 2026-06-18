@@ -13,7 +13,9 @@ vi.mock('vscode', () => ({
     executeCommand: vscodeMocks.executeCommand,
   },
   window: {
-    activeTextEditor: vscodeMocks.activeTextEditor,
+    get activeTextEditor() {
+      return vscodeMocks.activeTextEditor;
+    },
     showInformationMessage: vscodeMocks.showInformationMessage,
     showTextDocument: vscodeMocks.showTextDocument,
   },
@@ -29,13 +31,13 @@ vi.mock('vscode', () => ({
 }));
 
 import * as vscode from 'vscode';
-import { openOppositeViewBesideCommand, openPreviewCommand } from '../../src/commands/markdownCommands';
+import { openPreviewCommand } from '../../src/commands/markdownCommands';
 import { MarkdownPreviewCustomEditor } from '../../src/panel/MarkdownPreviewCustomEditor';
-import { MarkdownPreviewPanel } from '../../src/panel/MarkdownPreviewPanel';
 
 describe('openPreviewCommand', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vscodeMocks.activeTextEditor = undefined;
   });
 
   it('opens the custom editor surface instead of the standalone preview panel', async () => {
@@ -47,54 +49,32 @@ describe('openPreviewCommand', () => {
     await openPreviewCommand(extensionUri, new Map(), documentUri);
 
     expect(vscodeMocks.openTextDocument).toHaveBeenCalledWith(documentUri);
-    expect(vscodeMocks.executeCommand).toHaveBeenCalledWith('vscode.openWith', documentUri, MarkdownPreviewCustomEditor.viewType);
+    expect(vscodeMocks.executeCommand).toHaveBeenCalledWith('vscode.openWith', documentUri, MarkdownPreviewCustomEditor.viewType, {
+      preview: false,
+    });
+  });
+
+  it('closes the active text tab before reopening the same file in preview', async () => {
+    const extensionUri = vscode.Uri.file('C:/extension');
+    const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    vscodeMocks.activeTextEditor = {
+      document: {
+        uri: documentUri,
+      },
+    };
+    vscodeMocks.openTextDocument.mockResolvedValue({ uri: documentUri });
+
+    await openPreviewCommand(extensionUri, new Map(), documentUri);
+
+    expect(vscodeMocks.executeCommand).toHaveBeenNthCalledWith(1, 'workbench.action.closeActiveEditor');
+    expect(vscodeMocks.executeCommand).toHaveBeenNthCalledWith(2, 'vscode.openWith', documentUri, MarkdownPreviewCustomEditor.viewType, {
+      preview: false,
+    });
   });
 
   it('shows a message when no markdown file is available', async () => {
     await openPreviewCommand(vscode.Uri.file('C:/extension'), new Map());
 
     expect(vscodeMocks.showInformationMessage).toHaveBeenCalledWith('Open a Markdown file to preview it.');
-  });
-
-  it('opens the preview beside when editing', async () => {
-    const documentUri = vscode.Uri.file('C:/workspace/example.md');
-    vscodeMocks.openTextDocument.mockResolvedValue({
-      uri: documentUri,
-      languageId: 'markdown',
-    });
-    vi.spyOn(MarkdownPreviewCustomEditor, 'getActiveDocumentUri').mockReturnValue(undefined);
-    vi.spyOn(MarkdownPreviewPanel, 'getActivePreviewDocumentUri').mockReturnValue(undefined);
-
-    await openOppositeViewBesideCommand(documentUri);
-
-    expect(vscodeMocks.executeCommand).toHaveBeenCalledWith(
-      'vscode.openWith',
-      documentUri,
-      MarkdownPreviewCustomEditor.viewType,
-      {
-        preview: false,
-        preserveFocus: false,
-        viewColumn: vscode.ViewColumn.Beside,
-      },
-    );
-  });
-
-  it('opens the text editor beside when previewing', async () => {
-    const documentUri = vscode.Uri.file('C:/workspace/example.md');
-    const document = {
-      uri: documentUri,
-      languageId: 'markdown',
-    };
-    vscodeMocks.openTextDocument.mockResolvedValue(document);
-    vi.spyOn(MarkdownPreviewCustomEditor, 'getActiveDocumentUri').mockReturnValue(documentUri);
-    vi.spyOn(MarkdownPreviewPanel, 'getActivePreviewDocumentUri').mockReturnValue(undefined);
-
-    await openOppositeViewBesideCommand(documentUri);
-
-    expect(vscodeMocks.showTextDocument).toHaveBeenCalledWith(document, {
-      preview: false,
-      preserveFocus: false,
-      viewColumn: vscode.ViewColumn.Beside,
-    });
   });
 });

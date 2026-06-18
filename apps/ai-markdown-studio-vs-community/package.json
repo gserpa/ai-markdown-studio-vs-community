@@ -60,12 +60,6 @@
         "icon": "$(pencil)"
       },
       {
-        "command": "markdownAiStudio.openOppositeViewBeside",
-        "title": "Open Opposite View Beside",
-        "category": "AI Markdown Studio",
-        "icon": "$(split-horizontal)"
-      },
-      {
         "command": "markdownAiStudio.formatTables",
         "title": "Format Markdown Tables",
         "category": "AI Markdown Studio"
@@ -101,11 +95,6 @@
         "category": "AI Markdown Studio"
       },
       {
-        "command": "markdownAiStudio.openGlobalDocumentThemeFolder",
-        "title": "Open Global Document Theme Folder",
-        "category": "AI Markdown Studio"
-      },
-      {
         "command": "markdownAiStudio.openSettings",
         "title": "Change Settings...",
         "category": "AI Markdown Studio"
@@ -124,6 +113,18 @@
         "title": "Toggle Frontmatter",
         "category": "AI Markdown Studio",
         "icon": "$(list-tree)"
+      },
+      {
+        "command": "markdownAiStudio.showFrontMatter",
+        "title": "Show Frontmatter",
+        "category": "AI Markdown Studio",
+        "icon": "$(testing-show-as-list-icon)"
+      },
+      {
+        "command": "markdownAiStudio.hideFrontMatter",
+        "title": "Hide Frontmatter",
+        "category": "AI Markdown Studio",
+        "icon": "$(search-clear-results)"
       }
     ],
     "menus": {
@@ -173,20 +174,19 @@
           "group": "navigation@1"
         },
         {
-          "command": "markdownAiStudio.openOppositeViewBeside",
-          "when": "resourceExtname == .md",
+          "command": "markdownAiStudio.showFrontMatter",
+          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' && markdownAiStudio.activePreviewHasFrontMatter && !markdownAiStudio.activePreviewFrontMatterVisible",
           "group": "navigation@2"
         },
         {
-          "command": "markdownAiStudio.toggleFrontMatter",
-          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' && markdownAiStudio.activePreviewHasFrontMatter",
-          "group": "navigation@3",
-          "toggled": "markdownAiStudio.activePreviewFrontMatterVisible"
+          "command": "markdownAiStudio.hideFrontMatter",
+          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' && markdownAiStudio.activePreviewHasFrontMatter && markdownAiStudio.activePreviewFrontMatterVisible",
+          "group": "navigation@2"
         },
         {
           "command": "markdownAiStudio.showCommandList",
           "when": "resourceExtname == .md",
-          "group": "navigation@4"
+          "group": "navigation@3"
         }
       ]
     },
@@ -215,10 +215,33 @@
             ],
             "description": "Controls standard Markdown preview width."
           },
+          "markdownAiStudio.allowRemoteResources": {
+            "type": "boolean",
+            "default": true,
+            "description": "Allow remote resources in previews and installed feature contributions."
+          },
+          "markdownAiStudio.aiFeaturesEnabled": {
+            "type": "boolean",
+            "default": false,
+            "scope": "application",
+            "description": "By turning this on, you accept that AI Markdown Studio may use the GitHub Copilot service already configured in VS Code for AI-supported functionality, such as AI-assisted document generation, presentation generation, and AI Paste to Markdown. For those AI-supported features, the content you provide may be shared with that configured Copilot service for processing. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. Only enable this setting if you are authorized to share that content through the GitHub Copilot service already configured in VS Code. Disable at any time to revoke AI Markdown Studio AI access."
+          },
+          "markdownAiStudio.aiAuthorizationDenied": {
+            "type": "boolean",
+            "default": false,
+            "scope": "application",
+            "description": "Tracks whether the user explicitly denied AI Markdown Studio AI authorization. When true, AI-supported commands stay hidden except for Enable AI Features...."
+          }
+        }
+      },
+      {
+        "title": "Theme Customization",
+        "order": 2,
+        "properties": {
           "markdownAiStudio.documentPreviewTheme": {
             "type": "string",
             "default": "auto",
-            "description": "Default document preview theme.",
+            "markdownDescription": "Default document preview theme. Custom files can live in the [Document Themes Folder](command:markdownAiStudio.openDocumentThemesFolder) or in the workspace `.markdown-ai-studio/document-themes/` folder.",
             "enum": [
               "auto",
               "dark-aurora-noir",
@@ -238,34 +261,28 @@
               "Night Sky — bundled dark document theme."
             ]
           },
-          "markdownAiStudio.globalDocumentThemeDirectory": {
+          "markdownAiStudio.documentThemesFolder": {
             "type": "string",
-            "default": "",
+            "default": "%USERPROFILE%\\AI Markdown Studio\\Themes\\Document",
             "scope": "machine",
-            "description": "Absolute path to a global document theme folder."
+            "markdownDescription": "Absolute path to the **Document Themes Folder**. Use this to store custom document theme JSON files. [Open the folder in Explorer](command:markdownAiStudio.openDocumentThemesFolder). Presentation themes use the **Presentation Themes Folder**."
           },
-          "markdownAiStudio.previewThemeDirectory": {
+          "markdownAiStudio.presentationThemesFolder": {
             "type": "string",
-            "default": "",
+            "default": "%USERPROFILE%\\AI Markdown Studio\\Themes\\Presentation",
             "scope": "machine",
-            "description": "Absolute path to a global presentation theme folder."
-          },
-          "markdownAiStudio.allowRemoteResources": {
-            "type": "boolean",
-            "default": true,
-            "description": "Allow remote resources in previews and installed feature contributions."
-          },
-          "markdownAiStudio.aiFeaturesEnabled": {
+            "markdownDescription": "Absolute path to the **Presentation Themes Folder**. Use this to store custom presentation theme JSON files. [Open the folder in Explorer](command:markdownAiStudio.openPresentationThemesFolder). Document themes use the **Document Themes Folder**."
+          }
+        }
+      },
+      {
+        "title": "Formatting",
+        "order": 3,
+        "properties": {
+          "markdownAiStudio.formatTablesOnSave": {
             "type": "boolean",
             "default": false,
-            "scope": "application",
-            "description": "By turning this on, you accept that AI Markdown Studio may use the GitHub Copilot service already configured in VS Code for AI-supported functionality, such as AI-assisted document generation, presentation generation, and AI Paste to Markdown. For those AI-supported features, the content you provide may be shared with that configured Copilot service for processing. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. Only enable this setting if you are authorized to share that content through the GitHub Copilot service already configured in VS Code. Disable at any time to revoke AI Markdown Studio AI access."
-          },
-          "markdownAiStudio.aiAuthorizationDenied": {
-            "type": "boolean",
-            "default": false,
-            "scope": "application",
-            "description": "Tracks whether the user explicitly denied AI Markdown Studio AI authorization. When true, AI-supported commands stay hidden except for Enable AI Features...."
+            "markdownDescription": "Automatically format Markdown tables when saving a Markdown file."
           }
         }
       }

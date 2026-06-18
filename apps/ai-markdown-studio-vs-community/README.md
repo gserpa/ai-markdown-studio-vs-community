@@ -88,7 +88,6 @@ code --install-extension markdown-ai-studio-0.2.0.vsix
 - Opening a Markdown file uses the `markdownAiStudio.markdownPreview` custom editor by default.
 - **Preview Markdown** is available from the editor title bar and command list when a Markdown text editor is active.
 - **Edit Markdown** is available from the preview title bar and the command list. Switching modes closes the other surface for that file.
-- **Open Opposite View Beside** opens the preview beside the editor, or the editor beside the preview, without replacing the current surface.
 
 All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and the most common ones appear as icons in the **editor title bar** when a `.md` file is open.
 
@@ -96,16 +95,15 @@ All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and th
 | --- | --- | --- |
 | **Preview Markdown** | Opens or focuses preview for the current Markdown file | Title bar, command palette, command list |
 | **Edit Markdown** | Switches the current file to the text editor, closing the preview surface first | Preview title bar, Explorer file context menu, command palette, command list |
-| **Open Opposite View Beside** | Opens the other surface beside the current one without closing the current tab | Title bar, command palette, command list |
 | **Format Markdown Tables** | Auto-aligns all tables in the active file | Command palette, command list, Format Document |
+| **`markdownAiStudio.formatTablesOnSave`** | `false` | Automatically formats Markdown tables when you save a Markdown file. |
 | **Generate Document (AI)** | Creates a new Markdown document from a prompt | Command palette, command list |
 | **Generate Presentation (AI)** | Creates a presentation-style Markdown deck from a prompt | Command palette, command list |
-| **Paste as New Markdown File** | Converts clipboard text into a new Markdown file | Explorer context menu, command palette, command list |
+| **Paste as New Markdown File** | Converts clipboard text into a new Markdown file | Explorer folder context menu, command palette |
 | **Export Markdown as HTML** | Saves the rendered document as a standalone `.html` file | Command palette, command list |
 | **Export Markdown as DOCX (Basic)** | Saves the rendered document as a DOCX file | Command palette, command list |
 | **Enable AI Features...** | Reviews the AI data-sharing notice and enables AI features | Command palette, command list |
-| **Toggle Frontmatter** | Shows or hides the rendered front-matter summary in the active preview | Title bar, command palette |
-| **Open Global Document Theme Folder** | Opens the configured global document theme folder in your OS file explorer | Command palette |
+| **Toggle Frontmatter** | Shows or hides the rendered front-matter summary in the active preview | Title bar, command palette, command list when applicable |
 | **Show AI Markdown Studio Commands** | Lists the extension's main actions in a quick-pick menu | Title bar, command palette |
 | **Change Settings...** | Opens the VS Code Settings UI filtered to this extension | Command palette, command list |
 
@@ -119,7 +117,6 @@ To switch between preview and edit modes:
 
 - Use **Preview Markdown** from the editor title bar or command list when a Markdown text editor is active.
 - Use the pencil icon (**Edit Markdown**) in the preview tab's title bar, or the Explorer file context menu, to switch to edit mode.
-- Use **Open Opposite View Beside** from the title bar or command list to keep preview and editing open side by side.
 - Use the command list (**Show AI Markdown Studio Commands**) to switch modes from anywhere.
 
 The preview supports:
@@ -133,6 +130,8 @@ The preview supports:
 - Local images resolved relative to the source file
 - Theme-aware styling with selectable document themes
 
+Theme customization lives in Settings under the **Theme Customization** section. There you can choose the default document preview theme and set shared folders for document and presentation theme JSON files.
+
 When a Markdown file declares `document: presentation` in front matter, the preview switches to a slide-based presentation viewer instead of the standard scrolling document preview. Files without that explicit front-matter value stay on the standard text preview path.
 
 Preview-specific settings:
@@ -140,8 +139,8 @@ Preview-specific settings:
 | Setting | Default | Description |
 | --- | --- | --- |
 | **`markdownAiStudio.previewPageWidth`** | `full` | Uses `full` width for standard Markdown preview pages by default. Set to `readable` to constrain the page to a centred readable column. |
-| **`markdownAiStudio.documentPreviewTheme`** | `auto` | Selects the default document preview theme. Bundled options include `light`, `light-modern-blue`, `dark`, `dark-aurora-noir`, `dark-modern-aurora`, and `night-sky`. Can be overridden per file with the `theme` front matter field. |
-| **`markdownAiStudio.globalDocumentThemeDirectory`** | empty | Optional absolute path to a global document theme folder shared across workspaces. The extension also checks `.markdown-ai-studio/document-themes/` in the workspace root. |
+| **`markdownAiStudio.documentPreviewTheme`** | `auto` | Selects the default document preview theme. Bundled options include `light`, `light-modern-blue`, `dark`, `dark-aurora-noir`, `dark-modern-aurora`, and `night-sky`. Can be overridden per file with the `theme` front matter field. Find it in Settings under **Theme Customization**. |
+| **`markdownAiStudio.documentThemesFolder`** | `%USERPROFILE%\AI Markdown Studio\Themes\Document` | Optional absolute path to the shared document theme folder. The extension also checks `.markdown-ai-studio/document-themes/` in the workspace root. Find it in Settings under **Theme Customization**. |
 
 Mermaid diagrams in the standard document preview include a zoom control. Use the on-diagram **Zoom** button or double-click the rendered diagram to open it in an overlay viewer. Inside the viewer, use **+**, **-**, **Fit**, or the keyboard shortcuts `+`, `-`, `0`, and `Esc`.
 
@@ -159,7 +158,7 @@ Presentation preview features include:
 - template-aware layouts for supported slide types such as `cover`, `default`, `two-columns`, `image-right`, and `divider`
 - speaker notes displayed below the active slide when notes are present
 
-Presentation preview themes can be loaded from bundled themes (`black`, `galaxy`, `modern-blue`), from `.markdown-ai-studio/presentation-themes/` in the workspace root, or from a directory specified by **`markdownAiStudio.previewThemeDirectory`**.
+Presentation preview themes can be loaded from bundled themes (`black`, `galaxy`, `modern-blue`), from `.markdown-ai-studio/presentation-themes/` in the workspace root, or from a directory specified by **`markdownAiStudio.presentationThemesFolder`**.
 
 Use `Esc` to exit immersive mode.
 
@@ -173,6 +172,7 @@ The presentation preview follows the same Markdown structure used by AI Markdown
 ### Table Formatting
 
 The **Format Markdown Tables** command automatically aligns all Markdown tables in the active file for consistent, readable source formatting.
+If you want tables formatted automatically on save, enable **`markdownAiStudio.formatTablesOnSave`** in the settings.
 
 1. Open a `.md` file containing one or more Markdown tables.
 2. Run **Format Markdown Tables** from the Command Palette or the command list.
@@ -211,9 +211,9 @@ Use it as a single entry point to:
 
 - open the preview
 - edit the current Markdown file
+- toggle front matter when the active preview has front matter
 - format tables
 - generate a document or presentation with AI
-- paste clipboard text as a new Markdown file
 - export HTML
 - export basic DOCX
 - enable AI features

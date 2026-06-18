@@ -4,9 +4,8 @@ import {
   createMarkdownTableFormattingProvider,
   exportDocxBasicCommand,
   exportHtmlCommand,
+  getMarkdownTableFormattingEdits,
   formatTablesCommand,
-  openGlobalDocumentThemeFolderCommand,
-  openOppositeViewBesideCommand,
   openSettingsCommand,
   openPreviewCommand,
   showCommandListCommand,
@@ -17,14 +16,15 @@ import { refreshCopilotConfiguredContext } from './ai/copilotAvailability';
 import { generateDocumentCommand } from './generate/documentGenerationCommand';
 import { generatePresentationCommand } from './generate/presentationGenerationCommand';
 import { createCommunityApi } from './api/communityApi';
-import { getBundledDocumentThemeDirectory } from './document/documentThemeSupport';
+import { getBundledDocumentThemeDirectory, openDocumentThemesFolder } from './document/documentThemeSupport';
 import { MarkdownPreviewCustomEditor } from './panel/MarkdownPreviewCustomEditor';
 import { MarkdownPreviewPanel } from './panel/MarkdownPreviewPanel';
 import { registerMpsEditorSupport } from './presentation/mpsEditorSupport';
-import { getBundledPreviewThemeDirectory } from './presentation/previewThemeSupport';
+import { getBundledPreviewThemeDirectory, openPresentationThemesFolder } from './presentation/previewThemeSupport';
 import {
   hasDisplayableFrontMatter,
   refreshPreviewFrontMatterContext,
+  setFrontMatterVisibility,
   toggleFrontMatterVisibility,
 } from './panel/frontMatterDisplayState';
 
@@ -32,6 +32,27 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
   const previews = new Map<string, MarkdownPreviewPanel>();
   const markdownTableFormattingProvider = createMarkdownTableFormattingProvider();
   const customEditor = new MarkdownPreviewCustomEditor(context.extensionUri);
+  const setFrontMatterVisibilityAndRefresh = async (resource: vscode.Uri | undefined, visible: boolean): Promise<void> => {
+    const targetResource = (resource?.scheme === 'file' ? resource : undefined)
+      ?? MarkdownPreviewCustomEditor.getActiveDocumentUri()
+      ?? MarkdownPreviewPanel.getActivePreviewDocumentUri();
+    if (!targetResource) {
+      return;
+    }
+
+    const document = await vscode.workspace.openTextDocument(targetResource);
+    if (!hasDisplayableFrontMatter(document.getText())) {
+      return;
+    }
+
+    setFrontMatterVisibility(targetResource, visible);
+    const preview = previews.get(targetResource.toString());
+    if (preview) {
+      await preview.refresh(document);
+    }
+    await customEditor.refreshDocument(document);
+    await refreshPreviewFrontMatterContext(document);
+  };
   void vscode.commands.executeCommand('setContext', 'markdownAiStudio.proInstalled', false);
   void refreshCopilotConfiguredContext();
 
@@ -49,11 +70,25 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
     ),
     registerMpsEditorSupport(context.extensionUri),
     vscode.languages.registerDocumentFormattingEditProvider({ language: 'markdown' }, markdownTableFormattingProvider),
+    vscode.workspace.onWillSaveTextDocument((event) => {
+      if (event.document.languageId !== 'markdown') {
+        return;
+      }
+
+      const formatTablesOnSave = vscode.workspace.getConfiguration('markdownAiStudio', event.document.uri).get<boolean>('formatTablesOnSave', false);
+      if (!formatTablesOnSave) {
+        return;
+      }
+
+      const edits = getMarkdownTableFormattingEdits(event.document);
+      if (edits.length === 0) {
+        return;
+      }
+
+      event.waitUntil(Promise.resolve(edits));
+    }),
     vscode.commands.registerCommand('markdownAiStudio.openPreview', async (resource?: vscode.Uri) => {
       await openPreviewCommand(context.extensionUri, previews, resource);
-    }),
-    vscode.commands.registerCommand('markdownAiStudio.openOppositeViewBeside', async (resource?: vscode.Uri) => {
-      await openOppositeViewBesideCommand(resource);
     }),
     vscode.commands.registerCommand('markdownAiStudio.formatTables', async (resource?: vscode.Uri) => {
       await formatTablesCommand(resource);
@@ -71,8 +106,11 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
     vscode.commands.registerCommand('markdownAiStudio.openSettings', async () => {
       await openSettingsCommand();
     }),
-    vscode.commands.registerCommand('markdownAiStudio.openGlobalDocumentThemeFolder', async () => {
-      await openGlobalDocumentThemeFolderCommand();
+    vscode.commands.registerCommand('markdownAiStudio.openDocumentThemesFolder', async () => {
+      await openDocumentThemesFolder();
+    }),
+    vscode.commands.registerCommand('markdownAiStudio.openPresentationThemesFolder', async () => {
+      await openPresentationThemesFolder();
     }),
     vscode.commands.registerCommand('markdownAiStudio.showCommandList', async (resource?: vscode.Uri) => {
       const targetResource = (resource?.scheme === 'file' ? resource : undefined)
@@ -101,6 +139,12 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
       }
       await customEditor.refreshDocument(document);
       await refreshPreviewFrontMatterContext(document);
+    }),
+    vscode.commands.registerCommand('markdownAiStudio.showFrontMatter', async (resource?: vscode.Uri) => {
+      await setFrontMatterVisibilityAndRefresh(resource, true);
+    }),
+    vscode.commands.registerCommand('markdownAiStudio.hideFrontMatter', async (resource?: vscode.Uri) => {
+      await setFrontMatterVisibilityAndRefresh(resource, false);
     }),
     vscode.commands.registerCommand('markdownAiStudio.editAsText', async (resource?: vscode.Uri) => {
       const target = (resource?.scheme === 'file' ? resource : undefined)

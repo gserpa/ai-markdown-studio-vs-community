@@ -1,12 +1,11 @@
-import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { formatMarkdownTables, isMarkdownPresentationSource } from '@mfo/core';
 import { listFeatureContributions } from '../api/featureContributions';
 import { isAiAuthorizationDenied } from '../ai/aiConsent';
 import { hasConfiguredCopilotAccount } from '../ai/copilotAvailability';
-import { getConfiguredGlobalDocumentThemeDirectory } from '../document/documentThemeSupport';
 import { exportMarkdownAsBasicDocx } from '../export/docx/docxExporter';
 import { exportMarkdownAsHtml } from '../export/html/htmlExporter';
+import { hasDisplayableFrontMatter } from '../panel/frontMatterDisplayState';
 import { MarkdownPreviewCustomEditor } from '../panel/MarkdownPreviewCustomEditor';
 import { MarkdownPreviewPanel } from '../panel/MarkdownPreviewPanel';
 import { commandEntries } from './generatedCommandEntries';
@@ -23,6 +22,7 @@ type CommandListEntry = {
 type CommandListContext = {
   documentUri: vscode.Uri;
   isPreviewMode: boolean;
+  hasFrontMatter: boolean;
   isPresentation: boolean;
   copilotConfigured: boolean;
 };
@@ -30,7 +30,7 @@ type CommandListContext = {
 const QUICK_PICK_COMMAND_ORDER = [
   'markdownAiStudio.openPreview',
   'markdownAiStudio.editAsText',
-  'markdownAiStudio.openOppositeViewBeside',
+  'markdownAiStudio.toggleFrontMatter',
   'markdownAiStudio.formatTables',
   'markdownAiStudio.generateDocument',
   'markdownAiStudio.generatePresentation',
@@ -50,11 +50,17 @@ const AI_DEPENDENT_COMMANDS = new Set<string>([
 export function createMarkdownTableFormattingProvider(): vscode.DocumentFormattingEditProvider {
   return {
     provideDocumentFormattingEdits(document): vscode.TextEdit[] {
-      const original = document.getText();
-      const formatted = formatMarkdownTables(original);
-      return formatted === original ? [] : [vscode.TextEdit.replace(new vscode.Range(document.positionAt(0), document.positionAt(original.length)), formatted)];
+      return getMarkdownTableFormattingEdits(document);
     },
   };
+}
+
+export function getMarkdownTableFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[] {
+  const original = document.getText();
+  const formatted = formatMarkdownTables(original);
+  return formatted === original
+    ? []
+    : [vscode.TextEdit.replace(new vscode.Range(document.positionAt(0), document.positionAt(original.length)), formatted)];
 }
 
 export async function openPreviewCommand(extensionUri: vscode.Uri, _previews: Map<string, MarkdownPreviewPanel>, targetUri?: vscode.Uri): Promise<void> {
@@ -64,32 +70,12 @@ export async function openPreviewCommand(extensionUri: vscode.Uri, _previews: Ma
     return;
   }
   const document = await vscode.workspace.openTextDocument(uri);
-  await vscode.commands.executeCommand('vscode.openWith', document.uri, MarkdownPreviewCustomEditor.viewType);
-}
-
-export async function openOppositeViewBesideCommand(targetUri?: vscode.Uri): Promise<void> {
-  const uri = await resolveCurrentMarkdownUri(targetUri);
-  if (!uri) {
-    void vscode.window.showInformationMessage('Open a Markdown file first.');
-    return;
+  const activeEditor = vscode.window.activeTextEditor;
+  if (activeEditor?.document.uri.toString() === document.uri.toString()) {
+    await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
   }
-
-  const isPreviewMode = isPreviewModeForUri(uri);
-  if (isPreviewMode) {
-    const document = await vscode.workspace.openTextDocument(uri);
-    await vscode.window.showTextDocument(document, {
-      preview: false,
-      preserveFocus: false,
-      viewColumn: vscode.ViewColumn.Beside,
-    });
-    return;
-  }
-
-  const document = await vscode.workspace.openTextDocument(uri);
   await vscode.commands.executeCommand('vscode.openWith', document.uri, MarkdownPreviewCustomEditor.viewType, {
     preview: false,
-    preserveFocus: false,
-    viewColumn: vscode.ViewColumn.Beside,
   });
 }
 
@@ -120,17 +106,6 @@ export async function exportDocxBasicCommand(extensionUri: vscode.Uri, resource?
 
 export async function openSettingsCommand(): Promise<void> {
   await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:GustavoSerpa.markdown-ai-studio markdownAiStudio');
-}
-
-export async function openGlobalDocumentThemeFolderCommand(): Promise<void> {
-  const directory = getConfiguredGlobalDocumentThemeDirectory();
-  if (!directory || !path.isAbsolute(directory)) {
-    void vscode.window.showWarningMessage('Set markdownAiStudio.globalDocumentThemeDirectory to an absolute path first.');
-    return;
-  }
-  const uri = vscode.Uri.file(directory);
-  await vscode.workspace.fs.createDirectory(uri);
-  await vscode.commands.executeCommand('revealFileInOS', uri);
 }
 
 export async function showCommandListCommand(resource?: vscode.Uri): Promise<void> {
@@ -189,6 +164,7 @@ async function resolveCommandListContext(resource?: vscode.Uri): Promise<Command
   return {
     documentUri,
     isPreviewMode: activePreviewUri?.toString() === documentUri.toString(),
+    hasFrontMatter: hasDisplayableFrontMatter(document.getText()),
     isPresentation: isMarkdownPresentationSource(document.getText()),
     copilotConfigured,
   };
@@ -227,11 +203,6 @@ function buildOrderedQuickPickEntries(entries: Map<string, CommandListEntry>, co
     .sort((left, right) => left.order - right.order || left.title.localeCompare(right.title));
 }
 
-function isPreviewModeForUri(uri: vscode.Uri): boolean {
-  const activePreviewUri = MarkdownPreviewCustomEditor.getActiveDocumentUri() ?? MarkdownPreviewPanel.getActivePreviewDocumentUri();
-  return activePreviewUri?.toString() === uri.toString();
-}
-
 function shouldShowCommand(entry: CommandListEntry, context: CommandListContext): boolean {
   const command = entry.command;
   if (entry.requiresAi) {
@@ -252,6 +223,10 @@ function shouldShowCommand(entry: CommandListEntry, context: CommandListContext)
 
   if (command === 'markdownAiStudio.editAsText') {
     return context.isPreviewMode;
+  }
+
+  if (command === 'markdownAiStudio.toggleFrontMatter') {
+    return context.isPreviewMode && context.hasFrontMatter;
   }
 
   if (entry.presentationOnly) {

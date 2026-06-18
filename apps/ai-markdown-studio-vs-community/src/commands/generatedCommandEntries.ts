@@ -3,7 +3,6 @@
 export const commandEntries = [
   { command: "markdownAiStudio.openPreview", title: "Open Preview" },
   { command: "markdownAiStudio.editAsText", title: "Edit Markdown" },
-  { command: "markdownAiStudio.openOppositeViewBeside", title: "Open Opposite View Beside" },
   { command: "markdownAiStudio.formatTables", title: "Format Tables" },
   { command: "markdownAiStudio.exportHtml", title: "Export: HTML" },
   { command: "markdownAiStudio.exportDocxBasic", title: "Export: DOCX (Basic)" },
@@ -11,4 +10,5 @@ export const commandEntries = [
   { command: "markdownAiStudio.generatePresentation", title: "AI: Generate Presentation" },
   { command: "markdownAiStudio.enableAiFeatures", title: "AI: Enable Features..." },
   { command: "markdownAiStudio.openSettings", title: "Change Settings..." },
+  { command: "markdownAiStudio.toggleFrontMatter", title: "Toggle Frontmatter" },
 ] as const;

@@ -15,6 +15,7 @@ import {
   deactivatePreviewFrontMatterContext,
   hasDisplayableFrontMatter,
   isFrontMatterVisible,
+  setFrontMatterVisibility,
   toggleFrontMatterVisibility,
 } from '../../src/panel/frontMatterDisplayState';
 
@@ -36,6 +37,15 @@ describe('frontMatterDisplayState', () => {
     expect(toggleFrontMatterVisibility(uri as never)).toBe(true);
     expect(isFrontMatterVisible(uri as never)).toBe(true);
     expect(toggleFrontMatterVisibility(uri as never)).toBe(false);
+  });
+
+  it('can set visibility explicitly per document URI', () => {
+    const uri = createUri('file:///document.md');
+
+    expect(setFrontMatterVisibility(uri as never, true)).toBe(true);
+    expect(isFrontMatterVisible(uri as never)).toBe(true);
+    expect(setFrontMatterVisibility(uri as never, false)).toBe(false);
+    expect(isFrontMatterVisible(uri as never)).toBe(false);
   });
 
   it('publishes toolbar visibility and toggle state through context keys', async () => {

@@ -91,7 +91,6 @@ describe('showCommandListCommand', () => {
 
     expect(capturedLabels).toEqual([
       'Open Preview',
-      'Open Opposite View Beside',
       'Format Tables',
       'AI: Generate Document',
       'AI: Generate Document Theme',
@@ -107,7 +106,6 @@ describe('showCommandListCommand', () => {
     expect(capturedLabels).not.toContain('AI: Enable Features...');
     expect(capturedLabels).not.toContain('Edit Markdown');
     expect(capturedLabels).not.toContain('Export: PPTX');
-    expect(capturedLabels).not.toContain('Open Global Document Theme Folder');
   });
 
   it('switches to edit mode and only shows PPTX export for presentations', async () => {
@@ -128,9 +126,28 @@ describe('showCommandListCommand', () => {
     await showCommandListCommand(documentUri);
 
     expect(capturedLabels[0]).toBe('Edit Markdown');
-    expect(capturedLabels[1]).toBe('Open Opposite View Beside');
     expect(capturedLabels).toContain('Export: PPTX');
     expect(capturedLabels).not.toContain('Open Preview');
+  });
+
+  it('shows Toggle Frontmatter only for previews with displayable front matter', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    vscodeMocks.openTextDocument.mockResolvedValue({
+      uri: documentUri,
+      getText: () => ['---', 'title: Example', '---', '', '# Example'].join('\n'),
+    });
+    const capturedLabels: string[] = [];
+    vscodeMocks.showQuickPick.mockImplementation(async (items: Array<{ label: string }>) => {
+      capturedLabels.push(...items.map((item) => item.label));
+      return undefined;
+    });
+
+    vi.spyOn(MarkdownPreviewCustomEditor, 'getActiveDocumentUri').mockReturnValue(documentUri);
+    vi.spyOn(MarkdownPreviewPanel, 'getActivePreviewDocumentUri').mockReturnValue(undefined);
+
+    await showCommandListCommand(documentUri);
+
+    expect(capturedLabels).toContain('Toggle Frontmatter');
   });
 
   it('shows the basic DOCX command when Pro is not installed', async () => {

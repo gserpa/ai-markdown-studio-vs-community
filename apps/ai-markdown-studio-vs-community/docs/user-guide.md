@@ -43,7 +43,6 @@ Opening a Markdown file shows the rendered preview first. Switching between prev
 You can switch modes in several ways:
 
 - **Editor title bar** — the eye icon (**Preview Markdown**) when editing, and the pencil icon (**Edit Markdown**) when previewing.
-- **Editor title bar** — the split icon (**Open Opposite View Beside**) keeps the current surface open and opens the other one beside it.
 - **Command Palette** (`Ctrl+Shift+P`) — run **Preview Markdown** or **Edit Markdown**.
 - **Command launcher** — run **Show AI Markdown Studio Commands** and pick a mode.
 - **Explorer file context menu** — right-click a Markdown file and choose **Edit Markdown** to open it directly as text.
@@ -56,8 +55,8 @@ All commands are available from the Command Palette (`Ctrl+Shift+P`). The most c
 | --- | --- |
 | **Preview Markdown** | Opens or focuses the rendered preview for the current file. |
 | **Edit Markdown** | Switches the current file to the text editor. |
-| **Open Opposite View Beside** | Opens the preview beside the editor, or the editor beside the preview. |
 | **Format Markdown Tables** | Aligns every Markdown table in the active file. Also runs via **Format Document**. |
+| **`markdownAiStudio.formatTablesOnSave`** | `false` | Automatically formats Markdown tables when you save a Markdown file. |
 | **Export Markdown as HTML** | Saves the rendered document as a standalone `.html` file. |
 | **Export Markdown as DOCX (Basic)** | Saves the current document as a basic Word file. Pro automatically replaces this with its advanced DOCX export. |
 | **Generate Document (AI)** | Creates a Markdown document from your brief. |
@@ -65,7 +64,6 @@ All commands are available from the Command Palette (`Ctrl+Shift+P`). The most c
 | **Paste as New Markdown File** | Turns clipboard text into a new Markdown file. |
 | **Enable AI Features...** | Reviews the AI data-sharing notice and enables AI features. |
 | **Toggle Frontmatter** | Shows or hides the rendered front-matter summary in the active preview. |
-| **Open Global Document Theme Folder** | Opens the folder where shared document themes are stored. |
 | **Show AI Markdown Studio Commands** | Opens a quick-pick launcher of the extension's main actions. |
 | **Change Settings...** | Opens the VS Code Settings UI filtered to this extension. |
 
@@ -95,6 +93,8 @@ The preview renders your document in real time as you type. It supports:
 - **task lists**, **footnotes**, and **emoji**
 - **local images** stored beside your document or elsewhere in your project
 - selectable **document themes**
+
+Theme customization lives in the **Theme Customization** section of Settings. That section contains the default document theme plus the shared document and presentation theme folder paths.
 
 ### Mermaid diagrams and zoom
 
@@ -143,9 +143,9 @@ theme: light-modern-blue
 You can add your own document theme files. AI Markdown Studio looks for them in:
 
 - `.markdown-ai-studio/document-themes/` in your project folder, and
-- the folder set in **`markdownAiStudio.globalDocumentThemeDirectory`** (shared across workspaces).
+- the folder set in **`markdownAiStudio.documentThemesFolder`** (shared across workspaces).
 
-Use **Open Global Document Theme Folder** to create and open that global folder in your file explorer. After adding or editing a theme file, reopen the preview to pick it up.
+Use the **Theme Customization** settings to set the shared document theme folder. After adding or editing a theme file, reopen the preview to pick it up.
 
 ## Presentation preview
 
@@ -210,7 +210,7 @@ Bundled presentation themes: `black`, `galaxy`, and `modern-blue`. Set a deck's 
 Custom presentation themes are loaded from:
 
 - `.markdown-ai-studio/presentation-themes/` in your project folder, and
-- the folder set in **`markdownAiStudio.previewThemeDirectory`** (shared across workspaces).
+- the folder set in **`markdownAiStudio.presentationThemesFolder`** (shared across workspaces).
 
 ## Front matter
 
@@ -223,6 +223,7 @@ Use **Toggle Frontmatter** (also a title-bar control when the active preview has
 Run **Format Markdown Tables** to align every Markdown table in the active file into evenly padded columns, making the raw Markdown easier to read and diff.
 
 This command is also registered as a document formatter, so **Format Document** (`Shift+Alt+F`) on a `.md` file reformats its tables too. You can enable format-on-save for Markdown if you want tables aligned automatically.
+Turn on **`markdownAiStudio.formatTablesOnSave`** if you want the extension to apply the same formatting automatically when saving Markdown files.
 
 ## HTML export
 
@@ -245,9 +246,9 @@ Open settings with **Change Settings...**, or `Ctrl+,` and search for `markdownA
 | Setting | Default | Description |
 | --- | --- | --- |
 | `markdownAiStudio.previewPageWidth` | `full` | `full` lets standard preview pages use the whole panel width; `readable` constrains them to a centered column. |
-| `markdownAiStudio.documentPreviewTheme` | `auto` | Default document preview theme. Overridable per file via the `theme` front-matter field. |
-| `markdownAiStudio.globalDocumentThemeDirectory` | empty | Folder containing document themes shared across projects. |
-| `markdownAiStudio.previewThemeDirectory` | empty | Folder containing presentation themes shared across projects. |
+| `markdownAiStudio.documentPreviewTheme` | `auto` | Default document preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Customization** settings section. |
+| `markdownAiStudio.documentThemesFolder` | `%USERPROFILE%\AI Markdown Studio\Themes\Document` | Folder containing document themes shared across projects. Find it in the **Theme Customization** settings section. |
+| `markdownAiStudio.presentationThemesFolder` | `%USERPROFILE%\AI Markdown Studio\Themes\Presentation` | Folder containing presentation themes shared across projects. Find it in the **Theme Customization** settings section. |
 | `markdownAiStudio.allowRemoteResources` | `true` | Whether previews and exports may load images and other content from the internet. |
 | `markdownAiStudio.aiFeaturesEnabled` | `false` | Accepts AI-supported functionality that may use the GitHub Copilot service already configured in VS Code for document generation, presentation generation, and AI Paste to Markdown. |
 | `markdownAiStudio.aiAuthorizationDenied` | `false` | Records that you explicitly denied AI access. When this is on, the AI commands stay hidden except for **Enable AI Features...**. |

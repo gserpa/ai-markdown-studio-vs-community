@@ -107,4 +107,20 @@ describe('formatMarkdownTables', () => {
     const result = formatMarkdownTables(input);
     expect(result).toContain('foo\\|bar');
   });
+
+  it('formats wide unicode characters without collapsing the table layout', () => {
+    const input = [
+      '| 名称 | Value |',
+      '|---|---|',
+      '| 张三 | 1 |',
+      '| 李四五 | 100 |',
+    ].join('\n');
+
+    const result = formatMarkdownTables(input);
+    const lines = result.split('\n');
+
+    expect(lines[0]).toBe('| 名称   | Value |');
+    expect(lines[2]).toBe('| 张三   | 1     |');
+    expect(lines[3]).toBe('| 李四五 | 100   |');
+  });
 });

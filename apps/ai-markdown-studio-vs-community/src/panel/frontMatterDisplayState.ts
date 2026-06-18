@@ -15,14 +15,21 @@ export function isFrontMatterVisible(uri: vscode.Uri): boolean {
 }
 
 export function toggleFrontMatterVisibility(uri: vscode.Uri): boolean {
+  return setFrontMatterVisibility(uri, !visibleFrontMatterUris.has(uri.toString()));
+}
+
+export function setFrontMatterVisibility(uri: vscode.Uri, visible: boolean): boolean {
   const key = uri.toString();
-  if (visibleFrontMatterUris.has(key)) {
-    visibleFrontMatterUris.delete(key);
-    return false;
+  if (visible) {
+    visibleFrontMatterUris.add(key);
+    return true;
   }
 
-  visibleFrontMatterUris.add(key);
-  return true;
+  if (visibleFrontMatterUris.has(key)) {
+    visibleFrontMatterUris.delete(key);
+  }
+
+  return false;
 }
 
 export async function activatePreviewFrontMatterContext(owner: object, document: vscode.TextDocument): Promise<void> {

@@ -1,7 +1,6 @@
 [
   { "command": "markdownAiStudio.openPreview", "title": "Preview Markdown", "category": "AI Markdown Studio", "icon": "$(eye)", "quickPickTitle": "Open Preview" },
   { "command": "markdownAiStudio.editAsText", "title": "Edit Markdown", "category": "AI Markdown Studio", "icon": "$(pencil)", "quickPickTitle": "Edit Markdown" },
-  { "command": "markdownAiStudio.openOppositeViewBeside", "title": "Open Opposite View Beside", "category": "AI Markdown Studio", "icon": "$(split-horizontal)", "quickPickTitle": "Open Opposite View Beside" },
   { "command": "markdownAiStudio.formatTables", "title": "Format Markdown Tables", "category": "AI Markdown Studio", "quickPickTitle": "Format Tables" },
   { "command": "markdownAiStudio.exportHtml", "title": "Export Markdown as HTML", "category": "AI Markdown Studio", "quickPickTitle": "Export: HTML" },
   { "command": "markdownAiStudio.exportDocxBasic", "title": "Export Markdown as DOCX (Basic)", "category": "AI Markdown Studio", "quickPickTitle": "Export: DOCX (Basic)" },
@@ -9,8 +8,7 @@
   { "command": "markdownAiStudio.generatePresentation", "title": "Generate Presentation (AI)", "category": "AI Markdown Studio", "quickPickTitle": "AI: Generate Presentation" },
   { "command": "markdownAiStudio.pasteAsMarkdown", "title": "Paste as New Markdown File", "category": "AI Markdown Studio" },
   { "command": "markdownAiStudio.enableAiFeatures", "title": "Enable AI Features...", "category": "AI Markdown Studio", "quickPickTitle": "AI: Enable Features..." },
-  { "command": "markdownAiStudio.openGlobalDocumentThemeFolder", "title": "Open Global Document Theme Folder", "category": "AI Markdown Studio" },
   { "command": "markdownAiStudio.openSettings", "title": "Change Settings...", "category": "AI Markdown Studio", "quickPickTitle": "Change Settings..." },
   { "command": "markdownAiStudio.showCommandList", "title": "Show AI Markdown Studio Commands", "category": "AI Markdown Studio", "icon": { "light": "media/command-list-light.svg", "dark": "media/command-list-dark.svg" } },
-  { "command": "markdownAiStudio.toggleFrontMatter", "title": "Toggle Frontmatter", "category": "AI Markdown Studio", "icon": "$(list-tree)" }
+  { "command": "markdownAiStudio.toggleFrontMatter", "title": "Toggle Frontmatter", "category": "AI Markdown Studio", "icon": "$(list-tree)", "quickPickTitle": "Toggle Frontmatter" }
 ]
