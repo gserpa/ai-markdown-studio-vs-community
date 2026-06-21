@@ -6,4 +6,5 @@
 - Do not add Pro source, proprietary assets, Pro-only commands, or Pro-only dependencies to this repository.
 - Community must not hard-code knowledge of Pro commands. Optional editions contribute command metadata through `FeatureContribution`.
 - Edit preview assets only in `packages/md-preview-web/assets/`; extension copies are generated.
+- When adding bundled preview themes, use the Markdown AI Studio theme tools to generate and validate the JSON, save the files under `packages/md-preview-web/assets/themes/`, then run `scripts/sync-manifest-config.mjs` and `scripts/sync-preview-assets.mjs` so the Settings enum and copied assets stay in sync.
 - Community must continue to build, test, package, and run independently of Pro.

@@ -10,5 +10,7 @@
   { "command": "markdownAiStudio.enableAiFeatures", "title": "Enable AI Features...", "category": "AI Markdown Studio", "quickPickTitle": "AI: Enable Features..." },
   { "command": "markdownAiStudio.openSettings", "title": "Change Settings...", "category": "AI Markdown Studio", "quickPickTitle": "Change Settings..." },
   { "command": "markdownAiStudio.showCommandList", "title": "Show AI Markdown Studio Commands", "category": "AI Markdown Studio", "icon": { "light": "media/command-list-light.svg", "dark": "media/command-list-dark.svg" } },
+  { "command": "markdownAiStudio.showFrontMatter", "title": "Show Frontmatter", "category": "AI Markdown Studio", "icon": "$(list-tree)" },
+  { "command": "markdownAiStudio.hideFrontMatter", "title": "Hide Frontmatter", "category": "AI Markdown Studio", "icon": "$(list-tree)" },
   { "command": "markdownAiStudio.toggleFrontMatter", "title": "Toggle Frontmatter", "category": "AI Markdown Studio", "icon": "$(list-tree)", "quickPickTitle": "Toggle Frontmatter" }
 ]

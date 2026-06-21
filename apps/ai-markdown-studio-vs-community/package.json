@@ -109,22 +109,22 @@
         }
       },
       {
-        "command": "markdownAiStudio.toggleFrontMatter",
-        "title": "Toggle Frontmatter",
-        "category": "AI Markdown Studio",
-        "icon": "$(list-tree)"
-      },
-      {
         "command": "markdownAiStudio.showFrontMatter",
         "title": "Show Frontmatter",
         "category": "AI Markdown Studio",
-        "icon": "$(testing-show-as-list-icon)"
+        "icon": "$(list-tree)"
       },
       {
         "command": "markdownAiStudio.hideFrontMatter",
         "title": "Hide Frontmatter",
         "category": "AI Markdown Studio",
-        "icon": "$(search-clear-results)"
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "markdownAiStudio.toggleFrontMatter",
+        "title": "Toggle Frontmatter",
+        "category": "AI Markdown Studio",
+        "icon": "$(list-tree)"
       }
     ],
     "menus": {
@@ -249,20 +249,34 @@
             "enum": [
               "auto",
               "dark-aurora-noir",
+              "aurora-sans",
+              "autumn-ember",
               "dark",
               "light",
               "dark-modern-aurora",
               "light-modern-blue",
-              "night-sky"
+              "light-modern-blue-underline",
+              "night-sky",
+              "pastel-cloud",
+              "spring-blossom",
+              "summer-solstice",
+              "winter-frost"
             ],
             "enumDescriptions": [
               "Follows VS Code's dark or light theme automatically.",
               "Aurora Noir — bundled dark document theme.",
+              "Aurora Sans — bundled document theme.",
+              "Autumn Ember — bundled document theme.",
               "Dark — bundled dark document theme.",
               "Light — bundled light document theme.",
               "Modern Aurora — bundled document theme.",
               "Modern Blue — bundled light document theme.",
-              "Night Sky — bundled dark document theme."
+              "Modern Blue Underline — bundled light document theme.",
+              "Night Sky — bundled dark document theme.",
+              "Pastel Cloud — bundled document theme.",
+              "Spring Blossom — bundled document theme.",
+              "Summer Solstice — bundled document theme.",
+              "Winter Frost — bundled document theme."
             ]
           }
         }
