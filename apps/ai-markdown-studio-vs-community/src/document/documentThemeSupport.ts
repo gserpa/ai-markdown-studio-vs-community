@@ -1,13 +1,32 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { loadDocumentThemeRegistryFromDirectories, type DocumentThemeRegistry } from '@mfo/preview-web';
 import { resolveExtensionAssetUri } from '../util/extensionSupportRoot';
+
+const PRO_EXTENSION_ID = 'GustavoSerpa.markdown-ai-studio-pro';
 
 export function getBundledDocumentThemeDirectory(extensionUri: vscode.Uri): string {
   return resolveExtensionAssetUri(extensionUri, 'preview', 'themes', 'document').fsPath;
 }
 
-export function getDocumentThemeDirectories(extensionUri: vscode.Uri, _documentUri: vscode.Uri): string[] {
-  return [getBundledDocumentThemeDirectory(extensionUri)];
+export function getDocumentThemeDirectories(extensionUri: vscode.Uri, documentUri: vscode.Uri): string[] {
+  const directories = [getBundledDocumentThemeDirectory(extensionUri)];
+  if (!isProInstalled()) {
+    return directories;
+  }
+
+  const globalConfiguredDirectory = getConfiguredGlobalDocumentThemeDirectory();
+  if (globalConfiguredDirectory) {
+    directories.push(globalConfiguredDirectory);
+  }
+
+  const workspaceDirectory = getWorkspaceDocumentThemeDirectory(documentUri);
+  if (workspaceDirectory && !directories.includes(workspaceDirectory)) {
+    directories.push(workspaceDirectory);
+  }
+
+  return directories;
 }
 
 export function loadDocumentThemeRegistryForDocument(extensionUri: vscode.Uri, documentUri: vscode.Uri): DocumentThemeRegistry {
@@ -22,5 +41,71 @@ export function loadDocumentThemeRegistryForDocument(extensionUri: vscode.Uri, d
   } catch (error) {
     console.warn('[markdown-ai-studio] Failed to load document theme registry. Falling back to bundled themes.', error);
     return loadDocumentThemeRegistryFromDirectories([bundledDirectory]);
+  }
+}
+
+function isProInstalled(): boolean {
+  return Boolean(vscode.extensions?.getExtension(PRO_EXTENSION_ID));
+}
+
+function getConfiguredGlobalDocumentThemeDirectory(): string | undefined {
+  const configuredValue = vscode.workspace
+    .getConfiguration('markdownAiStudio')
+    .inspect<string>('globalDocumentThemeDirectory')
+    ?.globalValue;
+
+  if (typeof configuredValue !== 'string') {
+    return undefined;
+  }
+
+  const normalizedPath = path.normalize(configuredValue.trim());
+  if (!normalizedPath) {
+    return undefined;
+  }
+
+  if (!path.isAbsolute(normalizedPath)) {
+    console.warn('[markdown-ai-studio] Ignoring markdownAiStudio.globalDocumentThemeDirectory because it is not an absolute path.');
+    return undefined;
+  }
+
+  return resolveDocumentThemeDirectory(normalizedPath);
+}
+
+function getWorkspaceDocumentThemeDirectory(documentUri: vscode.Uri): string | undefined {
+  const workspaceFolder = vscode.workspace.getWorkspaceFolder(documentUri);
+  if (!workspaceFolder) {
+    return undefined;
+  }
+
+  return resolveDocumentThemeDirectory(vscode.Uri.joinPath(workspaceFolder.uri, '.markdown-ai-studio').fsPath);
+}
+
+function resolveDocumentThemeDirectory(themeDirectoryPath: string): string | undefined {
+  if (!themeDirectoryPath || !fs.existsSync(themeDirectoryPath)) {
+    return undefined;
+  }
+
+  if (hasJsonThemeFiles(themeDirectoryPath)) {
+    return path.normalize(themeDirectoryPath);
+  }
+
+  const nestedDocumentDirectory = path.join(themeDirectoryPath, 'document-themes');
+  if (hasJsonThemeFiles(nestedDocumentDirectory)) {
+    return path.normalize(nestedDocumentDirectory);
+  }
+
+  return undefined;
+}
+
+function hasJsonThemeFiles(themeDirectoryPath: string): boolean {
+  if (!themeDirectoryPath || !fs.existsSync(themeDirectoryPath)) {
+    return false;
+  }
+
+  try {
+    return fs.readdirSync(themeDirectoryPath, { withFileTypes: true })
+      .some((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.json'));
+  } catch {
+    return false;
   }
 }
