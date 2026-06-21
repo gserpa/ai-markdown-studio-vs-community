@@ -127,7 +127,7 @@ The primary untrusted input is Markdown document content, including:
 - local links and images
 - remote links and images
 - absolute file paths
-- document and presentation theme JSON loaded from the workspace or a configured theme directory
+- bundled document and presentation theme JSON loaded from the extension assets
 
 ### 4.2 Sensitive execution surfaces
 
