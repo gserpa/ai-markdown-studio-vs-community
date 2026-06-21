@@ -6,6 +6,7 @@ import {
   stripMarkdownFrontMatter,
 } from '@mfo/core';
 import { buildDocumentThemeStylesheet, resolveDocumentThemeSelection } from '@mfo/preview-web';
+import { getResolvedDocumentPreviewThemeSetting } from '../../document/documentPreviewThemeSettings';
 import { loadDocumentThemeRegistryForDocument } from '../../document/documentThemeSupport';
 import { resolveDocumentResource } from '../../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../../util/extensionSupportRoot';
@@ -391,7 +392,7 @@ function resolveExportDocumentTheme(
     const meta = extractMarkdownFrontMatterMeta(source);
     const documentThemeRegistry = loadDocumentThemeRegistryForDocument(extensionUri, document.uri);
     const frontMatterTheme = typeof meta.theme === 'string' ? meta.theme : '';
-    const settingTheme = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('documentPreviewTheme', 'auto');
+    const settingTheme = getResolvedDocumentPreviewThemeSetting(document.uri);
     const selection = resolveDocumentThemeSelection(frontMatterTheme || settingTheme, documentThemeRegistry);
 
     return {

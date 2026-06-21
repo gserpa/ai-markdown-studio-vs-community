@@ -6,6 +6,7 @@ import { createMarkdownRenderer, sanitizeRenderedHtml, stripMarkdownFrontMatter 
 import { isMarkdownPresentationSource, extractMarkdownFrontMatterMeta } from '@mfo/core';
 import { renderPresentationPreview } from '@mfo/preview-web';
 import { buildPreviewThemeStylesheet, buildDocumentThemeStylesheet, resolveDocumentThemeSelection } from '@mfo/preview-web';
+import { getResolvedDocumentPreviewThemeSetting } from '../document/documentPreviewThemeSettings';
 import { loadPreviewThemeRegistryForDocument } from '../presentation/previewThemeSupport';
 import { loadDocumentThemeRegistryForDocument } from '../document/documentThemeSupport';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../util/extensionSupportRoot';
@@ -78,7 +79,7 @@ export function buildPreviewHtml(
       const meta = extractMarkdownFrontMatterMeta(source);
       const documentThemeRegistry = loadDocumentThemeRegistryForDocument(extensionUri, document.uri);
       const frontMatterTheme = typeof meta['theme'] === 'string' ? meta['theme'] : '';
-      const settingTheme = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('documentPreviewTheme', 'auto');
+      const settingTheme = getResolvedDocumentPreviewThemeSetting(document.uri);
       const docThemeSelection = resolveDocumentThemeSelection(frontMatterTheme || settingTheme, documentThemeRegistry);
       documentThemeStylesheet = buildDocumentThemeStylesheet(documentThemeRegistry);
       documentThemeBodyClass = docThemeSelection.themeClassName;
