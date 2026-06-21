@@ -13,12 +13,12 @@ vi.mock('vscode', () => ({
 import { openSettingsCommand } from '../../src/commands/markdownCommands';
 
 describe('openSettingsCommand', () => {
-  it('opens the settings search for the active extension id', async () => {
-    await openSettingsCommand('GustavoSerpa.markdown-ai-studio-pro');
+  it('opens the markdownAiStudio settings search', async () => {
+    await openSettingsCommand();
 
     expect(vscodeMocks.executeCommand).toHaveBeenCalledWith(
       'workbench.action.openSettings',
-      '@ext:GustavoSerpa.markdown-ai-studio-pro markdownAiStudio',
+      'markdownAiStudio',
     );
   });
 });
