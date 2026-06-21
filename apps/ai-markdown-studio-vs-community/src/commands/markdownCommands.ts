@@ -105,8 +105,8 @@ export async function exportDocxBasicCommand(extensionUri: vscode.Uri, resource?
   if (target) void vscode.window.showInformationMessage(`Exported basic DOCX to ${target.fsPath}`);
 }
 
-export async function openSettingsCommand(): Promise<void> {
-  await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:GustavoSerpa.markdown-ai-studio markdownAiStudio');
+export async function openSettingsCommand(extensionId: string): Promise<void> {
+  await vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${extensionId} markdownAiStudio`);
 }
 
 export async function showCommandListCommand(resource?: vscode.Uri): Promise<void> {
