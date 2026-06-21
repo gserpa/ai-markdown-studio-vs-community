@@ -1,7 +1,7 @@
 {
   "name": "markdown-ai-studio",
   "displayName": "AI Markdown Studio Community",
-  "description": "Open-source Markdown authoring with AI-assisted document and MPS generation, live previews, HTML export, and basic DOCX export.",
+  "description": "AI Markdown Studio Community combines open-source Markdown authoring with AI-assisted document and MPS generation, live previews, HTML export, and basic DOCX export.",
   "version": "0.2.0",
   "license": "MIT",
   "publisher": "GustavoSerpa",
