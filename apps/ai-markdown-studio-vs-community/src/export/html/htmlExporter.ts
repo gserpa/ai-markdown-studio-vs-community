@@ -2,7 +2,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import {
   createMarkdownRenderer,
   extractMarkdownFrontMatterMeta,
+  isMarkdownPresentationSource,
+  parseMarkdownPresentation,
   sanitizeRenderedHtml,
+  resolveMarkdownPresentation,
   stripMarkdownFrontMatter,
 } from '@mfo/core';
 import { buildDocumentThemeStylesheet, resolveDocumentThemeSelection } from '@mfo/preview-web';
@@ -48,7 +51,8 @@ export async function buildExportHtmlString(extensionUri: vscode.Uri, document: 
     },
   });
 
-  const body = sanitizeRenderedHtml(renderer.render(stripMarkdownFrontMatter(source)));
+  const exportMarkdown = getExportMarkdown(source);
+  const body = sanitizeRenderedHtml(renderer.render(exportMarkdown));
   const theme = resolveExportDocumentTheme(extensionUri, document, source);
 
   return buildStandaloneHtml({
@@ -85,6 +89,15 @@ export async function exportMarkdownAsHtml(extensionUri: vscode.Uri, document: v
 
 function rewriteKatexCssUrls(css: string): string {
   return css.replace(/url\((?:\.\/)?fonts\//gu, 'url(https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/fonts/');
+}
+
+function getExportMarkdown(source: string): string {
+  if (!isMarkdownPresentationSource(source)) {
+    return stripMarkdownFrontMatter(source);
+  }
+
+  const presentation = resolveMarkdownPresentation(parseMarkdownPresentation(source));
+  return presentation.slides.map((slide) => slide.body).join('\n\n---\n\n');
 }
 
 function buildStandaloneHtml(input: {
@@ -236,14 +249,10 @@ function getMermaidBootstrapScript(): string {
     for (const anchor of block.querySelectorAll('a')) {
       const linkTarget = getAnchorLinkTarget(anchor);
       if (linkTarget) {
-        anchor.setAttribute('data-href', linkTarget);
+        anchor.setAttribute('href', linkTarget);
       }
 
-      anchor.removeAttribute('href');
-      anchor.removeAttribute('xlink:href');
-      anchor.removeAttribute('target');
-      anchor.removeAttribute('rel');
-      anchor.removeAttribute('title');
+      anchor.removeAttribute('onclick');
     }
 
     for (const element of block.querySelectorAll('[onclick]')) {

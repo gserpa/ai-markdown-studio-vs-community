@@ -138,6 +138,39 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('data-document-mermaid-theme-dark="default"');
   });
 
+  it('strips presentation speaker notes before exporting html', async () => {
+    const source = [
+      '---',
+      'document: presentation',
+      'title: Deck Title',
+      'subtitle: Demo Subtitle',
+      'author: Ada',
+      '---',
+      '',
+      '<!--notes: Title slide. No `<!--slide:-->` marker is set, so this should render using the default/cover layout derived from the front matter title, subtitle, and author.-->',
+      '',
+      '---',
+      '',
+      '# Opening',
+    ].join('\n');
+    const document = {
+      fileName: 'presentation.md',
+      uri: {
+        fsPath: 'C:/docs/presentation.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/presentation.md',
+      },
+      getText: () => source,
+    } as never;
+
+    const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+
+    expect(html).toContain('Deck Title');
+    expect(html).toContain('Opening');
+    expect(html).not.toContain('No `<!--slide:-->` marker is set');
+    expect(html).not.toContain('marker is set, so this should render');
+  });
+
   it('pins auto-theme exports to the current VS Code dark mode when preview is dark', async () => {
     vscode.window.activeColorTheme.kind = vscode.ColorThemeKind.Dark;
 
@@ -176,6 +209,23 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('htmlLabels: true');
     expect(html).toContain("document.querySelectorAll('.mermaid, .mermaid-rendered[data-mermaid-source]')");
     expect(html).toContain('normalizeRenderedMermaidSvgSizing(block);');
+  });
+
+  it('preserves Mermaid anchor hrefs in exported HTML', async () => {
+    const document = {
+      fileName: 'example.md',
+      uri: {
+        fsPath: 'C:/docs/example.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/example.md',
+      },
+      getText: () => '```mermaid\nflowchart TD\nA[Start] --> B[End]\nclick A "https://example.com" "Open link"\n```',
+    } as never;
+
+    const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+
+    expect(html).toContain("anchor.setAttribute('href', linkTarget);");
+    expect(html).not.toContain("anchor.removeAttribute('href');");
   });
 
   it('omits remote image src attributes when allowRemoteResources is false', async () => {
