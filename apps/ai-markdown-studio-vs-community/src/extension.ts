@@ -105,7 +105,7 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
     vscode.commands.registerCommand('markdownAiStudio.pasteAsMarkdown', pasteAsMarkdownCommand),
     vscode.commands.registerCommand('markdownAiStudio.enableAiFeatures', enableAiFeaturesCommand),
     vscode.commands.registerCommand('markdownAiStudio.openSettings', async () => {
-      await openSettingsCommand();
+      await openSettingsCommand(context.extension.id);
     }),
     vscode.commands.registerCommand('markdownAiStudio.showCommandList', async (resource?: vscode.Uri) => {
       const targetResource = (resource?.scheme === 'file' ? resource : undefined)

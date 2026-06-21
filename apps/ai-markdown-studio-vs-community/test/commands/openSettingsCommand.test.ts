@@ -14,11 +14,11 @@ import { openSettingsCommand } from '../../src/commands/markdownCommands';
 
 describe('openSettingsCommand', () => {
   it('opens the markdownAiStudio settings search', async () => {
-    await openSettingsCommand();
+    await openSettingsCommand('GustavoSerpa.markdown-ai-studio-pro');
 
     expect(vscodeMocks.executeCommand).toHaveBeenCalledWith(
       'workbench.action.openSettings',
-      'markdownAiStudio',
+      '@ext:GustavoSerpa.markdown-ai-studio-pro markdownAiStudio',
     );
   });
 });
