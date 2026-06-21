@@ -102,7 +102,7 @@ All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and th
 | **Paste as New Markdown File** | Converts clipboard text into a new Markdown file | Explorer folder context menu, command palette |
 | **Export Markdown as HTML** | Saves the rendered document as a standalone `.html` file | Command palette, command list |
 | **Export Markdown as DOCX (Basic)** | Saves the rendered document as a DOCX file | Command palette, command list |
-| **Enable AI Features...** | Reviews the AI data-sharing notice and enables AI features | Command palette, command list |
+| **Enable AI Features...** | Reviews the AI data-sharing notice and can enable or re-enable AI features | Command palette, command list |
 | **Toggle Frontmatter** | Shows or hides the rendered front-matter summary in the active preview | Title bar, command palette, command list when applicable |
 | **Show AI Markdown Studio Commands** | Lists the extension's main actions in a quick-pick menu | Title bar, command palette |
 | **Change Settings...** | Opens the VS Code Settings UI filtered to this extension | Command palette, command list |
@@ -130,7 +130,7 @@ The preview supports:
 - Local images resolved relative to the source file
 - Theme-aware styling with selectable document themes
 
-Theme customization lives in Settings under the **Theme Customization** section. There you can choose the default document preview theme and set shared folders for document and presentation theme JSON files.
+Theme selection lives in Settings under the **Theme Selection** section. Community includes the bundled document themes only; custom theme folders are a Pro feature.
 
 When a Markdown file declares `document: presentation` in front matter, the preview switches to a slide-based presentation viewer instead of the standard scrolling document preview. Files without that explicit front-matter value stay on the standard text preview path.
 
@@ -139,8 +139,7 @@ Preview-specific settings:
 | Setting | Default | Description |
 | --- | --- | --- |
 | **`markdownAiStudio.previewPageWidth`** | `full` | Uses `full` width for standard Markdown preview pages by default. Set to `readable` to constrain the page to a centred readable column. |
-| **`markdownAiStudio.documentPreviewTheme`** | `auto` | Selects the default document preview theme. Bundled options include `light`, `light-modern-blue`, `dark`, `dark-aurora-noir`, `dark-modern-aurora`, and `night-sky`. Can be overridden per file with the `theme` front matter field. Find it in Settings under **Theme Customization**. |
-| **`markdownAiStudio.documentThemesFolder`** | `%USERPROFILE%\AI Markdown Studio\Themes\Document` | Optional absolute path to the shared document theme folder. The extension also checks `.markdown-ai-studio/document-themes/` in the workspace root. Find it in Settings under **Theme Customization**. |
+| **`markdownAiStudio.documentPreviewTheme`** | `auto` | Selects the default document preview theme. Bundled options include `light`, `light-modern-blue`, `dark`, `dark-aurora-noir`, `dark-modern-aurora`, and `night-sky`. Can be overridden per file with the `theme` front matter field. Find it in Settings under **Theme Selection**. |
 
 Mermaid diagrams in the standard document preview include a zoom control. Use the on-diagram **Zoom** button or double-click the rendered diagram to open it in an overlay viewer. Inside the viewer, use **+**, **-**, **Fit**, or the keyboard shortcuts `+`, `-`, `0`, and `Esc`.
 
@@ -158,7 +157,7 @@ Presentation preview features include:
 - template-aware layouts for supported slide types such as `cover`, `default`, `two-columns`, `image-right`, and `divider`
 - speaker notes displayed below the active slide when notes are present
 
-Presentation preview themes can be loaded from bundled themes (`black`, `galaxy`, `modern-blue`), from `.markdown-ai-studio/presentation-themes/` in the workspace root, or from a directory specified by **`markdownAiStudio.presentationThemesFolder`**.
+Presentation preview themes are bundled only in Community (`black`, `galaxy`, `modern-blue`). Custom presentation theme folders are available in Pro.
 
 Use `Esc` to exit immersive mode.
 
@@ -188,16 +187,16 @@ The setting **`markdownAiStudio.allowRemoteResources`** controls whether remote 
 
 ### AI-Assisted Generation
 
-When GitHub Copilot is configured in VS Code and AI access has been enabled, AI Markdown Studio Community can create new Markdown documents or presentation decks from prompts. The AI commands stay hidden until Copilot is available and the consent flow has been accepted.
+When GitHub Copilot is configured in VS Code, AI Markdown Studio Community can create new Markdown documents or presentation decks from prompts. With the default `markdownAiStudio.aiAccess: "ask"` state, the commands stay visible and the disclosure appears only when an AI feature actually tries to run. If `markdownAiStudio.aiAccess` is `denied`, the AI commands hide again except for **Enable AI Features...**.
 
 - **Generate Document (AI)** creates a new Markdown document from a prompt.
 - **Generate Presentation (AI)** creates a new presentation-style Markdown deck from a prompt.
 
-Use **Enable AI Features...** if you need to review or re-enable the AI data-sharing notice.
+Use **Enable AI Features...** if you need to review or re-enable the AI data-sharing notice, or change `markdownAiStudio.aiAccess` directly in Settings.
 
 ### AI Paste to Markdown
 
-Use **Paste as New Markdown File** to turn clipboard text into a new Markdown file. This follows the same AI-enabled workflow as document generation and stays hidden until Copilot is configured and AI access is enabled.
+Use **Paste as New Markdown File** to turn clipboard text into a new Markdown file. This follows the same AI consent workflow as document generation: it is visible when Copilot is configured unless `markdownAiStudio.aiAccess` is `denied`, and it prompts on first real AI use while the state is `ask`.
 
 ### Basic DOCX Export
 

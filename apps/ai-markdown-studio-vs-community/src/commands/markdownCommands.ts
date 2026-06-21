@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { formatMarkdownTables, isMarkdownPresentationSource } from '@mfo/core';
 import { listFeatureContributions } from '../api/featureContributions';
-import { isAiAuthorizationDenied } from '../ai/aiConsent';
+import { getAiAccessState, type AiAccessState } from '../ai/aiConsent';
 import { hasConfiguredCopilotAccount } from '../ai/copilotAvailability';
 import { exportMarkdownAsBasicDocx } from '../export/docx/docxExporter';
 import { exportMarkdownAsHtml } from '../export/html/htmlExporter';
@@ -25,6 +25,7 @@ type CommandListContext = {
   hasFrontMatter: boolean;
   isPresentation: boolean;
   copilotConfigured: boolean;
+  aiAccessState: AiAccessState;
 };
 
 const QUICK_PICK_COMMAND_ORDER = [
@@ -167,6 +168,7 @@ async function resolveCommandListContext(resource?: vscode.Uri): Promise<Command
     hasFrontMatter: hasDisplayableFrontMatter(document.getText()),
     isPresentation: isMarkdownPresentationSource(document.getText()),
     copilotConfigured,
+    aiAccessState: getAiAccessState(),
   };
 }
 
@@ -211,10 +213,10 @@ function shouldShowCommand(entry: CommandListEntry, context: CommandListContext)
     }
 
     if (command === 'markdownAiStudio.enableAiFeatures') {
-      return isAiAuthorizationDenied();
+      return context.aiAccessState !== 'enabled';
     }
 
-    return !isAiAuthorizationDenied();
+    return context.aiAccessState !== 'denied';
   }
 
   if (command === 'markdownAiStudio.openPreview') {

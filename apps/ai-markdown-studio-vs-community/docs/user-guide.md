@@ -62,14 +62,14 @@ All commands are available from the Command Palette (`Ctrl+Shift+P`). The most c
 | **Generate Document (AI)** | Creates a Markdown document from your brief. |
 | **Generate Presentation (AI)** | Creates a Markdown presentation from your brief. |
 | **Paste as New Markdown File** | Turns clipboard text into a new Markdown file. |
-| **Enable AI Features...** | Reviews the AI data-sharing notice and enables AI features. |
+| **Enable AI Features...** | Reviews the AI data-sharing notice and can enable or re-enable AI features. |
 | **Toggle Frontmatter** | Shows or hides the rendered front-matter summary in the active preview. |
 | **Show AI Markdown Studio Commands** | Opens a quick-pick launcher of the extension's main actions. |
 | **Change Settings...** | Opens the VS Code Settings UI filtered to this extension. |
 
 ## Guided AI generation
 
-Community provides guided workflows for creating both documents and presentations. If GitHub Copilot is configured in VS Code, the AI commands appear in the Command Palette and prompt you the first time you use them. If you explicitly deny AI access, the AI commands hide again and only **Enable AI Features...** stays visible.
+Community provides guided workflows for creating both documents and presentations. If GitHub Copilot is configured in VS Code, the AI commands appear in the Command Palette. With the default **`markdownAiStudio.aiAccess: "ask"`** setting, the disclosure appears the first time an AI feature actually tries to run. If you explicitly deny AI access, the AI commands hide again and only **Enable AI Features...** stays visible.
 
 - **Generate Document (AI)** asks what you want to create, then lets you generate it with GitHub Copilot or copy the instructions for use with another AI tool.
 - **Generate Presentation (AI)** works the same way, while ensuring the result follows AI Markdown Studio's presentation format.
@@ -94,7 +94,7 @@ The preview renders your document in real time as you type. It supports:
 - **local images** stored beside your document or elsewhere in your project
 - selectable **document themes**
 
-Theme customization lives in the **Theme Customization** section of Settings. That section contains the default document theme plus the shared document and presentation theme folder paths.
+Theme selection lives in the **Theme Selection** section of Settings. Community includes the bundled document themes only; custom theme folders are a Pro feature.
 
 ### Mermaid diagrams and zoom
 
@@ -140,12 +140,7 @@ theme: light-modern-blue
 
 ### Custom document themes
 
-You can add your own document theme files. AI Markdown Studio looks for them in:
-
-- `.markdown-ai-studio/document-themes/` in your project folder, and
-- the folder set in **`markdownAiStudio.documentThemesFolder`** (shared across workspaces).
-
-Use the **Theme Customization** settings to set the shared document theme folder. After adding or editing a theme file, reopen the preview to pick it up.
+Community does not load custom document theme files. Use one of the bundled document themes above, or upgrade to Pro to use workspace or shared custom theme folders.
 
 ## Presentation preview
 
@@ -205,12 +200,7 @@ Opening slide.
 
 ## Presentation themes
 
-Bundled presentation themes: `black`, `galaxy`, and `modern-blue`. Set a deck's theme with the `theme` front-matter field.
-
-Custom presentation themes are loaded from:
-
-- `.markdown-ai-studio/presentation-themes/` in your project folder, and
-- the folder set in **`markdownAiStudio.presentationThemesFolder`** (shared across workspaces).
+Bundled presentation themes: `black`, `galaxy`, and `modern-blue`. Set a deck's theme with the `theme` front-matter field. Community does not load custom presentation themes; Pro adds workspace and shared custom-theme folders.
 
 ## Front matter
 
@@ -246,18 +236,15 @@ Open settings with **Change Settings...**, or `Ctrl+,` and search for `markdownA
 | Setting | Default | Description |
 | --- | --- | --- |
 | `markdownAiStudio.previewPageWidth` | `full` | `full` lets standard preview pages use the whole panel width; `readable` constrains them to a centered column. |
-| `markdownAiStudio.documentPreviewTheme` | `auto` | Default document preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Customization** settings section. |
-| `markdownAiStudio.documentThemesFolder` | `%USERPROFILE%\AI Markdown Studio\Themes\Document` | Folder containing document themes shared across projects. Find it in the **Theme Customization** settings section. |
-| `markdownAiStudio.presentationThemesFolder` | `%USERPROFILE%\AI Markdown Studio\Themes\Presentation` | Folder containing presentation themes shared across projects. Find it in the **Theme Customization** settings section. |
+| `markdownAiStudio.documentPreviewTheme` | `auto` | Default document preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Selection** settings section. |
 | `markdownAiStudio.allowRemoteResources` | `true` | Whether previews and exports may load images and other content from the internet. |
-| `markdownAiStudio.aiFeaturesEnabled` | `false` | Accepts AI-supported functionality that may use the GitHub Copilot service already configured in VS Code for document generation, presentation generation, and AI Paste to Markdown. |
-| `markdownAiStudio.aiAuthorizationDenied` | `false` | Records that you explicitly denied AI access. When this is on, the AI commands stay hidden except for **Enable AI Features...**. |
+| `markdownAiStudio.aiAccess` | `ask` | Controls AI consent. `ask` keeps AI commands visible and shows the disclosure the first time an AI feature tries to run, `enabled` allows AI-supported features to use the GitHub Copilot service already configured in VS Code, and `denied` hides AI commands except for **Enable AI Features...**. |
 
 ## Privacy and remote resources
 
 AI Markdown Studio Community has no product account or server component and does not collect telemetry. Outbound network activity can occur in two user-controlled situations:
 
-- **AI commands:** after you enable AI features and GitHub Copilot is configured in VS Code, AI Markdown Studio may use the Copilot service already configured there for AI-supported functionality such as document generation, presentation generation, and AI Paste to Markdown. The content you provide is shared with that embedded AI service for processing. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. Only enable AI features if you are authorized to share that content through your configured Copilot service.
+- **AI commands:** after GitHub Copilot is configured in VS Code and you allow an AI feature to run, AI Markdown Studio may use the Copilot service already configured there for AI-supported functionality such as document generation, presentation generation, and AI Paste to Markdown. The content you provide is shared with that embedded AI service for processing. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. Only set **`markdownAiStudio.aiAccess`** to `enabled`, or accept a one-time disclosure from `ask`, if you are authorized to share that content through your configured Copilot service.
 - **Remote resources:** previews and exported HTML can load resources that your Markdown explicitly references, such as an image at an `https://` URL.
 
 To prevent that — for example when reviewing untrusted documents or working in a restricted environment — set:
@@ -287,11 +274,11 @@ Installing Pro automatically installs Community as its dependency, and your Comm
 
 **My presentation opens as a normal document.** Confirm the front matter includes `document: presentation` at the very top of the file, between `---` fences.
 
-**A custom theme doesn't appear.** Confirm the theme file is in `.markdown-ai-studio/document-themes/`, `.markdown-ai-studio/presentation-themes/`, or your shared theme folder, then reopen the preview.
+**A custom theme doesn't appear.** Community does not load custom theme folders. Use a bundled theme here, or install Pro for workspace and shared custom theme folders.
 
 **A remote image doesn't load.** Check whether `markdownAiStudio.allowRemoteResources` is `false`, and confirm the URL is reachable and served over `https`.
 
-**An AI command is missing.** If GitHub Copilot is not configured in VS Code, the AI commands stay hidden. If you previously denied AI access, use **Enable AI Features...** to review the notice again.
+**An AI command is missing.** If GitHub Copilot is not configured in VS Code, the AI commands stay hidden. If **`markdownAiStudio.aiAccess`** is set to `denied`, use **Enable AI Features...** or change that setting to review the notice again.
 
 **Mermaid diagram shows an error.** The diagram source has a syntax error; the preview shows Mermaid's parse message. Fix the diagram definition and the preview updates.
 

@@ -1,10 +1,16 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { createMarkdownRenderer, sanitizeRenderedHtml, stripMarkdownFrontMatter } from '@mfo/core';
+import {
+  createMarkdownRenderer,
+  extractMarkdownFrontMatterMeta,
+  sanitizeRenderedHtml,
+  stripMarkdownFrontMatter,
+} from '@mfo/core';
+import { buildDocumentThemeStylesheet, resolveDocumentThemeSelection } from '@mfo/preview-web';
+import { loadDocumentThemeRegistryForDocument } from '../../document/documentThemeSupport';
 import { resolveDocumentResource } from '../../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../../util/extensionSupportRoot';
 import * as path from 'path';
 import * as vscode from 'vscode';
-
 
 export async function buildExportHtmlString(extensionUri: vscode.Uri, document: vscode.TextDocument): Promise<string> {
   const [previewCss, katexCss, mermaidScript] = await Promise.all([
@@ -13,6 +19,7 @@ export async function buildExportHtmlString(extensionUri: vscode.Uri, document: 
     readFile(resolveExtensionNodeModulesUri(extensionUri, 'mermaid', 'dist', 'mermaid.min.js').fsPath, 'utf8'),
   ]);
 
+  const source = document.getText();
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const renderer = createMarkdownRenderer({
     resolveImageSrc: (rawPath) => {
@@ -40,13 +47,19 @@ export async function buildExportHtmlString(extensionUri: vscode.Uri, document: 
     },
   });
 
-  const body = sanitizeRenderedHtml(renderer.render(stripMarkdownFrontMatter(document.getText())));
+  const body = sanitizeRenderedHtml(renderer.render(stripMarkdownFrontMatter(source)));
+  const theme = resolveExportDocumentTheme(extensionUri, document, source);
+
   return buildStandaloneHtml({
     title: path.basename(document.fileName),
     body,
     previewCss,
     katexCss: rewriteKatexCssUrls(katexCss),
     mermaidScript,
+    htmlClass: theme.hostThemeClass,
+    bodyClass: theme.bodyClass,
+    bodyAttributes: theme.bodyAttributes,
+    documentThemeCss: theme.documentThemeCss,
   });
 }
 
@@ -79,9 +92,13 @@ function buildStandaloneHtml(input: {
   previewCss: string;
   katexCss: string;
   mermaidScript: string;
+  htmlClass: string;
+  bodyClass: string;
+  bodyAttributes: string;
+  documentThemeCss: string;
 }): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en"${input.htmlClass ? ` class="${escapeHtml(input.htmlClass)}"` : ''}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -89,6 +106,9 @@ function buildStandaloneHtml(input: {
   <style>
 ${getExportThemeCss()}
   </style>
+  ${input.documentThemeCss ? `<style>
+${input.documentThemeCss}
+  </style>` : ''}
   <style>
 ${input.katexCss}
   </style>
@@ -96,11 +116,8 @@ ${input.katexCss}
 ${input.previewCss}
   </style>
 </head>
-<body>
+<body class="${escapeHtml(input.bodyClass)}" data-preview-mode="document"${input.bodyAttributes}>
   <main class="markdown-body">${input.body}</main>
-  <script>
-${getThemeBootstrapScript()}
-  </script>
   <script>
 ${input.mermaidScript}
   </script>
@@ -114,7 +131,6 @@ ${getMermaidBootstrapScript()}
 function getExportThemeCss(): string {
   return `
 :root {
-  color-scheme: light dark;
   --vscode-editor-foreground: #24292f;
   --vscode-editor-background: #ffffff;
   --vscode-panel-border: #d0d7de;
@@ -127,7 +143,8 @@ function getExportThemeCss(): string {
   --vscode-foreground: #24292f;
 }
 
-html.vscode-dark {
+html.vscode-dark,
+body.vscode-dark {
   --vscode-editor-foreground: #c9d1d9;
   --vscode-editor-background: #0d1117;
   --vscode-panel-border: #30363d;
@@ -149,48 +166,43 @@ body {
 `;
 }
 
-function getThemeBootstrapScript(): string {
-  return `(() => {
-  const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-  const applyTheme = () => {
-    document.documentElement.classList.toggle('vscode-dark', darkModeQuery.matches);
-  };
-
-  applyTheme();
-  if (typeof darkModeQuery.addEventListener === 'function') {
-    darkModeQuery.addEventListener('change', applyTheme);
-  } else if (typeof darkModeQuery.addListener === 'function') {
-    darkModeQuery.addListener(applyTheme);
-  }
-})();`;
-}
-
 function getMermaidBootstrapScript(): string {
-  return `(() => {
-  const isDark = document.documentElement.classList.contains('vscode-dark');
-  if (!window.mermaid) {
+  return `(async () => {
+  const body = document.body;
+  if (!window.mermaid || !(body instanceof HTMLBodyElement)) {
     return;
   }
 
-  window.mermaid.startOnLoad = false;
+  const hostIsDarkMode = body.classList.contains('vscode-dark') || body.classList.contains('vscode-high-contrast');
+  const documentThemeMode = body.dataset.documentThemeMode === 'dark' || body.dataset.documentThemeMode === 'light' || body.dataset.documentThemeMode === 'auto'
+    ? body.dataset.documentThemeMode
+    : 'auto';
+  const useDarkDocumentTheme = documentThemeMode === 'dark' || (documentThemeMode === 'auto' && hostIsDarkMode);
+  const mermaidTheme = useDarkDocumentTheme
+    ? (body.dataset.documentMermaidThemeDark || 'dark')
+    : (body.dataset.documentMermaidThemeLight || 'default');
+  const mermaidTransparentBackground = useDarkDocumentTheme
+    ? body.dataset.documentMermaidTransparentBackgroundDark === 'true'
+    : body.dataset.documentMermaidTransparentBackgroundLight === 'true';
 
+  window.mermaid.startOnLoad = false;
   window.mermaid.initialize({
     startOnLoad: false,
-    theme: isDark ? 'dark' : 'default',
+    theme: mermaidTheme,
     securityLevel: 'strict',
     suppressErrorRendering: true,
-    htmlLabels: false,
+    htmlLabels: true,
     fontFamily: 'Segoe UI, Arial, sans-serif',
     flowchart: {
-      htmlLabels: false,
+      htmlLabels: true,
       useMaxWidth: true,
       padding: 10,
     },
   });
 
-  const blocks = [...document.querySelectorAll('.mermaid')];
+  const blocks = [...document.querySelectorAll('.mermaid, .mermaid-rendered[data-mermaid-source]')];
   for (const [index, block] of blocks.entries()) {
-    const source = block.textContent?.trim();
+    const source = block.getAttribute('data-mermaid-source')?.trim() || block.textContent?.trim();
     if (!source) {
       continue;
     }
@@ -203,13 +215,237 @@ function getMermaidBootstrapScript(): string {
       block.classList.remove('mermaid');
       block.classList.add('mermaid-rendered');
       block.setAttribute('data-mermaid-source', source);
+      neutralizeStrictMermaidInteractivity(block);
+      normalizeRenderedMermaidSvgSizing(block);
+      if (mermaidTransparentBackground) {
+        patchTransparentMermaidBackground(block);
+      }
     }
 
     if (typeof renderResult?.bindFunctions === 'function') {
       renderResult.bindFunctions(block);
     }
   }
+
+  function neutralizeStrictMermaidInteractivity(block) {
+    if (!(block instanceof HTMLElement)) {
+      return;
+    }
+
+    for (const anchor of block.querySelectorAll('a')) {
+      const linkTarget = getAnchorLinkTarget(anchor);
+      if (linkTarget) {
+        anchor.setAttribute('data-href', linkTarget);
+      }
+
+      anchor.removeAttribute('href');
+      anchor.removeAttribute('xlink:href');
+      anchor.removeAttribute('target');
+      anchor.removeAttribute('rel');
+      anchor.removeAttribute('title');
+    }
+
+    for (const element of block.querySelectorAll('[onclick]')) {
+      element.removeAttribute('onclick');
+    }
+  }
+
+  function getAnchorLinkTarget(anchor) {
+    if (!(anchor instanceof Element)) {
+      return '';
+    }
+
+    const namespacedHref = anchor.getAttribute('href')
+      || anchor.getAttribute('xlink:href')
+      || anchor.getAttributeNS?.('http://www.w3.org/1999/xlink', 'href')
+      || anchor.getAttribute('data-href');
+    if (typeof namespacedHref === 'string' && namespacedHref.trim()) {
+      return namespacedHref.trim();
+    }
+
+    const hrefObject = anchor.href;
+    if (typeof hrefObject === 'string' && hrefObject.trim()) {
+      return hrefObject.trim();
+    }
+
+    if (hrefObject && typeof hrefObject === 'object') {
+      const baseVal = typeof hrefObject.baseVal === 'string' ? hrefObject.baseVal.trim() : '';
+      if (baseVal) {
+        return baseVal;
+      }
+
+      const animVal = typeof hrefObject.animVal === 'string' ? hrefObject.animVal.trim() : '';
+      if (animVal) {
+        return animVal;
+      }
+    }
+
+    return '';
+  }
+
+  function normalizeRenderedMermaidSvgSizing(block) {
+    if (!(block instanceof HTMLElement)) {
+      return;
+    }
+
+    const svg = block.querySelector('svg');
+    if (!(svg instanceof SVGElement)) {
+      return;
+    }
+
+    const viewBox = parseSvgViewBox(svg.getAttribute('viewBox'));
+    if (!viewBox || viewBox.width <= 0 || viewBox.height <= 0) {
+      return;
+    }
+
+    svg.setAttribute('width', String(viewBox.width));
+    svg.setAttribute('height', String(viewBox.height));
+    if (!svg.hasAttribute('preserveAspectRatio')) {
+      svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    }
+
+    svg.style.removeProperty('width');
+    svg.style.removeProperty('height');
+    svg.style.removeProperty('max-width');
+  }
+
+  function patchTransparentMermaidBackground(block) {
+    if (!(block instanceof HTMLElement)) {
+      return;
+    }
+
+    const svg = block.querySelector('svg');
+    if (!(svg instanceof SVGElement)) {
+      return;
+    }
+
+    svg.classList.add('mermaid-background-transparent');
+    svg.style.background = 'transparent';
+    svg.style.backgroundColor = 'transparent';
+
+    const viewBox = parseSvgViewBox(svg.getAttribute('viewBox'));
+    const backgroundElements = block.querySelectorAll('svg > rect, svg .background, svg rect.background, svg .diagram-background');
+    for (const element of backgroundElements) {
+      if (!(element instanceof SVGElement) || !isMermaidBackgroundElement(element, viewBox)) {
+        continue;
+      }
+
+      element.setAttribute('fill', 'transparent');
+      element.style.fill = 'transparent';
+      element.style.background = 'transparent';
+      element.style.backgroundColor = 'transparent';
+    }
+  }
+
+  function parseSvgViewBox(value) {
+    const parts = (value || '').trim().split(/\\s+/).map((part) => Number(part));
+    if (parts.length !== 4 || parts.some((part) => Number.isNaN(part))) {
+      return undefined;
+    }
+
+    return {
+      width: parts[2],
+      height: parts[3],
+    };
+  }
+
+  function isMermaidBackgroundElement(element, viewBox) {
+    const className = String(element.getAttribute('class') || '').toLowerCase();
+    const id = String(element.getAttribute('id') || '').toLowerCase();
+    if (className.includes('background') || id.includes('background')) {
+      return true;
+    }
+
+    if (element.parentElement?.tagName.toLowerCase() !== 'svg') {
+      return false;
+    }
+
+    const width = String(element.getAttribute('width') || '').trim();
+    const height = String(element.getAttribute('height') || '').trim();
+    if (width === '100%' || height === '100%') {
+      return true;
+    }
+
+    if (!viewBox) {
+      return false;
+    }
+
+    return Number(width) >= viewBox.width && Number(height) >= viewBox.height;
+  }
 })();`;
+}
+
+function resolveExportDocumentTheme(
+  extensionUri: vscode.Uri,
+  document: vscode.TextDocument,
+  source: string,
+): {
+  hostThemeClass: string;
+  bodyClass: string;
+  bodyAttributes: string;
+  documentThemeCss: string;
+} {
+  const hostThemeClass = getHostThemeClass();
+
+  try {
+    const meta = extractMarkdownFrontMatterMeta(source);
+    const documentThemeRegistry = loadDocumentThemeRegistryForDocument(extensionUri, document.uri);
+    const frontMatterTheme = typeof meta.theme === 'string' ? meta.theme : '';
+    const settingTheme = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('documentPreviewTheme', 'auto');
+    const selection = resolveDocumentThemeSelection(frontMatterTheme || settingTheme, documentThemeRegistry);
+
+    return {
+      hostThemeClass,
+      bodyClass: ['preview-mode-document', selection.themeClassName, `document-theme-mode-${selection.themeMode}`, hostThemeClass]
+        .filter(Boolean)
+        .join(' '),
+      bodyAttributes: buildBodyAttributes({
+        previewMode: 'document',
+        documentTheme: selection.themeName,
+        documentThemeMode: selection.themeMode,
+        documentMermaidThemeLight: selection.lightMermaidTheme,
+        documentMermaidThemeDark: selection.darkMermaidTheme,
+        documentMermaidTransparentBackgroundLight: selection.lightMermaidTransparentBackground ? 'true' : 'false',
+        documentMermaidTransparentBackgroundDark: selection.darkMermaidTransparentBackground ? 'true' : 'false',
+      }),
+      documentThemeCss: buildDocumentThemeStylesheet(documentThemeRegistry),
+    };
+  } catch (error) {
+    console.warn('[markdown-ai-studio] Failed to resolve export document theme. Falling back to auto theme.', error);
+    return {
+      hostThemeClass,
+      bodyClass: ['preview-mode-document', 'document-theme-auto', 'document-theme-mode-auto', hostThemeClass]
+        .filter(Boolean)
+        .join(' '),
+      bodyAttributes: buildBodyAttributes({
+        previewMode: 'document',
+        documentTheme: 'auto',
+        documentThemeMode: 'auto',
+        documentMermaidThemeLight: 'default',
+        documentMermaidThemeDark: 'dark',
+        documentMermaidTransparentBackgroundLight: 'false',
+        documentMermaidTransparentBackgroundDark: 'false',
+      }),
+      documentThemeCss: '',
+    };
+  }
+}
+
+function buildBodyAttributes(attributes: Record<string, string>): string {
+  return Object.entries(attributes)
+    .map(([name, value]) => ` data-${toKebabCase(name)}="${escapeHtml(value)}"`)
+    .join('');
+}
+
+function toKebabCase(value: string): string {
+  return value.replace(/[A-Z]/gu, (match) => `-${match.toLowerCase()}`);
+}
+
+function getHostThemeClass(): string {
+  const kind = vscode.window.activeColorTheme.kind;
+  return kind === vscode.ColorThemeKind.Dark || kind === vscode.ColorThemeKind.HighContrast
+    ? 'vscode-dark'
+    : '';
 }
 
 function escapeHtml(value: string): string {

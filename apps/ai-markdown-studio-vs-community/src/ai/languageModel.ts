@@ -1,12 +1,7 @@
 import * as vscode from 'vscode';
 import { assertAiFeaturesEnabled } from './aiConsent';
+import { buildClipboardMarkdownPrompt } from './clipboardMarkdown';
 const REQUEST_TIMEOUT_MS = 10 * 60 * 1000;
-const CLIPBOARD_TO_MARKDOWN_PROMPT = [
-  'Convert the supplied clipboard content into well-structured Markdown.',
-  'Preserve all meaningful information and hierarchy.',
-  'Use headings, lists, tables, blockquotes, and fenced code blocks when appropriate.',
-  'Return raw Markdown only, without a code fence around the complete response.',
-].join('\n');
 
 export async function isLanguageModelAvailable(): Promise<boolean> {
   return (await vscode.lm.selectChatModels({ vendor: 'copilot' })).length > 0;
@@ -17,7 +12,7 @@ export async function convertClipboardTextToMarkdown(
   cancellationToken?: vscode.CancellationToken,
 ): Promise<string> {
   return generateTextWithLanguageModel(
-    `${CLIPBOARD_TO_MARKDOWN_PROMPT}\n\n---\n\n${text}`,
+    buildClipboardMarkdownPrompt(text),
     cancellationToken,
     'Convert clipboard content to Markdown',
   );

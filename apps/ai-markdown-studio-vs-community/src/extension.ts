@@ -11,16 +11,16 @@ import {
   showCommandListCommand,
 } from './commands/markdownCommands';
 import { pasteAsMarkdownCommand } from './commands/aiCommands';
-import { enableAiFeaturesCommand } from './ai/aiConsent';
+import { enableAiFeaturesCommand, initializeAiConsent } from './ai/aiConsent';
 import { refreshCopilotConfiguredContext } from './ai/copilotAvailability';
 import { generateDocumentCommand } from './generate/documentGenerationCommand';
 import { generatePresentationCommand } from './generate/presentationGenerationCommand';
 import { createCommunityApi } from './api/communityApi';
-import { getBundledDocumentThemeDirectory, openDocumentThemesFolder } from './document/documentThemeSupport';
+import { getBundledDocumentThemeDirectory } from './document/documentThemeSupport';
 import { MarkdownPreviewCustomEditor } from './panel/MarkdownPreviewCustomEditor';
 import { MarkdownPreviewPanel } from './panel/MarkdownPreviewPanel';
 import { registerMpsEditorSupport } from './presentation/mpsEditorSupport';
-import { getBundledPreviewThemeDirectory, openPresentationThemesFolder } from './presentation/previewThemeSupport';
+import { getBundledPreviewThemeDirectory } from './presentation/previewThemeSupport';
 import {
   hasDisplayableFrontMatter,
   refreshPreviewFrontMatterContext,
@@ -54,6 +54,7 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
     await refreshPreviewFrontMatterContext(document);
   };
   void vscode.commands.executeCommand('setContext', 'markdownAiStudio.proInstalled', false);
+  void initializeAiConsent();
   void refreshCopilotConfiguredContext();
 
   context.subscriptions.push(
@@ -105,12 +106,6 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
     vscode.commands.registerCommand('markdownAiStudio.enableAiFeatures', enableAiFeaturesCommand),
     vscode.commands.registerCommand('markdownAiStudio.openSettings', async () => {
       await openSettingsCommand();
-    }),
-    vscode.commands.registerCommand('markdownAiStudio.openDocumentThemesFolder', async () => {
-      await openDocumentThemesFolder();
-    }),
-    vscode.commands.registerCommand('markdownAiStudio.openPresentationThemesFolder', async () => {
-      await openPresentationThemesFolder();
     }),
     vscode.commands.registerCommand('markdownAiStudio.showCommandList', async (resource?: vscode.Uri) => {
       const targetResource = (resource?.scheme === 'file' ? resource : undefined)
@@ -178,6 +173,10 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (!event.affectsConfiguration('markdownAiStudio')) {
         return;
+      }
+
+      if (event.affectsConfiguration('markdownAiStudio.aiAccess')) {
+        await initializeAiConsent();
       }
 
       for (const preview of previews.values()) {

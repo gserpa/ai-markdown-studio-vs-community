@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:fs/promises', () => ({
   readFile: vi.fn(async (filePath: string) => {
@@ -15,12 +15,40 @@ vi.mock('node:fs/promises', () => ({
   writeFile: vi.fn(),
 }));
 
+vi.mock('@mfo/preview-web', () => ({
+  buildDocumentThemeStylesheet: vi.fn(() => 'body.document-theme-light { --md-preview-body-color: #111111; }'),
+  resolveDocumentThemeSelection: vi.fn((themeName: string) => ({
+    themeName: themeName || 'auto',
+    themeClassName: themeName === 'light' ? 'document-theme-light' : 'document-theme-auto',
+    themeMode: themeName === 'light' ? 'light' : 'auto',
+    lightMermaidTheme: 'default',
+    darkMermaidTheme: themeName === 'light' ? 'default' : 'dark',
+    lightMermaidTransparentBackground: false,
+    darkMermaidTransparentBackground: false,
+  })),
+}));
+
+vi.mock('../../../src/document/documentThemeSupport', () => ({
+  loadDocumentThemeRegistryForDocument: vi.fn(() => ({ themes: new Map(), aliases: new Map(), warnings: [] })),
+}));
+
 vi.mock('vscode', () => ({
+  ColorThemeKind: {
+    Light: 1,
+    Dark: 2,
+    HighContrast: 3,
+    HighContrastLight: 4,
+  },
   workspace: {
     getWorkspaceFolder: vi.fn(() => undefined),
     getConfiguration: vi.fn(() => ({
-      get: vi.fn((_key: string, fallback: unknown) => fallback),
+      get: vi.fn((key: string, fallback: unknown) => key === 'documentPreviewTheme' ? 'auto' : fallback),
     })),
+  },
+  window: {
+    activeColorTheme: {
+      kind: 1,
+    },
   },
   Uri: {
     file: (fsPath: string) => ({
@@ -43,6 +71,13 @@ import { buildExportHtmlString } from '../../../src/export/html/htmlExporter';
 import * as vscode from 'vscode';
 
 describe('buildExportHtmlString', () => {
+  beforeEach(() => {
+    vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+      get: vi.fn((key: string, fallback: unknown) => key === 'documentPreviewTheme' ? 'auto' : fallback),
+    } as never);
+    vscode.window.activeColorTheme.kind = vscode.ColorThemeKind.Light;
+  });
+
   it('omits leading frontmatter while preserving body horizontal rules', async () => {
     const source = [
       '---',
@@ -77,10 +112,82 @@ describe('buildExportHtmlString', () => {
     expect(html).not.toContain('theme: light');
   });
 
+  it('uses the resolved document theme metadata for export markup', async () => {
+    const source = [
+      '---',
+      'title: Themed export',
+      'theme: light',
+      '---',
+      '',
+      '# Heading',
+    ].join('\n');
+    const document = {
+      fileName: 'example.md',
+      uri: {
+        fsPath: 'C:/docs/example.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/example.md',
+      },
+      getText: () => source,
+    } as never;
+
+    const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+
+    expect(html).toContain('class="preview-mode-document document-theme-light document-theme-mode-light"');
+    expect(html).toContain('data-document-theme="light"');
+    expect(html).toContain('data-document-mermaid-theme-dark="default"');
+  });
+
+  it('pins auto-theme exports to the current VS Code dark mode when preview is dark', async () => {
+    vscode.window.activeColorTheme.kind = vscode.ColorThemeKind.Dark;
+
+    const document = {
+      fileName: 'example.md',
+      uri: {
+        fsPath: 'C:/docs/example.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/example.md',
+      },
+      getText: () => '# Heading',
+    } as never;
+
+    const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+
+    expect(html).toContain('<html lang="en" class="vscode-dark">');
+    expect(html).toContain('class="preview-mode-document document-theme-auto document-theme-mode-auto vscode-dark" data-preview-mode="document"');
+    expect(html).toContain('data-document-mermaid-theme-dark="dark"');
+  });
+
+  it('uses the same Mermaid label mode as preview for exported diagrams', async () => {
+    vscode.window.activeColorTheme.kind = vscode.ColorThemeKind.Dark;
+
+    const document = {
+      fileName: 'example.md',
+      uri: {
+        fsPath: 'C:/docs/example.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/example.md',
+      },
+      getText: () => '```mermaid\nflowchart TD\nA-->B\n```',
+    } as never;
+
+    const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+
+    expect(html).toContain('htmlLabels: true');
+    expect(html).toContain("document.querySelectorAll('.mermaid, .mermaid-rendered[data-mermaid-source]')");
+    expect(html).toContain('normalizeRenderedMermaidSvgSizing(block);');
+  });
+
   it('omits remote image src attributes when allowRemoteResources is false', async () => {
     vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
-      get: vi.fn((key: string, fallback: unknown) => key === 'allowRemoteResources' ? false : fallback),
-    });
+      get: vi.fn((key: string, fallback: unknown) => {
+        if (key === 'allowRemoteResources') {
+          return false;
+        }
+
+        return key === 'documentPreviewTheme' ? 'auto' : fallback;
+      }),
+    } as never);
 
     const document = {
       fileName: 'example.md',

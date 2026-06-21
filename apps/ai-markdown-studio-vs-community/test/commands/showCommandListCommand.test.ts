@@ -33,7 +33,7 @@ const featureContributionsMock = vi.hoisted(() => ({
 }));
 
 const aiConsentMock = vi.hoisted(() => ({
-  isAiAuthorizationDenied: vi.fn(),
+  getAiAccessState: vi.fn(),
 }));
 
 vi.mock('../../src/api/featureContributions', () => ({
@@ -41,7 +41,7 @@ vi.mock('../../src/api/featureContributions', () => ({
 }));
 
 vi.mock('../../src/ai/aiConsent', () => ({
-  isAiAuthorizationDenied: aiConsentMock.isAiAuthorizationDenied,
+  getAiAccessState: aiConsentMock.getAiAccessState,
 }));
 
 import * as vscode from 'vscode';
@@ -54,7 +54,7 @@ describe('showCommandListCommand', () => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
     vscodeMocks.copilotConfigured = true;
-    aiConsentMock.isAiAuthorizationDenied.mockReturnValue(false);
+    aiConsentMock.getAiAccessState.mockReturnValue('enabled');
     featureContributionsMock.listFeatureContributions.mockReturnValue([
       {
         id: 'markdown-ai-studio-pro',
@@ -172,8 +172,34 @@ describe('showCommandListCommand', () => {
     expect(capturedLabels).not.toContain('Export: DOCX');
   });
 
-  it('shows AI commands when Copilot is configured and authorization has not been denied', async () => {
+  it('shows both Enable AI Features and AI commands in ask state', async () => {
     const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    aiConsentMock.getAiAccessState.mockReturnValue('ask');
+    vscodeMocks.openTextDocument.mockResolvedValue({
+      uri: documentUri,
+      getText: () => '# Example',
+    });
+    const capturedLabels: string[] = [];
+    vscodeMocks.showQuickPick.mockImplementation(async (items: Array<{ label: string }>) => {
+      capturedLabels.push(...items.map((item) => item.label));
+      return undefined;
+    });
+
+    vi.spyOn(MarkdownPreviewCustomEditor, 'getActiveDocumentUri').mockReturnValue(undefined);
+    vi.spyOn(MarkdownPreviewPanel, 'getActivePreviewDocumentUri').mockReturnValue(undefined);
+
+    await showCommandListCommand(documentUri);
+
+    expect(capturedLabels).toContain('AI: Enable Features...');
+    expect(capturedLabels).toContain('AI: Generate Document');
+    expect(capturedLabels).toContain('AI: Generate Presentation');
+    expect(capturedLabels).toContain('AI: Generate Document Theme');
+    expect(capturedLabels).toContain('AI: Generate Presentation Theme');
+  });
+
+  it('hides Enable AI Features once AI access is enabled', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    aiConsentMock.getAiAccessState.mockReturnValue('enabled');
     vscodeMocks.openTextDocument.mockResolvedValue({
       uri: documentUri,
       getText: () => '# Example',
@@ -198,7 +224,7 @@ describe('showCommandListCommand', () => {
 
   it('hides AI commands when AI authorization has been denied', async () => {
     const documentUri = vscode.Uri.file('C:/workspace/example.md');
-    aiConsentMock.isAiAuthorizationDenied.mockReturnValue(true);
+    aiConsentMock.getAiAccessState.mockReturnValue('denied');
     vscodeMocks.openTextDocument.mockResolvedValue({
       uri: documentUri,
       getText: () => '# Example',

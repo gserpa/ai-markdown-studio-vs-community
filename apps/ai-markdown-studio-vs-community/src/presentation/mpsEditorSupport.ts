@@ -131,12 +131,7 @@ export function registerMpsEditorSupport(extensionUri: vscode.Uri): vscode.Dispo
     hoverProvider,
     codeActionProvider,
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (
-        !event.affectsConfiguration('markdownAiStudio.presentationThemesFolder') &&
-        !event.affectsConfiguration('markdownAiStudio.previewThemeDirectory') &&
-        !event.affectsConfiguration('markdownAiStudio.documentThemesFolder') &&
-        !event.affectsConfiguration('markdownAiStudio.globalDocumentThemeDirectory')
-      ) {
+      if (!event.affectsConfiguration('markdownAiStudio')) {
         return;
       }
 

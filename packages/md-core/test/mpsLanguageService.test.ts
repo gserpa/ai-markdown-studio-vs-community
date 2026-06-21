@@ -13,6 +13,20 @@ describe('validateMpsSource', () => {
     expect(issues.some((issue) => issue.message.includes('document: presentation'))).toBe(true);
   });
 
+  it('does not warn for plain markdown front matter without presentation markers', () => {
+    const issues = validateMpsSource(`---
+theme: auto
+title: Notes
+---
+
+# Title
+
+Body text.
+`, schema);
+
+    expect(issues.some((issue) => issue.code === 'missing-document-kind')).toBe(false);
+  });
+
   it('validates front matter enum values and slide directive placement', () => {
     const issues = validateMpsSource(`---
 document: presentation

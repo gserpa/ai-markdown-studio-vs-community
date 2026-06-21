@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { convertClipboardTextToMarkdown } from '../ai/languageModel';
+import { extractMarkdownFilename } from '../ai/clipboardMarkdown';
 import { ensureAiFeaturesEnabled } from '../ai/aiConsent';
-import { createUniqueUri } from '../util/workspaceFiles';
+import { createUniqueUri, normalizeMarkdownFilename } from '../util/workspaceFiles';
 
 export async function pasteAsMarkdownCommand(resource?: vscode.Uri): Promise<void> {
   if (!resource || resource.scheme !== 'file') {
@@ -21,7 +22,8 @@ export async function pasteAsMarkdownCommand(resource?: vscode.Uri): Promise<voi
     cancellable: true,
   }, async (_progress, token) => {
     const markdown = await convertClipboardTextToMarkdown(text, token);
-    const target = await createUniqueUri(resource, 'pasted.md');
+    const filename = extractMarkdownFilename(markdown);
+    const target = await createUniqueUri(resource, filename ? normalizeMarkdownFilename(filename) : 'pasted.md');
     await vscode.workspace.fs.writeFile(target, Buffer.from(`${markdown.trim()}\n`, 'utf8'));
     await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(target));
   });

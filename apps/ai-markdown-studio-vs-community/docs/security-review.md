@@ -40,7 +40,7 @@ Community deliberately contains no PDF/PPTX export, Microsoft Word/PowerShell au
   - scoped `localResourceRoots` rather than full-workspace exposure
   - an automated boundary check that rejects Pro source, Pro dependencies, Pro commands, and packaged source/test files from the Community VSIX
 - `npm audit` reports **0 known vulnerabilities** at the time of this review.
-- Some AI-supported features use only the GitHub Copilot service already configured in VS Code. If Copilot is not configured, those AI surfaces stay hidden. If Copilot is configured and the user has not explicitly denied access, the AI surfaces are shown and the consent flow appears when they are used. If the user denies access, the AI surfaces hide again except for **Enable AI Features...**. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials.
+- Some AI-supported features use only the GitHub Copilot service already configured in VS Code. If Copilot is not configured, those AI surfaces stay hidden. If Copilot is configured, the default `markdownAiStudio.aiAccess` state keeps AI surfaces visible and shows the consent flow only when an AI feature actually runs. If the user denies access, the AI surfaces hide again except for **Enable AI Features...**. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials.
 - The main residual risks are **content-trust risks** associated with rendering Markdown that references remote or local resources.
 
 ### Security posture summary
@@ -145,7 +145,7 @@ Network activity can occur after a user enables and invokes Generate Document, G
 
 #### VS Code Language Model API
 
-AI-supported functionality is controlled by a simple three-state model. If GitHub Copilot is not configured in VS Code, the AI surfaces stay hidden. If Copilot is configured and the user has not explicitly denied access, the AI surfaces stay visible and the consent flow appears when the user invokes them. If the user denies access, the AI surfaces hide again except for **Enable AI Features...**. The persisted `markdownAiStudio.aiFeaturesEnabled` setting records whether the user accepted AI access, and the persisted denial state records an explicit refusal. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The extension stores no provider API key. The copy-prompt path calls no model.
+AI-supported functionality is controlled by a simple three-state model. If GitHub Copilot is not configured in VS Code, the AI surfaces stay hidden. If Copilot is configured and `markdownAiStudio.aiAccess` is `ask`, the AI surfaces stay visible and the consent flow appears only when the user actually tries to run an AI feature. If `markdownAiStudio.aiAccess` is `enabled`, AI features run without repeating the disclosure. If `markdownAiStudio.aiAccess` is `denied`, the AI surfaces hide again except for **Enable AI Features...**. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The extension stores no provider API key. The copy-prompt path calls no model.
 
 ## 5. Existing security controls
 
@@ -209,7 +209,7 @@ Security-positive aspects:
 
 #### Description
 
-Generate Document, Generate Presentation, and Paste as New Markdown File are examples of AI-supported functionality that use only the GitHub Copilot service already configured in VS Code and share the user-supplied brief or clipboard text with that embedded AI service for processing. If GitHub Copilot is not configured, those commands stay hidden. If Copilot is configured and access has not been explicitly denied, the commands are visible and prompt for consent when used. If the user denies access, the commands hide again except for **Enable AI Features...**. Calls are explicit and command-driven; the extension does not upload documents in the background. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The copy-prompt option does not call Copilot.
+Generate Document, Generate Presentation, and Paste as New Markdown File are examples of AI-supported functionality that use only the GitHub Copilot service already configured in VS Code and share the user-supplied brief or clipboard text with that embedded AI service for processing. If GitHub Copilot is not configured, those commands stay hidden. If Copilot is configured and `markdownAiStudio.aiAccess` is `ask` or `enabled`, the commands are visible. The consent flow appears on first real AI use while the state is `ask`; if the user denies access, the commands hide again except for **Enable AI Features...**. Calls are explicit and command-driven; the extension does not upload documents in the background. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The copy-prompt option does not call Copilot.
 
 #### Security impact
 
@@ -279,6 +279,6 @@ Consider a safety mode for untrusted workspaces that blocks absolute local paths
 
 ## 9. Bottom line
 
-AI Markdown Studio Community uses scoped resources, strict Mermaid mode, sanitization, and a machine-enforced edition boundary to reduce content-trust risks. AI-supported features use only the GitHub Copilot service already configured in VS Code, appear only when Copilot is configured and access has not been explicitly denied, and can be revoked at any time in Settings. AI Markdown Studio does not connect to any other third-party AI service or bring its own AI account or credentials.
+AI Markdown Studio Community uses scoped resources, strict Mermaid mode, sanitization, and a machine-enforced edition boundary to reduce content-trust risks. AI-supported features use only the GitHub Copilot service already configured in VS Code, appear only when Copilot is configured and `markdownAiStudio.aiAccess` is not `denied`, and can be revoked at any time in Settings. AI Markdown Studio does not connect to any other third-party AI service or bring its own AI account or credentials.
 
 > This is a point-in-time engineering review, not a guarantee. Re-run dependency and audit checks before each release.

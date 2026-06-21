@@ -99,10 +99,7 @@ export function validateMpsSource(source: string, schema: MpsDocumentSchema = cr
 
   const issues: MpsValidationIssue[] = [];
   const slideDirectiveCandidates = findSlideDirectiveCandidates(context.lines, context.frontMatter);
-  const usesKnownPresentationField = context.frontMatter.entries.some(
-    (entry) => schema.frontMatterFieldMap.has(entry.normalizedKey) && entry.normalizedKey !== 'document',
-  );
-  const looksLikePresentation = slideDirectiveCandidates.length > 0 || usesKnownPresentationField || context.isPresentation;
+  const looksLikePresentation = slideDirectiveCandidates.length > 0 || context.isPresentation;
 
   if (context.frontMatter.exists && !context.frontMatter.closed) {
     issues.push(createIssue(
