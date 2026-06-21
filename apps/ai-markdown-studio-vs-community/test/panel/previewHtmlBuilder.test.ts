@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 const vscodeState = vi.hoisted(() => ({
   allowRemoteResources: true,
-  globalDocumentThemeDirectory: '',
+  documentThemeFolder: '',
   workspaceRoot: '',
   proInstalled: false,
 }));
@@ -22,8 +22,8 @@ vi.mock('vscode', () => ({
     getConfiguration: vi.fn(() => ({
       get: vi.fn((key: string, fallback: unknown) => (key === 'allowRemoteResources' ? vscodeState.allowRemoteResources : fallback)),
       inspect: vi.fn((key: string) => {
-        if (key === 'globalDocumentThemeDirectory') {
-          return { globalValue: vscodeState.globalDocumentThemeDirectory };
+        if (key === 'documentThemeFolder') {
+          return { globalValue: vscodeState.documentThemeFolder };
         }
         return { globalValue: undefined };
       }),
@@ -155,7 +155,7 @@ describe('buildPreviewHtml', () => {
     const documentUri = { fsPath: path.join(workspaceRoot, 'docs', 'example.md'), scheme: 'file', toString: () => 'file:///C:/docs/example.md' };
 
     vscodeState.workspaceRoot = workspaceRoot;
-    vscodeState.globalDocumentThemeDirectory = globalRoot;
+    vscodeState.documentThemeFolder = globalRoot;
     vscodeState.proInstalled = true;
 
     createThemeFile(workspaceThemeDir, 'lumen-paper.json', 'lumen-paper');

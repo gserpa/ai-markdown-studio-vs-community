@@ -3,8 +3,10 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { loadDocumentThemeRegistryFromDirectories, type DocumentThemeRegistry } from '@mfo/preview-web';
 import { resolveExtensionAssetUri } from '../util/extensionSupportRoot';
+import { resolveConfiguredAbsolutePath } from '../util/configuredPaths';
 
 const PRO_EXTENSION_ID = 'GustavoSerpa.markdown-ai-studio-pro';
+const DOCUMENT_THEME_FOLDER_SETTING = 'documentThemeFolder';
 
 export function getBundledDocumentThemeDirectory(extensionUri: vscode.Uri): string {
   return resolveExtensionAssetUri(extensionUri, 'preview', 'themes', 'document').fsPath;
@@ -51,20 +53,15 @@ function isProInstalled(): boolean {
 function getConfiguredGlobalDocumentThemeDirectory(): string | undefined {
   const configuredValue = vscode.workspace
     .getConfiguration('markdownAiStudio')
-    .inspect<string>('globalDocumentThemeDirectory')
+    .inspect<string>(DOCUMENT_THEME_FOLDER_SETTING)
     ?.globalValue;
 
   if (typeof configuredValue !== 'string') {
     return undefined;
   }
 
-  const normalizedPath = path.normalize(configuredValue.trim());
+  const normalizedPath = resolveConfiguredAbsolutePath(configuredValue);
   if (!normalizedPath) {
-    return undefined;
-  }
-
-  if (!path.isAbsolute(normalizedPath)) {
-    console.warn('[markdown-ai-studio] Ignoring markdownAiStudio.globalDocumentThemeDirectory because it is not an absolute path.');
     return undefined;
   }
 

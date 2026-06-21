@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const vscodeState = vi.hoisted(() => ({
-  previewThemeDirectory: '',
+  presentationThemeFolder: '',
   workspaceRoot: '',
   proInstalled: false,
 }));
@@ -20,8 +20,8 @@ vi.mock('vscode', () => ({
   workspace: {
     getConfiguration: vi.fn(() => ({
       inspect: vi.fn((key: string) => {
-        if (key === 'previewThemeDirectory') {
-          return { globalValue: vscodeState.previewThemeDirectory };
+        if (key === 'presentationThemeFolder') {
+          return { globalValue: vscodeState.presentationThemeFolder };
         }
         return { globalValue: undefined };
       }),
@@ -52,6 +52,18 @@ function createThemeFile(directory: string, fileName: string, name: string): str
 }
 
 describe('previewThemeSupport', () => {
+  const originalUserProfile = process.env.USERPROFILE;
+
+  beforeEach(() => {
+    vscodeState.presentationThemeFolder = '';
+    vscodeState.workspaceRoot = '';
+    vscodeState.proInstalled = false;
+  });
+
+  afterEach(() => {
+    process.env.USERPROFILE = originalUserProfile;
+  });
+
   it('includes only the bundled presentation theme directory when Pro is not installed', () => {
     const extensionUri = { fsPath: 'C:/extension-root', scheme: 'file' };
     const documentUri = { fsPath: 'C:/workspace/slides/deck.md', scheme: 'file' };
@@ -70,7 +82,7 @@ describe('previewThemeSupport', () => {
     const extensionUri = { fsPath: path.join(workspaceRoot, 'fake-extension-root'), scheme: 'file' };
 
     vscodeState.workspaceRoot = workspaceRoot;
-    vscodeState.previewThemeDirectory = globalRoot;
+    vscodeState.presentationThemeFolder = globalRoot;
     vscodeState.proInstalled = true;
 
     createThemeFile(workspaceThemeDir, 'workspace-theme.json', 'workspace-theme');
@@ -81,5 +93,23 @@ describe('previewThemeSupport', () => {
     expect(directories).toContain(path.normalize(globalThemeDir));
     expect(directories).toContain(path.normalize(workspaceThemeDir));
     expect(directories[directories.length - 1]).toBe(path.normalize(workspaceThemeDir));
+  });
+
+  it('expands Windows environment variables in the global presentation theme folder', () => {
+    const globalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mads-global-pres-'));
+    const configuredRoot = path.join(globalRoot, 'AI Markdown Studio', 'Themes', 'Presentation');
+    const globalThemeDir = path.join(configuredRoot, 'presentation-themes');
+    const documentUri = { fsPath: 'C:/workspace/slides/deck.md', scheme: 'file' };
+    const extensionUri = { fsPath: 'C:/extension-root', scheme: 'file' };
+
+    vscodeState.presentationThemeFolder = path.join('%userprofile%', 'AI Markdown Studio', 'Themes', 'Presentation');
+    vscodeState.proInstalled = true;
+    process.env.USERPROFILE = globalRoot;
+
+    createThemeFile(globalThemeDir, 'global-theme.json', 'global-theme');
+
+    const directories = getPreviewThemeDirectories(extensionUri as never, documentUri as never);
+
+    expect(directories).toContain(path.normalize(globalThemeDir));
   });
 });
