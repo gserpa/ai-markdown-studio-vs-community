@@ -207,6 +207,10 @@ function buildOrderedQuickPickEntries(entries: Map<string, CommandListEntry>, co
 
 function shouldShowCommand(entry: CommandListEntry, context: CommandListContext): boolean {
   const command = entry.command;
+  if (command === 'markdownAiStudio.convertToMarkdown') {
+    return false;
+  }
+
   if (entry.requiresAi) {
     if (!context.copilotConfigured) {
       return false;

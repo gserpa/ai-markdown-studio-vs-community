@@ -62,6 +62,7 @@ describe('showCommandListCommand', () => {
         commands: [
           { command: 'markdownAiStudio.generateDocumentTheme', title: 'AI: Generate Document Theme', order: 4.1, requiresAi: true },
           { command: 'markdownAiStudio.generatePresentationTheme', title: 'AI: Generate Presentation Theme', order: 4.2, requiresAi: true },
+          { command: 'markdownAiStudio.convertToMarkdown', title: 'Convert to Markdown', order: 5, requiresAi: true },
           { command: 'markdownAiStudio.exportDocx', title: 'Export: DOCX', order: 7, replaces: ['markdownAiStudio.exportDocxBasic'] },
           { command: 'markdownAiStudio.exportPptx', title: 'Export: PPTX', order: 7.1, presentationOnly: true },
           { command: 'markdownAiStudio.exportPdf', title: 'Export: PDF', order: 7.2 },
@@ -106,6 +107,7 @@ describe('showCommandListCommand', () => {
     expect(capturedLabels).not.toContain('AI: Enable Features...');
     expect(capturedLabels).not.toContain('Edit Markdown');
     expect(capturedLabels).not.toContain('Export: PPTX');
+    expect(capturedLabels).not.toContain('Convert to Markdown');
   });
 
   it('switches to edit mode and only shows PPTX export for presentations', async () => {
