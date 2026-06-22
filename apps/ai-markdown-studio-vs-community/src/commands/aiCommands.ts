@@ -16,15 +16,46 @@ export async function pasteAsMarkdownCommand(resource?: vscode.Uri): Promise<voi
     return;
   }
 
-  await vscode.window.withProgress({
-    location: vscode.ProgressLocation.Notification,
-    title: 'Converting clipboard content to Markdown...',
-    cancellable: true,
-  }, async (_progress, token) => {
-    const markdown = await convertClipboardTextToMarkdown(text, token);
-    const filename = extractMarkdownFilename(markdown);
-    const target = await createUniqueUri(resource, filename ? normalizeMarkdownFilename(filename) : 'pasted.md');
-    await vscode.workspace.fs.writeFile(target, Buffer.from(`${markdown.trim()}\n`, 'utf8'));
-    await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(target));
-  });
+  let target: vscode.Uri | undefined;
+  try {
+    await vscode.window.withProgress({
+      location: vscode.ProgressLocation.Notification,
+      title: 'Converting clipboard content to Markdown...',
+      cancellable: true,
+    }, async (_progress, token) => {
+      const markdown = await convertClipboardTextToMarkdown(text, token);
+      const output = markdown.trim();
+      if (!output) {
+        throw new Error('The language model returned an empty response.');
+      }
+
+      const filename = extractMarkdownFilename(markdown);
+      const requestedName = filename ? normalizeMarkdownFilename(filename) : 'pasted.md';
+      target = await createUniqueUri(resource, requestedName);
+      await vscode.workspace.fs.writeFile(target, Buffer.from(`${output}\n`, 'utf8'));
+    });
+  } catch (error) {
+    if (isCancellationError(error)) {
+      void vscode.window.showInformationMessage('Paste as New Markdown File cancelled.');
+      return;
+    }
+
+    target = target ?? await createUniqueUri(resource, 'pasted.md');
+    await vscode.workspace.fs.writeFile(target, Buffer.from(`${text.trim()}\n`, 'utf8'));
+    const details = error instanceof Error ? error.message : String(error);
+    void vscode.window.showWarningMessage(
+      `AI conversion failed, so the clipboard text was saved as-is instead. ${details}`,
+    );
+  }
+
+  const resolvedTarget = target ?? await createUniqueUri(resource, 'pasted.md');
+  await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(resolvedTarget));
+}
+
+function isCancellationError(error: unknown): boolean {
+  if (error instanceof vscode.CancellationError) {
+    return true;
+  }
+
+  return error instanceof Error && /cancelled|canceled/i.test(error.message);
 }
