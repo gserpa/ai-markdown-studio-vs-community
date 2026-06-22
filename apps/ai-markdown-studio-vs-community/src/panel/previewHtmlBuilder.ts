@@ -199,7 +199,7 @@ export function buildDocumentPreviewBody(
     ? `<aside class="frontmatter-shell">${buildFrontMatterPanel(source)}</aside>`
     : '';
   const documentBody = `${documentPrefix}${renderMarkdown(stripMarkdownFrontMatter(source))}`;
-  return `${frontMatter}<main class="markdown-body">${documentBody}</main>`;
+  return `<div class="document-preview-shell">${frontMatter}<div class="document-preview-scroll"><main class="markdown-body">${documentBody}</main></div></div>`;
 }
 
 function formatFrontMatterValue(value: unknown): string {

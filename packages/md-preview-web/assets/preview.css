@@ -605,7 +605,26 @@ body.mermaid-lightbox-open {
 }
 
 body.preview-mode-document {
+  height: 100vh;
+  height: 100dvh;
   overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+body.preview-mode-document .document-preview-shell {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body.preview-mode-document .document-preview-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body.preview-mode-document .markdown-body {
@@ -621,6 +640,16 @@ body.preview-mode-document .markdown-body {
   font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
   font-size: var(--vscode-font-size, 13px);
   line-height: normal;
+}
+
+body.preview-mode-document .frontmatter-shell {
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.preview-mode-document[data-preview-page-width='full'] .frontmatter-shell {
+  max-width: none;
 }
 
 .frontmatter-grid {

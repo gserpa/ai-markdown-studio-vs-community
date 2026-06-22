@@ -94,9 +94,10 @@ describe('buildFrontMatterPanel', () => {
       true,
     );
 
-    expect(html).toMatch(/^<aside class="frontmatter-shell">/u);
-    expect(html.indexOf('frontmatter-shell')).toBeLessThan(html.indexOf('<main class="markdown-body">'));
-    expect(html).toContain('</aside><main class="markdown-body">');
+    expect(html).toMatch(/^<div class="document-preview-shell"><aside class="frontmatter-shell">/u);
+    expect(html).toContain('<div class="document-preview-scroll"><main class="markdown-body">');
+    expect(html.indexOf('frontmatter-shell')).toBeLessThan(html.indexOf('document-preview-scroll'));
+    expect(html).toContain('</aside><div class="document-preview-scroll"><main class="markdown-body">');
     expect(html).toContain('<p># Body</p>');
   });
 });
