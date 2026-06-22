@@ -138,6 +138,27 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('data-document-mermaid-theme-dark="default"');
   });
 
+  it('keeps exported document html page-scrollable', async () => {
+    const document = {
+      fileName: 'example.md',
+      uri: {
+        fsPath: 'C:/docs/example.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/example.md',
+      },
+      getText: () => '# Heading\n\n'.repeat(200),
+    } as never;
+
+    const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+
+    expect(html).toContain('body.preview-mode-document {');
+    expect(html).toContain('overflow-y: auto;');
+    expect(html).toContain('body.preview-mode-document .document-preview-shell {');
+    expect(html).toContain('min-height: 100vh;');
+    expect(html).toContain('body.preview-mode-document .document-preview-scroll {');
+    expect(html).toContain('overflow: visible;');
+  });
+
   it('strips presentation speaker notes before exporting html', async () => {
     const source = [
       '---',

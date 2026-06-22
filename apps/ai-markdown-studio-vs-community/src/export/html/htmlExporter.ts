@@ -129,6 +129,9 @@ ${input.katexCss}
   <style>
 ${input.previewCss}
   </style>
+  <style>
+${getExportScrollCss()}
+  </style>
 </head>
 <body class="${escapeHtml(input.bodyClass)}" data-preview-mode="document"${input.bodyAttributes}>
   <main class="markdown-body">${input.body}</main>
@@ -140,6 +143,31 @@ ${getMermaidBootstrapScript()}
   </script>
 </body>
 </html>`;
+}
+
+function getExportScrollCss(): string {
+  return `
+body.preview-mode-document {
+  height: auto;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body.preview-mode-document .document-preview-shell {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 100vh;
+}
+
+body.preview-mode-document .document-preview-scroll {
+  display: block;
+  flex: none;
+  min-height: 0;
+  overflow: visible;
+}
+`;
 }
 
 function getExportThemeCss(): string {
