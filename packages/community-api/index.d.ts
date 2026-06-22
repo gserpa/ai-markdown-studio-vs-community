@@ -35,7 +35,12 @@ export interface CommunityApiV1 {
   readonly rendering: {
     renderMarkdown(markdown: string): RenderedMarkdown;
     renderPresentation(markdown: string): RenderedPresentation;
-    buildStandaloneHtml(document: vscode.TextDocument): Promise<string>;
+    buildStandaloneHtml(
+      document: vscode.TextDocument,
+      options?: {
+        pdfBackgroundMode?: 'theme' | 'paper';
+      },
+    ): Promise<string>;
   };
   readonly parsing: {
     detectDocumentKind(markdown: string): 'document' | 'presentation';

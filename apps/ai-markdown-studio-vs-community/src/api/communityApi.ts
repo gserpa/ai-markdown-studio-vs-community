@@ -34,7 +34,10 @@ export function createCommunityApi(extensionVersion: string, extensionUri: vscod
         const html = renderPresentationPreview(markdown, renderMarkdown, registry, (html) => new JSDOM(html).window.document).html;
         return Object.freeze({ html, presentation });
       },
-      buildStandaloneHtml: (document: vscode.TextDocument) => buildExportHtmlString(extensionUri, document),
+      buildStandaloneHtml: (
+        document: vscode.TextDocument,
+        options?: { pdfBackgroundMode?: 'theme' | 'paper' },
+      ) => buildExportHtmlString(extensionUri, document, options),
     }),
     parsing: Object.freeze({
       detectDocumentKind: (markdown: string) => isMarkdownPresentationSource(markdown) ? 'presentation' : 'document',

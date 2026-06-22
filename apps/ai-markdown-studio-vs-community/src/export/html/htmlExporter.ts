@@ -16,7 +16,13 @@ import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../../
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-export async function buildExportHtmlString(extensionUri: vscode.Uri, document: vscode.TextDocument): Promise<string> {
+export type PdfBackgroundMode = 'theme' | 'paper';
+
+export async function buildExportHtmlString(
+  extensionUri: vscode.Uri,
+  document: vscode.TextDocument,
+  options: { pdfBackgroundMode?: PdfBackgroundMode } = {},
+): Promise<string> {
   const [previewCss, katexCss, mermaidScript] = await Promise.all([
     readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.css').fsPath, 'utf8'),
     readFile(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'katex.min.css').fsPath, 'utf8'),
@@ -53,7 +59,7 @@ export async function buildExportHtmlString(extensionUri: vscode.Uri, document: 
 
   const exportMarkdown = getExportMarkdown(source);
   const body = sanitizeRenderedHtml(renderer.render(exportMarkdown));
-  const theme = resolveExportDocumentTheme(extensionUri, document, source);
+  const theme = resolveExportDocumentTheme(extensionUri, document, source, options.pdfBackgroundMode ?? 'theme');
 
   return buildStandaloneHtml({
     title: path.basename(document.fileName),
@@ -65,6 +71,7 @@ export async function buildExportHtmlString(extensionUri: vscode.Uri, document: 
     bodyClass: theme.bodyClass,
     bodyAttributes: theme.bodyAttributes,
     documentThemeCss: theme.documentThemeCss,
+    pdfBackgroundMode: options.pdfBackgroundMode ?? 'theme',
   });
 }
 
@@ -110,6 +117,7 @@ function buildStandaloneHtml(input: {
   bodyClass: string;
   bodyAttributes: string;
   documentThemeCss: string;
+  pdfBackgroundMode: PdfBackgroundMode;
 }): string {
   return `<!DOCTYPE html>
 <html lang="en"${input.htmlClass ? ` class="${escapeHtml(input.htmlClass)}"` : ''}>
@@ -130,7 +138,7 @@ ${input.katexCss}
 ${input.previewCss}
   </style>
   <style>
-${getExportScrollCss()}
+${getExportScrollCss(input.pdfBackgroundMode)}
   </style>
 </head>
 <body class="${escapeHtml(input.bodyClass)}" data-preview-mode="document"${input.bodyAttributes}>
@@ -145,13 +153,22 @@ ${getMermaidBootstrapScript()}
 </html>`;
 }
 
-function getExportScrollCss(): string {
+function getExportScrollCss(pdfBackgroundMode: PdfBackgroundMode): string {
+  const pageBackground = pdfBackgroundMode === 'paper'
+    ? '#ffffff'
+    : 'var(--md-preview-content-bg)';
+
   return `
 body.preview-mode-document {
   height: auto;
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
+  background-color: ${pageBackground};
+}
+
+html {
+  background-color: ${pageBackground};
 }
 
 body.preview-mode-document .document-preview-shell {
@@ -417,6 +434,7 @@ function resolveExportDocumentTheme(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
   source: string,
+  pdfBackgroundMode: PdfBackgroundMode,
 ): {
   hostThemeClass: string;
   bodyClass: string;
@@ -430,7 +448,10 @@ function resolveExportDocumentTheme(
     const documentThemeRegistry = loadDocumentThemeRegistryForDocument(extensionUri, document.uri);
     const frontMatterTheme = typeof meta.theme === 'string' ? meta.theme : '';
     const settingTheme = getResolvedDocumentPreviewThemeSetting(document.uri);
-    const selection = resolveDocumentThemeSelection(frontMatterTheme || settingTheme, documentThemeRegistry);
+    const themeName = pdfBackgroundMode === 'paper'
+      ? 'light'
+      : (frontMatterTheme || settingTheme);
+    const selection = resolveDocumentThemeSelection(themeName, documentThemeRegistry);
 
     return {
       hostThemeClass,
