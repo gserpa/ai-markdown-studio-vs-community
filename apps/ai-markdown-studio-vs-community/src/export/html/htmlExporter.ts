@@ -3,14 +3,19 @@ import {
   createMarkdownRenderer,
   extractMarkdownFrontMatterMeta,
   isMarkdownPresentationSource,
-  parseMarkdownPresentation,
   sanitizeRenderedHtml,
-  resolveMarkdownPresentation,
   stripMarkdownFrontMatter,
 } from '@mfo/core';
-import { buildDocumentThemeStylesheet, resolveDocumentThemeSelection } from '@mfo/preview-web';
+import { JSDOM } from 'jsdom';
+import {
+  buildDocumentThemeStylesheet,
+  buildPreviewThemeStylesheet,
+  renderPresentationPreview,
+  resolveDocumentThemeSelection,
+} from '@mfo/preview-web';
 import { getResolvedDocumentPreviewThemeSetting } from '../../document/documentPreviewThemeSettings';
 import { loadDocumentThemeRegistryForDocument } from '../../document/documentThemeSupport';
+import { loadPreviewThemeRegistryForDocument } from '../../presentation/previewThemeSupport';
 import { resolveDocumentResource } from '../../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../../util/extensionSupportRoot';
 import * as path from 'path';
@@ -22,10 +27,12 @@ export async function buildExportHtmlString(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
 ): Promise<string> {
-  const [previewCss, katexCss, mermaidScript] = await Promise.all([
+  const [previewCss, katexCss, mermaidScript, previewThemeRuntimeScript, previewScript] = await Promise.all([
     readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.css').fsPath, 'utf8'),
     readFile(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'katex.min.css').fsPath, 'utf8'),
     readFile(resolveExtensionNodeModulesUri(extensionUri, 'mermaid', 'dist', 'mermaid.min.js').fsPath, 'utf8'),
+    readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview-theme-runtime.js').fsPath, 'utf8'),
+    readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.js').fsPath, 'utf8'),
   ]);
 
   const source = document.getText();
@@ -55,9 +62,31 @@ export async function buildExportHtmlString(
       };
     },
   });
+  const renderMarkdown = (markdown: string): string => sanitizeRenderedHtml(renderer.render(markdown));
+
+  if (isMarkdownPresentationSource(source)) {
+    const registry = loadPreviewThemeRegistryForDocument(extensionUri, document.uri);
+    const rendered = renderPresentationPreview(
+      source,
+      renderMarkdown,
+      registry,
+      (html) => new JSDOM(html).window.document,
+    );
+
+    return buildPresentationStandaloneHtml({
+      title: path.basename(document.fileName),
+      body: rendered.html,
+      previewCss,
+      katexCss: rewriteKatexCssUrls(katexCss),
+      mermaidScript,
+      previewThemeRuntimeScript,
+      previewScript,
+      previewThemeCss: buildPreviewThemeStylesheet(registry),
+    });
+  }
 
   const exportMarkdown = getExportMarkdown(source);
-  const body = sanitizeRenderedHtml(renderer.render(exportMarkdown));
+  const body = renderMarkdown(exportMarkdown);
   const theme = resolveExportDocumentTheme(extensionUri, document, source);
 
   return buildStandaloneHtml({
@@ -97,12 +126,7 @@ function rewriteKatexCssUrls(css: string): string {
 }
 
 function getExportMarkdown(source: string): string {
-  if (!isMarkdownPresentationSource(source)) {
-    return stripMarkdownFrontMatter(source);
-  }
-
-  const presentation = resolveMarkdownPresentation(parseMarkdownPresentation(source));
-  return presentation.slides.map((slide) => slide.body).join('\n\n---\n\n');
+  return stripMarkdownFrontMatter(source);
 }
 
 function buildStandaloneHtml(input: {
@@ -148,6 +172,70 @@ ${getMermaidBootstrapScript()}
   </script>
 </body>
 </html>`;
+}
+
+function buildPresentationStandaloneHtml(input: {
+  title: string;
+  body: string;
+  previewCss: string;
+  katexCss: string;
+  mermaidScript: string;
+  previewThemeRuntimeScript: string;
+  previewScript: string;
+  previewThemeCss: string;
+}): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(input.title)}</title>
+  <style>
+${getExportThemeCss()}
+  </style>
+  <style>
+${input.previewThemeCss}
+  </style>
+  <style>
+${input.katexCss}
+  </style>
+  <style>
+${input.previewCss}
+  </style>
+</head>
+<body class="preview-mode-presentation" data-preview-mode="presentation">
+  ${input.body}
+  <script>
+${getStandalonePreviewBridgeScript()}
+  </script>
+  <script>
+${input.mermaidScript}
+  </script>
+  <script>
+${input.previewThemeRuntimeScript}
+  </script>
+  <script>
+${input.previewScript}
+  </script>
+</body>
+</html>`;
+}
+
+function getStandalonePreviewBridgeScript(): string {
+  return `window.__previewBridge = {
+  openLink(href) {
+    if (href) {
+      window.open(href, '_blank', 'noopener,noreferrer');
+    }
+  },
+  resolveImage() {},
+  setState(state) {
+    window.__markdownAiStudioPreviewState = state;
+  },
+  getState() {
+    return window.__markdownAiStudioPreviewState || {};
+  },
+};`;
 }
 
 function getExportScrollCss(): string {

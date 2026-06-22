@@ -17,6 +17,14 @@ vi.mock('node:fs/promises', () => ({
 
 vi.mock('@mfo/preview-web', () => ({
   buildDocumentThemeStylesheet: vi.fn(() => 'body.document-theme-light { --md-preview-body-color: #111111; }'),
+  buildPreviewThemeStylesheet: vi.fn(() => '.presentation-preview { color: white; }'),
+  renderPresentationPreview: vi.fn((source: string) => ({
+    deckTitle: 'Deck Title',
+    slideCount: 2,
+    html: source.includes('document: presentation')
+      ? '<section class="presentation-preview"><div class="presentation-stage"><section class="presentation-slide is-active"><article class="presentation-slide-body markdown-body"><h1>Deck Title</h1></article></section><section class="presentation-slide"><article class="presentation-slide-body markdown-body"><h1>Opening</h1></article></section></div></section>'
+      : '',
+  })),
   resolveDocumentThemeSelection: vi.fn((themeName: string) => ({
     themeName: themeName || 'auto',
     themeClassName: themeName === 'light' ? 'document-theme-light' : 'document-theme-auto',
@@ -30,6 +38,10 @@ vi.mock('@mfo/preview-web', () => ({
 
 vi.mock('../../../src/document/documentThemeSupport', () => ({
   loadDocumentThemeRegistryForDocument: vi.fn(() => ({ themes: new Map(), aliases: new Map(), warnings: [] })),
+}));
+
+vi.mock('../../../src/presentation/previewThemeSupport', () => ({
+  loadPreviewThemeRegistryForDocument: vi.fn(() => ({ themes: new Map(), aliases: new Map(), warnings: [] })),
 }));
 
 vi.mock('vscode', () => ({
@@ -159,7 +171,7 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('overflow: visible;');
   });
 
-  it('strips presentation speaker notes before exporting html', async () => {
+  it('exports markdown presentations as standalone presentation html', async () => {
     const source = [
       '---',
       'document: presentation',
@@ -186,8 +198,13 @@ describe('buildExportHtmlString', () => {
 
     const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
 
+    expect(html).toContain('class="preview-mode-presentation" data-preview-mode="presentation"');
+    expect(html).toContain('class="presentation-preview"');
+    expect(html).toContain('class="presentation-slide is-active"');
+    expect(html).toContain('window.__previewBridge');
     expect(html).toContain('Deck Title');
     expect(html).toContain('Opening');
+    expect(html).not.toContain('preview-mode-document');
     expect(html).not.toContain('No `<!--slide:-->` marker is set');
     expect(html).not.toContain('marker is set, so this should render');
   });
