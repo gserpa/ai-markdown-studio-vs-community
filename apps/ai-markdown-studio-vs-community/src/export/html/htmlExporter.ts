@@ -21,7 +21,6 @@ export type PdfBackgroundMode = 'theme' | 'paper';
 export async function buildExportHtmlString(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
-  options: { pdfBackgroundMode?: PdfBackgroundMode } = {},
 ): Promise<string> {
   const [previewCss, katexCss, mermaidScript] = await Promise.all([
     readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.css').fsPath, 'utf8'),
@@ -59,7 +58,7 @@ export async function buildExportHtmlString(
 
   const exportMarkdown = getExportMarkdown(source);
   const body = sanitizeRenderedHtml(renderer.render(exportMarkdown));
-  const theme = resolveExportDocumentTheme(extensionUri, document, source, options.pdfBackgroundMode ?? 'theme');
+  const theme = resolveExportDocumentTheme(extensionUri, document, source);
 
   return buildStandaloneHtml({
     title: path.basename(document.fileName),
@@ -71,7 +70,6 @@ export async function buildExportHtmlString(
     bodyClass: theme.bodyClass,
     bodyAttributes: theme.bodyAttributes,
     documentThemeCss: theme.documentThemeCss,
-    pdfBackgroundMode: options.pdfBackgroundMode ?? 'theme',
   });
 }
 
@@ -117,7 +115,6 @@ function buildStandaloneHtml(input: {
   bodyClass: string;
   bodyAttributes: string;
   documentThemeCss: string;
-  pdfBackgroundMode: PdfBackgroundMode;
 }): string {
   return `<!DOCTYPE html>
 <html lang="en"${input.htmlClass ? ` class="${escapeHtml(input.htmlClass)}"` : ''}>
@@ -138,7 +135,7 @@ ${input.katexCss}
 ${input.previewCss}
   </style>
   <style>
-${getExportScrollCss(input.pdfBackgroundMode)}
+${getExportScrollCss()}
   </style>
 </head>
 <body class="${escapeHtml(input.bodyClass)}" data-preview-mode="document"${input.bodyAttributes}>
@@ -153,22 +150,18 @@ ${getMermaidBootstrapScript()}
 </html>`;
 }
 
-function getExportScrollCss(pdfBackgroundMode: PdfBackgroundMode): string {
-  const pageBackground = pdfBackgroundMode === 'paper'
-    ? '#ffffff'
-    : 'var(--md-preview-content-bg)';
-
+function getExportScrollCss(): string {
   return `
 body.preview-mode-document {
   height: auto;
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
-  background-color: ${pageBackground};
+  background-color: var(--md-preview-content-bg);
 }
 
 html {
-  background-color: ${pageBackground};
+  background-color: var(--md-preview-content-bg);
 }
 
 body.preview-mode-document .document-preview-shell {
@@ -434,7 +427,6 @@ function resolveExportDocumentTheme(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
   source: string,
-  pdfBackgroundMode: PdfBackgroundMode,
 ): {
   hostThemeClass: string;
   bodyClass: string;
@@ -448,9 +440,7 @@ function resolveExportDocumentTheme(
     const documentThemeRegistry = loadDocumentThemeRegistryForDocument(extensionUri, document.uri);
     const frontMatterTheme = typeof meta.theme === 'string' ? meta.theme : '';
     const settingTheme = getResolvedDocumentPreviewThemeSetting(document.uri);
-    const themeName = pdfBackgroundMode === 'paper'
-      ? 'light'
-      : (frontMatterTheme || settingTheme);
+    const themeName = frontMatterTheme || settingTheme;
     const selection = resolveDocumentThemeSelection(themeName, documentThemeRegistry);
 
     return {

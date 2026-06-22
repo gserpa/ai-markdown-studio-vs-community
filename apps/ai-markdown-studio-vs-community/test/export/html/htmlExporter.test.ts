@@ -138,34 +138,6 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('data-document-mermaid-theme-dark="default"');
   });
 
-  it('supports theme and printer-friendly pdf background modes', async () => {
-    const document = {
-      fileName: 'example.md',
-      uri: {
-        fsPath: 'C:/docs/example.md',
-        scheme: 'file',
-        toString: () => 'file:///C:/docs/example.md',
-      },
-      getText: () => '# Heading',
-    } as never;
-
-    const themeHtml = await buildExportHtmlString(
-      { fsPath: 'C:/extension', scheme: 'file' } as never,
-      document,
-      { pdfBackgroundMode: 'theme' },
-    );
-    const paperHtml = await buildExportHtmlString(
-      { fsPath: 'C:/extension', scheme: 'file' } as never,
-      document,
-      { pdfBackgroundMode: 'paper' },
-    );
-
-    expect(themeHtml).toContain('background-color: var(--md-preview-content-bg);');
-    expect(themeHtml).toContain('document-preview-scroll');
-    expect(paperHtml).toContain('background-color: #ffffff;');
-    expect(paperHtml).toContain('class="preview-mode-document document-theme-light document-theme-mode-light"');
-  });
-
   it('keeps exported document html page-scrollable', async () => {
     const document = {
       fileName: 'example.md',
