@@ -38,7 +38,7 @@ export interface CommunityApiV1 {
     buildStandaloneHtml(
       document: vscode.TextDocument,
       options?: {
-        pdfBackgroundMode?: 'theme' | 'paper';
+        exportMode?: 'theme' | 'paper' | 'paper-borderless';
       },
     ): Promise<string>;
   };

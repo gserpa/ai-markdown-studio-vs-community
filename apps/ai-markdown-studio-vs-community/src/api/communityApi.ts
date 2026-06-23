@@ -36,7 +36,7 @@ export function createCommunityApi(extensionVersion: string, extensionUri: vscod
       },
       buildStandaloneHtml: (
         document: vscode.TextDocument,
-        options?: { pdfBackgroundMode?: 'theme' | 'paper' },
+        options?: { exportMode?: 'theme' | 'paper' | 'paper-borderless' },
       ) => buildExportHtmlString(extensionUri, document, options),
     }),
     parsing: Object.freeze({

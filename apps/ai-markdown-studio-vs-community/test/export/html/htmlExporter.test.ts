@@ -156,7 +156,7 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('data-document-mermaid-theme-dark="default"');
   });
 
-  it('switches printer-friendly document exports to the light theme', async () => {
+  it('switches printer-friendly document exports to the light theme and borderless frame styles', async () => {
     vscode.window.activeColorTheme.kind = vscode.ColorThemeKind.Dark;
 
     const source = [
@@ -180,12 +180,14 @@ describe('buildExportHtmlString', () => {
     const html = await buildExportHtmlString(
       { fsPath: 'C:/extension', scheme: 'file' } as never,
       document,
-      { pdfBackgroundMode: 'paper' },
+      { exportMode: 'paper-borderless' },
     );
 
     expect(html).toContain('<html lang="en">');
     expect(html).toContain('<body class="preview-mode-document document-theme-light document-theme-mode-light"');
     expect(html).toContain('data-document-theme="light"');
+    expect(html).toContain('border: 0 !important;');
+    expect(html).toContain('box-shadow: none !important;');
   });
 
   it('keeps exported document html page-scrollable', async () => {

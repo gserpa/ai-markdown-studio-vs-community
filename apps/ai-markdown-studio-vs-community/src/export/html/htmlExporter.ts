@@ -21,14 +21,14 @@ import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../../
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-export type PdfBackgroundMode = 'theme' | 'paper';
+export type ExportMode = 'theme' | 'paper' | 'paper-borderless';
 
 export async function buildExportHtmlString(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
-  options: { pdfBackgroundMode?: PdfBackgroundMode } = {},
+  options: { exportMode?: ExportMode } = {},
 ): Promise<string> {
-  const pdfBackgroundMode = options.pdfBackgroundMode ?? 'theme';
+  const exportMode = options.exportMode ?? 'theme';
   const [previewCss, katexCss, mermaidScript, previewThemeRuntimeScript, previewScript] = await Promise.all([
     readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.css').fsPath, 'utf8'),
     readFile(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'katex.min.css').fsPath, 'utf8'),
@@ -83,13 +83,14 @@ export async function buildExportHtmlString(
       mermaidScript,
       previewThemeRuntimeScript,
       previewScript,
+      exportMode,
       previewThemeCss: buildPreviewThemeStylesheet(registry),
     });
   }
 
   const exportMarkdown = getExportMarkdown(source);
   const body = renderMarkdown(exportMarkdown);
-  const theme = resolveExportDocumentTheme(extensionUri, document, source, pdfBackgroundMode);
+  const theme = resolveExportDocumentTheme(extensionUri, document, source, exportMode);
 
   return buildStandaloneHtml({
     title: path.basename(document.fileName),
@@ -101,6 +102,7 @@ export async function buildExportHtmlString(
     bodyClass: theme.bodyClass,
     bodyAttributes: theme.bodyAttributes,
     documentThemeCss: theme.documentThemeCss,
+    exportMode,
   });
 }
 
@@ -141,6 +143,7 @@ function buildStandaloneHtml(input: {
   bodyClass: string;
   bodyAttributes: string;
   documentThemeCss: string;
+  exportMode: ExportMode;
 }): string {
   return `<!DOCTYPE html>
 <html lang="en"${input.htmlClass ? ` class="${escapeHtml(input.htmlClass)}"` : ''}>
@@ -160,6 +163,9 @@ ${input.katexCss}
   <style>
 ${input.previewCss}
   </style>
+  ${input.exportMode === 'paper-borderless' ? `<style>
+${getBorderlessExportCss()}
+  </style>` : ''}
   <style>
 ${getExportScrollCss()}
   </style>
@@ -185,6 +191,7 @@ function buildPresentationStandaloneHtml(input: {
   previewThemeRuntimeScript: string;
   previewScript: string;
   previewThemeCss: string;
+  exportMode: ExportMode;
 }): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -204,6 +211,9 @@ ${input.katexCss}
   <style>
 ${input.previewCss}
   </style>
+  ${input.exportMode === 'paper-borderless' ? `<style>
+${getBorderlessExportCss()}
+  </style>` : ''}
 </head>
 <body class="preview-mode-presentation" data-preview-mode="presentation">
   ${input.body}
@@ -249,7 +259,6 @@ body.preview-mode-document {
   overflow-y: auto;
   background-color: var(--md-preview-content-bg);
 }
-
 html {
   background-color: var(--md-preview-content-bg);
 }
@@ -266,6 +275,19 @@ body.preview-mode-document .document-preview-scroll {
   flex: none;
   min-height: 0;
   overflow: visible;
+}
+`;
+}
+
+function getBorderlessExportCss(): string {
+  return `
+body.preview-mode-document .markdown-body,
+body.preview-mode-presentation .presentation-slide-shell,
+body.preview-mode-presentation .presentation-frame,
+body.preview-mode-presentation .presentation-surface,
+body.preview-mode-presentation .presentation-slide-body.markdown-body {
+  border: 0 !important;
+  box-shadow: none !important;
 }
 `;
 }
@@ -517,21 +539,22 @@ function resolveExportDocumentTheme(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
   source: string,
-  pdfBackgroundMode: PdfBackgroundMode,
+  exportMode: ExportMode,
 ): {
   hostThemeClass: string;
   bodyClass: string;
   bodyAttributes: string;
   documentThemeCss: string;
 } {
-  const hostThemeClass = pdfBackgroundMode === 'paper' ? '' : getHostThemeClass();
+  const usePrinterFriendlyTheme = exportMode !== 'theme';
+  const hostThemeClass = usePrinterFriendlyTheme ? '' : getHostThemeClass();
 
   try {
     const meta = extractMarkdownFrontMatterMeta(source);
     const documentThemeRegistry = loadDocumentThemeRegistryForDocument(extensionUri, document.uri);
     const frontMatterTheme = typeof meta.theme === 'string' ? meta.theme : '';
     const settingTheme = getResolvedDocumentPreviewThemeSetting(document.uri);
-    const themeName = pdfBackgroundMode === 'paper'
+    const themeName = usePrinterFriendlyTheme
       ? documentThemeRegistry.defaultLightThemeName
       : frontMatterTheme || settingTheme;
     const selection = resolveDocumentThemeSelection(themeName, documentThemeRegistry);
