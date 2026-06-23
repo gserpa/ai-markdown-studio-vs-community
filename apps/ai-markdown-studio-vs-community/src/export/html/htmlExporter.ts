@@ -26,7 +26,9 @@ export type PdfBackgroundMode = 'theme' | 'paper';
 export async function buildExportHtmlString(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
+  options: { pdfBackgroundMode?: PdfBackgroundMode } = {},
 ): Promise<string> {
+  const pdfBackgroundMode = options.pdfBackgroundMode ?? 'theme';
   const [previewCss, katexCss, mermaidScript, previewThemeRuntimeScript, previewScript] = await Promise.all([
     readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.css').fsPath, 'utf8'),
     readFile(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'katex.min.css').fsPath, 'utf8'),
@@ -87,7 +89,7 @@ export async function buildExportHtmlString(
 
   const exportMarkdown = getExportMarkdown(source);
   const body = renderMarkdown(exportMarkdown);
-  const theme = resolveExportDocumentTheme(extensionUri, document, source);
+  const theme = resolveExportDocumentTheme(extensionUri, document, source, pdfBackgroundMode);
 
   return buildStandaloneHtml({
     title: path.basename(document.fileName),
@@ -515,20 +517,23 @@ function resolveExportDocumentTheme(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
   source: string,
+  pdfBackgroundMode: PdfBackgroundMode,
 ): {
   hostThemeClass: string;
   bodyClass: string;
   bodyAttributes: string;
   documentThemeCss: string;
 } {
-  const hostThemeClass = getHostThemeClass();
+  const hostThemeClass = pdfBackgroundMode === 'paper' ? '' : getHostThemeClass();
 
   try {
     const meta = extractMarkdownFrontMatterMeta(source);
     const documentThemeRegistry = loadDocumentThemeRegistryForDocument(extensionUri, document.uri);
     const frontMatterTheme = typeof meta.theme === 'string' ? meta.theme : '';
     const settingTheme = getResolvedDocumentPreviewThemeSetting(document.uri);
-    const themeName = frontMatterTheme || settingTheme;
+    const themeName = pdfBackgroundMode === 'paper'
+      ? documentThemeRegistry.defaultLightThemeName
+      : frontMatterTheme || settingTheme;
     const selection = resolveDocumentThemeSelection(themeName, documentThemeRegistry);
 
     return {

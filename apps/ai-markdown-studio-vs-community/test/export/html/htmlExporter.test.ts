@@ -37,7 +37,13 @@ vi.mock('@mfo/preview-web', () => ({
 }));
 
 vi.mock('../../../src/document/documentThemeSupport', () => ({
-  loadDocumentThemeRegistryForDocument: vi.fn(() => ({ themes: new Map(), aliases: new Map(), warnings: [] })),
+  loadDocumentThemeRegistryForDocument: vi.fn(() => ({
+    themes: new Map(),
+    aliases: new Map(),
+    defaultDarkThemeName: 'dark',
+    defaultLightThemeName: 'light',
+    warnings: [],
+  })),
 }));
 
 vi.mock('../../../src/presentation/previewThemeSupport', () => ({
@@ -148,6 +154,38 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('class="preview-mode-document document-theme-light document-theme-mode-light"');
     expect(html).toContain('data-document-theme="light"');
     expect(html).toContain('data-document-mermaid-theme-dark="default"');
+  });
+
+  it('switches printer-friendly document exports to the light theme', async () => {
+    vscode.window.activeColorTheme.kind = vscode.ColorThemeKind.Dark;
+
+    const source = [
+      '---',
+      'title: Printer friendly',
+      'theme: night-sky',
+      '---',
+      '',
+      '# Heading',
+    ].join('\n');
+    const document = {
+      fileName: 'example.md',
+      uri: {
+        fsPath: 'C:/docs/example.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/example.md',
+      },
+      getText: () => source,
+    } as never;
+
+    const html = await buildExportHtmlString(
+      { fsPath: 'C:/extension', scheme: 'file' } as never,
+      document,
+      { pdfBackgroundMode: 'paper' },
+    );
+
+    expect(html).toContain('<html lang="en">');
+    expect(html).toContain('<body class="preview-mode-document document-theme-light document-theme-mode-light"');
+    expect(html).toContain('data-document-theme="light"');
   });
 
   it('keeps exported document html page-scrollable', async () => {
