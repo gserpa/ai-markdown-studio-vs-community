@@ -8,11 +8,12 @@ AI Markdown Studio Community is the MIT-licensed open-source core of AI Markdown
 
 It provides preview-first Markdown authoring, live document and presentation previews, Mermaid, KaTeX, syntax highlighting, table formatting, document and presentation themes, speaker notes in presentation view, AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX export.
 
-AI Markdown Studio Pro is a separate product that extends Community with AI theme generation, file conversion, PDF/PPTX export, high-fidelity DOCX, Copilot agent tools, and corporate PowerPoint template automation. Pro depends on Community; Community contains no Pro implementation.
+AI Markdown Studio Pro is a separate product that extends Community with AI theme generation, file conversion, PDF/PPTX export, high-fidelity DOCX, Copilot agent tools, shared custom theme folders, and corporate PowerPoint template automation. Pro ships as its own standalone extension, built from a pinned Community revision plus a Pro overlay; Community contains no Pro implementation.
 
 ## Start Here
 
 - [Extension README](./apps/ai-markdown-studio-vs-community/README.md) - full user guide, feature tour, security notes, and Pro comparison
+- [Why Upgrade to Pro?](./apps/ai-markdown-studio-vs-community/docs/upgrade-to-pro.md) - Community-to-Pro comparison focused on advanced conversion, export, theming, and Copilot workflows
 - [Extension Manifest](./apps/ai-markdown-studio-vs-community/package.json) - the VS Code extension entrypoint and contributed commands/settings
 - [Workspace Package](./package.json) - the private workspace scripts and shared dependency pins
 

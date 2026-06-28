@@ -22,7 +22,7 @@ Use `.vsix` distribution when you want to share privately, install offline, test
 
 Use Marketplace distribution when you want users to install through the Extensions view, want versioned public releases and automatic updates, and want a discoverable public extension page.
 
-> **Open-core note:** AI Markdown Studio Pro declares Community as an `extensionDependencies` entry (`GustavoSerpa.markdown-ai-studio`). For Pro to install from the Marketplace and resolve that dependency automatically, **Community must be published to the Marketplace first** under that exact publisher/name. See [§7](#7-publishing-order-for-the-pro-edition).
+> **Open-core note:** AI Markdown Studio Pro is now packaged as a standalone extension built from a pinned Community revision plus a private Pro overlay. Community and Pro can therefore be published independently; there is no runtime Marketplace dependency between them.
 
 ## 2. Prerequisites
 
@@ -150,16 +150,14 @@ You can publish directly from source or package first and publish the `.vsix` in
 8. Publish to the Marketplace if desired.
 9. Attach the `.vsix` to your release notes for direct download.
 
-## 7. Publishing order for the Pro edition
+## 7. Relationship to the Pro edition
 
-AI Markdown Studio Pro is a **separate** extension that depends on Community. For the open-core model to work end to end:
+AI Markdown Studio Pro is a **separate standalone** extension built from a pinned Community revision plus a private Pro overlay.
 
-1. **Publish Community first** (`GustavoSerpa.markdown-ai-studio`). Pro's `extensionDependencies` references this exact ID.
-2. **Then publish Pro** (`GustavoSerpa.markdown-ai-studio-pro`). When a user installs Pro, the Marketplace automatically installs/updates Community.
-3. Keep the Community public API version (`CommunityApiV1`, currently `"1.0"`) backward-compatible. Pro checks `api.apiVersion` and refuses to activate against an unexpected version. If you make a breaking API change, bump the Community API version and ship a matching Pro update.
-4. For `.vsix`-only distribution (no Marketplace), users must install the Community `.vsix` **before** the Pro `.vsix`, because VS Code resolves extension dependencies at install time.
-
-Community never references Pro, so Community can be published and updated independently.
+1. Community can be published to the Marketplace or distributed as a `.vsix` on its own schedule.
+2. Pro can be published independently because it no longer declares a runtime `extensionDependencies` relationship to Community.
+3. Keep the Community public API version (`CommunityApiV1`, currently `"1.0"`) backward-compatible. Pro pins and validates the source-level contract it composes against; if you make a breaking API change, bump the Community API version and ship a matching Pro update.
+4. Users install either Community or Pro. Pro already contains the tested Community foundation used for that Pro release.
 
 ## 8. CI/CD recommendations
 

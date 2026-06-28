@@ -6,9 +6,9 @@
 
 The open-source core of AI Markdown Studio: a VS Code extension for authoring Markdown with a live preview panel, Mermaid diagram support, KaTeX math, syntax highlighting, table formatting, document and presentation preview themes, a slide-based presentation preview, AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX export.
 
-AI Markdown Studio Community is licensed under the MIT License and is useful entirely on its own. It includes AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX. PDF/PPTX export, high-fidelity DOCX, broad file conversion, theme AI workflows, agent tools, and corporate PowerPoint template automation are provided separately by **AI Markdown Studio Pro**.
+AI Markdown Studio Community is licensed under the MIT License and is useful entirely on its own. It includes AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX. PDF/PPTX export, high-fidelity DOCX, broad file conversion, theme AI workflows, shared custom theme folders, agent tools, and corporate PowerPoint template automation are provided separately by **AI Markdown Studio Pro**.
 
-For a complete end-user walkthrough, see [docs/user-guide.md](./docs/user-guide.md). For the public extension API consumed by Pro and other feature extensions, see [docs/community-api.md](./docs/community-api.md).
+For a complete end-user walkthrough, see [docs/user-guide.md](./docs/user-guide.md). For the public extension API consumed by Pro and other feature extensions, see [docs/community-api.md](./docs/community-api.md). For a focused comparison of what Pro adds, see [docs/upgrade-to-pro.md](./docs/upgrade-to-pro.md).
 
 ## User Guide Index
 
@@ -59,8 +59,8 @@ code --install-extension markdown-ai-studio-0.2.0.vsix
 - **Math equations** - KaTeX-rendered inline and block math (`$...$` / `$$...$$`).
 - **Task lists, footnotes, and emoji** - common Markdown extensions are enabled by default.
 - **Local image resolution** - images are resolved relative to the source Markdown file.
-- **Document themes** - standard document preview can follow VS Code automatically or use bundled and custom themes.
-- **Presentation themes** - presentation preview can load bundled or workspace-provided slide themes.
+- **Document themes** - standard document preview can follow VS Code automatically or use bundled themes.
+- **Presentation themes** - presentation preview can load bundled slide themes.
 - **Presentation preview** - presentation-style Markdown files open in a slide viewer with slide navigation, a collapsible filmstrip, immersive fullscreen mode, fixed-canvas scaling, and speaker-note display.
 - **AI-assisted document generation** - create Markdown documents from prompts through the GitHub Copilot service already configured in VS Code, with consent gating.
 - **AI-assisted presentation generation** - generate presentation-style Markdown decks from prompts through the same Copilot-backed workflow.
@@ -259,7 +259,7 @@ AI Markdown Studio Community is the open-source core. **AI Markdown Studio Pro**
 - Corporate PowerPoint template-backed export with manifest inference/validation/generation and placeholder mapping
 - GitHub Copilot agent-mode tools and prompt builders
 
-Pro installs Community as an extension dependency, activates it through the VS Code extension API, and consumes Community's public `CommunityApiV1` surface. Installing Pro therefore gives you the complete AI Markdown Studio experience. Community remains MIT-licensed; Pro features and assets are governed by the AI Markdown Studio Pro EULA, and nothing in that EULA limits the rights granted under the MIT License for Community components.
+Pro is packaged as a standalone extension built from a pinned Community revision plus a private Pro overlay, and it consumes Community's public `CommunityApiV1` surface internally. Installing Pro therefore gives you the complete AI Markdown Studio experience without a separate Community install. Community remains MIT-licensed; Pro features and assets are governed by the AI Markdown Studio Pro EULA, and nothing in that EULA limits the rights granted under the MIT License for Community components.
 
 ## Disclaimer
 

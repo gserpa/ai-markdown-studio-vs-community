@@ -262,11 +262,12 @@ As a general precaution, treat Markdown from untrusted sources carefully because
 If you need the advanced automation and Office-native export layer, install **AI Markdown Studio Pro**:
 
 - AI **Convert to Markdown** (PDF/DOCX/PPTX/image/text) and AI theme generation
+- shared custom document and presentation theme folders
 - high-fidelity **DOCX**, **PDF**, and **PPTX** export
 - export using your organization's existing **PowerPoint templates**
 - deeper Copilot Chat workflows for creating and reviewing documents, presentations, and themes
 
-Installing Pro automatically installs Community as its dependency, and your Community previews, themes, and presentations continue to work unchanged — Pro simply adds the advanced commands on top.
+Pro is distributed as its own standalone extension, built from a tested Community foundation plus a private Pro overlay. Your Community previews, bundled themes, documents, and presentations continue to work unchanged; Pro simply adds the advanced commands and settings on top. See [upgrade-to-pro.md](./upgrade-to-pro.md) for the full comparison.
 
 ## Troubleshooting
 
