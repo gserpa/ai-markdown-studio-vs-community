@@ -20,7 +20,7 @@
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@mfo/core": "*",
-    "dompurify": "^3.4.1",
+    "dompurify": "^3.4.11",
     "jsdom": "^26.0.0"
   },
   "devDependencies": {

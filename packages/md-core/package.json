@@ -15,7 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "dompurify": "^3.4.1",
+    "dompurify": "^3.4.11",
     "highlight.js": "^11.11.1",
     "jsdom": "^26.0.0",
     "katex": "^0.16.22",
