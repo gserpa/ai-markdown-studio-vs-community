@@ -8,7 +8,7 @@ The open-source core of AI Markdown Studio: a VS Code extension for authoring Ma
 
 AI Markdown Studio Community is licensed under the MIT License and is useful entirely on its own. It includes AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX. PDF/PPTX export, high-fidelity DOCX, broad file conversion, theme AI workflows, shared custom theme folders, agent tools, and corporate PowerPoint template automation are provided separately by **AI Markdown Studio Pro**.
 
-For a complete end-user walkthrough, see [docs/user-guide.md](./docs/user-guide.md). For the public extension API consumed by Pro and other feature extensions, see [docs/community-api.md](./docs/community-api.md). For a focused comparison of what Pro adds, see [docs/upgrade-to-pro.md](./docs/upgrade-to-pro.md).
+For a complete end-user walkthrough, see [user-guide.md](./docs/user/user-guide.md). For a focused comparison of what Pro adds, see [upgrade-to-pro.md](./docs/user/upgrade-to-pro.md).
 
 ## User Guide Index
 
@@ -91,21 +91,21 @@ code --install-extension markdown-ai-studio-0.2.0.vsix
 
 All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and the most common ones appear as icons in the **editor title bar** when a `.md` file is open.
 
-| Command | Description | Where |
-| --- | --- | --- |
-| **Preview Markdown** | Opens or focuses preview for the current Markdown file | Title bar, command palette, command list |
-| **Edit Markdown** | Switches the current file to the text editor, closing the preview surface first | Preview title bar, Explorer file context menu, command palette, command list |
-| **Format Markdown Tables** | Auto-aligns all tables in the active file | Command palette, command list, Format Document |
-| **`markdownAiStudio.formatTablesOnSave`** | `false` | Automatically formats Markdown tables when you save a Markdown file. |
-| **Generate Document (AI)** | Creates a new Markdown document from a prompt | Command palette, command list |
-| **Generate Presentation (AI)** | Creates a presentation-style Markdown deck from a prompt | Command palette, command list |
-| **Paste as New Markdown File** | Converts clipboard text into a new Markdown file | Explorer folder context menu, command palette |
-| **Export Markdown as HTML** | Saves the rendered document as a standalone `.html` file | Command palette, command list |
-| **Export Markdown as DOCX (Basic)** | Saves the rendered document as a DOCX file | Command palette, command list |
-| **Enable AI Features...** | Reviews the AI data-sharing notice and can enable or re-enable AI features | Command palette, command list |
-| **Toggle Frontmatter** | Shows or hides the rendered front-matter summary in the active preview | Title bar, command palette, command list when applicable |
-| **Show AI Markdown Studio Commands** | Lists the extension's main actions in a quick-pick menu | Title bar, command palette |
-| **Change Settings...** | Opens the VS Code Settings UI filtered to this extension | Command palette, command list |
+| Command                                   | Description                                                                     | Where                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Preview Markdown**                      | Opens or focuses preview for the current Markdown file                          | Title bar, command palette, command list                                     |
+| **Edit Markdown**                         | Switches the current file to the text editor, closing the preview surface first | Preview title bar, Explorer file context menu, command palette, command list |
+| **Format Markdown Tables**                | Auto-aligns all tables in the active file                                       | Command palette, command list, Format Document                               |
+| **`markdownAiStudio.formatTablesOnSave`** | `false`                                                                         | Automatically formats Markdown tables when you save a Markdown file.         |
+| **Generate Document (AI)**                | Creates a new Markdown document from a prompt                                   | Command palette, command list                                                |
+| **Generate Presentation (AI)**            | Creates a presentation-style Markdown deck from a prompt                        | Command palette, command list                                                |
+| **Paste as New Markdown File**            | Converts clipboard text into a new Markdown file                                | Explorer folder context menu, command palette                                |
+| **Export Markdown as HTML**               | Saves the rendered document as a standalone `.html` file                        | Command palette, command list                                                |
+| **Export Markdown as DOCX (Basic)**       | Saves the rendered document as a DOCX file                                      | Command palette, command list                                                |
+| **Enable AI Features...**                 | Reviews the AI data-sharing notice and can enable or re-enable AI features      | Command palette, command list                                                |
+| **Toggle Frontmatter**                    | Shows or hides the rendered front-matter summary in the active preview          | Title bar, command palette, command list when applicable                     |
+| **Show AI Markdown Studio Commands**      | Lists the extension's main actions in a quick-pick menu                         | Title bar, command palette                                                   |
+| **Change Settings...**                    | Opens the VS Code Settings UI filtered to this extension                        | Command palette, command list                                                |
 
 ## Feature Details
 
@@ -136,10 +136,10 @@ When a Markdown file declares `document: presentation` in front matter, the prev
 
 Preview-specific settings:
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| **`markdownAiStudio.previewPageWidth`** | `full` | Uses `full` width for standard Markdown preview pages by default. Set to `readable` to constrain the page to a centred readable column. |
-| **`markdownAiStudio.documentPreviewTheme`** | `auto` | Selects the default document preview theme. Bundled options include `light`, `light-modern-blue`, `dark`, `dark-aurora-noir`, `dark-modern-aurora`, and `night-sky`. Can be overridden per file with the `theme` front matter field. Find it in Settings under **Theme Selection**. |
+| Setting                                     | Default | Description                                                                                                                                                                                                                                                                         |
+| ------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`markdownAiStudio.previewPageWidth`**     | `full`  | Uses `full` width for standard Markdown preview pages by default. Set to `readable` to constrain the page to a centred readable column.                                                                                                                                             |
+| **`markdownAiStudio.documentPreviewTheme`** | `auto`  | Selects the default document preview theme. Bundled options include `light`, `light-modern-blue`, `dark`, `dark-aurora-noir`, `dark-modern-aurora`, and `night-sky`. Can be overridden per file with the `theme` front matter field. Find it in Settings under **Theme Selection**. |
 
 Mermaid diagrams in the standard document preview include a zoom control. Use the on-diagram **Zoom** button or double-click the rendered diagram to open it in an overlay viewer. Inside the viewer, use **+**, **-**, **Fit**, or the keyboard shortcuts `+`, `-`, `0`, and `Esc`.
 
@@ -248,7 +248,7 @@ npm run verify
 - HTML sanitization and a restrictive webview Content Security Policy (CSP) are applied to reduce XSS and script-injection risks. Mermaid runs in `securityLevel: 'strict'` mode.
 - All dependencies are permissively licensed and regularly audited for vulnerabilities. If you discover a security issue, please report it via the project repository.
 
-See [docs/security-review.md](./docs/security-review.md) for a detailed security assessment and mitigation strategies.
+See [security-review.md](./docs/user/security-review.md) for a detailed security assessment and mitigation strategies.
 
 ## AI Markdown Studio Pro
 

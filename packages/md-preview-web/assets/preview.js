@@ -76,6 +76,7 @@
             if (previewThemeState.mermaidTransparentBackground) {
               patchTransparentMermaidBackground(block);
             }
+            patchMermaidLabelContrast(block);
             decorateRenderedMermaid(block);
           }
         } catch (diagramError) {
@@ -554,6 +555,8 @@ function positionMermaidZoomTrigger(trigger, block) {
     return;
   }
 
+  trigger.style.top = '';
+  trigger.style.bottom = '';
   trigger.style.left = '';
   trigger.style.right = '';
 
@@ -565,9 +568,12 @@ function positionMermaidZoomTrigger(trigger, block) {
   const availableOutsideWidth = viewportWidth - blockRect.right - viewportPadding;
 
   if (availableOutsideWidth >= triggerWidth + outsideGap) {
+    trigger.style.top = '0';
     trigger.style.left = `${blockRect.width + outsideGap}px`;
     trigger.style.right = 'auto';
   } else {
+    trigger.style.top = 'auto';
+    trigger.style.bottom = `calc(100% + ${outsideGap}px)`;
     trigger.style.left = 'auto';
     trigger.style.right = '0';
   }
@@ -690,6 +696,41 @@ function patchTransparentMermaidBackground(block) {
   }
 }
 
+function patchMermaidLabelContrast(block) {
+  if (!(block instanceof HTMLElement)) {
+    return;
+  }
+
+  const svg = block.querySelector('svg');
+  if (!(svg instanceof SVGElement)) {
+    return;
+  }
+
+  for (const node of svg.querySelectorAll('g.node')) {
+    if (!(node instanceof SVGElement)) {
+      continue;
+    }
+
+    const fillColor = getMermaidNodeFillColor(node);
+    if (!fillColor) {
+      continue;
+    }
+
+    const labelTargets = getMermaidNodeLabelTargets(node);
+    if (labelTargets.length === 0) {
+      continue;
+    }
+
+    const currentLabelColor = getMermaidLabelColor(labelTargets[0]);
+    if (currentLabelColor && contrastRatio(currentLabelColor, fillColor) >= 4.5) {
+      continue;
+    }
+
+    const nextLabelColor = pickHighContrastTextColor(fillColor);
+    applyMermaidLabelColor(labelTargets, nextLabelColor);
+  }
+}
+
 function parseSvgViewBox(value) {
   const parts = (value || '').trim().split(/\s+/).map((part) => Number(part));
   if (parts.length !== 4 || parts.some((part) => Number.isNaN(part))) {
@@ -733,6 +774,212 @@ function isMermaidBackgroundElement(element, viewBox) {
   }
 
   return Number(width) >= viewBox.width && Number(height) >= viewBox.height;
+}
+
+function getMermaidNodeFillColor(node) {
+  let bestCandidate = null;
+
+  for (const shape of node.querySelectorAll('rect, polygon, circle, ellipse, path')) {
+    if (!(shape instanceof SVGElement)) {
+      continue;
+    }
+
+    const fillValue = shape.getAttribute('fill')
+      || shape.style.fill
+      || getComputedStyle(shape).fill;
+    const parsedFill = parseCssColor(fillValue);
+    if (!parsedFill) {
+      continue;
+    }
+
+    let area = 0;
+    try {
+      const box = typeof shape.getBBox === 'function' ? shape.getBBox() : null;
+      if (box && Number.isFinite(box.width) && Number.isFinite(box.height)) {
+        area = Math.abs(box.width * box.height);
+      }
+    } catch {
+      area = 0;
+    }
+
+    if (!bestCandidate || area > bestCandidate.area) {
+      bestCandidate = { color: parsedFill, area };
+    }
+  }
+
+  return bestCandidate?.color ?? null;
+}
+
+function getMermaidNodeLabelTargets(node) {
+  const selectors = [
+    '.nodeLabel',
+    '.label text',
+    'foreignObject div',
+    'foreignObject span',
+    'foreignObject p',
+    'text',
+    'tspan',
+  ];
+  const targets = [];
+  const seen = new Set();
+
+  for (const selector of selectors) {
+    for (const element of node.querySelectorAll(selector)) {
+      if (!(element instanceof Element) || seen.has(element)) {
+        continue;
+      }
+
+      seen.add(element);
+      targets.push(element);
+    }
+  }
+
+  return targets;
+}
+
+function getMermaidLabelColor(target) {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  const colorValue = target.getAttribute('fill')
+    || target.style.fill
+    || target.style.color
+    || getComputedStyle(target).fill
+    || getComputedStyle(target).color;
+  return parseCssColor(colorValue);
+}
+
+function applyMermaidLabelColor(targets, color) {
+  const colorValue = rgbToCss(color);
+  for (const target of targets) {
+    if (!(target instanceof Element)) {
+      continue;
+    }
+
+    if (target instanceof SVGTextElement || target instanceof SVGTSpanElement) {
+      target.setAttribute('fill', colorValue);
+      target.style.fill = colorValue;
+      target.style.stroke = 'none';
+      continue;
+    }
+
+    if (target instanceof SVGElement) {
+      target.setAttribute('fill', colorValue);
+      target.style.fill = colorValue;
+    }
+
+    if (target instanceof HTMLElement) {
+      target.style.color = colorValue;
+      target.style.fill = colorValue;
+    }
+  }
+}
+
+function pickHighContrastTextColor(background) {
+  const darkText = { red: 17, green: 24, blue: 39 };
+  const lightText = { red: 248, green: 250, blue: 252 };
+  return contrastRatio(darkText, background) >= contrastRatio(lightText, background)
+    ? darkText
+    : lightText;
+}
+
+function contrastRatio(foreground, background) {
+  const foregroundLuminance = relativeLuminance(foreground);
+  const backgroundLuminance = relativeLuminance(background);
+  const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+  const darker = Math.min(foregroundLuminance, backgroundLuminance);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function relativeLuminance(color) {
+  const channel = (value) => {
+    const normalized = value / 255;
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  };
+
+  return 0.2126 * channel(color.red)
+    + 0.7152 * channel(color.green)
+    + 0.0722 * channel(color.blue);
+}
+
+function parseCssColor(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized || normalized === 'none' || normalized === 'transparent') {
+    return null;
+  }
+
+  const hexMatch = normalized.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/u);
+  if (hexMatch) {
+    const hex = hexMatch[1];
+    if (hex.length === 3) {
+      return {
+        red: Number.parseInt(hex[0] + hex[0], 16),
+        green: Number.parseInt(hex[1] + hex[1], 16),
+        blue: Number.parseInt(hex[2] + hex[2], 16),
+      };
+    }
+
+    return {
+      red: Number.parseInt(hex.slice(0, 2), 16),
+      green: Number.parseInt(hex.slice(2, 4), 16),
+      blue: Number.parseInt(hex.slice(4, 6), 16),
+    };
+  }
+
+  const rgbMatch = normalized.match(/^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+)\s*)?\)$/u);
+  if (rgbMatch) {
+    const alpha = rgbMatch[4] === undefined ? 1 : Number.parseFloat(rgbMatch[4]);
+    if (alpha <= 0) {
+      return null;
+    }
+
+    return {
+      red: clampRgbChannel(Number.parseFloat(rgbMatch[1])),
+      green: clampRgbChannel(Number.parseFloat(rgbMatch[2])),
+      blue: clampRgbChannel(Number.parseFloat(rgbMatch[3])),
+    };
+  }
+
+  const probe = getCssColorProbe();
+  probe.style.color = '';
+  probe.style.color = normalized;
+  if (!probe.style.color) {
+    return null;
+  }
+  const computed = getComputedStyle(probe).color;
+  if (!computed) {
+    return null;
+  }
+
+  return parseCssColor(computed);
+}
+
+function clampRgbChannel(value) {
+  return Math.min(255, Math.max(0, Math.round(value)));
+}
+
+function rgbToCss(color) {
+  return `rgb(${color.red}, ${color.green}, ${color.blue})`;
+}
+
+let cssColorProbe;
+
+function getCssColorProbe() {
+  if (cssColorProbe instanceof HTMLElement) {
+    return cssColorProbe;
+  }
+
+  cssColorProbe = document.createElement('span');
+  cssColorProbe.hidden = true;
+  cssColorProbe.setAttribute('aria-hidden', 'true');
+  cssColorProbe.style.position = 'fixed';
+  cssColorProbe.style.pointerEvents = 'none';
+  cssColorProbe.style.opacity = '0';
+  document.body.append(cssColorProbe);
+  return cssColorProbe;
 }
 
 function readPreviewCssVariable(name, fallbackValue, element = document.body) {

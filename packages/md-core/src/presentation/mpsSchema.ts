@@ -88,7 +88,7 @@ const FRONT_MATTER_FIELDS: readonly Omit<MpsFrontMatterFieldSchema, 'suggestions
 const DIRECTIVES: readonly MpsDirectiveSchema[] = [
   {
     name: 'slide',
-    description: 'Assigns a slide template to the current slide. Must appear at the start of a slide. Built-in layouts resolve automatically, and custom names can resolve through PPTX template markers or manifest aliases.',
+    description: 'Assigns a slide template to the current slide. Must appear exactly once as the first non-whitespace content after the slide separator and before any slide body content. Built-in layouts resolve automatically, and custom names can resolve through PPTX template markers or manifest aliases.',
   },
   {
     name: 'notes',

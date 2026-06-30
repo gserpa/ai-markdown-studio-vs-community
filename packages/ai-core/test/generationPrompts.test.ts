@@ -26,9 +26,11 @@ describe('generation prompt builders', () => {
       length: '9 slides',
       presentationTheme: 'galaxy',
       presentationRatio: '16:9',
+      allowRemoteResources: true,
     });
 
     expect(prompt).toContain('Create a complete .md file for the requested presentation deck.');
+    expect(prompt).toContain('place exactly one <!--slide: name--> comment immediately after the top-level --- separator and before the title');
     expect(prompt).toContain('Avoid the pattern where every slide has exactly three bullets.');
     expect(prompt).toContain('roughly 8-10 short lines');
     expect(prompt).toContain('Choose each slide layout deliberately');
@@ -36,5 +38,23 @@ describe('generation prompt builders', () => {
     expect(prompt).toContain('Use two-columns only for real comparisons');
     expect(prompt).toContain('Every content slide must include a concise <!--notes: ...-->');
     expect(prompt).toContain('use Google Images or a similar image search');
+    expect(prompt).toContain('Remote image embeds are allowed in this workspace');
+    expect(prompt).toContain('embed the remote image in the Markdown slide content');
+  });
+
+  it('builds a presentation prompt that blocks remote embeds when disabled', () => {
+    const prompt = createPresentationPrompt({
+      brief: 'Explain the target architecture',
+      audience: 'Architecture review board',
+      tone: 'Technical',
+      length: '9 slides',
+      presentationTheme: 'galaxy',
+      presentationRatio: '16:9',
+      allowRemoteResources: false,
+    });
+
+    expect(prompt).toContain('Remote image embeds are NOT allowed in this workspace');
+    expect(prompt).toContain('Do not embed remote image URLs in the Markdown');
+    expect(prompt).toContain('Use speaker-note or blockquote image suggestions instead');
   });
 });

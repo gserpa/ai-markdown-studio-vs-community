@@ -23,8 +23,11 @@ describe('preview Mermaid theming', () => {
     expect(previewRuntime).not.toContain('patchDarkModeMermaid(');
     expect(previewRuntime).not.toContain('function patchMermaidPalette(');
     expect(previewRuntime).not.toContain('setRenderedMermaidThemeClass(');
-    expect(previewRuntime).not.toContain('patchMermaidLabelContrast(');
-    expect(previewRuntime).not.toContain('__mfoMermaidLabelContrast');
+    expect(previewRuntime).toContain('patchMermaidLabelContrast(block);');
+    expect(previewRuntime).toContain('function patchMermaidLabelContrast(block)');
+    expect(previewRuntime).toContain('contrastRatio(currentLabelColor, fillColor) >= 4.5');
+    expect(previewRuntime).toContain('function pickHighContrastTextColor(background)');
+    expect(previewRuntime).toContain('function getMermaidNodeFillColor(node)');
   });
 
   it('normalizes rendered Mermaid SVG dimensions from the viewBox', () => {

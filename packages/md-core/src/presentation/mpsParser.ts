@@ -196,7 +196,7 @@ function parseSlideChunk(chunk: string): MarkdownPresentationSlide {
 
   const trailingDirectives = [...remaining.matchAll(ANY_SLIDE_DIRECTIVE_PATTERN)];
   if (trailingDirectives.length > 0) {
-    throw new Error('Slide directives must appear only once and at the start of a slide.');
+    throw new Error('Slide directives must appear only once and as the first non-whitespace content after the slide separator, before the slide title.');
   }
 
   const extractedComments = extractSpeakerNotes(remaining);

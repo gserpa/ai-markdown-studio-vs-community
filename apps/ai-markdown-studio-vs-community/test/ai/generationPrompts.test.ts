@@ -23,9 +23,11 @@ describe('Community generation prompts', () => {
       length: '9 slides',
       presentationTheme: 'galaxy',
       presentationRatio: '16:9',
+      allowRemoteResources: true,
     });
     expect(prompt).toContain('document: presentation');
     expect(prompt).toContain('9 slides');
     expect(prompt).toContain('Use ratio: 16:9');
+    expect(prompt).toContain('Remote image embeds are allowed in this workspace');
   });
 });

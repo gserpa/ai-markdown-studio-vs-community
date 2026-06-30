@@ -31,11 +31,15 @@ describe('preview Mermaid links', () => {
     expect(canonicalPreviewRuntime).toContain('scrollToPreviewFragment(linkedHref)');
     expect(canonicalPreviewRuntime).toContain('function scrollToPreviewFragment(href)');
     expect(canonicalPreviewRuntime).toContain('cleanupMermaidRenderArtifacts(renderId)');
+    expect(canonicalPreviewRuntime).toContain('patchMermaidLabelContrast(block);');
+    expect(canonicalPreviewRuntime).toContain('function getMermaidNodeLabelTargets(node)');
+    expect(canonicalPreviewRuntime).toContain('function applyMermaidLabelColor(targets, color)');
   });
 
   it('repositions zoom buttons to stay within the viewport', () => {
     expect(canonicalPreviewRuntime).toContain('function positionMermaidZoomTrigger(trigger, block)');
     expect(canonicalPreviewRuntime).toContain('const availableOutsideWidth = viewportWidth - blockRect.right - viewportPadding');
+    expect(canonicalPreviewRuntime).toContain("trigger.style.bottom = `calc(100% + ${outsideGap}px)`;");
     expect(canonicalPreviewRuntime).toContain("trigger.style.right = '0';");
     expect(canonicalPreviewRuntime).toContain('function repositionMermaidZoomTriggers()');
   });

@@ -19,6 +19,7 @@ type PresentationGenerationRequest = {
 export async function generatePresentationCommand(resource?: vscode.Uri): Promise<void> {
   const request = await collectRequest();
   if (!request) return;
+  const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio').get<boolean>('allowRemoteResources', true);
 
   const prompt = createPresentationPrompt({
     brief: request.brief,
@@ -27,6 +28,7 @@ export async function generatePresentationCommand(resource?: vscode.Uri): Promis
     length: `${request.slideCount} slides`,
     presentationTheme: request.theme,
     presentationRatio: request.ratio,
+    allowRemoteResources,
   });
   if (!(await shouldGenerateWithLanguageModel(prompt))) return;
 

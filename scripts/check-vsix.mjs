@@ -10,8 +10,12 @@ const scriptFilePath = fileURLToPath(import.meta.url);
 const scriptDirectory = path.dirname(scriptFilePath);
 const repoRoot = path.resolve(scriptDirectory, '..');
 const extensionManifest = JSON.parse(readFileSync(path.join(repoRoot, 'apps', 'ai-markdown-studio-vs-community', 'package.json'), 'utf8'));
+const extensionReadmePath = path.join(repoRoot, 'apps', 'ai-markdown-studio-vs-community', 'README.md');
+const rootReadmePath = path.join(repoRoot, 'README.md');
 const defaultVsixPath = path.join(repoRoot, `${extensionManifest.name}-${extensionManifest.version}.vsix`);
 const vsixPath = path.resolve(process.argv[2] ?? defaultVsixPath);
+const expectedExtensionReadme = normalizeText(readFileSync(extensionReadmePath, 'utf8'));
+const rootReadme = normalizeText(readFileSync(rootReadmePath, 'utf8'));
 
 const maxCompressedBytes = 58 * 1024 * 1024;
 const maxUncompressedBytes = 140 * 1024 * 1024;
@@ -42,8 +46,9 @@ const forbiddenEntryRules = [
 const report = await readVsix(vsixPath);
 const violations = findViolations(report.entries);
 const sizeViolations = findSizeViolations(report);
+const readmeViolations = findReadmeViolations(report.files);
 
-if (violations.length === 0 && sizeViolations.length === 0) {
+if (violations.length === 0 && sizeViolations.length === 0 && readmeViolations.length === 0) {
   console.log(
     `VSIX check passed: ${formatBytes(report.compressedBytes)} on disk, ${formatBytes(report.uncompressedBytes)} unpacked, ${report.entries.length} entries.`,
   );
@@ -53,6 +58,10 @@ if (violations.length === 0 && sizeViolations.length === 0) {
 console.error(`VSIX check failed for ${path.relative(repoRoot, vsixPath) || vsixPath}`);
 
 for (const violation of sizeViolations) {
+  console.error(`- ${violation}`);
+}
+
+for (const violation of readmeViolations) {
   console.error(`- ${violation}`);
 }
 
@@ -70,6 +79,8 @@ process.exit(1);
 function readVsix(filePath) {
   return new Promise((resolve, reject) => {
     const entryInfos = [];
+    const extractedFiles = new Map();
+    const filesToCapture = new Set(['extension/README.md']);
 
     yauzl.open(filePath, { lazyEntries: true }, (error, zipFile) => {
       if (error) {
@@ -83,15 +94,46 @@ function readVsix(filePath) {
       }
 
       zipFile.on('entry', (entry) => {
-        if (!entry.fileName.endsWith('/')) {
-          entryInfos.push({
-            fileName: entry.fileName,
-            compressedSize: entry.compressedSize,
-            uncompressedSize: entry.uncompressedSize,
-          });
+        if (entry.fileName.endsWith('/')) {
+          zipFile.readEntry();
+          return;
         }
 
-        zipFile.readEntry();
+        entryInfos.push({
+          fileName: entry.fileName,
+          compressedSize: entry.compressedSize,
+          uncompressedSize: entry.uncompressedSize,
+        });
+
+        if (!filesToCapture.has(entry.fileName)) {
+          zipFile.readEntry();
+          return;
+        }
+
+        zipFile.openReadStream(entry, (streamError, readStream) => {
+          if (streamError) {
+            zipFile.close();
+            reject(streamError);
+            return;
+          }
+
+          if (!readStream) {
+            zipFile.close();
+            reject(new Error(`Unable to read ${entry.fileName} from ${filePath}.`));
+            return;
+          }
+
+          const chunks = [];
+          readStream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+          readStream.on('end', () => {
+            extractedFiles.set(entry.fileName, Buffer.concat(chunks).toString('utf8'));
+            zipFile.readEntry();
+          });
+          readStream.on('error', (streamReadError) => {
+            zipFile.close();
+            reject(streamReadError);
+          });
+        });
       });
 
       zipFile.on('end', () => {
@@ -100,6 +142,7 @@ function readVsix(filePath) {
         resolve({
           compressedBytes: statSync(filePath).size,
           entries: entryInfos,
+          files: extractedFiles,
           uncompressedBytes: entryInfos.reduce((total, entry) => total + entry.uncompressedSize, 0),
         });
       });
@@ -148,6 +191,33 @@ function findSizeViolations(report) {
   }
 
   return violations;
+}
+
+function findReadmeViolations(files) {
+  const violations = [];
+  const packagedReadme = files.get('extension/README.md');
+
+  if (!packagedReadme) {
+    violations.push('Missing extension/README.md in the VSIX package.');
+    return violations;
+  }
+
+  const normalizedPackagedReadme = normalizeText(packagedReadme);
+  if (normalizedPackagedReadme !== expectedExtensionReadme) {
+    violations.push(
+      'Packaged extension/README.md does not match apps/ai-markdown-studio-vs-community/README.md.',
+    );
+  }
+
+  if (normalizedPackagedReadme === rootReadme) {
+    violations.push('Packaged extension/README.md matches the repository root README.md instead of the app README.');
+  }
+
+  return violations;
+}
+
+function normalizeText(value) {
+  return value.replace(/\r\n/g, '\n').trim();
 }
 
 function formatBytes(byteCount) {

@@ -127,7 +127,7 @@ flowchart LR
 
 <!--slide: two-columns-->
 Body
-`)).toThrow(/Slide directives must appear only once/u);
+`)).toThrow(/first non-whitespace content after the slide separator/u);
   });
 
   it('treats the legacy notes marker as a stripped comment and keeps following content in the slide body', () => {
