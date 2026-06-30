@@ -144,6 +144,16 @@ export function createMarkdownRenderer(options: MarkdownRendererOptions = {}): M
       : self.renderToken(tokens, idx, renderOptions);
   };
 
+  md.core.ruler.after('inline', 'rewrite-html-images', (state) => {
+    for (const token of state.tokens) {
+      if ((token.type !== 'html_block' && token.type !== 'html_inline') || !token.content.includes('<img')) {
+        continue;
+      }
+
+      token.content = rewriteHtmlImageTags(token.content, options, md);
+    }
+  });
+
   const defaultLinkOpen = md.renderer.rules.link_open?.bind(md.renderer.rules);
   md.renderer.rules.link_open = (tokens, idx, renderOptions, env, self) => {
     const token = tokens[idx];
@@ -295,4 +305,66 @@ function escapeHtml(value: string): string {
     .replace(/>/gu, '&gt;')
     .replace(/"/gu, '&quot;')
     .replace(/'/gu, '&#39;');
+}
+
+function rewriteHtmlImageTags(html: string, options: MarkdownRendererOptions, md: MarkdownIt): string {
+  return html.replace(/<img\b[^>]*>/giu, (tag) => rewriteSingleHtmlImageTag(tag, options, md));
+}
+
+function rewriteSingleHtmlImageTag(tag: string, options: MarkdownRendererOptions, md: MarkdownIt): string {
+  const src = readHtmlAttribute(tag, 'src');
+  if (!src) {
+    return tag;
+  }
+
+  const altText = readHtmlAttribute(tag, 'alt') ?? '';
+  const resolvedSrc = options.resolveImageSrc?.(src);
+  if (resolvedSrc === null) {
+    const escapedAltText = md.utils.escapeHtml(altText);
+    const escapedSource = md.utils.escapeHtml(src);
+    return [
+      `<span class="remote-resource-placeholder" role="img" aria-label="${escapedAltText || 'Remote image blocked'}" data-source-src="${escapedSource}" data-remote-resource-blocked="true">`,
+      '  <span class="remote-resource-placeholder-icon" aria-hidden="true"></span>',
+      '  <span class="remote-resource-placeholder-copy">',
+      `    <span class="remote-resource-placeholder-title">${escapedAltText || 'Remote image blocked'}</span>`,
+      '    <span class="remote-resource-placeholder-message">Extension settings restrict access to remote resources.</span>',
+      '  </span>',
+      '</span>',
+    ].join('\n');
+  }
+
+  let rewritten = setHtmlAttribute(tag, 'data-source-src', src);
+  if (resolvedSrc !== undefined) {
+    rewritten = setHtmlAttribute(rewritten, 'src', resolvedSrc);
+  }
+
+  return rewritten;
+}
+
+function readHtmlAttribute(tag: string, attributeName: string): string | undefined {
+  const quotedPattern = new RegExp(`${attributeName}\\s*=\\s*(['"])(.*?)\\1`, 'iu');
+  const quotedMatch = quotedPattern.exec(tag);
+  if (quotedMatch) {
+    return quotedMatch[2];
+  }
+
+  const barePattern = new RegExp(`${attributeName}\\s*=\\s*([^\\s>]+)`, 'iu');
+  const bareMatch = barePattern.exec(tag);
+  return bareMatch?.[1];
+}
+
+function setHtmlAttribute(tag: string, attributeName: string, value: string): string {
+  const escapedValue = escapeHtml(value);
+  const replacement = `${attributeName}="${escapedValue}"`;
+  const quotedPattern = new RegExp(`${attributeName}\\s*=\\s*(['"])(.*?)\\1`, 'iu');
+  if (quotedPattern.test(tag)) {
+    return tag.replace(quotedPattern, replacement);
+  }
+
+  const barePattern = new RegExp(`${attributeName}\\s*=\\s*([^\\s>]+)`, 'iu');
+  if (barePattern.test(tag)) {
+    return tag.replace(barePattern, replacement);
+  }
+
+  return tag.replace(/\/?>$/u, (suffix) => ` ${replacement}${suffix}`);
 }

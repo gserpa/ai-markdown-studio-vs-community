@@ -1,7 +1,7 @@
 # AI Markdown Studio Community
 
 <p align="center">
-  <img src="media/markdown-ai-studio-logo.png" alt="AI Markdown Studio" width="520" />
+  <img src="media/markdown-ai-studio-logo.png" alt="AI Markdown Studio" width="320" />
 </p>
 
 The open-source core of AI Markdown Studio: a VS Code extension for authoring Markdown with a live preview panel, Mermaid diagram support, KaTeX math, syntax highlighting, table formatting, document and presentation preview themes, a slide-based presentation preview, AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX export.
@@ -9,6 +9,23 @@ The open-source core of AI Markdown Studio: a VS Code extension for authoring Ma
 AI Markdown Studio Community is licensed under the MIT License and is useful entirely on its own. It includes AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX. PDF/PPTX export, high-fidelity DOCX, broad file conversion, theme AI workflows, shared custom theme folders, agent tools, and corporate PowerPoint template automation are provided separately by **AI Markdown Studio Pro**.
 
 For a complete end-user walkthrough, see [user-guide.md](./docs/user/user-guide.md). For a focused comparison of what Pro adds, see [upgrade-to-pro.md](./docs/user/upgrade-to-pro.md).
+
+## Why Markdown Studio Exists
+
+Markdown is an ideal file format for the AI era because it works as a simple common
+language between humans and AI systems. It is plain text, easy to parse, token-efficient,
+portable between tools, diffable in Git, and stable over time. AI Markdown Studio exists
+to keep valuable knowledge in that open format instead of letting it disappear into chat
+threads, closed editors, or heavyweight document files.
+
+It also keeps content separate from presentation. You can store ideas, documentation,
+notes, and decks in a clean standard Markdown form, then apply themes as a separate
+visualization layer when you want a different reading experience, presentation style, or
+brand. That keeps the source simple while making the output easy to change.
+
+Community is the open-source core of that workflow. It gives you a practical Markdown
+workspace for authoring, preview, presentation decks, AI-assisted generation, and basic
+export, so your Markdown knowledge base stays useful to both people and AI every day.
 
 ## User Guide Index
 
@@ -25,7 +42,6 @@ For a complete end-user walkthrough, see [user-guide.md](./docs/user/user-guide.
   - [Basic DOCX Export](#basic-docx-export)
   - [Command List](#command-list)
   - [Mermaid Diagram Example](#mermaid-example)
-- [Running Tests](#running-tests)
 - [Security](#security)
 - [AI Markdown Studio Pro](#markdown-ai-studio-pro)
 - [Acknowledgments & Third-Party Licenses](#acknowledgments--third-party-licenses)
@@ -48,6 +64,9 @@ Or install a packaged build directly from a `.vsix` file:
 ```bash
 code --install-extension markdown-ai-studio-0.2.0.vsix
 ```
+
+If you are working on the repository itself, use the workspace root README for build
+and verification commands.
 
 ## Features
 
@@ -72,14 +91,6 @@ code --install-extension markdown-ai-studio-0.2.0.vsix
 - **Command launcher** - quick access to the extension's main actions from the editor title bar. The launcher is extensible: when a compatible feature extension such as AI Markdown Studio Pro is installed, its commands appear alongside the Community commands.
 - **Command palette settings shortcut** - jump directly to the extension's settings with **Change Settings...**.
 - **Single-tab per file** - always one tab per file; switching modes closes the other surface.
-
-## App Layout
-
-- `src/` - extension source
-- `out/` - compiled extension output
-- `docs/` - extension-specific documentation
-- `media/` - command icons referenced by the extension manifest
-- `config/` - extension metadata used to generate the command launcher entries
 
 ## Usage
 
@@ -219,21 +230,6 @@ Use it as a single entry point to:
 - open extension settings
 
 When a compatible feature extension such as AI Markdown Studio Pro is installed, its registered commands appear in the same launcher, so Pro features look integrated without Community depending on Pro.
-
-## Running Tests
-
-The extension includes automated unit tests covering table formatting, HTML sanitization, presentation parsing and preview rendering, front-matter display state, and HTML export helpers.
-
-Install dependencies and run the verification pipeline:
-
-```bash
-npm install
-npm run verify
-```
-
-`npm run verify` runs the Community boundary check, compiles the workspace packages, runs the [Vitest](https://vitest.dev/) suite, and packages the VSIX. Tests run entirely in Node.js - no VS Code instance is required.
-
-> Note: `npm test` on its own assumes the workspace packages (`@mfo/core`, `@mfo/preview-web`) are already compiled. Run `npm run compile` first, or use `npm run verify`, which compiles before testing.
 
 ## Security
 

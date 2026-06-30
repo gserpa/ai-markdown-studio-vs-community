@@ -127,11 +127,31 @@ describe('sanitizeRenderedHtml', () => {
       expect(result).toContain('data-source-src="https://example.com/img.png"');
     });
 
+    it('rewrites raw HTML img tags through the configured image resolver', () => {
+      const renderer = createMarkdownRenderer({
+        resolveImageSrc: (rawPath) => `https://preview.local/${rawPath}`,
+      });
+      const result = sanitizeRenderedHtml(renderer.render('<img src="images/chart.png" alt="Chart">'));
+      expect(result).toContain('src="https://preview.local/images/chart.png"');
+      expect(result).toContain('data-source-src="images/chart.png"');
+      expect(result).toContain('alt="Chart"');
+    });
+
     it('can blank image src while preserving the original source for gated fallback handling', () => {
       const renderer = createMarkdownRenderer({
         resolveImageSrc: () => null,
       });
       const result = sanitizeRenderedHtml(renderer.render('![Alt](https://example.com/img.png)'));
+      expect(result).toContain('class="remote-resource-placeholder"');
+      expect(result).toContain('data-source-src="https://example.com/img.png"');
+      expect(result).toContain('Extension settings restrict access to remote resources.');
+    });
+
+    it('can gate raw HTML img tags while preserving the original source', () => {
+      const renderer = createMarkdownRenderer({
+        resolveImageSrc: () => null,
+      });
+      const result = sanitizeRenderedHtml(renderer.render('<img src="https://example.com/img.png" alt="Alt">'));
       expect(result).toContain('class="remote-resource-placeholder"');
       expect(result).toContain('data-source-src="https://example.com/img.png"');
       expect(result).toContain('Extension settings restrict access to remote resources.');
