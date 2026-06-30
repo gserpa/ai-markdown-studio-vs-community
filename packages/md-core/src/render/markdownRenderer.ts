@@ -238,7 +238,7 @@ export function sanitizeRenderedHtml(html: string): string {
   return sanitizeHtml(html, {
     allowedTags: [...allowedTags],
     allowedAttributes: {
-      '*': ['class', 'id', 'style', 'title', 'aria-hidden', 'data-*'],
+      '*': ['class', 'id', 'style', 'title', 'aria-hidden', 'data-*', 'align'],
       a: ['href', 'name', 'target', 'rel', 'data-href'],
       img: ['src', 'alt', 'title', 'width', 'height'],
       input: ['type', 'checked', 'disabled'],

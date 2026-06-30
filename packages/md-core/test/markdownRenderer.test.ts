@@ -75,6 +75,12 @@ describe('sanitizeRenderedHtml', () => {
       expect(result).toBe('<p>Hello <strong>world</strong></p>');
     });
 
+    it('preserves safe alignment attributes on HTML blocks', () => {
+      const input = '<p align="center">Centered</p>';
+      const result = sanitizeRenderedHtml(input);
+      expect(result).toContain('<p align="center">Centered</p>');
+    });
+
     it('preserves heading tags', () => {
       const input = '<h1>Title</h1><h2>Subtitle</h2>';
       const result = sanitizeRenderedHtml(input);
