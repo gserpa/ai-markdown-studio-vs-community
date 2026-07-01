@@ -1,6 +1,6 @@
 ---
 date: 2026-06-13
-version: 0.2.0
+version: 1.0.0
 ---
 
 # AI Markdown Studio Community — User Guide

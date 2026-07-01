@@ -28,7 +28,7 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```powershell
-code --install-extension markdown-ai-studio-0.2.0.vsix
+code --install-extension markdown-ai-studio-1.0.0.vsix
 ```
 
 ## Highlights

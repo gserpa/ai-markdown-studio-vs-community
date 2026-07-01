@@ -2,7 +2,7 @@
   "name": "ai-markdown-studio-vs-community-workspace",
   "displayName": "AI Markdown Studio Community Workspace",
   "description": "Workspace for building and packaging AI Markdown Studio Community.",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "license": "MIT",
   "private": true,
   "scripts": {

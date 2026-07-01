@@ -1,11 +1,11 @@
 ---
 date: 2026-06-13
-version: 0.2.0
+version: 1.0.0
 ---
 
 # Security Review — AI Markdown Studio Community
 
-**Document version:** 0.2.0 (document last updated 2026-06-13)
+**Document version:** 1.0.0 (document last updated 2026-06-13)
 
 ## Disclaimer and Scope of This Review
 

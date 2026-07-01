@@ -9,6 +9,10 @@ const repoRoot = path.resolve(scriptDirectory, '..');
 const extensionAppRoot = path.join(repoRoot, 'apps', 'ai-markdown-studio-vs-community');
 const stageDirectory = path.join(repoRoot, '.vsix-stage');
 const extensionManifest = JSON.parse(readFileSync(path.join(extensionAppRoot, 'package.json'), 'utf8'));
+const repositoryUrl = normalizeRepositoryUrl(extensionManifest.repository?.url ?? '');
+const extensionRepositoryDirectory = path.relative(repoRoot, extensionAppRoot).split(path.sep).join('/');
+const baseContentUrl = repositoryUrl ? `${repositoryUrl}/blob/HEAD/${extensionRepositoryDirectory}` : '';
+const baseImagesUrl = repositoryUrl ? `${toRawRepositoryUrl(repositoryUrl)}/HEAD/${extensionRepositoryDirectory}` : '';
 const vsixFilePath = path.join(repoRoot, `${extensionManifest.name}-${extensionManifest.version}.vsix`);
 
 rmSync(vsixFilePath, { force: true });
@@ -39,7 +43,15 @@ try {
   pruneStageNodeModulesToRuntimeDependencies();
 
   const vsceCliPath = path.join(repoRoot, 'node_modules', '@vscode', 'vsce', 'vsce');
-  const result = spawnSync(process.execPath, [vsceCliPath, 'package', '--out', vsixFilePath], {
+  const packagingArguments = [vsceCliPath, 'package', '--out', vsixFilePath];
+  if (baseContentUrl) {
+    packagingArguments.push('--baseContentUrl', baseContentUrl);
+  }
+  if (baseImagesUrl) {
+    packagingArguments.push('--baseImagesUrl', baseImagesUrl);
+  }
+
+  const result = spawnSync(process.execPath, packagingArguments, {
     cwd: stageDirectory,
     stdio: 'inherit',
   });
@@ -189,5 +201,13 @@ function verifyBoundary(filePath) {
   if (result.status !== 0) {
     throw new Error(`Boundary validation failed with exit code ${result.status ?? 'unknown'}.`);
   }
+}
+
+function normalizeRepositoryUrl(value) {
+  return value.replace(/\.git$/u, '');
+}
+
+function toRawRepositoryUrl(value) {
+  return value.replace('https://github.com/', 'https://raw.githubusercontent.com/');
 }
 

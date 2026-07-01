@@ -1,6 +1,12 @@
 # AI Markdown Studio Community
 
-![AI Markdown Studio](media/markdown-ai-studio-logo.png)
+<p align="center">
+  <img
+    src="https://raw.githubusercontent.com/gserpa/ai-markdown-studio-vs-community/HEAD/apps/ai-markdown-studio-vs-community/media/markdown-ai-studio-logo.png"
+    alt="AI Markdown Studio"
+    width="420"
+  />
+</p>
 
 The open-source core of AI Markdown Studio: a VS Code extension for authoring Markdown with a live preview panel, Mermaid diagram support, KaTeX math, syntax highlighting, table formatting, document and presentation preview themes, a slide-based presentation preview, AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX export.
 
@@ -60,7 +66,7 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```bash
-code --install-extension markdown-ai-studio-0.2.0.vsix
+code --install-extension markdown-ai-studio-1.0.0.vsix
 ```
 
 If you are working on the repository itself, use the workspace root README for build

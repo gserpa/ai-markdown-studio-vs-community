@@ -12,10 +12,16 @@ const repoRoot = path.resolve(scriptDirectory, '..');
 const extensionManifest = JSON.parse(readFileSync(path.join(repoRoot, 'apps', 'ai-markdown-studio-vs-community', 'package.json'), 'utf8'));
 const extensionReadmePath = path.join(repoRoot, 'apps', 'ai-markdown-studio-vs-community', 'README.md');
 const rootReadmePath = path.join(repoRoot, 'README.md');
+const repositoryUrl = normalizeRepositoryUrl(extensionManifest.repository?.url ?? '');
+const rawRepositoryUrl = toRawRepositoryUrl(repositoryUrl);
+const extensionReadmeRepositoryDirectory = path.posix.dirname(
+  path.relative(repoRoot, extensionReadmePath).split(path.sep).join('/'),
+);
 const defaultVsixPath = path.join(repoRoot, `${extensionManifest.name}-${extensionManifest.version}.vsix`);
 const vsixPath = path.resolve(process.argv[2] ?? defaultVsixPath);
 const expectedExtensionReadme = normalizeText(readFileSync(extensionReadmePath, 'utf8'));
 const rootReadme = normalizeText(readFileSync(rootReadmePath, 'utf8'));
+const packagedReadmePath = 'extension/readme.md';
 
 const maxCompressedBytes = 58 * 1024 * 1024;
 const maxUncompressedBytes = 140 * 1024 * 1024;
@@ -80,7 +86,6 @@ function readVsix(filePath) {
   return new Promise((resolve, reject) => {
     const entryInfos = [];
     const extractedFiles = new Map();
-    const filesToCapture = new Set(['extension/README.md']);
 
     yauzl.open(filePath, { lazyEntries: true }, (error, zipFile) => {
       if (error) {
@@ -105,7 +110,7 @@ function readVsix(filePath) {
           uncompressedSize: entry.uncompressedSize,
         });
 
-        if (!filesToCapture.has(entry.fileName)) {
+        if (entry.fileName.toLowerCase() !== packagedReadmePath) {
           zipFile.readEntry();
           return;
         }
@@ -195,32 +200,69 @@ function findSizeViolations(report) {
 
 function findReadmeViolations(files) {
   const violations = [];
-  const packagedReadme = files.get('extension/README.md');
+  const packagedReadme = files.get(packagedReadmePath);
 
   if (!packagedReadme) {
-    violations.push('Missing extension/README.md in the VSIX package.');
+    violations.push('Missing extension/readme.md in the VSIX package.');
     return violations;
   }
 
   const normalizedPackagedReadme = normalizeText(packagedReadme);
   if (normalizedPackagedReadme !== expectedExtensionReadme) {
     violations.push(
-      'Packaged extension/README.md does not match apps/ai-markdown-studio-vs-community/README.md.',
+      'Packaged extension/readme.md does not match apps/ai-markdown-studio-vs-community/README.md.',
     );
   }
 
   if (normalizedPackagedReadme === rootReadme) {
-    violations.push('Packaged extension/README.md matches the repository root README.md instead of the app README.');
+    violations.push('Packaged extension/readme.md matches the repository root README.md instead of the app README.');
   }
 
   return violations;
 }
 
 function normalizeText(value) {
-  return value.replace(/\r\n/g, '\n').trim();
+  return normalizeRelativePaths(normalizeRepositoryLinks(value.replace(/\r\n/g, '\n'))).trim();
 }
 
 function formatBytes(byteCount) {
   const mebibytes = byteCount / (1024 * 1024);
   return `${mebibytes.toFixed(2)} MiB`;
+}
+
+function normalizeRepositoryUrl(value) {
+  return value.replace(/\.git$/u, '');
+}
+
+function normalizeRepositoryLinks(value) {
+  if (!repositoryUrl) {
+    return value;
+  }
+
+  return value
+    .replace(new RegExp(`${escapeRegExp(repositoryUrl)}/(?:blob|raw)/HEAD/([^\\s)]+)`, 'gu'), (_match, repoPath) => normalizeReadmeTarget(repoPath))
+    .replace(new RegExp(`${escapeRegExp(rawRepositoryUrl)}/HEAD/([^\\s)]+)`, 'gu'), (_match, repoPath) => normalizeReadmeTarget(repoPath));
+}
+
+function normalizeRelativePaths(value) {
+  return value.replace(/\(\.\/((?:\.\.\/)+[^)]+)\)/gu, '($1)');
+}
+
+function normalizeReadmeTarget(repoPath) {
+  const normalizedRepoPath = repoPath.replace(/\\/gu, '/').replace(/^\/+/u, '');
+  const relativePath = path.posix.relative(extensionReadmeRepositoryDirectory, normalizedRepoPath);
+
+  if (!relativePath || relativePath === '.') {
+    return './';
+  }
+
+  return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
+}
+
+function toRawRepositoryUrl(value) {
+  return value.replace('https://github.com/', 'https://raw.githubusercontent.com/');
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 }
