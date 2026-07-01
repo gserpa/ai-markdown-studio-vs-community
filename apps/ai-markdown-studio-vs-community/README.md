@@ -1,8 +1,6 @@
 # AI Markdown Studio Community
 
-<p align="center">
-  <img src="media/markdown-ai-studio-logo.png" alt="AI Markdown Studio" width="320" />
-</p>
+![AI Markdown Studio](media/markdown-ai-studio-logo.png)
 
 The open-source core of AI Markdown Studio: a VS Code extension for authoring Markdown with a live preview panel, Mermaid diagram support, KaTeX math, syntax highlighting, table formatting, document and presentation preview themes, a slide-based presentation preview, AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX export.
 
