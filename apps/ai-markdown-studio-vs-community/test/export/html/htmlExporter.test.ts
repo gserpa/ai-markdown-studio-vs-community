@@ -16,7 +16,15 @@ vi.mock('node:fs/promises', () => ({
 }));
 
 vi.mock('@mfo/preview-web', () => ({
-  buildDocumentThemeStylesheet: vi.fn(() => 'body.document-theme-light { --md-preview-body-color: #111111; }'),
+  buildDocumentThemeStylesheet: vi.fn(() => [
+    'body.document-theme-light {',
+    '  --md-preview-body-color: #111111;',
+    '  --md-preview-heading-color: #1e3a8a;',
+    '  --md-preview-link-color: #0969da;',
+    '  --md-preview-content-bg: linear-gradient(180deg, #ffffff, #eff6ff);',
+    '  --md-preview-code-bg: #d7e8ff;',
+    '}',
+  ].join('\n')),
   buildPreviewThemeStylesheet: vi.fn(() => '.presentation-preview { color: white; }'),
   renderPresentationPreview: vi.fn((source: string) => ({
     deckTitle: 'Deck Title',
@@ -188,6 +196,57 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('data-document-theme="light"');
     expect(html).toContain('border: 0 !important;');
     expect(html).toContain('box-shadow: none !important;');
+    expect(html).toContain('--md-preview-heading-color: #1e3a8a;');
+    expect(html).toContain('--md-preview-link-color: #0969da;');
+    expect(html).toContain('--md-preview-code-bg: #d7e8ff;');
+    expect(html).toContain('body.preview-mode-document .markdown-body,');
+    expect(html).toContain('background: #ffffff !important;');
+    expect(html).toContain('--md-preview-content-bg: #ffffff;');
+  });
+
+  it('does not apply printer-friendly background stripping to themed document exports', async () => {
+    const document = {
+      fileName: 'example.md',
+      uri: {
+        fsPath: 'C:/docs/example.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/example.md',
+      },
+      getText: () => '# Heading',
+    } as never;
+
+    const html = await buildExportHtmlString(
+      { fsPath: 'C:/extension', scheme: 'file' } as never,
+      document,
+      { exportMode: 'theme' },
+    );
+
+    expect(html).toContain('--md-preview-content-bg: linear-gradient(180deg, #ffffff, #eff6ff);');
+    expect(html).not.toContain('background: #ffffff !important;');
+    expect(html).not.toContain('--md-preview-content-bg: #ffffff;');
+  });
+
+  it('applies printer-friendly backgrounds without borderless frame styles in paper mode', async () => {
+    const document = {
+      fileName: 'example.md',
+      uri: {
+        fsPath: 'C:/docs/example.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/example.md',
+      },
+      getText: () => '# Heading',
+    } as never;
+
+    const html = await buildExportHtmlString(
+      { fsPath: 'C:/extension', scheme: 'file' } as never,
+      document,
+      { exportMode: 'paper' },
+    );
+
+    expect(html).toContain('background: #ffffff !important;');
+    expect(html).toContain('--md-preview-content-bg: #ffffff;');
+    expect(html).not.toContain('border: 0 !important;');
+    expect(html).not.toContain('box-shadow: none !important;');
   });
 
   it('keeps exported document html page-scrollable', async () => {

@@ -163,8 +163,8 @@ ${input.katexCss}
   <style>
 ${input.previewCss}
   </style>
-  ${input.exportMode === 'paper-borderless' ? `<style>
-${getBorderlessExportCss()}
+  ${input.exportMode !== 'theme' ? `<style>
+${getPrinterFriendlyExportCss(input.exportMode)}
   </style>` : ''}
   <style>
 ${getExportScrollCss()}
@@ -211,8 +211,8 @@ ${input.katexCss}
   <style>
 ${input.previewCss}
   </style>
-  ${input.exportMode === 'paper-borderless' ? `<style>
-${getBorderlessExportCss()}
+  ${input.exportMode !== 'theme' ? `<style>
+${getPrinterFriendlyExportCss(input.exportMode)}
   </style>` : ''}
 </head>
 <body class="preview-mode-presentation" data-preview-mode="presentation">
@@ -279,8 +279,29 @@ body.preview-mode-document .document-preview-scroll {
 `;
 }
 
-function getBorderlessExportCss(): string {
+function getPrinterFriendlyExportCss(exportMode: ExportMode): string {
   return `
+html,
+body,
+body.preview-mode-document,
+body.preview-mode-presentation,
+body.preview-mode-document .document-preview-shell,
+body.preview-mode-document .document-preview-scroll,
+body.preview-mode-presentation .presentation-preview,
+body.preview-mode-presentation .presentation-stage,
+body.preview-mode-presentation .presentation-slide,
+body.preview-mode-presentation .presentation-slide-shell,
+body.preview-mode-presentation .presentation-frame,
+body.preview-mode-presentation .presentation-canvas,
+body.preview-mode-presentation .presentation-surface,
+body.preview-mode-document .markdown-body,
+body.preview-mode-presentation .presentation-slide-body.markdown-body {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  background: #ffffff !important;
+}
+
+${exportMode === 'paper-borderless' ? `
 body.preview-mode-document .markdown-body,
 body.preview-mode-presentation .presentation-slide-shell,
 body.preview-mode-presentation .presentation-frame,
@@ -288,6 +309,14 @@ body.preview-mode-presentation .presentation-surface,
 body.preview-mode-presentation .presentation-slide-body.markdown-body {
   border: 0 !important;
   box-shadow: none !important;
+}
+` : ''}
+
+body.preview-mode-document .markdown-body,
+body.preview-mode-presentation .presentation-slide-body.markdown-body {
+  --md-preview-content-bg: #ffffff;
+  --md-preview-content-border: transparent;
+  --md-preview-content-shadow: none;
 }
 `;
 }
