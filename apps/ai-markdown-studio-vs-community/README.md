@@ -14,6 +14,21 @@ AI Markdown Studio Community is licensed under the MIT License and is useful ent
 
 For a complete end-user walkthrough, see [user-guide.md](./docs/user/user-guide.md). For a focused comparison of what Pro adds, see [upgrade-to-pro.md](./docs/user/upgrade-to-pro.md).
 
+## See It In Action
+
+<p align="left">
+  <video
+    src="https://raw.githubusercontent.com/gserpa/ai-markdown-studio-vs-community/HEAD/apps/ai-markdown-studio-vs-community/media/demo/community-1-preview-mermaid-theme.mp4"
+    autoplay
+    loop
+    muted
+    playsinline
+    style="max-width: 100%; border-radius: 14px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);"
+  ></video>
+</p>
+
+Preview, zoom Mermaid diagrams, and switch themes in one short loop.
+
 ## Why Markdown Studio Exists
 
 Markdown is an ideal file format for the AI era because it works as a simple common
@@ -36,6 +51,7 @@ export, so your Markdown knowledge base stays useful to both people and AI every
 - [Installation](#installation)
 - [Features](#features)
 - [Usage & Commands](#usage)
+- [See It In Action](#see-it-in-action)
 - [Feature Details](#feature-details)
   - [Markdown Preview](#markdown-preview)
   - [Presentation Preview](#presentation-preview)

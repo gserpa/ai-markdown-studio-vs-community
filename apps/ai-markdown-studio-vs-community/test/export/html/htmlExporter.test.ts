@@ -308,6 +308,33 @@ describe('buildExportHtmlString', () => {
     expect(html).not.toContain('marker is set, so this should render');
   });
 
+  it('pins auto-theme presentation exports to the current VS Code dark mode when preview is dark', async () => {
+    vscode.window.activeColorTheme.kind = vscode.ColorThemeKind.Dark;
+
+    const source = [
+      '---',
+      'document: presentation',
+      'title: Deck Title',
+      '---',
+      '',
+      '# Opening',
+    ].join('\n');
+    const document = {
+      fileName: 'presentation.md',
+      uri: {
+        fsPath: 'C:/docs/presentation.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/presentation.md',
+      },
+      getText: () => source,
+    } as never;
+
+    const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+
+    expect(html).toContain('<html lang="en" class="vscode-dark">');
+    expect(html).toContain('<body class="preview-mode-presentation vscode-dark" data-preview-mode="presentation">');
+  });
+
   it('pins auto-theme exports to the current VS Code dark mode when preview is dark', async () => {
     vscode.window.activeColorTheme.kind = vscode.ColorThemeKind.Dark;
 

@@ -84,6 +84,7 @@ export async function buildExportHtmlString(
       previewThemeRuntimeScript,
       previewScript,
       exportMode,
+      hostThemeClass: exportMode === 'theme' ? getHostThemeClass() : '',
       previewThemeCss: buildPreviewThemeStylesheet(registry),
     });
   }
@@ -191,10 +192,11 @@ function buildPresentationStandaloneHtml(input: {
   previewThemeRuntimeScript: string;
   previewScript: string;
   previewThemeCss: string;
+  hostThemeClass: string;
   exportMode: ExportMode;
 }): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en"${input.hostThemeClass ? ` class="${escapeHtml(input.hostThemeClass)}"` : ''}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -215,7 +217,7 @@ ${input.previewCss}
 ${getPrinterFriendlyExportCss(input.exportMode)}
   </style>` : ''}
 </head>
-<body class="preview-mode-presentation" data-preview-mode="presentation">
+<body class="${escapeHtml(['preview-mode-presentation', input.hostThemeClass].filter(Boolean).join(' '))}" data-preview-mode="presentation">
   ${input.body}
   <script>
 ${getStandalonePreviewBridgeScript()}
