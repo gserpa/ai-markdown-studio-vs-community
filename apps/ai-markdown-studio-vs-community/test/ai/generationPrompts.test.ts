@@ -29,5 +29,6 @@ describe('Community generation prompts', () => {
     expect(prompt).toContain('9 slides');
     expect(prompt).toContain('Use ratio: 16:9');
     expect(prompt).toContain('Remote image embeds are allowed in this workspace');
+    expect(prompt).toContain('Treat remote image verification as mandatory');
   });
 });

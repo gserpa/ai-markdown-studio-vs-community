@@ -48,6 +48,9 @@ const additionalTags = [
   'mtr',
   'mtd',
   'input',
+  'video',
+  'source',
+  'track',
 ];
 
 const additionalAttributes = [
@@ -74,6 +77,19 @@ const additionalAttributes = [
   'alt',
   'width',
   'height',
+  'controls',
+  'autoplay',
+  'loop',
+  'muted',
+  'playsinline',
+  'poster',
+  'preload',
+  'type',
+  'media',
+  'kind',
+  'srclang',
+  'label',
+  'default',
 ];
 
 function sanitizeRenderedHtmlForBrowser(html: string): string {

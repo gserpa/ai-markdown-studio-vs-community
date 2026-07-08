@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { createPresentationPrompt, createPresentationRepairPrompt } from '@mfo/ai-core';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
 import { validatePresentation } from '../ai/presentationValidation';
+import { normalizeGeneratedPresentationImages } from './generatedPresentationImages';
 import { shouldGenerateWithLanguageModel } from './generationMode';
 
 const THEMES = ['auto', 'default', 'galaxy', 'modern-blue', 'black'] as const;
@@ -63,6 +64,21 @@ export async function generatePresentationCommand(resource?: vscode.Uri): Promis
         if (remainingIssues.length > 0) {
           void vscode.window.showWarningMessage(`Generated presentation needs review: ${remainingIssues.slice(0, 3).join(' ')}`);
         }
+      }
+      const normalizedImages = await normalizeGeneratedPresentationImages(markdown, {
+        allowRemoteResources,
+        providedImageSource: request.brief,
+        isCancellationRequested: () => token.isCancellationRequested,
+      });
+      markdown = normalizedImages.markdown;
+      if (normalizedImages.replacements.length > 0) {
+        const remoteFixes = normalizedImages.replacements.filter((entry) => entry.reason !== 'invented-local').length;
+        const localFixes = normalizedImages.replacements.length - remoteFixes;
+        const summary = [
+          remoteFixes > 0 ? `${remoteFixes} unverified remote image ${remoteFixes === 1 ? 'was' : 'were'} converted to image suggestions` : '',
+          localFixes > 0 ? `${localFixes} invented local image ${localFixes === 1 ? 'was' : 'were'} removed` : '',
+        ].filter(Boolean).join('; ');
+        void vscode.window.showWarningMessage(`Generated presentation image cleanup: ${summary}.`);
       }
       await vscode.workspace.fs.writeFile(target, Buffer.from(markdown, 'utf8'));
       await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(target));

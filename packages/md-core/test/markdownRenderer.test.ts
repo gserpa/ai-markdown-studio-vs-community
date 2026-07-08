@@ -125,6 +125,28 @@ describe('sanitizeRenderedHtml', () => {
       expect(result).toContain('alt="An image"');
     });
 
+    it('preserves video embeds with safe playback attributes', () => {
+      const input = '<video src="https://example.com/demo.mp4" autoplay loop muted playsinline poster="https://example.com/poster.png"></video>';
+      const result = sanitizeRenderedHtml(input);
+      expect(result).toContain('<video');
+      expect(result).toContain('src="https://example.com/demo.mp4"');
+      expect(result).toContain('autoplay');
+      expect(result).toContain('loop');
+      expect(result).toContain('muted');
+      expect(result).toContain('playsinline');
+      expect(result).toContain('poster="https://example.com/poster.png"');
+    });
+
+    it('preserves video source children', () => {
+      const input = '<video controls><source src="https://example.com/demo.webm" type="video/webm"></video>';
+      const result = sanitizeRenderedHtml(input);
+      expect(result).toContain('<video');
+      expect(result).toContain('<source');
+      expect(result).toContain('src="https://example.com/demo.webm"');
+      expect(result).toContain('type="video/webm"');
+      expect(result).toContain('controls');
+    });
+
     it('preserves source tracking attributes for images', () => {
       const renderer = createMarkdownRenderer({
         resolveImageSrc: (rawPath) => rawPath,

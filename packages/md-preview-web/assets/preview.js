@@ -2290,6 +2290,8 @@ function parsePresentationRatio(value) {
 function initializeImageFallback(bridge, eagerlyResolvePresentationImages) {
   const pendingRequests = new Map();
 
+  const imageLoadedSuccessfully = (image) => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0;
+
   const requestResolution = (image) => {
     if (!(image instanceof HTMLImageElement)) {
       return;
@@ -2331,8 +2333,23 @@ function initializeImageFallback(bridge, eagerlyResolvePresentationImages) {
       return;
     }
 
+    image.dataset.imageResolveRequested = 'false';
+    if (imageLoadedSuccessfully(image)) {
+      image.classList.remove('image-load-failed');
+      return;
+    }
+
     image.classList.add('image-load-failed');
   });
+
+  document.addEventListener('load', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLImageElement)) {
+      return;
+    }
+
+    target.classList.remove('image-load-failed');
+  }, true);
 
   document.addEventListener('error', (event) => {
     const target = event.target;
@@ -2340,8 +2357,12 @@ function initializeImageFallback(bridge, eagerlyResolvePresentationImages) {
       return;
     }
 
-    if (target.dataset.imageResolved === 'true' || target.dataset.imageResolveRequested === 'true') {
+    if (target.dataset.imageResolved === 'true') {
       target.classList.add('image-load-failed');
+      return;
+    }
+
+    if (target.dataset.imageResolveRequested === 'true') {
       return;
     }
 

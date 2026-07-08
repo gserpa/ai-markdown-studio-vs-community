@@ -29,6 +29,45 @@ For a complete end-user walkthrough, see [user-guide.md](./docs/user/user-guide.
 
 Preview, zoom Mermaid diagrams, and switch themes in one short loop.
 
+<p align="left">
+  <video
+    src="https://raw.githubusercontent.com/gserpa/ai-markdown-studio-vs-community/HEAD/apps/ai-markdown-studio-vs-community/media/demo/community-2-generate-presentation-preview.mp4"
+    autoplay
+    loop
+    muted
+    playsinline
+    style="max-width: 100%; border-radius: 14px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);"
+  ></video>
+</p>
+
+Create AI-generated presentations from a brief and open them directly in slide preview.
+
+<p align="left">
+  <video
+    src="https://raw.githubusercontent.com/gserpa/ai-markdown-studio-vs-community/HEAD/apps/ai-markdown-studio-vs-community/media/demo/community-3-export-docs-html.mp4"
+    autoplay
+    loop
+    muted
+    playsinline
+    style="max-width: 100%; border-radius: 14px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);"
+  ></video>
+</p>
+
+Export a Markdown document to HTML and open the standalone browser result.
+
+<p align="left">
+  <video
+    src="https://raw.githubusercontent.com/gserpa/ai-markdown-studio-vs-community/HEAD/apps/ai-markdown-studio-vs-community/media/demo/community-3-export-presentation-html.mp4"
+    autoplay
+    loop
+    muted
+    playsinline
+    style="max-width: 100%; border-radius: 14px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);"
+  ></video>
+</p>
+
+Export a Markdown presentation to HTML and keep the slide-style experience in the browser.
+
 ## Why Markdown Studio Exists
 
 Markdown is an ideal file format for the AI era because it works as a simple common
@@ -306,3 +345,5 @@ This extension is built on the following open-source libraries:
 - [Inter](https://github.com/rsms/inter), [Fraunces](https://github.com/undercasetype/Fraunces), and [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) fonts (SIL Open Font License 1.1)
 
 All libraries are used in accordance with their license terms. See [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) and `package-lock.json` for the authoritative dependency and version list. Bundled font license texts are distributed under `packages/md-preview-web/assets/fonts`.
+
+

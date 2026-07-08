@@ -40,6 +40,10 @@ describe('generation prompt builders', () => {
     expect(prompt).toContain('use Google Images or a similar image search');
     expect(prompt).toContain('Remote image embeds are allowed in this workspace');
     expect(prompt).toContain('embed the remote image in the Markdown slide content');
+    expect(prompt).toContain('Treat remote image verification as mandatory');
+    expect(prompt).toContain('HTTP 200 response');
+    expect(prompt).toContain('upload.wikimedia.org');
+    expect(prompt).toContain('verify one candidate at a time');
   });
 
   it('builds a presentation prompt that blocks remote embeds when disabled', () => {
