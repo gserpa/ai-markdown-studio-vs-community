@@ -277,6 +277,20 @@
               "Summer Solstice — bundled document theme.",
               "Winter Frost — bundled document theme."
             ]
+          },
+          "markdownAiStudio.documentTableLayout": {
+            "type": "string",
+            "default": "wide",
+            "scope": "resource",
+            "enum": [
+              "wide",
+              "wrap"
+            ],
+            "enumDescriptions": [
+              "Keep preview tables in a wide, horizontally scrollable layout by default.",
+              "Wrap preview table cell text to fit the document width by default."
+            ],
+            "markdownDescription": "Default table layout for document preview. Individual preview tables can still be toggled between wide and wrapped layout for the current preview session."
           }
         }
       },

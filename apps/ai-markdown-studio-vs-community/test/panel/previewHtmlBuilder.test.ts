@@ -148,6 +148,39 @@ describe('buildPreviewHtml', () => {
     expect(html).not.toMatch(/<a\s+href="#section"/u);
   });
 
+  it('passes the configured document table layout to the preview runtime', () => {
+    vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+      get: vi.fn((key: string, fallback: unknown) => {
+        if (key === 'documentTableLayout') {
+          return 'wrap';
+        }
+
+        if (key === 'allowRemoteResources') {
+          return true;
+        }
+
+        return fallback;
+      }),
+      inspect: vi.fn(() => undefined),
+    });
+
+    const html = buildPreviewHtml(
+      { fsPath: 'C:/extension', scheme: 'file' } as never,
+      {
+        cspSource: 'vscode-resource:',
+        asWebviewUri: (value: { fsPath?: string; toString: () => string }) => ({ toString: () => value.toString(), fsPath: value.fsPath }),
+      } as never,
+      {
+        uri: { fsPath: 'C:/docs/example.md', scheme: 'file', toString: () => 'file:///C:/docs/example.md' },
+        fileName: 'C:/docs/example.md',
+        getText: () => '| A | B |\n| - | - |\n| Long | Cell |',
+      } as never,
+      (rawPath) => rawPath,
+    );
+
+    expect(html).toContain('data-document-table-layout="wrap"');
+  });
+
   it('injects custom document theme styles when Pro is installed', () => {
     const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mads-workspace-'));
     const globalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mads-global-doc-'));

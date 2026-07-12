@@ -254,20 +254,320 @@ function getPreviewThemeRuntime() {
 }
 
 function wrapTablesForScroll() {
+  const defaultLayout = document.body.dataset.documentTableLayout === 'wrap' ? 'wrap' : 'wide';
   const tables = document.querySelectorAll('.markdown-body table');
   for (const table of tables) {
     if (!(table instanceof HTMLTableElement)) {
       continue;
     }
 
+    if (table.closest('.presentation-slide-body')) {
+      continue;
+    }
+
     if (table.parentElement?.classList.contains('table-scroll-wrapper')) {
+      enhanceTableScrollWrapper(table.parentElement, defaultLayout);
       continue;
     }
 
     const wrapper = document.createElement('div');
     wrapper.className = 'table-scroll-wrapper';
+    wrapper.dataset.tableLayout = defaultLayout;
+    wrapper.dataset.tableControls = 'Wide table controls for document preview';
     table.parentElement?.insertBefore(wrapper, table);
     wrapper.appendChild(table);
+    enhanceTableScrollWrapper(wrapper, defaultLayout);
+  }
+}
+
+function enhanceTableScrollWrapper(wrapper, defaultLayout) {
+  if (!(wrapper instanceof HTMLElement)) {
+    return;
+  }
+
+  if (wrapper.dataset.tableEnhanced === 'true') {
+    updateTableOverflowState(wrapper);
+    return;
+  }
+
+  wrapper.dataset.tableEnhanced = 'true';
+  wrapper.dataset.tableLayout = wrapper.dataset.tableLayout === 'wrap' ? 'wrap' : defaultLayout;
+  if (wrapper.dataset.tableLayout === 'wrap') {
+    wrapper.dataset.overflowCapable = measureTableWideOverflow(wrapper) ? 'true' : 'false';
+  }
+  wrapper.tabIndex = wrapper.tabIndex >= 0 ? wrapper.tabIndex : 0;
+
+  const toggleButton = document.createElement('button');
+  toggleButton.type = 'button';
+  toggleButton.className = 'table-overlay-button';
+  const overlayLane = document.createElement('div');
+  overlayLane.className = 'table-overlay-lane';
+  overlayLane.appendChild(toggleButton);
+
+  const leftButton = createTableEdgeButton('left');
+  const rightButton = createTableEdgeButton('right');
+  const edgeLane = document.createElement('div');
+  edgeLane.className = 'table-edge-scroll-lane';
+  edgeLane.append(leftButton, rightButton);
+  const table = wrapper.querySelector('table');
+  wrapper.insertBefore(overlayLane, table ?? wrapper.firstChild);
+  wrapper.insertBefore(edgeLane, table ?? null);
+
+  const updateToggle = () => {
+    const isWrap = wrapper.dataset.tableLayout === 'wrap';
+    setTableButtonIcon(toggleButton, isWrap ? 'wide' : 'wrap');
+    toggleButton.title = isWrap ? 'Use wide table layout' : 'Wrap table text';
+    toggleButton.setAttribute('aria-label', toggleButton.title);
+    toggleButton.setAttribute('aria-pressed', isWrap ? 'true' : 'false');
+  };
+
+  toggleButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    wrapper.dataset.tableLayout = wrapper.dataset.tableLayout === 'wrap' ? 'wide' : 'wrap';
+    wrapper.scrollLeft = 0;
+    updateToggle();
+    updateTableOverflowState(wrapper);
+  });
+
+  wrapper.addEventListener('scroll', () => {
+    updateTableOverflowState(wrapper);
+  }, { passive: true });
+  wrapper.addEventListener('pointermove', (event) => {
+    updateTableHoverSide(wrapper, event);
+  }, { passive: true });
+  wrapper.addEventListener('pointerenter', (event) => {
+    updateTableHoverSide(wrapper, event);
+  }, { passive: true });
+  wrapper.addEventListener('pointerleave', () => {
+    delete wrapper.dataset.hoverSide;
+  });
+
+  configureTableEdgeButton(leftButton, wrapper, -1);
+  configureTableEdgeButton(rightButton, wrapper, 1);
+  updateToggle();
+  queueTableOverflowUpdate(wrapper);
+
+  if (typeof ResizeObserver !== 'undefined') {
+    const observer = new ResizeObserver(() => queueTableOverflowUpdate(wrapper));
+    observer.observe(wrapper);
+    if (table) {
+      observer.observe(table);
+    }
+  }
+
+  window.addEventListener('resize', () => queueTableOverflowUpdate(wrapper));
+}
+
+function createTableEdgeButton(direction) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'table-edge-scroll-button';
+  button.dataset.tableScrollDirection = direction;
+  setTableButtonIcon(button, direction === 'left' ? 'chevron-left' : 'chevron-right');
+  button.title = direction === 'left' ? 'Scroll table left' : 'Scroll table right';
+  button.setAttribute('aria-label', button.title);
+  return button;
+}
+
+function setTableButtonIcon(button, iconName) {
+  button.replaceChildren(createTableButtonIcon(iconName));
+}
+
+function createTableButtonIcon(iconName) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '18');
+  svg.setAttribute('height', '18');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  svg.setAttribute('class', 'table-control-icon');
+
+  const paths = {
+    'chevron-left': ['M15 5 8 12l7 7'],
+    'chevron-right': ['m9 5 7 7-7 7'],
+    wide: ['M8 7 3 12l5 5', 'M16 7l5 5-5 5', 'M4 12h16'],
+    wrap: ['M4 7h16', 'M4 12h11a4 4 0 0 1 0 8h-2', 'm15 16-4 4 4 4'],
+  };
+
+  for (const d of paths[iconName] ?? paths.wide) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    svg.appendChild(path);
+  }
+
+  return svg;
+}
+
+function configureTableEdgeButton(button, wrapper, direction) {
+  let holdTimer = 0;
+  let holdFrame = 0;
+  let holdActive = false;
+  let suppressNextClick = false;
+  let lastFrameTime = 0;
+
+  const stopContinuousScroll = () => {
+    if (holdTimer) {
+      window.clearTimeout(holdTimer);
+      holdTimer = 0;
+    }
+    if (holdFrame) {
+      window.cancelAnimationFrame(holdFrame);
+      holdFrame = 0;
+    }
+    holdActive = false;
+    lastFrameTime = 0;
+  };
+
+  const step = (timestamp) => {
+    if (!holdActive || button.disabled || wrapper.dataset.tableLayout === 'wrap') {
+      stopContinuousScroll();
+      return;
+    }
+
+    const elapsed = lastFrameTime ? timestamp - lastFrameTime : 16;
+    lastFrameTime = timestamp;
+    wrapper.scrollLeft += direction * Math.min(42, Math.max(8, elapsed * 0.48));
+    updateTableOverflowState(wrapper);
+    holdFrame = window.requestAnimationFrame(step);
+  };
+
+  button.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (suppressNextClick) {
+      suppressNextClick = false;
+      return;
+    }
+
+    scrollTableByPage(wrapper, direction);
+    if (event.detail > 0) {
+      button.blur();
+    }
+  });
+
+  button.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0 || button.disabled) {
+      return;
+    }
+
+    stopContinuousScroll();
+    holdTimer = window.setTimeout(() => {
+      holdActive = true;
+      suppressNextClick = true;
+      button.setPointerCapture?.(event.pointerId);
+      holdFrame = window.requestAnimationFrame(step);
+    }, 350);
+  });
+
+  for (const eventName of ['pointerup', 'pointercancel', 'pointerleave', 'blur']) {
+    button.addEventListener(eventName, stopContinuousScroll);
+  }
+
+  button.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      stopContinuousScroll();
+      button.blur();
+    }
+  });
+
+  window.addEventListener('blur', stopContinuousScroll);
+}
+
+function scrollTableByPage(wrapper, direction) {
+  const distance = Math.max(80, Math.round(wrapper.clientWidth * 0.6));
+  wrapper.scrollBy({ left: direction * distance, behavior: 'smooth' });
+  window.setTimeout(() => updateTableOverflowState(wrapper), 220);
+}
+
+function queueTableOverflowUpdate(wrapper) {
+  window.requestAnimationFrame(() => updateTableOverflowState(wrapper));
+}
+
+function updateTableHoverSide(wrapper, event) {
+  const bounds = wrapper.getBoundingClientRect();
+  const x = event.clientX - bounds.left;
+  const edgeDistance = Math.max(72, Math.min(120, bounds.width * 0.12));
+  if (x <= edgeDistance) {
+    wrapper.dataset.hoverSide = 'left';
+  } else if (bounds.width - x <= edgeDistance) {
+    wrapper.dataset.hoverSide = 'right';
+  } else {
+    delete wrapper.dataset.hoverSide;
+  }
+}
+
+function updateTableControlGeometry(wrapper) {
+  const table = wrapper.querySelector('table');
+  if (!(table instanceof HTMLTableElement)) {
+    return;
+  }
+
+  const header = table.tHead ?? table.querySelector('thead') ?? table.querySelector('tr');
+  const headerCell = header?.querySelector?.('th, td') ?? table.querySelector('th, thead td');
+  const headerHeight = Math.max(34, Math.round(header?.getBoundingClientRect().height ?? 40));
+  const tableHeight = Math.round(table.getBoundingClientRect().height);
+  const edgeHeight = Math.max(42, tableHeight - headerHeight);
+  const headerBackground = headerCell instanceof HTMLElement ? getComputedStyle(headerCell).backgroundColor : '';
+  wrapper.style.setProperty('--md-preview-table-header-height', `${headerHeight}px`);
+  wrapper.style.setProperty('--md-preview-table-edge-height', `${edgeHeight}px`);
+  wrapper.style.setProperty('--md-preview-table-scroll-left', `${Math.round(wrapper.scrollLeft)}px`);
+  wrapper.style.setProperty('--md-preview-table-visible-width', `${Math.round(wrapper.clientWidth)}px`);
+  if (headerBackground && headerBackground !== 'rgba(0, 0, 0, 0)' && headerBackground !== 'transparent') {
+    wrapper.style.setProperty('--md-preview-table-computed-header-bg', headerBackground);
+  } else {
+    wrapper.style.removeProperty('--md-preview-table-computed-header-bg');
+  }
+}
+
+function measureTableWideOverflow(wrapper) {
+  const table = wrapper.querySelector('table');
+  if (!(table instanceof HTMLTableElement)) {
+    return false;
+  }
+
+  const previousLayout = wrapper.dataset.tableLayout === 'wrap' ? 'wrap' : 'wide';
+  wrapper.dataset.tableLayout = 'wide';
+  const hasOverflow = table.scrollWidth - wrapper.clientWidth > 1;
+  wrapper.dataset.tableLayout = previousLayout;
+  return hasOverflow;
+}
+
+function updateTableOverflowState(wrapper) {
+  if (!(wrapper instanceof HTMLElement)) {
+    return;
+  }
+
+  const layout = wrapper.dataset.tableLayout === 'wrap' ? 'wrap' : 'wide';
+  updateTableControlGeometry(wrapper);
+  const table = wrapper.querySelector('table');
+  const tableOverflow = table instanceof HTMLTableElement ? table.scrollWidth - wrapper.clientWidth : 0;
+  const maxScroll = Math.max(0, wrapper.scrollWidth - wrapper.clientWidth, tableOverflow);
+  let overflowCapable = wrapper.dataset.overflowCapable === 'true';
+
+  if (layout === 'wide') {
+    overflowCapable = maxScroll > 1;
+    wrapper.dataset.overflowCapable = overflowCapable ? 'true' : 'false';
+  } else {
+    overflowCapable = measureTableWideOverflow(wrapper);
+    wrapper.dataset.overflowCapable = overflowCapable ? 'true' : 'false';
+  }
+
+  const hasOverflow = overflowCapable && layout !== 'wrap';
+  const canScrollLeft = hasOverflow && wrapper.scrollLeft > 1;
+  const canScrollRight = hasOverflow && wrapper.scrollLeft < maxScroll - 1;
+
+  wrapper.dataset.overflowX = hasOverflow ? 'true' : 'false';
+  wrapper.dataset.canScrollLeft = canScrollLeft ? 'true' : 'false';
+  wrapper.dataset.canScrollRight = canScrollRight ? 'true' : 'false';
+
+  const leftButton = wrapper.querySelector('[data-table-scroll-direction="left"]');
+  const rightButton = wrapper.querySelector('[data-table-scroll-direction="right"]');
+  if (leftButton instanceof HTMLButtonElement) {
+    leftButton.disabled = !canScrollLeft;
+  }
+  if (rightButton instanceof HTMLButtonElement) {
+    rightButton.disabled = !canScrollRight;
   }
 }
 

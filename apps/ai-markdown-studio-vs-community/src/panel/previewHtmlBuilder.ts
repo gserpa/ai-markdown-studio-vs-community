@@ -33,6 +33,7 @@ export function buildPreviewHtml(
   const source = document.getText();
   const isPresentation = isMarkdownPresentationSource(source);
   const previewPageWidth = getPreviewPageWidth(document);
+  const documentTableLayout = getDocumentTableLayout(document);
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const showFrontMatter = isFrontMatterVisible(document.uri);
   const renderer = createMarkdownRenderer({
@@ -131,7 +132,7 @@ export function buildPreviewHtml(
   <link rel="stylesheet" href="${katexStylesheetUri}" />
   <title>${title}</title>
 </head>
-<body class="${bodyClass}" data-preview-mode="${previewMode}" data-preview-page-width="${previewPageWidth}" data-document-theme="${documentThemeName}" data-document-theme-mode="${documentThemeModeClass.replace('document-theme-mode-', '')}" data-document-mermaid-theme-light="${documentMermaidThemeLight}" data-document-mermaid-theme-dark="${documentMermaidThemeDark}" data-document-mermaid-transparent-background-light="${documentMermaidTransparentBackgroundLight ? 'true' : 'false'}" data-document-mermaid-transparent-background-dark="${documentMermaidTransparentBackgroundDark ? 'true' : 'false'}">
+<body class="${bodyClass}" data-preview-mode="${previewMode}" data-preview-page-width="${previewPageWidth}" data-document-table-layout="${documentTableLayout}" data-document-theme="${documentThemeName}" data-document-theme-mode="${documentThemeModeClass.replace('document-theme-mode-', '')}" data-document-mermaid-theme-light="${documentMermaidThemeLight}" data-document-mermaid-theme-dark="${documentMermaidThemeDark}" data-document-mermaid-transparent-background-light="${documentMermaidTransparentBackgroundLight ? 'true' : 'false'}" data-document-mermaid-transparent-background-dark="${documentMermaidTransparentBackgroundDark ? 'true' : 'false'}">
   ${previewBody}
   <div class="mermaid-lightbox" data-mermaid-lightbox hidden aria-hidden="true">
     <div class="mermaid-lightbox-backdrop" data-mermaid-lightbox-action="close"></div>
@@ -173,6 +174,11 @@ export function buildPreviewHtml(
 function getPreviewPageWidth(document: vscode.TextDocument): PreviewPageWidth {
   const configured = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('previewPageWidth', 'readable');
   return configured === 'full' ? 'full' : 'readable';
+}
+
+function getDocumentTableLayout(document: vscode.TextDocument): 'wide' | 'wrap' {
+  const configured = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('documentTableLayout', 'wide');
+  return configured === 'wrap' ? 'wrap' : 'wide';
 }
 
 export function buildFrontMatterPanel(source: string): string {

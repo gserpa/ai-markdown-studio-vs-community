@@ -696,6 +696,270 @@ body.preview-mode-document[data-preview-page-width='full'] .frontmatter-shell {
   margin: 0;
 }
 
+/* Wide table controls for document preview. */
+body.preview-mode-document .markdown-body table {
+  width: 100%;
+  min-width: 0;
+  table-layout: auto;
+}
+
+body.preview-mode-document .markdown-body th,
+body.preview-mode-document .markdown-body td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: clip;
+  --md-preview-table-control-width: 54px;
+  --md-preview-table-header-height: 40px;
+  --md-preview-table-edge-height: 96px;
+  --md-preview-table-scroll-left: 0px;
+  --md-preview-table-visible-width: 100%;
+  --md-preview-table-control-bg: color-mix(in srgb, var(--md-preview-table-header-bg, #f6f8fa) 88%, transparent);
+  --md-preview-table-control-hover-bg: color-mix(in srgb, var(--md-preview-table-row-hover-bg, #ddf4ff) 70%, var(--md-preview-table-header-bg, #f6f8fa) 30%);
+  --md-preview-table-control-border: color-mix(in srgb, var(--md-preview-table-cell-border, #d0d7de) 78%, transparent);
+  --md-preview-table-control-color: var(--md-preview-table-header-color, var(--md-preview-body-color, #24292f));
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wide'] table {
+  width: max-content;
+  min-width: 100%;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wide'] th,
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wide'] td {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] {
+  overflow-x: hidden;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] table {
+  width: 100%;
+  min-width: 0;
+  table-layout: auto;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] th,
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-overflow-capable='true'] table > thead > tr > :last-child,
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-overflow-capable='true'] table > tbody > tr:first-child > th:last-child {
+  padding-right: calc(16px + var(--md-preview-table-control-width));
+}
+
+body.preview-mode-document .markdown-body .table-overlay-button,
+body.preview-mode-document .markdown-body .table-edge-scroll-button {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  color: var(--md-preview-table-control-color);
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, background-color 120ms ease, border-color 120ms ease;
+  z-index: 4;
+  overflow: hidden;
+}
+
+body.preview-mode-document .markdown-body .table-overlay-lane {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--md-preview-table-header-height);
+  margin: 0 0 calc(-1 * var(--md-preview-table-header-height));
+  pointer-events: none;
+  z-index: 4;
+}
+
+body.preview-mode-document .markdown-body .table-edge-scroll-lane {
+  position: sticky;
+  top: var(--md-preview-table-header-height);
+  left: 0;
+  width: 100%;
+  height: var(--md-preview-table-edge-height);
+  min-height: 42px;
+  margin: 0 0 calc(-1 * var(--md-preview-table-edge-height));
+  pointer-events: none;
+  z-index: 4;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-hover-side='left'][data-can-scroll-left='true'] .table-edge-scroll-button[data-table-scroll-direction='left'],
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-hover-side='right'][data-can-scroll-right='true'] .table-edge-scroll-button[data-table-scroll-direction='right'],
+body.preview-mode-document .markdown-body .table-scroll-wrapper:hover .table-overlay-button,
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-hover-side='right'] .table-overlay-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.preview-mode-document .markdown-body .table-edge-scroll-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--md-preview-table-computed-header-bg, var(--md-preview-table-header-bg, #f6f8fa));
+  opacity: 0.26;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  z-index: 0;
+}
+
+body.preview-mode-document .markdown-body .table-edge-scroll-button:hover::before {
+  opacity: 0.34;
+}
+
+body.preview-mode-document .markdown-body .table-overlay-button:focus-visible,
+body.preview-mode-document .markdown-body .table-edge-scroll-button:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--vscode-focusBorder, #0969da);
+  outline-offset: 2px;
+  pointer-events: auto;
+}
+
+body.preview-mode-document .markdown-body .table-control-icon {
+  display: block;
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  position: relative;
+  z-index: 1;
+}
+
+body.preview-mode-document .markdown-body .table-overlay-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--md-preview-table-control-width);
+  height: var(--md-preview-table-header-height);
+  min-height: 34px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+body.preview-mode-document .markdown-body .table-overlay-button:hover {
+  background: transparent;
+}
+
+body.preview-mode-document .markdown-body .table-edge-scroll-button {
+  position: absolute;
+  top: 0;
+  width: var(--md-preview-table-control-width);
+  height: 100%;
+  min-height: 42px;
+  margin: 0;
+  border-radius: 0;
+}
+
+body.preview-mode-document .markdown-body .table-edge-scroll-button[data-table-scroll-direction='left'] {
+  left: 0;
+  border-right: 1px solid var(--md-preview-table-control-border);
+}
+
+body.preview-mode-document .markdown-body .table-edge-scroll-button[data-table-scroll-direction='right'] {
+  right: 0;
+  border-left: 1px solid var(--md-preview-table-control-border);
+}
+
+body.preview-mode-document .markdown-body .table-edge-scroll-button:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper:hover[data-hover-side='left'][data-can-scroll-left='true'] .table-edge-scroll-button[data-table-scroll-direction='left'],
+body.preview-mode-document .markdown-body .table-scroll-wrapper:hover[data-hover-side='right'][data-can-scroll-right='true'] .table-edge-scroll-button[data-table-scroll-direction='right'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper:not([data-overflow-x='true']) .table-edge-scroll-button,
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] .table-edge-scroll-button,
+body.preview-mode-document .markdown-body .table-scroll-wrapper:not([data-overflow-x='true']) .table-edge-scroll-lane,
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] .table-edge-scroll-lane {
+  display: none;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper:not([data-overflow-capable='true']) .table-overlay-button {
+  display: none;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper::before,
+body.preview-mode-document .markdown-body .table-scroll-wrapper::after {
+  content: '';
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: block;
+  width: 26px;
+  height: 1px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper::before {
+  left: 0;
+  float: left;
+  box-shadow: 16px 0 18px 12px color-mix(in srgb, var(--md-preview-table-bg, #fff) 78%, transparent);
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper::after {
+  left: calc(100% - 26px);
+  float: right;
+  box-shadow: -16px 0 18px 12px color-mix(in srgb, var(--md-preview-table-bg, #fff) 78%, transparent);
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-can-scroll-left='true']::before,
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-can-scroll-right='true']::after {
+  opacity: 1;
+}
+
+@media print {
+  body.preview-mode-document .markdown-body .table-scroll-wrapper {
+    overflow: visible !important;
+  }
+
+  body.preview-mode-document .markdown-body .table-scroll-wrapper table,
+  body.preview-mode-document .markdown-body table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+  }
+
+  body.preview-mode-document .markdown-body .table-scroll-wrapper th,
+  body.preview-mode-document .markdown-body .table-scroll-wrapper td,
+  body.preview-mode-document .markdown-body th,
+  body.preview-mode-document .markdown-body td {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  body.preview-mode-document .markdown-body .table-overlay-button,
+  body.preview-mode-document .markdown-body .table-edge-scroll-button,
+  body.preview-mode-document .markdown-body .table-edge-scroll-lane {
+    display: none !important;
+  }
+}
+
 .mermaid-lightbox {
   position: fixed;
   inset: 0;
