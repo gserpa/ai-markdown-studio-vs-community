@@ -68,6 +68,22 @@ Export a Markdown document to HTML and open the standalone browser result.
 
 Export a Markdown presentation to HTML and keep the slide-style experience in the browser.
 
+### Sample documents
+
+Open these Markdown files in VS Code to explore the document preview, themes,
+Mermaid rendering, math, tables, and export workflows:
+
+- [Creating Agentic AI Applications](./media/demo-examples/ai-training-on-how-to-create-agentic-ai-applications.md) — a long-form training guide with structured sections, tables, code examples, and practical explanations.
+- [Mermaid Diagram Gallery](./media/demo-examples/mermaid-gallery.md) — a collection of diagram types for preview, zoom, and export experimentation.
+
+### Sample presentations
+
+Open these files to try slide navigation, filmstrip view, themes, layouts,
+Mermaid media, and speaker notes:
+
+- [Markdown, Made Visible](./media/demo-examples/community-feature-showcase.md) — a 20-slide Community feature showcase and presentation-preview sample.
+- [Dinosaurs of the Triassic](./media/demo-examples/dinosaurs-of-the-triassic.md) — a colorful, audience-friendly deck demonstrating cover slides, diagrams, notes, and presentation pacing.
+
 ## Why Markdown Studio Exists
 
 Markdown is an ideal file format for the AI era because it works as a simple common
