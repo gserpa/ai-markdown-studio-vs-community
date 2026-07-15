@@ -12,6 +12,8 @@ The open-source core of AI Markdown Studio: a VS Code extension for authoring Ma
 
 AI Markdown Studio Community is licensed under the MIT License and is useful entirely on its own. It includes AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX. PDF/PPTX export, high-fidelity DOCX, broad file conversion, theme AI workflows, shared custom theme folders, agent tools, and corporate PowerPoint template automation are provided separately by **AI Markdown Studio Pro**.
 
+If AI Markdown Studio Community is useful to you, consider [supporting the project through GitHub Sponsors](https://github.com/sponsors/gserpa).
+
 For a complete end-user walkthrough, see [user-guide.md](./docs/user/user-guide.md). For a focused comparison of what Pro adds, see [upgrade-to-pro.md](./docs/user/upgrade-to-pro.md).
 
 ## See It In Action

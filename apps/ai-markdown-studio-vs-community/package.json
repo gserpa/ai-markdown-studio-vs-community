@@ -6,6 +6,9 @@
   "license": "MIT",
   "publisher": "GustavoSerpa",
   "author": "Gustavo Serpa",
+  "sponsor": {
+    "url": "https://github.com/sponsors/gserpa"
+  },
   "icon": "assets/media/markdown-ai-studio-icon-v2.png",
   "engines": {
     "vscode": "^1.104.0"

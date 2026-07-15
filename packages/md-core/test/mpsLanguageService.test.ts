@@ -40,7 +40,7 @@ theme: sunset
 
     expect(issues.some((issue) => issue.message.includes('ratio must be one of'))).toBe(true);
     expect(issues.some((issue) => issue.message.includes('Unknown theme sunset'))).toBe(true);
-    expect(issues.some((issue) => issue.message.includes('only once and at the start of a slide'))).toBe(true);
+    expect(issues.some((issue) => issue.message.includes('only once and as the first non-whitespace content after the slide separator'))).toBe(true);
   });
 
   it('warns for custom slide templates that are not built in', () => {
