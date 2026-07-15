@@ -65,8 +65,8 @@ describe('previewThemeSupport', () => {
   });
 
   it('includes only the bundled presentation theme directory when Pro is not installed', () => {
-    const extensionUri = { fsPath: 'C:/extension-root', scheme: 'file' };
-    const documentUri = { fsPath: 'C:/workspace/slides/deck.md', scheme: 'file' };
+    const extensionUri = { fsPath: fs.mkdtempSync(path.join(os.tmpdir(), 'mads-extension-')), scheme: 'file' };
+    const documentUri = { fsPath: path.resolve('workspace/slides/deck.md'), scheme: 'file' };
     const bundledPreviewThemeDirectory = path.join(extensionUri.fsPath, 'assets', 'preview', 'themes', 'presentation');
 
     expect(getBundledPreviewThemeDirectory(extensionUri as never)).toBe(bundledPreviewThemeDirectory);
@@ -99,8 +99,8 @@ describe('previewThemeSupport', () => {
     const globalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mads-global-pres-'));
     const configuredRoot = path.join(globalRoot, 'AI Markdown Studio', 'Themes', 'Presentation');
     const globalThemeDir = path.join(configuredRoot, 'presentation-themes');
-    const documentUri = { fsPath: 'C:/workspace/slides/deck.md', scheme: 'file' };
-    const extensionUri = { fsPath: 'C:/extension-root', scheme: 'file' };
+    const documentUri = { fsPath: path.resolve('workspace/slides/deck.md'), scheme: 'file' };
+    const extensionUri = { fsPath: path.resolve('extension-root'), scheme: 'file' };
 
     vscodeState.presentationThemeFolder = path.join('%userprofile%', 'AI Markdown Studio', 'Themes', 'Presentation');
     vscodeState.proInstalled = true;

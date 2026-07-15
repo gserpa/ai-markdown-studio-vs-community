@@ -65,8 +65,8 @@ describe('documentThemeSupport', () => {
   });
 
   it('includes only the bundled document theme directory when Pro is not installed', () => {
-    const extensionUri = { fsPath: 'C:/extension-root', scheme: 'file' };
-    const documentUri = { fsPath: 'C:/workspace/docs/example.md', scheme: 'file' };
+    const extensionUri = { fsPath: fs.mkdtempSync(path.join(os.tmpdir(), 'mads-extension-')), scheme: 'file' };
+    const documentUri = { fsPath: path.resolve('workspace/docs/example.md'), scheme: 'file' };
     const bundledDocumentThemeDirectory = path.join(extensionUri.fsPath, 'assets', 'preview', 'themes', 'document');
 
     expect(getBundledDocumentThemeDirectory(extensionUri as never)).toBe(bundledDocumentThemeDirectory);
@@ -99,8 +99,8 @@ describe('documentThemeSupport', () => {
     const globalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mads-global-doc-'));
     const configuredRoot = path.join(globalRoot, 'AI Markdown Studio', 'Themes', 'Documents');
     const globalThemeDir = path.join(configuredRoot, 'document-themes');
-    const extensionUri = { fsPath: 'C:/extension-root', scheme: 'file' };
-    const documentUri = { fsPath: 'C:/workspace/docs/example.md', scheme: 'file' };
+    const extensionUri = { fsPath: path.resolve('extension-root'), scheme: 'file' };
+    const documentUri = { fsPath: path.resolve('workspace/docs/example.md'), scheme: 'file' };
 
     vscodeState.documentThemeFolder = path.join('%userprofile%', 'AI Markdown Studio', 'Themes', 'Documents');
     vscodeState.workspaceRoot = '';
