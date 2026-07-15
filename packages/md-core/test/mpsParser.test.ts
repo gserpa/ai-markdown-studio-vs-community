@@ -109,6 +109,19 @@ flowchart LR
     expect(presentation.slides[0].body).toContain('---');
   });
 
+  it('ignores slide directive examples inside fenced code blocks', () => {
+    const presentation = parseMarkdownPresentation(`# Layout example
+
+\`\`\`md
+<!--slide: two-columns-->
+# Example title
+\`\`\`
+    `);
+
+    expect(presentation.slides).toHaveLength(1);
+    expect(presentation.slides[0].body).toContain('# Layout example');
+  });
+
   it('does not confuse a leading slide separator with front matter', () => {
     const presentation = parseMarkdownPresentation(`---
 # Title Slide

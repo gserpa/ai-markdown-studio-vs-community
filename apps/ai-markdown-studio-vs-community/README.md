@@ -145,7 +145,7 @@ and verification commands.
 - **AI Paste to Markdown** - convert clipboard text into a new Markdown file.
 - **Basic DOCX export** - export rendered Markdown to DOCX through the Community DOCX path.
 - **Front matter toggle** - show or hide a rendered front-matter summary in the preview.
-- **Table formatting** - auto-align Markdown tables with a single command, also available through **Format Document**.
+- **Table formatting and preview layouts** - auto-align Markdown tables with a single command, also available through **Format Document**; preview tables can stay wide and scroll horizontally or wrap to the available width.
 - **HTML export** - save the rendered document as a standalone, self-contained HTML file.
 - **Command launcher** - quick access to the extension's main actions from the editor title bar. The launcher is extensible: when a compatible feature extension such as AI Markdown Studio Pro is installed, its commands appear alongside the Community commands.
 - **Command palette settings shortcut** - jump directly to the extension's settings with **Change Settings...**.
@@ -249,6 +249,12 @@ If you want tables formatted automatically on save, enable **`markdownAiStudio.f
 
 This command is also registered as a document formatter, so it can be invoked via **Format Document** (`Shift+Alt+F`) when a `.md` file is active.
 
+### Table Preview Layout
+
+Document preview has two table layouts. **Wide** (the default) keeps each cell on one line and lets a table scroll horizontally when needed. **Wrap** fits the table to the preview width by wrapping cell text.
+
+Set the resource-scoped **`markdownAiStudio.documentTableLayout`** setting to choose the default for a document. You can also use the control that appears over a preview table to switch that table between **Wrap table text** and **Use wide table layout** for the current preview session. Wide tables expose left and right scrolling controls when they overflow.
+
 ### HTML Export
 
 Run **Export Markdown as HTML** from the Command Palette or the command list to save the current Markdown file as a self-contained `.html` file. The exported file includes the extension's styling and rendered content for sharing outside VS Code.
@@ -258,6 +264,8 @@ The setting **`markdownAiStudio.allowRemoteResources`** controls whether remote 
 ### AI-Assisted Generation
 
 When GitHub Copilot is configured in VS Code, AI Markdown Studio Community can create new Markdown documents or presentation decks from prompts. With the default `markdownAiStudio.aiAccess: "ask"` state, the commands stay visible and the disclosure appears only when an AI feature actually tries to run. If `markdownAiStudio.aiAccess` is `denied`, the AI commands hide again except for **Enable AI Features...**.
+
+AI actions are user-triggered and use the model made available through the user's VS Code/Copilot setup. The preferred model is configurable with `markdownAiStudio.aiModel`; if it is unavailable or unsuccessful, the extension tries `gpt-5.4-mini` and then the first available Copilot model. Depending on the Copilot plan or configured AI provider, requests may consume token quota or incur usage charges. The **Enable AI Features...** authorization notice explains this and requires the user to accept responsibility for those costs before AI features are enabled.
 
 - **Generate Document (AI)** creates a new Markdown document from a prompt.
 - **Generate Presentation (AI)** creates a new presentation-style Markdown deck from a prompt.

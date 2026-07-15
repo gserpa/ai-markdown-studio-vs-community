@@ -318,7 +318,7 @@ export function buildDocumentThemeStylesheet(registry: DocumentThemeRegistry): s
 
 export function resolveDocumentThemeSelection(themeName: string, registry: DocumentThemeRegistry): DocumentThemeSelection {
   const normalized = normalizeThemeName(themeName);
-  if (!normalized || normalized === 'default' || normalized === 'auto') {
+  if (!normalized || normalized === 'auto') {
     return createAutoThemeSelection(registry);
   }
 

@@ -51,21 +51,21 @@ You can switch modes in several ways:
 
 All commands are available from the Command Palette (`Ctrl+Shift+P`). The most common ones also appear in the editor title bar for `.md` files.
 
-| Command | What it does |
-| --- | --- |
-| **Preview Markdown** | Opens or focuses the rendered preview for the current file. |
-| **Edit Markdown** | Switches the current file to the text editor. |
-| **Format Markdown Tables** | Aligns every Markdown table in the active file. Also runs via **Format Document**. |
-| **`markdownAiStudio.formatTablesOnSave`** | `false` | Automatically formats Markdown tables when you save a Markdown file. |
-| **Export Markdown as HTML** | Saves the rendered document as a standalone `.html` file. |
-| **Export Markdown as DOCX (Basic)** | Saves the current document as a basic Word file. Pro automatically replaces this with its advanced DOCX export. |
-| **Generate Document (AI)** | Creates a Markdown document from your brief. |
-| **Generate Presentation (AI)** | Creates a Markdown presentation from your brief. |
-| **Paste as New Markdown File** | Turns clipboard text into a new Markdown file. |
-| **Enable AI Features...** | Reviews the AI data-sharing notice and can enable or re-enable AI features. |
-| **Toggle Frontmatter** | Shows or hides the rendered front-matter summary in the active preview. |
-| **Show AI Markdown Studio Commands** | Opens a quick-pick launcher of the extension's main actions. |
-| **Change Settings...** | Opens the VS Code Settings UI filtered to this extension. |
+| Command                                   | What it does                                                                                                    |                                                                      |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Preview Markdown**                      | Opens or focuses the rendered preview for the current file.                                                     |                                                                      |
+| **Edit Markdown**                         | Switches the current file to the text editor.                                                                   |                                                                      |
+| **Format Markdown Tables**                | Aligns every Markdown table in the active file. Also runs via **Format Document**.                              |                                                                      |
+| **`markdownAiStudio.formatTablesOnSave`** | `false`                                                                                                         | Automatically formats Markdown tables when you save a Markdown file. |
+| **Export Markdown as HTML**               | Saves the rendered document as a standalone `.html` file.                                                       |                                                                      |
+| **Export Markdown as DOCX (Basic)**       | Saves the current document as a basic Word file. Pro automatically replaces this with its advanced DOCX export. |                                                                      |
+| **Generate Document (AI)**                | Creates a Markdown document from your brief.                                                                    |                                                                      |
+| **Generate Presentation (AI)**            | Creates a Markdown presentation from your brief.                                                                |                                                                      |
+| **Paste as New Markdown File**            | Turns clipboard text into a new Markdown file.                                                                  |                                                                      |
+| **Enable AI Features...**                 | Reviews the AI data-sharing notice and can enable or re-enable AI features.                                     |                                                                      |
+| **Toggle Frontmatter**                    | Shows or hides the rendered front-matter summary in the active preview.                                         |                                                                      |
+| **Show AI Markdown Studio Commands**      | Opens a quick-pick launcher of the extension's main actions.                                                    |                                                                      |
+| **Change Settings...**                    | Opens the VS Code Settings UI filtered to this extension.                                                       |                                                                      |
 
 ## Guided AI generation
 
@@ -215,6 +215,15 @@ Run **Format Markdown Tables** to align every Markdown table in the active file 
 This command is also registered as a document formatter, so **Format Document** (`Shift+Alt+F`) on a `.md` file reformats its tables too. You can enable format-on-save for Markdown if you want tables aligned automatically.
 Turn on **`markdownAiStudio.formatTablesOnSave`** if you want the extension to apply the same formatting automatically when saving Markdown files.
 
+### Preview table layout
+
+Document preview offers two table layouts:
+
+- **Wide** (default) keeps cell text on one line. Tables wider than the preview scroll horizontally, with left and right controls shown when you hover an edge.
+- **Wrap** fits a table to the preview width by wrapping text inside its cells.
+
+Set **`markdownAiStudio.documentTableLayout`** to choose a document's default layout. This is a resource-scoped setting, so you can use different defaults for different files or folders. In the preview, the table-header control lets you switch an individual table between **Wrap table text** and **Use wide table layout** for the current session; this does not change the setting or the Markdown source.
+
 ## HTML export
 
 Run **Export Markdown as HTML** to save the current document as a self-contained `.html` file you can share or open in any browser. The export bundles the extension's rendered styling so the output looks like the preview.
@@ -233,12 +242,13 @@ When **AI Markdown Studio Pro** is installed, its advanced DOCX export takes ove
 
 Open settings with **Change Settings...**, or `Ctrl+,` and search for `markdownAiStudio`.
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| `markdownAiStudio.previewPageWidth` | `full` | `full` lets standard preview pages use the whole panel width; `readable` constrains them to a centered column. |
-| `markdownAiStudio.documentPreviewTheme` | `auto` | Default document preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Selection** settings section. |
-| `markdownAiStudio.allowRemoteResources` | `true` | Whether previews and exports may load images and other content from the internet. |
-| `markdownAiStudio.aiAccess` | `ask` | Controls AI consent. `ask` keeps AI commands visible and shows the disclosure the first time an AI feature tries to run, `enabled` allows AI-supported features to use the GitHub Copilot service already configured in VS Code, and `denied` hides AI commands except for **Enable AI Features...**. |
+| Setting                                 | Default | Description                                                                                                                                                                                                                                                                                           |
+| --------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `markdownAiStudio.previewPageWidth`     | `full`  | `full` lets standard preview pages use the whole panel width; `readable` constrains them to a centered column.                                                                                                                                                                                        |
+| `markdownAiStudio.documentPreviewTheme` | `auto`  | Default document preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Selection** settings section.                                                                                                                                                         |
+| `markdownAiStudio.documentTableLayout`  | `wide`  | Default layout for tables in document preview. `wide` preserves single-line cells and allows horizontal scrolling; `wrap` wraps cell text to fit the preview width. Individual preview tables can be toggled for the current session.                                                                 |
+| `markdownAiStudio.allowRemoteResources` | `true`  | Whether previews and exports may load images and other content from the internet.                                                                                                                                                                                                                     |
+| `markdownAiStudio.aiAccess`             | `ask`   | Controls AI consent. `ask` keeps AI commands visible and shows the disclosure the first time an AI feature tries to run, `enabled` allows AI-supported features to use the GitHub Copilot service already configured in VS Code, and `denied` hides AI commands except for **Enable AI Features...**. |
 
 ## Privacy and remote resources
 
@@ -267,7 +277,7 @@ If you need the advanced automation and Office-native export layer, install **AI
 - export using your organization's existing **PowerPoint templates**
 - deeper Copilot Chat workflows for creating and reviewing documents, presentations, and themes
 
-Pro is distributed as its own standalone extension, built from a tested Community foundation plus a private Pro overlay. Your Community previews, bundled themes, documents, and presentations continue to work unchanged; Pro simply adds the advanced commands and settings on top. See [upgrade-to-pro.md](./upgrade-to-pro.md) for the full comparison.
+Pro will be distributed as its own standalone extension, built from a tested Community foundation plus a private Pro overlay. Your Community previews, bundled themes, documents, and presentations continue to work unchanged; Pro simply adds the advanced commands and settings on top. See [upgrade-to-pro.md](./upgrade-to-pro.md) for the full comparison.
 
 ## Troubleshooting
 

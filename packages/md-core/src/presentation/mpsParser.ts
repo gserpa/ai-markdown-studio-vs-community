@@ -194,7 +194,7 @@ function parseSlideChunk(chunk: string): MarkdownPresentationSlide {
     remaining = remaining.slice(initialDirectiveMatch[0].length);
   }
 
-  const trailingDirectives = [...remaining.matchAll(ANY_SLIDE_DIRECTIVE_PATTERN)];
+  const trailingDirectives = findSlideDirectivesOutsideFences(remaining);
   if (trailingDirectives.length > 0) {
     throw new Error('Slide directives must appear only once and as the first non-whitespace content after the slide separator, before the slide title.');
   }
@@ -303,6 +303,34 @@ function extractSpeakerNotes(source: string): { body: string; notes: string[] } 
     body: bodyParts.join(''),
     notes,
   };
+}
+
+function findSlideDirectivesOutsideFences(source: string): RegExpMatchArray[] {
+  const matches: RegExpMatchArray[] = [];
+  let inFence: { marker: string; length: number } | undefined;
+
+  for (const line of source.split(/\r?\n/u)) {
+    const trimmed = line.trim();
+    const fenceMatch = trimmed.match(/^(`{3,}|~{3,})/u);
+
+    if (inFence) {
+      if (fenceMatch && fenceMatch[1][0] === inFence.marker && fenceMatch[1].length >= inFence.length) {
+        inFence = undefined;
+      }
+      continue;
+    }
+
+    if (fenceMatch) {
+      inFence = { marker: fenceMatch[1][0], length: fenceMatch[1].length };
+      continue;
+    }
+
+    for (const match of line.matchAll(ANY_SLIDE_DIRECTIVE_PATTERN)) {
+      matches.push(match);
+    }
+  }
+
+  return matches;
 }
 
 function findHtmlCommentEnd(source: string, fromIndex: number): number {

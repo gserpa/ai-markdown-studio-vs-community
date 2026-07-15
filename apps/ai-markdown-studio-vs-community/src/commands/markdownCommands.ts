@@ -101,6 +101,10 @@ export async function exportHtmlCommand(extensionUri: vscode.Uri, resource?: vsc
 export async function exportDocxBasicCommand(extensionUri: vscode.Uri, resource?: vscode.Uri): Promise<void> {
   const document = await resolveMarkdownDocument(resource);
   if (!document) return;
+  if (isMarkdownPresentationSource(document.getText())) {
+    void vscode.window.showWarningMessage('Basic DOCX export is not supported for Markdown presentations.');
+    return;
+  }
   const target = await exportMarkdownAsBasicDocx(extensionUri, document);
   if (target) void vscode.window.showInformationMessage(`Exported basic DOCX to ${target.fsPath}`);
 }
@@ -233,6 +237,10 @@ function shouldShowCommand(entry: CommandListEntry, context: CommandListContext)
 
   if (entry.presentationOnly) {
     return context.isPresentation;
+  }
+
+  if (command === 'markdownAiStudio.exportDocxBasic') {
+    return !context.isPresentation;
   }
 
   return true;

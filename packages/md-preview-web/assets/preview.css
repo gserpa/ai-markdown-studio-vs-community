@@ -2367,6 +2367,12 @@ body.preview-mode-presentation {
   background: transparent;
 }
 
+.presentation-cover-subtitle h2,
+.presentation-cover-subtitle h3,
+.presentation-cover-subtitle h4 {
+  color: inherit;
+}
+
 .presentation-cover-subtitle > :first-child,
 .presentation-side-banner-content > :first-child,
 .presentation-side-picture-content > :first-child,

@@ -282,7 +282,7 @@ export function buildPreviewThemeStylesheet(registry: PreviewThemeRegistry): str
 
 export function resolvePreviewThemeSelection(themeName: string, registry: PreviewThemeRegistry): PreviewThemeSelection {
   const normalized = normalizeThemeName(themeName);
-  if (!normalized || normalized === 'default' || normalized === 'auto') {
+  if (!normalized || normalized === 'auto') {
     return createAutoThemeSelection(registry);
   }
 

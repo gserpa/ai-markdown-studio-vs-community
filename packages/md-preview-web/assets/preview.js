@@ -7,6 +7,7 @@
 
   if (previewMode !== 'presentation') {
     wrapTablesForScroll();
+    initializeTableLifecycleRefresh();
   }
 
   const previewRoot = document.querySelector('.presentation-preview');
@@ -278,6 +279,28 @@ function wrapTablesForScroll() {
     wrapper.appendChild(table);
     enhanceTableScrollWrapper(wrapper, defaultLayout);
   }
+}
+
+function initializeTableLifecycleRefresh() {
+  const refreshTables = () => {
+    for (const wrapper of document.querySelectorAll('.table-scroll-wrapper')) {
+      if (wrapper instanceof HTMLElement) {
+        updateTableOverflowState(wrapper);
+      }
+    }
+  };
+
+  window.addEventListener('focus', refreshTables, { passive: true });
+  window.addEventListener('resize', refreshTables, { passive: true });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      refreshTables();
+    }
+  }, { passive: true });
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(refreshTables);
+  });
 }
 
 function enhanceTableScrollWrapper(wrapper, defaultLayout) {

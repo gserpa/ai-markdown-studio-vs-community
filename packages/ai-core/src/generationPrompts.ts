@@ -53,6 +53,7 @@ export function createPresentationPrompt(request: GenerationPromptRequest): stri
     'For two-columns slides, use ## H2 headings to define the sections.',
     'Every content slide must include a concise <!--notes: ...--> speaker note with delivery guidance. Cover and thanks slides may use shorter notes.',
     'Do not use unsupported custom directives.',
+    'If you show slide-directive syntax in a fenced code example, the example is allowed and must not be treated as an actual directive; never place a literal slide directive in visible slide content outside a fenced code block.',
     'Keep slides concise enough to preview and export cleanly.',
     '',
     'Quality guidance:',

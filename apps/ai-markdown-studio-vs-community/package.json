@@ -35,13 +35,7 @@
     "theme": "dark"
   },
   "activationEvents": [
-    "onLanguage:markdown",
-    "onCustomEditor:markdownAiStudio.markdownPreview",
-    "onCommand:markdownAiStudio.generateDocument",
-    "onCommand:markdownAiStudio.generatePresentation",
-    "onCommand:markdownAiStudio.pasteAsMarkdown",
-    "onCommand:markdownAiStudio.enableAiFeatures",
-    "onCommand:markdownAiStudio.exportDocxBasic"
+    "onLanguage:markdown"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -234,6 +228,12 @@
               "AI-supported commands stay hidden, while Enable AI Features... remains available so you can review and change this choice later."
             ],
             "description": "Controls whether AI Markdown Studio may use the GitHub Copilot service already configured in VS Code for AI-supported functionality. Choose Enabled only if you are authorized to share that content through the configured Copilot service."
+          },
+          "markdownAiStudio.aiModel": {
+            "type": "string",
+            "default": "gpt-5.6-luna",
+            "scope": "application",
+            "description": "Preferred Copilot model family. If unavailable or unsuccessful, AI Markdown Studio tries gpt-5.4-mini and then the first available Copilot model."
           }
         }
       },

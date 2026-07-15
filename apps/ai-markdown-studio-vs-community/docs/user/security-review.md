@@ -1,11 +1,11 @@
 ---
-date: 2026-06-13
+date: 2026-07-14
 version: 1.0.0
 ---
 
 # Security Review — AI Markdown Studio Community
 
-**Document version:** 1.0.0 (document last updated 2026-06-13)
+**Document version:** 1.0.0 (document last updated 2026-07-14)
 
 ## Disclaimer and Scope of This Review
 
@@ -39,7 +39,7 @@ Community deliberately contains no PDF/PPTX export, Microsoft Word/PowerShell au
   - Mermaid `securityLevel: 'strict'`
   - scoped `localResourceRoots` rather than full-workspace exposure
   - an automated boundary check that rejects Pro source, Pro dependencies, Pro commands, and packaged source/test files from the Community VSIX
-- `npm audit` reports **0 known vulnerabilities** at the time of this review.
+- `npm audit --omit=dev` reported **0 known vulnerabilities** on 2026-07-14.
 - Some AI-supported features use only the GitHub Copilot service already configured in VS Code. If Copilot is not configured, those AI surfaces stay hidden. If Copilot is configured, the default `markdownAiStudio.aiAccess` state keeps AI surfaces visible and shows the consent flow only when an AI feature actually runs. If the user denies access, the AI surfaces hide again except for **Enable AI Features...**. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials.
 - The main residual risks are **content-trust risks** associated with rendering Markdown that references remote or local resources.
 
@@ -66,6 +66,7 @@ Reviewed components:
 - standalone HTML export
 - basic DOCX export via `html-to-docx`
 - guided document and MPS presentation generation
+- generated-presentation image normalization and remote-image URL verification
 - AI Paste to Markdown
 - document and presentation theme loading
 - local file and image resolution behavior
@@ -109,7 +110,7 @@ This review used:
 
 ### Automated dependency result
 
-`npm audit` reported **0 vulnerabilities** (0 critical / 0 high / 0 moderate / 0 low). This is a point-in-time result and should be re-run before each release.
+`npm audit --omit=dev` reported **0 vulnerabilities** (0 critical / 0 high / 0 moderate / 0 low) on 2026-07-14. This is a point-in-time result and should be re-run before each release.
 
 ### License inventory result
 
@@ -141,7 +142,7 @@ The extension host resolves links and images, loads theme files, invokes the VS 
 
 #### Network access
 
-Network activity can occur after a user enables and invokes Generate Document, Generate Presentation, or Paste as New Markdown File. It can also occur when the preview or an exported HTML file loads remote resources referenced by the Markdown. There is no AI Markdown Studio server component and no telemetry.
+Network activity can occur after a user enables and invokes Generate Document, Generate Presentation, or Paste as New Markdown File. When remote resources are allowed, generated presentations also verify model-supplied remote image URLs before retaining them. Network activity can also occur when the preview or an exported HTML file loads remote resources referenced by the Markdown. There is no AI Markdown Studio server component and no telemetry.
 
 #### VS Code Language Model API
 
@@ -200,6 +201,10 @@ Security-positive aspects:
 
 `scripts/check-community-boundary.mjs` runs in `npm run verify` and in CI. It rejects Pro-only commands, dependencies, source paths, and packaged source/test files while explicitly allowing Community-owned document/presentation generation, AI Paste, and basic DOCX implementations. PDF export and its Puppeteer dependency remain Pro-only.
 
+### 5.7 Generated-presentation image handling
+
+After presentation generation, the extension normalizes image targets before it writes the Markdown file. When `markdownAiStudio.allowRemoteResources` is `false`, remote model-supplied image embeds are replaced with image suggestions and are not probed. When it is `true`, the extension verifies each candidate URL with a timeout-bound `HEAD` request and, only for servers that do not support `HEAD`, a range-limited `GET` fallback. Unverifiable remote URLs and invented local paths are converted into image suggestions instead of being retained as embeds. This reduces broken or guessed image references while preserving the existing remote-resource privacy control.
+
 ## 6. Findings
 
 ### Finding 1: AI-supported features share user-supplied content with VS Code configured GitHub Copilot
@@ -226,7 +231,7 @@ Keep the feature list and data-sharing notice clear. Preserve default-off consen
 
 #### Description
 
-Untrusted Markdown can reference remote images. During preview, remote `https:` images are permitted by the CSP and may be loaded. Exported HTML may also reference remote resources that load when the file is later opened.
+Untrusted Markdown can reference remote images. During preview, remote `https:` images are permitted by the CSP and may be loaded. Exported HTML may also reference remote resources that load when the file is later opened. Generated presentation output is additionally normalized: model-supplied remote image URLs are probed only when `markdownAiStudio.allowRemoteResources` is enabled; otherwise they are replaced with non-fetching image suggestions.
 
 #### Security impact
 

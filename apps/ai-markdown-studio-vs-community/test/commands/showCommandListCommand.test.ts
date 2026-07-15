@@ -127,6 +127,7 @@ describe('showCommandListCommand', () => {
 
     expect(capturedLabels[0]).toBe('Edit Markdown');
     expect(capturedLabels).toContain('Export: PPTX');
+    expect(capturedLabels).not.toContain('Export: DOCX (Basic)');
     expect(capturedLabels).not.toContain('Open Preview');
   });
 

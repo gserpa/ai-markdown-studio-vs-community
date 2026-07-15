@@ -5,7 +5,7 @@ version: 1.0.0
 
 # Why Upgrade to AI Markdown Studio Pro
 
-AI Markdown Studio Community is a complete, MIT-licensed Markdown authoring tool on its own. It covers live preview, presentation preview, Mermaid, KaTeX, bundled themes, AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX export.
+AI Markdown Studio Community is being beta-tested and will be released as a complete, MIT-licensed Markdown authoring tool on its own. It covers live preview, presentation preview, Mermaid, KaTeX, bundled themes, AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX export.
 
 AI Markdown Studio Pro is the advanced workflow edition for teams and individuals who also need conversion, polished Office exports, reusable custom theme folders, and deeper Copilot-driven automation.
 
@@ -36,22 +36,22 @@ AI Markdown Studio Pro is the advanced workflow edition for teams and individual
 
 ## Quick comparison
 
-| Capability | Community | Pro |
-| --- | --- | --- |
-| Live Markdown preview | Yes | Yes |
-| Presentation preview | Yes | Yes |
-| Bundled themes | Yes | Yes |
-| Shared custom theme folders | No | Yes |
-| Generate document/presentation with AI | Yes | Yes |
-| Paste clipboard text into a new Markdown file | Yes | Yes |
-| Convert PDF/DOCX/PPTX/image/text to Markdown | No | Yes |
-| HTML export | Yes | Yes |
-| Basic DOCX export | Yes | Yes |
-| High-fidelity DOCX export | No | Yes |
-| PDF export | No | Yes |
-| PPTX export | No | Yes |
-| Corporate PowerPoint template workflows | No | Yes |
-| Copilot agent-mode tools | No | Yes |
+| Capability                                    | Community | Pro |
+| --------------------------------------------- | --------- | --- |
+| Live Markdown preview                         | Yes       | Yes |
+| Presentation preview                          | Yes       | Yes |
+| Bundled themes                                | Yes       | Yes |
+| Shared custom theme folders                   | No        | Yes |
+| Generate document/presentation with AI        | Yes       | Yes |
+| Paste clipboard text into a new Markdown file | Yes       | Yes |
+| Convert PDF/DOCX/PPTX/image/text to Markdown  | No        | Yes |
+| HTML export                                   | Yes       | Yes |
+| Basic DOCX export                             | Yes       | Yes |
+| High-fidelity DOCX export                     | No        | Yes |
+| PDF export                                    | No        | Yes |
+| PPTX export                                   | No        | Yes |
+| Corporate PowerPoint template workflows       | No        | Yes |
+| Copilot agent-mode tools                      | No        | Yes |
 
 ## Who Pro is for
 
