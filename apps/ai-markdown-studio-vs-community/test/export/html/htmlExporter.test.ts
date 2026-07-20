@@ -270,6 +270,29 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('overflow: visible;');
   });
 
+  it('uses the document table layout setting to choose the exported page width', async () => {
+    const document = {
+      fileName: 'tables.md',
+      uri: {
+        fsPath: 'C:/docs/tables.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/tables.md',
+      },
+      getText: () => '| First | Second |\n| --- | --- |\n| A | B |',
+    } as never;
+
+    const wideHtml = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+    expect(wideHtml).toContain('data-preview-page-width="full"');
+    expect(wideHtml).toContain('data-document-table-layout="wide"');
+
+    vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+      get: vi.fn((key: string, fallback: unknown) => key === 'documentTableLayout' ? 'wrap' : fallback),
+    } as never);
+    const wrappedHtml = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+    expect(wrappedHtml).toContain('data-preview-page-width="readable"');
+    expect(wrappedHtml).toContain('data-document-table-layout="wrap"');
+  });
+
   it('exports markdown presentations as standalone presentation html', async () => {
     const source = [
       '---',

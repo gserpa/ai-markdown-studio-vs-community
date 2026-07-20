@@ -92,6 +92,7 @@ export async function buildExportHtmlString(
   const exportMarkdown = getExportMarkdown(source);
   const body = renderMarkdown(exportMarkdown);
   const theme = resolveExportDocumentTheme(extensionUri, document, source, exportMode);
+  const documentTableLayout = getDocumentTableLayout(document);
 
   return buildStandaloneHtml({
     title: path.basename(document.fileName),
@@ -101,7 +102,7 @@ export async function buildExportHtmlString(
     mermaidScript,
     htmlClass: theme.hostThemeClass,
     bodyClass: theme.bodyClass,
-    bodyAttributes: theme.bodyAttributes,
+    bodyAttributes: `${theme.bodyAttributes} data-preview-page-width="${documentTableLayout === 'wide' ? 'full' : 'readable'}" data-document-table-layout="${documentTableLayout}"`,
     documentThemeCss: theme.documentThemeCss,
     exportMode,
   });
@@ -132,6 +133,11 @@ function rewriteKatexCssUrls(css: string): string {
 
 function getExportMarkdown(source: string): string {
   return stripMarkdownFrontMatter(source);
+}
+
+function getDocumentTableLayout(document: vscode.TextDocument): 'wide' | 'wrap' {
+  const configured = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('documentTableLayout', 'wide');
+  return configured === 'wrap' ? 'wrap' : 'wide';
 }
 
 function buildStandaloneHtml(input: {
