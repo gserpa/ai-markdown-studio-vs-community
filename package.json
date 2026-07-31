@@ -2,7 +2,7 @@
   "name": "ai-markdown-studio-vs-community-workspace",
   "displayName": "AI Markdown Studio Community Workspace",
   "description": "Workspace for building and packaging AI Markdown Studio Community.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -36,6 +36,11 @@
     "@vscode/vsce": "^3.9.1",
     "typescript": "^5.7.2",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "dompurify": "3.4.12",
+    "linkify-it": "5.0.2",
+    "postcss": "8.5.25"
   },
   "repository": { "type": "git", "url": "https://github.com/gserpa/ai-markdown-studio-vs-community" }
 }

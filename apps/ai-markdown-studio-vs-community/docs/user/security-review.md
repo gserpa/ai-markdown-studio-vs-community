@@ -1,11 +1,11 @@
 ---
-date: 2026-07-14
-version: 1.0.0
+date: 2026-07-31
+version: 1.1.0
 ---
 
 # Security Review — AI Markdown Studio Community
 
-**Document version:** 1.0.0 (document last updated 2026-07-14)
+**Document version:** 1.1.0 (document last updated 2026-07-31)
 
 ## Disclaimer and Scope of This Review
 
@@ -26,9 +26,9 @@ This review is part of the developer's ongoing due diligence to keep AI Markdown
 
 ## 1. Executive summary
 
-This review covers the **AI Markdown Studio Community** VS Code extension: the MIT-licensed open-source core that provides preview-first Markdown authoring, live document and presentation previews, AI-assisted document/MPS generation, AI Paste to Markdown, HTML export, and basic DOCX export.
+This review covers the **AI Markdown Studio Community** VS Code extension: the MIT-licensed open-source core that provides preview-first Markdown authoring, live document and presentation previews, AI-assisted document/MPS generation, Copilot agent tools for MPS prompt building, validation, and confirmed saves, AI Paste to Markdown, HTML export, and basic DOCX export.
 
-Community deliberately contains no PDF/PPTX export, Microsoft Word/PowerShell automation, broad file-conversion, agent-tool, or corporate-template code. Those surfaces live in the separate proprietary AI Markdown Studio Pro extension.
+Community deliberately contains no PDF/PPTX export, Microsoft Word/PowerShell automation, broad file-conversion, document/theme agent-tool, or corporate-template code. Those surfaces live in the separate proprietary AI Markdown Studio Pro extension.
 
 ### Overall assessment
 
@@ -39,7 +39,8 @@ Community deliberately contains no PDF/PPTX export, Microsoft Word/PowerShell au
   - Mermaid `securityLevel: 'strict'`
   - scoped `localResourceRoots` rather than full-workspace exposure
   - an automated boundary check that rejects Pro source, Pro dependencies, Pro commands, and packaged source/test files from the Community VSIX
-- `npm audit --omit=dev` reported **0 known vulnerabilities** on 2026-07-14.
+  - workspace-confined MPS tool reads and confirmed, collision-free Markdown saves
+- `npm audit --omit=dev` reported **0 known vulnerabilities** on 2026-07-31 after applying patched dependency resolutions.
 - Some AI-supported features use only the GitHub Copilot service already configured in VS Code. If Copilot is not configured, those AI surfaces stay hidden. If Copilot is configured, the default `markdownAiStudio.aiAccess` state keeps AI surfaces visible and shows the consent flow only when an AI feature actually runs. If the user denies access, the AI surfaces hide again except for **Enable AI Features...**. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials.
 - The main residual risks are **content-trust risks** associated with rendering Markdown that references remote or local resources.
 
@@ -68,13 +69,14 @@ Reviewed components:
 - guided document and MPS presentation generation
 - generated-presentation image normalization and remote-image URL verification
 - AI Paste to Markdown
+- MPS Language Model Tools for prompt building, validation, and confirmed workspace saves
 - document and presentation theme loading
 - local file and image resolution behavior
 - the public Community API surface exposed to feature extensions
 - the Community packaging boundary check
 - dependency vulnerability and license posture
 
-Out of scope (Pro only — not present in Community): PDF/PPTX export, broad file conversion, theme AI generation, Copilot Language Model Tools, PowerPoint template automation, and the Word/PowerShell automation path.
+Out of scope (Pro only — not present in Community): PDF/PPTX export, broad file conversion, theme AI generation, document/theme Copilot Language Model Tools, PowerPoint template automation, and the Word/PowerShell automation path.
 
 Key reviewed files:
 
@@ -90,6 +92,7 @@ Key reviewed files:
 - `apps/ai-markdown-studio-vs-community/src/generate/presentationGenerationCommand.ts`
 - `apps/ai-markdown-studio-vs-community/src/generate/generationMode.ts`
 - `apps/ai-markdown-studio-vs-community/src/ai/aiConsent.ts`
+- `apps/ai-markdown-studio-vs-community/src/ai/languageModelTools.ts`
 - `apps/ai-markdown-studio-vs-community/src/commands/aiCommands.ts`
 - `apps/ai-markdown-studio-vs-community/src/util/documentResourceResolver.ts`
 - `apps/ai-markdown-studio-vs-community/src/api/communityApi.ts`
@@ -110,7 +113,7 @@ This review used:
 
 ### Automated dependency result
 
-`npm audit --omit=dev` reported **0 vulnerabilities** (0 critical / 0 high / 0 moderate / 0 low) on 2026-07-14. This is a point-in-time result and should be re-run before each release.
+`npm audit --omit=dev` reported **0 vulnerabilities** (0 critical / 0 high / 0 moderate / 0 low) on 2026-07-31. This is a point-in-time result and should be re-run before each release.
 
 ### License inventory result
 
@@ -128,6 +131,7 @@ The primary untrusted input is Markdown document content, including:
 - local links and images
 - remote links and images
 - absolute file paths
+- Copilot tool inputs, including presentation Markdown, workspace file URIs, filenames, and workspace-relative directories
 - bundled document and presentation theme JSON loaded from the extension assets
 
 ### 4.2 Sensitive execution surfaces
@@ -138,11 +142,11 @@ The preview uses a VS Code webview with JavaScript enabled for rendering, slide 
 
 #### Extension host
 
-The extension host resolves links and images, loads theme files, invokes the VS Code Language Model API for explicit AI commands, and writes generated Markdown and exported HTML/DOCX files. Community launches no browser or external application.
+The extension host resolves links and images, loads theme files, invokes the VS Code Language Model API for explicit AI commands, registers deterministic MPS prompt/validation tools, and writes generated Markdown and exported HTML/DOCX files. Community launches no browser or external application.
 
 #### Network access
 
-Network activity can occur after a user enables and invokes Generate Document, Generate Presentation, or Paste as New Markdown File. When remote resources are allowed, generated presentations also verify model-supplied remote image URLs before retaining them. Network activity can also occur when the preview or an exported HTML file loads remote resources referenced by the Markdown. There is no AI Markdown Studio server component and no telemetry.
+Network activity can occur after a user enables and invokes Generate Document, Generate Presentation, Paste as New Markdown File, or an MPS tool through Copilot Chat. The MPS prompt builder and validator do not make their own model or network requests, and the save tool only writes locally, but they participate in a Copilot agent workflow. When remote resources are allowed, generated presentations also verify model-supplied remote image URLs before retaining them. Network activity can also occur when the preview or an exported HTML file loads remote resources referenced by the Markdown. There is no AI Markdown Studio server component and no telemetry.
 
 #### VS Code Language Model API
 
@@ -199,11 +203,15 @@ Security-positive aspects:
 
 ### 5.6 Edition boundary enforcement
 
-`scripts/check-community-boundary.mjs` runs in `npm run verify` and in CI. It rejects Pro-only commands, dependencies, source paths, and packaged source/test files while explicitly allowing Community-owned document/presentation generation, AI Paste, and basic DOCX implementations. PDF export and its Puppeteer dependency remain Pro-only.
+`scripts/check-community-boundary.mjs` runs in `npm run verify` and in CI. It rejects Pro-only commands, dependencies, source paths, packaged source/test files, and document/theme agent-tool identifiers while explicitly allowing the three Community-owned MPS tools, document/presentation generation, AI Paste, and basic DOCX implementations. PDF export and its Puppeteer dependency remain Pro-only.
 
 ### 5.7 Generated-presentation image handling
 
 After presentation generation, the extension normalizes image targets before it writes the Markdown file. When `markdownAiStudio.allowRemoteResources` is `false`, remote model-supplied image embeds are replaced with image suggestions and are not probed. When it is `true`, the extension verifies each candidate URL with a timeout-bound `HEAD` request and, only for servers that do not support `HEAD`, a range-limited `GET` fallback. Unverifiable remote URLs and invented local paths are converted into image suggestions instead of being retained as embeds. This reduces broken or guessed image references while preserving the existing remote-resource privacy control.
+
+### 5.8 MPS agent-tool file controls
+
+The presentation prompt builder is deterministic and read-only. Presentation validation accepts raw Markdown or a `file:` URI only when the resolved file is inside an open workspace. The save tool requires a filename rather than a path, accepts only a workspace-relative destination without `.` or `..` segments, displays a confirmation message, and calls `createUniqueUri` so it never overwrites an existing file.
 
 ## 6. Findings
 
@@ -214,7 +222,7 @@ After presentation generation, the extension normalizes image targets before it 
 
 #### Description
 
-Generate Document, Generate Presentation, and Paste as New Markdown File are examples of AI-supported functionality that use only the GitHub Copilot service already configured in VS Code and share the user-supplied brief or clipboard text with that embedded AI service for processing. If GitHub Copilot is not configured, those commands stay hidden. If Copilot is configured and `markdownAiStudio.aiAccess` is `ask` or `enabled`, the commands are visible. The consent flow appears on first real AI use while the state is `ask`; if the user denies access, the commands hide again except for **Enable AI Features...**. Calls are explicit and command-driven; the extension does not upload documents in the background. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The copy-prompt option does not call Copilot.
+Generate Document, Generate Presentation, Paste as New Markdown File, and MPS tools invoked through Copilot Chat are examples of AI-supported functionality that use only the GitHub Copilot service already configured in VS Code and may share the user-supplied brief, clipboard text, or presentation content with that embedded AI service for processing. The prompt builder and validator themselves are deterministic local functions, but Copilot supplies their inputs and consumes their results as part of the agent conversation. If GitHub Copilot is not configured, AI commands stay hidden and the tools have no calling agent. The consent flow appears on first real command use while the state is `ask`; tool invocation requires AI access to be enabled. Calls are explicit and user-driven; the extension does not upload documents in the background. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The copy-prompt option does not call Copilot.
 
 #### Security impact
 
@@ -264,6 +272,7 @@ Consider a safety mode for untrusted workspaces that blocks absolute local paths
 - **Mermaid configuration is security-aware.** Strict mode is the correct default for untrusted diagrams.
 - **No telemetry or network beacon.** The extension does not collect usage data or send background requests. Its Copilot requests are explicit user-invoked feature actions.
 - **Edition boundary is machine-enforced.** The boundary check prevents proprietary or higher-risk Pro code from silently entering the open-source package.
+- **MPS tool writes are bounded and reviewable.** Validation reads only workspace files, save destinations cannot escape the workspace, VS Code asks for confirmation, and filename collisions create a new file rather than overwriting.
 
 ## 8. Recommended remediation plan
 
@@ -284,6 +293,6 @@ Consider a safety mode for untrusted workspaces that blocks absolute local paths
 
 ## 9. Bottom line
 
-AI Markdown Studio Community uses scoped resources, strict Mermaid mode, sanitization, and a machine-enforced edition boundary to reduce content-trust risks. AI-supported features use only the GitHub Copilot service already configured in VS Code, appear only when Copilot is configured and `markdownAiStudio.aiAccess` is not `denied`, and can be revoked at any time in Settings. AI Markdown Studio does not connect to any other third-party AI service or bring its own AI account or credentials.
+AI Markdown Studio Community uses scoped resources, strict Mermaid mode, sanitization, workspace-confined MPS tools, confirmed non-overwriting saves, and a machine-enforced edition boundary to reduce content-trust risks. AI-supported features use only the GitHub Copilot service already configured in VS Code and can be revoked at any time in Settings. AI Markdown Studio does not connect to any other third-party AI service or bring its own AI account or credentials.
 
 > This is a point-in-time engineering review, not a guarantee. Re-run dependency and audit checks before each release.

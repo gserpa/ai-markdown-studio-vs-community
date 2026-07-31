@@ -9,15 +9,26 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const proTokens = [
   'vscode-extension-pro', '/convert/', '/export/pdf/', '/export/pptx/',
   'markdownAiStudio.exportDocx', 'markdownAiStudio.exportPdf', 'markdownAiStudio.exportPptx',
-  'markdownAiStudio.convertToMarkdown', 'languageModelTools',
+  'markdownAiStudio.convertToMarkdown',
+  'markdown_ai_studio_build_document_prompt', 'markdown_ai_studio_validate_document',
+  'markdown_ai_studio_build_document_theme_prompt', 'markdown_ai_studio_build_presentation_theme_prompt',
+  'markdown_ai_studio_validate_theme', 'markdown_ai_studio_save_theme_file',
   'sharp', '@resvg/resvg-js', 'puppeteer-core', 'pptxgenjs', 'pptx-automizer', 'pdf-parse',
 ];
 const proRuntimeTokens = [
   'markdownAiStudio.exportDocx', 'markdownAiStudio.exportPdf', 'markdownAiStudio.exportPptx',
-  'markdownAiStudio.convertToMarkdown', 'languageModelTools',
+  'markdownAiStudio.convertToMarkdown',
+  'markdown_ai_studio_build_document_prompt', 'markdown_ai_studio_validate_document',
+  'markdown_ai_studio_build_document_theme_prompt', 'markdown_ai_studio_build_presentation_theme_prompt',
+  'markdown_ai_studio_validate_theme', 'markdown_ai_studio_save_theme_file',
   'require("sharp")', "require('sharp')", '@resvg/resvg-js', 'puppeteer-core', 'pptxgenjs', 'pptx-automizer', 'pdf-parse',
 ];
 const proDependencyPaths = ['sharp', '@resvg/resvg-js', 'puppeteer-core', 'pptxgenjs', 'pptx-automizer', 'pdf-parse'];
+const allowedCommunityLanguageModelTools = new Set([
+  'markdown_ai_studio_build_presentation_prompt',
+  'markdown_ai_studio_validate_presentation',
+  'markdown_ai_studio_save_markdown_file',
+]);
 const maxCommunityCompressedBytes = 58 * 1024 * 1024;
 const failures = [];
 
@@ -40,6 +51,19 @@ function checkManifest() {
   const manifest = readFileSync(path.join(repoRoot, 'apps/ai-markdown-studio-vs-community/package.json'), 'utf8');
   for (const token of proTokens) {
     if (containsForbiddenToken(manifest, token)) failures.push(`Community manifest contains Pro token: ${token}`);
+  }
+
+  const parsedManifest = JSON.parse(manifest);
+  const contributedTools = parsedManifest.contributes?.languageModelTools ?? [];
+  for (const tool of contributedTools) {
+    if (!allowedCommunityLanguageModelTools.has(tool.name)) {
+      failures.push(`Community manifest contains unsupported language-model tool: ${tool.name ?? '<missing name>'}`);
+    }
+  }
+  for (const toolName of allowedCommunityLanguageModelTools) {
+    if (!contributedTools.some((tool) => tool.name === toolName)) {
+      failures.push(`Community manifest is missing required language-model tool: ${toolName}`);
+    }
   }
 }
 

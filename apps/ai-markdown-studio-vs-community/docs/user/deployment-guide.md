@@ -1,6 +1,6 @@
 ---
-date: 2026-06-12
-version: 1.0.0
+date: 2026-07-31
+version: 1.1.0
 ---
 
 # Deployment Guide — AI Markdown Studio Community
@@ -40,7 +40,7 @@ Community ships a small, permissive runtime tree:
 - `@mfo/preview-web` — shared browser preview runtime and bundled themes/fonts (workspace package, MIT)
 - `mermaid`, `katex`, `jsdom`, `markdown-it` (+ plugins), `highlight.js`, `sanitize-html`, `dompurify`, `yaml`, `html-to-docx` (MIT)
 
-Community includes VS Code Language Model API workflows for document/MPS generation and AI Paste. It contains no Puppeteer, PDF/PPTX, Word/PowerShell, Sharp, or resvg implementation. Pro owns browser-backed PDF, high-fidelity Word DOCX, and PPTX paths.
+Community includes VS Code Language Model API workflows for document/MPS generation, AI Paste, and three MPS agent tools for prompt building, validation, and confirmed workspace saves. It contains no Puppeteer, PDF/PPTX, Word/PowerShell, Sharp, resvg, or Pro document/theme agent-tool implementation. Pro owns browser-backed PDF, high-fidelity Word DOCX, PPTX paths, and the additional document/theme tools.
 
 ### Project scripts
 
@@ -63,7 +63,7 @@ Defined in the repository-root `package.json`:
 3. Confirm `license` is `MIT` and the root `LICENSE` is present.
 4. Run `npm install`.
 5. Run `npm run verify` (boundary → compile → test → package). All must pass.
-6. Run `npm audit` and confirm 0 vulnerabilities (or triage findings).
+6. Run `npm audit --omit=dev` and confirm 0 production vulnerabilities (or triage findings).
 7. Verify the extension activates and that preview, presentation preview, table formatting, HTML export, and basic DOCX export all work.
 8. Review `README.md`, `CHANGELOG.md`, and `docs/`.
 9. Confirm the packaged VSIX contains no `src/`, test, or `.map` files (the boundary check enforces this).
@@ -77,7 +77,7 @@ npm install
 npm run verify
 ```
 
-`npm run verify` produces a `.vsix` in the repository root, named from the extension name and version, for example `markdown-ai-studio-1.0.0.vsix`.
+`npm run verify` produces a `.vsix` in the repository root, named from the extension name and version, for example `markdown-ai-studio-1.1.0.vsix`.
 
 To package without the full gate (after a successful compile):
 
@@ -96,7 +96,7 @@ Distribute the file by email, internal file share, a GitHub/Azure DevOps release
 **Command line:**
 
 ```powershell
-code --install-extension markdown-ai-studio-1.0.0.vsix
+code --install-extension markdown-ai-studio-1.1.0.vsix
 ```
 
 ### Updating a `.vsix` deployment
@@ -143,7 +143,7 @@ You can publish directly from source or package first and publish the `.vsix` in
 1. Finalize code changes.
 2. `npm install`
 3. `npm run verify` (boundary → compile → test → package)
-4. `npm audit`
+4. `npm audit --omit=dev`
 5. Manually test preview, presentation preview, table formatting, and HTML export in VS Code.
 6. Update `version`.
 7. Smoke-test the produced `.vsix` locally.

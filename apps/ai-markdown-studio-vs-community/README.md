@@ -8,9 +8,9 @@
   />
 </p>
 
-The open-source core of AI Markdown Studio: a VS Code extension for authoring Markdown with a live preview panel, Mermaid diagram support, KaTeX math, syntax highlighting, table formatting, document and presentation preview themes, a slide-based presentation preview, AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX export.
+The open-source core of AI Markdown Studio: a VS Code extension for authoring Markdown with a live preview panel, Mermaid diagram support, KaTeX math, syntax highlighting, table formatting, document and presentation preview themes, a slide-based presentation preview, AI-assisted document and presentation generation, Copilot agent tools for MPS decks, AI Paste to Markdown, HTML export, and basic DOCX export.
 
-AI Markdown Studio Community is licensed under the MIT License and is useful entirely on its own. It includes AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX. PDF/PPTX export, high-fidelity DOCX, broad file conversion, theme AI workflows, shared custom theme folders, agent tools, and corporate PowerPoint template automation are provided separately by **AI Markdown Studio Pro**.
+AI Markdown Studio Community is licensed under the MIT License and is useful entirely on its own. It includes AI-assisted document and presentation generation, a three-tool Copilot agent workflow for MPS decks, AI Paste to Markdown, HTML export, and basic DOCX. PDF/PPTX export, high-fidelity DOCX, broad file conversion, theme AI workflows, shared custom theme folders, additional document/theme agent tools, and corporate PowerPoint template automation are provided separately by **AI Markdown Studio Pro**.
 
 If AI Markdown Studio Community is useful to you, consider [supporting the project through GitHub Sponsors](https://github.com/sponsors/gserpa).
 
@@ -115,6 +115,7 @@ export, so your Markdown knowledge base stays useful to both people and AI every
   - [Table Formatting](#table-formatting)
   - [HTML Export](#html-export)
   - [AI-Assisted Generation](#ai-assisted-generation)
+  - [Copilot Agent Tools for MPS](#copilot-agent-tools-for-mps)
   - [AI Paste to Markdown](#ai-paste-to-markdown)
   - [Basic DOCX Export](#basic-docx-export)
   - [Command List](#command-list)
@@ -139,7 +140,7 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```bash
-code --install-extension markdown-ai-studio-1.0.0.vsix
+code --install-extension markdown-ai-studio-1.1.0.vsix
 ```
 
 If you are working on the repository itself, use the workspace root README for build
@@ -160,6 +161,7 @@ and verification commands.
 - **Presentation preview** - presentation-style Markdown files open in a slide viewer with slide navigation, a collapsible filmstrip, immersive fullscreen mode, fixed-canvas scaling, and speaker-note display.
 - **AI-assisted document generation** - create Markdown documents from prompts through the GitHub Copilot service already configured in VS Code, with consent gating.
 - **AI-assisted presentation generation** - generate presentation-style Markdown decks from prompts through the same Copilot-backed workflow.
+- **Copilot agent tools for MPS** - let Copilot Chat build the canonical presentation prompt, validate a generated deck, and save approved Markdown without overwriting an existing file.
 - **AI Paste to Markdown** - convert clipboard text into a new Markdown file.
 - **Basic DOCX export** - export rendered Markdown to DOCX through the Community DOCX path.
 - **Front matter toggle** - show or hide a rendered front-matter summary in the preview.
@@ -290,6 +292,16 @@ AI actions are user-triggered and use the model made available through the user'
 
 Use **Enable AI Features...** if you need to review or re-enable the AI data-sharing notice, or change `markdownAiStudio.aiAccess` directly in Settings.
 
+### Copilot Agent Tools for MPS
+
+Community contributes three Language Model Tools to Copilot Chat so an agent can complete the MPS authoring loop without requiring you to remember every presentation rule:
+
+- `#markdownPresentationPrompt` builds the canonical, workspace-aware MPS generation prompt. It is deterministic, does not call a model itself, and does not write files.
+- `#validateMarkdownPresentation` validates raw Markdown or a file URI inside the current workspace. It is read-only.
+- `#saveMarkdownStudioFile` saves approved Markdown inside the current workspace. VS Code asks for confirmation, parent-directory traversal is rejected, and existing files are never overwritten.
+
+In Copilot Chat agent mode, ask for a presentation and allow the agent to chain prompt building, deck generation, validation, and saving. You can also reference any tool explicitly with the names above. Enable AI features first so the extension's Copilot consent requirements are satisfied.
+
 ### AI Paste to Markdown
 
 Use **Paste as New Markdown File** to turn clipboard text into a new Markdown file. This follows the same AI consent workflow as document generation: it is visible when Copilot is configured unless `markdownAiStudio.aiAccess` is `denied`, and it prompts on first real AI use while the state is `ask`.
@@ -338,7 +350,7 @@ AI Markdown Studio Community is the open-source core. **AI Markdown Studio Pro**
 - AI-assisted **Convert to Markdown** and AI theme generation
 - Adds PDF and PPTX export; Improved DOCX export.
 - Corporate PowerPoint template-backed export with manifest inference/validation/generation and placeholder mapping
-- GitHub Copilot agent-mode tools and prompt builders
+- Additional GitHub Copilot document/theme agent tools and prompt builders
 
 Pro is packaged as a standalone extension built from a pinned Community revision plus a private Pro overlay, and it consumes Community's public `CommunityApiV1` surface internally. Installing Pro therefore gives you the complete AI Markdown Studio experience without a separate Community install. Community remains MIT-licensed; Pro features and assets are governed by the AI Markdown Studio Pro EULA, and nothing in that EULA limits the rights granted under the MIT License for Community components.
 

@@ -13,6 +13,7 @@ import {
 import { pasteAsMarkdownCommand } from './commands/aiCommands';
 import { enableAiFeaturesCommand, initializeAiConsent } from './ai/aiConsent';
 import { refreshCopilotConfiguredContext } from './ai/copilotAvailability';
+import { registerLanguageModelTools } from './ai/languageModelTools';
 import { generateDocumentCommand } from './generate/documentGenerationCommand';
 import { generatePresentationCommand } from './generate/presentationGenerationCommand';
 import { createCommunityApi } from './api/communityApi';
@@ -56,6 +57,7 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
   void vscode.commands.executeCommand('setContext', 'markdownAiStudio.proInstalled', false);
   void initializeAiConsent();
   void refreshCopilotConfiguredContext();
+  registerLanguageModelTools(context);
 
   context.subscriptions.push(
     vscode.window.registerCustomEditorProvider(

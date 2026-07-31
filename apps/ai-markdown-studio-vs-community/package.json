@@ -2,7 +2,7 @@
   "name": "markdown-ai-studio",
   "displayName": "AI Markdown Studio Community",
   "description": "AI Markdown Studio Community combines open-source Markdown authoring with AI-assisted document and MPS generation, live previews, HTML export, and basic DOCX export.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "publisher": "GustavoSerpa",
   "author": "Gustavo Serpa",
@@ -38,7 +38,10 @@
     "theme": "dark"
   },
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onLanguageModelTool:markdown_ai_studio_build_presentation_prompt",
+    "onLanguageModelTool:markdown_ai_studio_validate_presentation",
+    "onLanguageModelTool:markdown_ai_studio_save_markdown_file"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -121,6 +124,120 @@
         "title": "Toggle Frontmatter",
         "category": "AI Markdown Studio",
         "icon": "$(list-tree)"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "markdown_ai_studio_build_presentation_prompt",
+        "tags": [
+          "markdown-ai-studio",
+          "markdown",
+          "presentations"
+        ],
+        "toolReferenceName": "markdownPresentationPrompt",
+        "displayName": "Build Markdown AI Studio Presentation Prompt",
+        "modelDescription": "Builds a complete, self-contained Markdown AI Studio prompt for creating a Markdown Presentation Specification .md deck. Use this when the user wants to generate a presentation deck that previews and exports correctly in Markdown AI Studio. The prompt includes slide layout, density, image, speaker notes, theme, ratio guidance, the rule that each slide directive must appear once immediately after the slide separator and before the slide title, and workspace-aware guidance on whether remote image embeds should be used or avoided based on `markdownAiStudio.allowRemoteResources`. This tool does not call an AI model and does not write files.",
+        "userDescription": "Build a Markdown AI Studio presentation-generation prompt.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(preview)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "brief": {
+              "type": "string",
+              "description": "The presentation request or topic."
+            },
+            "audience": {
+              "type": "string",
+              "description": "The intended audience. Defaults to a general audience."
+            },
+            "tone": {
+              "type": "string",
+              "description": "The desired tone, such as professional, executive, technical, storytelling, warm, or fun."
+            },
+            "slideCount": {
+              "type": "number",
+              "description": "Target number of slides. Defaults to 8."
+            },
+            "theme": {
+              "type": "string",
+              "description": "Markdown AI Studio presentation theme. Defaults to galaxy."
+            },
+            "ratio": {
+              "type": "string",
+              "enum": [
+                "16:9",
+                "4:3"
+              ],
+              "description": "Slide ratio. Defaults to 16:9."
+            }
+          },
+          "required": [
+            "brief"
+          ]
+        }
+      },
+      {
+        "name": "markdown_ai_studio_validate_presentation",
+        "tags": [
+          "markdown-ai-studio",
+          "markdown",
+          "validation"
+        ],
+        "toolReferenceName": "validateMarkdownPresentation",
+        "displayName": "Validate Markdown AI Studio Presentation",
+        "modelDescription": "Validates Markdown Presentation Specification content for Markdown AI Studio. Use this to check whether a generated .md deck has presentation front matter, slide separators, valid structure, slide titles, and correctly placed slide directives. Accepts either raw Markdown or a workspace file URI. This tool is read-only.",
+        "userDescription": "Validate a Markdown AI Studio presentation deck.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(checklist)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "markdown": {
+              "type": "string",
+              "description": "Raw Markdown presentation content to validate."
+            },
+            "uri": {
+              "type": "string",
+              "description": "A file URI inside the current workspace to validate."
+            }
+          }
+        }
+      },
+      {
+        "name": "markdown_ai_studio_save_markdown_file",
+        "tags": [
+          "markdown-ai-studio",
+          "markdown",
+          "workspace"
+        ],
+        "toolReferenceName": "saveMarkdownStudioFile",
+        "displayName": "Save Markdown AI Studio File",
+        "modelDescription": "Creates a new Markdown file inside the current workspace from provided Markdown content. Use only after the user has approved saving a generated Markdown AI Studio presentation or document. The tool never overwrites existing files; it creates a unique filename. This tool has workspace write side effects.",
+        "userDescription": "Save generated Markdown into the current workspace.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(save)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filename": {
+              "type": "string",
+              "description": "File name for the Markdown file. Must be a file name, not a path."
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete Markdown file content to save."
+            },
+            "workspaceRelativeDirectory": {
+              "type": "string",
+              "description": "Optional directory relative to the workspace folder. Defaults to the workspace root."
+            }
+          },
+          "required": [
+            "filename",
+            "content"
+          ]
+        }
       }
     ],
     "menus": {

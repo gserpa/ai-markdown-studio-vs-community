@@ -1,11 +1,11 @@
 ---
-date: 2026-06-13
-version: 1.0.0
+date: 2026-07-31
+version: 1.1.0
 ---
 
 # AI Markdown Studio Community — User Guide
 
-AI Markdown Studio Community turns VS Code into a focused Markdown authoring environment with live previews, AI-assisted document and presentation creation, AI Paste to Markdown, HTML export, and basic DOCX export.
+AI Markdown Studio Community turns VS Code into a focused Markdown authoring environment with live previews, AI-assisted document and presentation creation, Copilot agent tools for MPS decks, AI Paste to Markdown, HTML export, and basic DOCX export.
 
 This guide covers everything in the Community edition. Advanced conversion, theme creation, higher-fidelity exports, and corporate PowerPoint templates are available in **AI Markdown Studio Pro**.
 
@@ -15,6 +15,7 @@ This guide covers everything in the Community edition. Advanced conversion, them
 - [The preview-first model](#the-preview-first-model)
 - [Commands](#commands)
 - [Guided AI generation](#guided-ai-generation)
+- [Copilot agent tools for MPS](#copilot-agent-tools-for-mps)
 - [AI Paste to Markdown](#ai-paste-to-markdown)
 - [Markdown preview](#markdown-preview)
 - [Document themes](#document-themes)
@@ -75,6 +76,20 @@ Community provides guided workflows for creating both documents and presentation
 - **Generate Presentation (AI)** works the same way, while ensuring the result follows AI Markdown Studio's presentation format.
 
 Both workflows create a new Markdown file and open it for review without changing your current document. Choosing **Copy Prompt** does not contact Copilot; it copies the instructions to your clipboard.
+
+## Copilot agent tools for MPS
+
+Community exposes three tools in Copilot Chat agent mode:
+
+| Tool reference | Purpose |
+| --- | --- |
+| `#markdownPresentationPrompt` | Builds the canonical MPS prompt, including layout, slide-density, image, notes, theme, ratio, and workspace remote-resource guidance. |
+| `#validateMarkdownPresentation` | Validates raw presentation Markdown or a file URI inside the current workspace. |
+| `#saveMarkdownStudioFile` | Saves approved Markdown under the current workspace after confirmation, using a unique name rather than overwriting. |
+
+The prompt builder and validator are deterministic and read-only; they do not call a model themselves. The save tool rejects absolute or parent-traversing destinations, displays the proposed filename and workspace-relative directory for confirmation, and never overwrites an existing file.
+
+Ask Copilot Chat to create an AI Markdown Studio presentation and it can chain the three tools around its own generation step. You can also invoke each tool explicitly by typing its `#` reference. AI access must be enabled because the tools run as part of a Copilot Chat workflow.
 
 ## AI Paste to Markdown
 
@@ -275,7 +290,7 @@ If you need the advanced automation and Office-native export layer, install **AI
 - shared custom document and presentation theme folders
 - high-fidelity **DOCX**, **PDF**, and **PPTX** export
 - export using your organization's existing **PowerPoint templates**
-- deeper Copilot Chat workflows for creating and reviewing documents, presentations, and themes
+- additional Copilot Chat tools for creating and reviewing documents and themes
 
 Pro will be distributed as its own standalone extension, built from a tested Community foundation plus a private Pro overlay. Your Community previews, bundled themes, documents, and presentations continue to work unchanged; Pro simply adds the advanced commands and settings on top. See [upgrade-to-pro.md](./upgrade-to-pro.md) for the full comparison.
 
@@ -293,4 +308,4 @@ Pro will be distributed as its own standalone extension, built from a tested Com
 
 **Mermaid diagram shows an error.** The diagram source has a syntax error; the preview shows Mermaid's parse message. Fix the diagram definition and the preview updates.
 
-**PDF/PowerPoint export, advanced file conversion, theme creation, or deeper Copilot Chat workflows are missing.** Those are Pro features. Install AI Markdown Studio Pro to add them.
+**PDF/PowerPoint export, advanced file conversion, theme creation, or document/theme Copilot tools are missing.** Those are Pro features. MPS prompt, validation, and save tools are included in Community; install AI Markdown Studio Pro for the additional workflows.

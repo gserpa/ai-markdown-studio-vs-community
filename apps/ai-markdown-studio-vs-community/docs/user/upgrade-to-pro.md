@@ -1,11 +1,11 @@
 ---
-date: 2026-06-28
-version: 1.0.0
+date: 2026-07-31
+version: 1.1.0
 ---
 
 # Why Upgrade to AI Markdown Studio Pro
 
-AI Markdown Studio Community is being beta-tested and will be released as a complete, MIT-licensed Markdown authoring tool on its own. It covers live preview, presentation preview, Mermaid, KaTeX, bundled themes, AI-assisted document and presentation generation, AI Paste to Markdown, HTML export, and basic DOCX export.
+AI Markdown Studio Community is a complete, MIT-licensed Markdown authoring tool on its own. It covers live preview, presentation preview, Mermaid, KaTeX, bundled themes, AI-assisted document and presentation generation, a three-tool Copilot workflow for MPS decks, AI Paste to Markdown, HTML export, and basic DOCX export.
 
 AI Markdown Studio Pro is the advanced workflow edition for teams and individuals who also need conversion, polished Office exports, reusable custom theme folders, and deeper Copilot-driven automation.
 
@@ -17,6 +17,7 @@ AI Markdown Studio Pro is the advanced workflow edition for teams and individual
 - Bundled document and presentation themes
 - AI-assisted document generation
 - AI-assisted presentation generation
+- Copilot agent tools for building an MPS prompt, validating a deck, and safely saving approved Markdown
 - AI Paste to Markdown from clipboard text
 - HTML export
 - Basic DOCX export
@@ -31,7 +32,7 @@ AI Markdown Studio Pro is the advanced workflow edition for teams and individual
 - **PDF export** for documents and presentations
 - **PPTX export** for Markdown presentations
 - **PowerPoint template automation** using existing corporate templates plus override manifests
-- **Copilot agent-mode tools** for prompt building, validation, and confirmed saves
+- **Additional Copilot agent-mode tools** for document and theme prompt building, validation, and confirmed theme saves
 - **Mermaid export rendering** for polished document and presentation outputs
 
 ## Quick comparison
@@ -51,7 +52,8 @@ AI Markdown Studio Pro is the advanced workflow edition for teams and individual
 | PDF export                                    | No        | Yes |
 | PPTX export                                   | No        | Yes |
 | Corporate PowerPoint template workflows       | No        | Yes |
-| Copilot agent-mode tools                      | No        | Yes |
+| MPS prompt/validation/safe-save agent tools   | Yes       | Yes |
+| Document and theme agent tools                | No        | Yes |
 
 ## Who Pro is for
 
@@ -61,7 +63,7 @@ Pro is a strong fit when you need one or more of these:
 - conversion of existing files into Markdown rather than starting from a blank brief
 - branded presentation export that fits an existing corporate PowerPoint template
 - shared custom preview themes across projects or teams
-- deeper Copilot workflows for structured prompt building, validation, and save flows
+- additional document and theme Copilot workflows for structured prompt building, validation, and save flows
 
 ## Installation model
 
