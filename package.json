@@ -2,7 +2,7 @@
   "name": "ai-markdown-studio-vs-community-workspace",
   "displayName": "AI Markdown Studio Community Workspace",
   "description": "Workspace for building and packaging AI Markdown Studio Community.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -26,7 +26,7 @@
     "html-to-docx": "^1.8.0",
     "jsdom": "^26.0.0",
     "katex": "^0.16.22",
-    "mermaid": "^11.14.0"
+    "mermaid": "^11.16.1"
   },
   "devDependencies": {
     "@types/html-to-docx": "^1.8.0",
@@ -38,7 +38,7 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
-    "dompurify": "3.4.12",
+    "dompurify": "3.4.13",
     "linkify-it": "5.0.2",
     "postcss": "8.5.25"
   },

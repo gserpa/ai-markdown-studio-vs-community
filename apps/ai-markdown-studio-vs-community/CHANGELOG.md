@@ -5,6 +5,16 @@ All notable changes to **AI Markdown Studio Community** are documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-08-12
+
+### Fixed
+
+- Corrected a minor presentation theme colour inconsistency that could make headings and bold table text appear grey instead of using the active presentation palette.
+
+### Added
+
+- Added an opt-in `markdownAiStudio.presentationContentOverflow` setting for presentation previews. `scaleToFit` fits overflowing slide content down to 60%, scales long code blocks locally first, and preserves scrolling when content remains too dense.
+
 ## [1.1.0] - 2026-07-31
 
 ### Added

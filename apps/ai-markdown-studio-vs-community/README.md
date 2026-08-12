@@ -140,7 +140,7 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```bash
-code --install-extension markdown-ai-studio-1.1.0.vsix
+code --install-extension markdown-ai-studio-1.1.1.vsix
 ```
 
 If you are working on the repository itself, use the workspace root README for build
@@ -230,6 +230,7 @@ Preview-specific settings:
 | ------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`markdownAiStudio.previewPageWidth`**     | `full`  | Uses `full` width for standard Markdown preview pages by default. Set to `readable` to constrain the page to a centred readable column.                                                                                                                                             |
 | **`markdownAiStudio.documentPreviewTheme`** | `auto`  | Selects the default document preview theme. Bundled options include `light`, `light-modern-blue`, `dark`, `dark-aurora-noir`, `dark-modern-aurora`, and `night-sky`. Can be overridden per file with the `theme` front matter field. Find it in Settings under **Theme Selection**. |
+| **`markdownAiStudio.presentationContentOverflow`** | `scroll` | Presentation previews keep overflowing content scrollable by default. Set to `scaleToFit` to fit overflowing slide content down to 60%; long code blocks are reduced locally first. |
 
 Mermaid diagrams in the standard document preview include a zoom control. Use the on-diagram **Zoom** button or double-click the rendered diagram to open it in an overlay viewer. Inside the viewer, use **+**, **-**, **Fit**, or the keyboard shortcuts `+`, `-`, `0`, and `Esc`.
 
@@ -244,6 +245,7 @@ Presentation preview features include:
 - a collapsible filmstrip of slides for quick navigation
 - immersive fullscreen mode, toggled with the on-screen control or the `F` key
 - fixed-canvas scaling so fullscreen preserves the same slide composition you see in the smaller preview panel
+- optional overflow fitting through `markdownAiStudio.presentationContentOverflow`; `scaleToFit` reduces dense slide content to 60% when needed and retains scrolling below that floor
 - template-aware layouts for supported slide types such as `cover`, `default`, `two-columns`, `image-right`, and `divider`
 - speaker notes displayed below the active slide when notes are present
 

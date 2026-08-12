@@ -142,6 +142,7 @@ Hello world.
     expect(preview.html).toContain('class="presentation-canvas"');
     expect(preview.html).toContain('data-design-width="1280"');
     expect(preview.html).toContain('data-design-height="720"');
+    expect(preview.html).toContain('class="presentation-content-fit" data-presentation-content-fit');
     expect(preview.html).toContain('data-presentation-theme="auto"');
   expect(preview.html).not.toContain('presentation-notes-pool');
   expect(preview.html).not.toContain('presentation-info-pool');

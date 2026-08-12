@@ -181,6 +181,39 @@ describe('buildPreviewHtml', () => {
     expect(html).toContain('data-document-table-layout="wrap"');
   });
 
+  it('passes the configured presentation overflow behavior to the preview runtime', () => {
+    vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+      get: vi.fn((key: string, fallback: unknown) => {
+        if (key === 'presentationContentOverflow') {
+          return 'scaleToFit';
+        }
+
+        if (key === 'allowRemoteResources') {
+          return true;
+        }
+
+        return fallback;
+      }),
+      inspect: vi.fn(() => undefined),
+    });
+
+    const html = buildPreviewHtml(
+      { fsPath: 'C:/extension', scheme: 'file' } as never,
+      {
+        cspSource: 'vscode-resource:',
+        asWebviewUri: (value: { fsPath?: string; toString: () => string }) => ({ toString: () => value.toString(), fsPath: value.fsPath }),
+      } as never,
+      {
+        uri: { fsPath: 'C:/docs/deck.md', scheme: 'file', toString: () => 'file:///C:/docs/deck.md' },
+        fileName: 'C:/docs/deck.md',
+        getText: () => '---\ndocument: presentation\n---\n\n# Intro',
+      } as never,
+      (rawPath) => rawPath,
+    );
+
+    expect(html).toContain('data-presentation-content-overflow="scaleToFit"');
+  });
+
   it('injects custom document theme styles when Pro is installed', () => {
     const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mads-workspace-'));
     const globalRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mads-global-doc-'));

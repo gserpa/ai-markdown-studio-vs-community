@@ -13,6 +13,7 @@ import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../uti
 import { isFrontMatterVisible } from './frontMatterDisplayState';
 
 type PreviewPageWidth = 'readable' | 'full';
+type PresentationContentOverflow = 'scroll' | 'scaleToFit';
 
 export function getPreviewTitle(document: vscode.TextDocument, isPresentation = false): string {
   return `${isPresentation ? 'Presentation Preview' : 'Preview'}: ${path.basename(document.fileName)}`;
@@ -34,6 +35,7 @@ export function buildPreviewHtml(
   const isPresentation = isMarkdownPresentationSource(source);
   const previewPageWidth = getPreviewPageWidth(document);
   const documentTableLayout = getDocumentTableLayout(document);
+  const presentationContentOverflow = getPresentationContentOverflow(document);
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const showFrontMatter = isFrontMatterVisible(document.uri);
   const renderer = createMarkdownRenderer({
@@ -132,7 +134,7 @@ export function buildPreviewHtml(
   <link rel="stylesheet" href="${katexStylesheetUri}" />
   <title>${title}</title>
 </head>
-<body class="${bodyClass}" data-preview-mode="${previewMode}" data-preview-page-width="${previewPageWidth}" data-document-table-layout="${documentTableLayout}" data-document-theme="${documentThemeName}" data-document-theme-mode="${documentThemeModeClass.replace('document-theme-mode-', '')}" data-document-mermaid-theme-light="${documentMermaidThemeLight}" data-document-mermaid-theme-dark="${documentMermaidThemeDark}" data-document-mermaid-transparent-background-light="${documentMermaidTransparentBackgroundLight ? 'true' : 'false'}" data-document-mermaid-transparent-background-dark="${documentMermaidTransparentBackgroundDark ? 'true' : 'false'}">
+<body class="${bodyClass}" data-preview-mode="${previewMode}" data-preview-page-width="${previewPageWidth}" data-document-table-layout="${documentTableLayout}" data-presentation-content-overflow="${presentationContentOverflow}" data-document-theme="${documentThemeName}" data-document-theme-mode="${documentThemeModeClass.replace('document-theme-mode-', '')}" data-document-mermaid-theme-light="${documentMermaidThemeLight}" data-document-mermaid-theme-dark="${documentMermaidThemeDark}" data-document-mermaid-transparent-background-light="${documentMermaidTransparentBackgroundLight ? 'true' : 'false'}" data-document-mermaid-transparent-background-dark="${documentMermaidTransparentBackgroundDark ? 'true' : 'false'}">
   ${previewBody}
   <div class="mermaid-lightbox" data-mermaid-lightbox hidden aria-hidden="true">
     <div class="mermaid-lightbox-backdrop" data-mermaid-lightbox-action="close"></div>
@@ -179,6 +181,11 @@ function getPreviewPageWidth(document: vscode.TextDocument): PreviewPageWidth {
 function getDocumentTableLayout(document: vscode.TextDocument): 'wide' | 'wrap' {
   const configured = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('documentTableLayout', 'wide');
   return configured === 'wrap' ? 'wrap' : 'wide';
+}
+
+function getPresentationContentOverflow(document: vscode.TextDocument): PresentationContentOverflow {
+  const configured = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('presentationContentOverflow', 'scroll');
+  return configured === 'scaleToFit' ? 'scaleToFit' : 'scroll';
 }
 
 export function buildFrontMatterPanel(source: string): string {

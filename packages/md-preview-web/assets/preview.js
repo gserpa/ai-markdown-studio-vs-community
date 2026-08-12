@@ -1888,6 +1888,148 @@ function clearPresentationFrameStyles(slides) {
   }
 }
 
+const presentationContentOverflowSelector = [
+  '.presentation-standard-layout',
+  '.presentation-cover-layout',
+  '.presentation-side-banner-layout',
+  '.presentation-side-picture-layout',
+  '.presentation-default-side-layout',
+  '.presentation-table-legend-layout',
+  '.presentation-divider-layout',
+  '.presentation-divider-b-layout',
+  '.presentation-divider-c-layout',
+  '.presentation-thanks-layout',
+  '.presentation-standard-content',
+  '.presentation-side-banner-content',
+  '.presentation-side-picture-content',
+  '.presentation-default-side-content',
+  '.presentation-table-legend-copy',
+  '.presentation-table-legend-table',
+  '.presentation-divider-c-subtitle',
+  '.presentation-thanks-note',
+].join(', ');
+const presentationContentFitMinimumScale = 0.6;
+
+function getPresentationContentOverflowTargets(contentFit) {
+  if (!(contentFit instanceof HTMLElement)) {
+    return [];
+  }
+
+  return [contentFit, ...contentFit.querySelectorAll(presentationContentOverflowSelector)]
+    .filter((target) => target instanceof HTMLElement);
+}
+
+function measurePresentationContentScale(contentFit) {
+  let scale = 1;
+
+  for (const target of getPresentationContentOverflowTargets(contentFit)) {
+    if (target.clientWidth > 0 && target.scrollWidth > target.clientWidth + 1) {
+      scale = Math.min(scale, target.clientWidth / target.scrollWidth);
+    }
+
+    if (target.clientHeight > 0 && target.scrollHeight > target.clientHeight + 1) {
+      scale = Math.min(scale, target.clientHeight / target.scrollHeight);
+    }
+  }
+
+  return scale;
+}
+
+function clearPresentationContentScale(contentFit) {
+  contentFit.style.removeProperty('--presentation-content-scale');
+  contentFit.style.removeProperty('--presentation-content-fit-width');
+  contentFit.style.removeProperty('--presentation-content-fit-height');
+}
+
+function clearPresentationCodeScales(contentFit) {
+  for (const codeBlock of contentFit.querySelectorAll('pre')) {
+    if (codeBlock instanceof HTMLElement) {
+      codeBlock.style.removeProperty('--presentation-code-scale');
+    }
+  }
+}
+
+function fitPresentationCodeBlocks(contentFit) {
+  for (const codeBlock of contentFit.querySelectorAll('pre')) {
+    if (!(codeBlock instanceof HTMLElement)) {
+      continue;
+    }
+
+    codeBlock.style.removeProperty('--presentation-code-scale');
+    if (codeBlock.clientWidth <= 0 || codeBlock.scrollWidth <= codeBlock.clientWidth + 1) {
+      continue;
+    }
+
+    let scale = Math.max(presentationContentFitMinimumScale, codeBlock.clientWidth / codeBlock.scrollWidth);
+    codeBlock.style.setProperty('--presentation-code-scale', String(scale));
+
+    if (codeBlock.scrollWidth > codeBlock.clientWidth + 1 && scale > presentationContentFitMinimumScale) {
+      scale = Math.max(presentationContentFitMinimumScale, scale * (codeBlock.clientWidth / codeBlock.scrollWidth));
+      codeBlock.style.setProperty('--presentation-code-scale', String(scale));
+    }
+  }
+}
+
+function applyPresentationContentScale(contentFit, scale) {
+  if (scale >= 0.999) {
+    clearPresentationContentScale(contentFit);
+    return;
+  }
+
+  contentFit.style.setProperty('--presentation-content-scale', String(scale));
+  contentFit.style.setProperty('--presentation-content-fit-width', `${100 / scale}%`);
+  contentFit.style.setProperty('--presentation-content-fit-height', `${100 / scale}%`);
+}
+
+function findLargestPresentationContentScale(contentFit) {
+  clearPresentationContentScale(contentFit);
+  if (measurePresentationContentScale(contentFit) >= 0.999) {
+    return 1;
+  }
+
+  applyPresentationContentScale(contentFit, presentationContentFitMinimumScale);
+  if (measurePresentationContentScale(contentFit) < 0.999) {
+    return presentationContentFitMinimumScale;
+  }
+
+  let fittingScale = presentationContentFitMinimumScale;
+  let overflowingScale = 1;
+  for (let iteration = 0; iteration < 7; iteration += 1) {
+    const candidateScale = (fittingScale + overflowingScale) / 2;
+    applyPresentationContentScale(contentFit, candidateScale);
+    if (measurePresentationContentScale(contentFit) >= 0.999) {
+      fittingScale = candidateScale;
+    } else {
+      overflowingScale = candidateScale;
+    }
+  }
+
+  applyPresentationContentScale(contentFit, fittingScale);
+  return fittingScale;
+}
+
+function fitPresentationContent(slide) {
+  const contentFit = slide.querySelector('[data-presentation-content-fit]');
+  if (!(contentFit instanceof HTMLElement)) {
+    return;
+  }
+
+  if (document.body.dataset.presentationContentOverflow !== 'scaleToFit') {
+    clearPresentationContentScale(contentFit);
+    clearPresentationCodeScales(contentFit);
+    return;
+  }
+
+  clearPresentationContentScale(contentFit);
+  fitPresentationCodeBlocks(contentFit);
+  findLargestPresentationContentScale(contentFit);
+
+  // The wider fitted layout gives code blocks more room. Restore as much code
+  // size as possible, then make one final whole-slide fit pass if necessary.
+  fitPresentationCodeBlocks(contentFit);
+  findLargestPresentationContentScale(contentFit);
+}
+
 function createPresentationFrameFitScheduler(slides) {
   let fitRequestId = 0;
 
@@ -2309,6 +2451,19 @@ function initializePresentationPreview(bridge) {
     fitScheduler.queue();
   });
 
+  if (document.body.dataset.presentationContentOverflow === 'scaleToFit') {
+    document.addEventListener('load', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLImageElement) || !target.closest('.presentation-slide.is-active')) {
+        return;
+      }
+
+      fitScheduler.queue();
+    }, true);
+
+    void document.fonts?.ready?.then(() => fitScheduler.queue());
+  }
+
   window.__setPresentationImmersiveMode = (enabled) => {
     clearPendingStageTap();
     setImmersiveMode(Boolean(enabled));
@@ -2585,6 +2740,7 @@ function fitPresentationFrames(slides = [...document.querySelectorAll('.presenta
     canvas.style.transform = userZoom === 1
       ? `scale(${scale})`
       : `translate(${panX}px, ${panY}px) scale(${scale * userZoom})`;
+    fitPresentationContent(slide);
   }
 }
 

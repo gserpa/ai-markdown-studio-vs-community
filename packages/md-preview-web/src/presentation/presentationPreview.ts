@@ -61,7 +61,7 @@ export function renderPresentationPreview(
           <div class="presentation-frame ${ratioClass}" data-presentation-fullscreen-target data-presentation-ratio="${escapeHtml(presentationRatio)}">
             <div class="presentation-canvas" data-design-width="${canvasSize.width}" data-design-height="${canvasSize.height}">
               <div class="presentation-surface">
-                <article class="presentation-slide-body markdown-body">${slide.bodyLayoutHtml}</article>
+                <article class="presentation-slide-body markdown-body"><div class="presentation-content-fit" data-presentation-content-fit>${slide.bodyLayoutHtml}</div></article>
               </div>
             </div>
           </div>
