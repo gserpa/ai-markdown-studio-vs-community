@@ -35,6 +35,7 @@ const QUICK_PICK_COMMAND_ORDER = [
   'markdownAiStudio.formatTables',
   'markdownAiStudio.generateDocument',
   'markdownAiStudio.generatePresentation',
+  'markdownAiStudio.installPresentationSkill',
   'markdownAiStudio.enableAiFeatures',
   'markdownAiStudio.exportHtml',
   'markdownAiStudio.exportDocxBasic',
@@ -44,7 +45,6 @@ const QUICK_PICK_COMMAND_ORDER = [
 const AI_DEPENDENT_COMMANDS = new Set<string>([
   'markdownAiStudio.enableAiFeatures',
   'markdownAiStudio.generateDocument',
-  'markdownAiStudio.generatePresentation',
   'markdownAiStudio.pasteAsMarkdown',
 ]);
 

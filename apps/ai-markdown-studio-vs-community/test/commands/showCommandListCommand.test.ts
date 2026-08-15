@@ -96,11 +96,12 @@ describe('showCommandListCommand', () => {
       'AI: Generate Document Theme',
       'AI: Generate Presentation Theme',
       'AI: Generate Presentation',
+      'AI: Install Presentation Skill',
       'Export: DOCX',
-      'Export: HTML',
       'Export: PDF',
       'PPTX Tools: Validate Template',
       'PPTX Tools: Generate Template Manifest',
+      'Export: HTML',
       'Change Settings...',
     ]);
     expect(capturedLabels).not.toContain('AI: Enable Features...');
@@ -223,7 +224,7 @@ describe('showCommandListCommand', () => {
     expect(capturedLabels).toContain('AI: Generate Presentation Theme');
   });
 
-  it('hides AI commands when AI authorization has been denied', async () => {
+  it('keeps local presentation prompt commands available when AI authorization has been denied', async () => {
     const documentUri = vscode.Uri.file('C:/workspace/example.md');
     aiConsentMock.getAiAccessState.mockReturnValue('denied');
     vscodeMocks.openTextDocument.mockResolvedValue({
@@ -243,12 +244,13 @@ describe('showCommandListCommand', () => {
 
     expect(capturedLabels).toContain('AI: Enable Features...');
     expect(capturedLabels).not.toContain('AI: Generate Document');
-    expect(capturedLabels).not.toContain('AI: Generate Presentation');
+    expect(capturedLabels).toContain('AI: Generate Presentation');
+    expect(capturedLabels).toContain('AI: Install Presentation Skill');
     expect(capturedLabels).not.toContain('AI: Generate Document Theme');
     expect(capturedLabels).not.toContain('AI: Generate Presentation Theme');
   });
 
-  it('hides all AI commands when Copilot is not configured', async () => {
+  it('keeps local presentation prompt commands available when Copilot is not configured', async () => {
     const documentUri = vscode.Uri.file('C:/workspace/example.md');
     vscodeMocks.copilotConfigured = false;
     vscodeMocks.openTextDocument.mockResolvedValue({
@@ -268,7 +270,8 @@ describe('showCommandListCommand', () => {
 
     expect(capturedLabels).not.toContain('AI: Enable Features...');
     expect(capturedLabels).not.toContain('AI: Generate Document');
-    expect(capturedLabels).not.toContain('AI: Generate Presentation');
+    expect(capturedLabels).toContain('AI: Generate Presentation');
+    expect(capturedLabels).toContain('AI: Install Presentation Skill');
     expect(capturedLabels).not.toContain('AI: Generate Document Theme');
     expect(capturedLabels).not.toContain('AI: Generate Presentation Theme');
   });

@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 
 const vscodeMocks = vi.hoisted(() => ({
+  aiAccess: 'enabled',
   allowRemoteResources: true,
   registerTool: vi.fn(),
   stat: vi.fn(),
@@ -44,7 +45,7 @@ vi.mock('vscode', () => {
       },
       getConfiguration: vi.fn(() => ({
         get: vi.fn((settingName: string, defaultValue: unknown) => {
-          if (settingName === 'aiAccess') return 'enabled';
+          if (settingName === 'aiAccess') return vscodeMocks.aiAccess;
           if (settingName === 'allowRemoteResources') return vscodeMocks.allowRemoteResources;
           return defaultValue;
         }),
@@ -84,6 +85,7 @@ const COMMUNITY_MPS_TOOLS = [
 describe('Community MPS language model tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vscodeMocks.aiAccess = 'enabled';
     vscodeMocks.allowRemoteResources = true;
     vscodeMocks.stat.mockRejectedValue(new Error('missing'));
     vscodeMocks.createDirectory.mockResolvedValue(undefined);
@@ -136,6 +138,25 @@ describe('Community MPS language model tools', () => {
     expect(result).toContain('Use theme: galaxy.');
     expect(result).toContain('Use ratio: 16:9.');
     expect(result).toContain('Remote image embeds are NOT allowed in this workspace');
+  });
+
+  it('keeps local tools available when native Copilot access is denied', async () => {
+    vscodeMocks.aiAccess = 'denied';
+    const tools = captureTools();
+
+    expect(invokeTool(tools.markdown_ai_studio_build_presentation_prompt, {
+      brief: 'Present the architecture',
+    })).toContain('You are generating a Markdown Presentation Specification deck');
+
+    expect(await invokeToolAsync(tools.markdown_ai_studio_validate_presentation, {
+      markdown: '---\ndocument: presentation\n---\n\n---\n# Deck',
+    })).toContain('"valid": true');
+
+    await invokeToolAsync(tools.markdown_ai_studio_save_markdown_file, {
+      filename: 'deck.md',
+      content: '# Deck',
+    });
+    expect(vscodeMocks.writeFile).toHaveBeenCalledTimes(1);
   });
 
   it('reports common presentation and directive issues', async () => {

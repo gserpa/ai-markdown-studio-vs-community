@@ -11,13 +11,15 @@ const packageJsonPath = path.join(repoRoot, 'apps', 'ai-markdown-studio-vs-commu
 const commandMetadataPath = path.join(repoRoot, 'apps', 'ai-markdown-studio-vs-community', 'config', 'command-metadata.json');
 const generatedCommandEntriesPath = path.join(repoRoot, 'apps', 'ai-markdown-studio-vs-community', 'src', 'commands', 'generatedCommandEntries.ts');
 const bundledDocumentThemeDirectory = path.join(repoRoot, 'packages', 'md-preview-web', 'assets', 'themes', 'document');
+const bundledPresentationThemeDirectory = path.join(repoRoot, 'packages', 'md-preview-web', 'assets', 'themes', 'presentation');
 
 const rootPackageJson = JSON.parse(readFileSync(rootPackageJsonPath, 'utf8'));
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 const commandMetadata = readCommandMetadata();
 const documentThemes = readThemeMetadata(bundledDocumentThemeDirectory);
+const presentationThemes = readThemeMetadata(bundledPresentationThemeDirectory);
 
-syncPackageJson(rootPackageJson, packageJson, commandMetadata, documentThemes);
+syncPackageJson(rootPackageJson, packageJson, commandMetadata, documentThemes, presentationThemes);
 syncGeneratedCommandEntries(commandMetadata);
 
 function readCommandMetadata() {
@@ -109,7 +111,7 @@ function normalizeThemeMetadata(definition) {
   };
 }
 
-function syncPackageJson(rootManifest, currentPackageJson, commands, documentThemes) {
+function syncPackageJson(rootManifest, currentPackageJson, commands, documentThemes, presentationThemes) {
   if (typeof rootManifest.version !== 'string' || rootManifest.version.trim().length === 0) {
     throw new Error('Root package.json is missing a valid version.');
   }
@@ -142,6 +144,20 @@ function syncPackageJson(rootManifest, currentPackageJson, commands, documentThe
   documentPreviewThemeSetting.enumDescriptions = [
     'Follows VS Code\'s dark or light theme automatically.',
     ...documentThemes.map((theme) => describeTheme(theme)),
+  ];
+
+  const presentationDefaultThemeSetting = currentPackageJson.contributes.configuration
+    .flatMap((section) => Object.entries(section.properties ?? {}))
+    .find(([key]) => key === 'markdownAiStudio.presentationDefaultTheme')?.[1];
+
+  if (!presentationDefaultThemeSetting) {
+    throw new Error('Could not find markdownAiStudio.presentationDefaultTheme in package.json.');
+  }
+
+  presentationDefaultThemeSetting.enum = ['auto', ...presentationThemes.map((theme) => theme.name)];
+  presentationDefaultThemeSetting.enumDescriptions = [
+    'Follows the active VS Code color theme automatically.',
+    ...presentationThemes.map((theme) => describePresentationTheme(theme)),
   ];
 
   writeIfChanged(packageJsonPath, `${JSON.stringify(currentPackageJson, null, 2)}\n`);
@@ -193,4 +209,17 @@ function writeIfChanged(filePath, nextContent) {
   }
 
   writeFileSync(filePath, nextContent, 'utf8');
+}
+
+function describePresentationTheme(theme) {
+  const modes = new Set(theme.defaultForModes);
+  if (modes.has('dark') && !modes.has('light')) {
+    return `${theme.label} — bundled dark presentation theme.`;
+  }
+
+  if (modes.has('light') && !modes.has('dark')) {
+    return `${theme.label} — bundled light presentation theme.`;
+  }
+
+  return `${theme.label} — bundled presentation theme.`;
 }

@@ -268,6 +268,31 @@ theme: modern-blue
     expect(preview.html).toContain('presentation-theme-modern-blue');
   });
 
+  it('uses the configured default theme when front matter does not specify one', () => {
+    const preview = renderPresentationPreview(`---
+document: presentation
+---
+
+# Intro
+`, (markdown) => markdown.replace(/^# (.+)$/gmu, '<h1>$1</h1>'), previewThemeRegistry, createDocument, 'black');
+
+    expect(preview.html).toContain('data-presentation-theme="black"');
+    expect(preview.html).toContain('presentation-theme-black');
+  });
+
+  it('prefers a front-matter theme over the configured default theme', () => {
+    const preview = renderPresentationPreview(`---
+document: presentation
+theme: modern-blue
+---
+
+# Intro
+`, (markdown) => markdown.replace(/^# (.+)$/gmu, '<h1>$1</h1>'), previewThemeRegistry, createDocument, 'black');
+
+    expect(preview.html).toContain('data-presentation-theme="modern-blue"');
+    expect(preview.html).not.toContain('presentation-theme-black');
+  });
+
   it('renders text-only cover slides with the empty media column preserved', () => {
     const preview = renderPresentationPreview(`---
 document: presentation

@@ -1,11 +1,11 @@
 ---
 date: 2026-08-12
-version: 1.1.1
+version: 1.2.0
 ---
 
 # AI Markdown Studio Community — User Guide
 
-AI Markdown Studio Community turns VS Code into a focused Markdown authoring environment with live previews, AI-assisted document and presentation creation, Copilot agent tools for MPS decks, AI Paste to Markdown, HTML export, and basic DOCX export.
+AI Markdown Studio Community turns VS Code into a focused Markdown authoring environment with live previews, AI-assisted document and presentation creation, MPS agent tools and skills, AI Paste to Markdown, HTML export, and basic DOCX export.
 
 This guide covers everything in the Community edition. Advanced conversion, theme creation, higher-fidelity exports, and corporate PowerPoint templates are available in **AI Markdown Studio Pro**.
 
@@ -15,7 +15,7 @@ This guide covers everything in the Community edition. Advanced conversion, them
 - [The preview-first model](#the-preview-first-model)
 - [Commands](#commands)
 - [Guided AI generation](#guided-ai-generation)
-- [Copilot agent tools for MPS](#copilot-agent-tools-for-mps)
+- [MPS agent tools](#mps-agent-tools)
 - [AI Paste to Markdown](#ai-paste-to-markdown)
 - [Markdown preview](#markdown-preview)
 - [Document themes](#document-themes)
@@ -35,7 +35,7 @@ This guide covers everything in the Community edition. Advanced conversion, them
 2. Open any `.md` file. It opens in the **preview** by default.
 3. Use the pencil (**Edit Markdown**) icon in the preview's title bar to switch to the text editor, and the eye (**Preview Markdown**) icon to switch back.
 
-No account, sign-in, or network connection is required for authoring, preview, themes, HTML export, or basic DOCX export. The optional AI features use the GitHub Copilot service already configured in VS Code. If Copilot is not configured, the AI commands stay hidden.
+No account, sign-in, or network connection is required for authoring, preview, themes, HTML export, or basic DOCX export. The optional AI features use the GitHub Copilot service already configured in VS Code. **Generate Presentation (AI)** remains available without Copilot and copies a complete presentation prompt for use in Claude or another AI assistant.
 
 ## The preview-first model
 
@@ -61,7 +61,8 @@ All commands are available from the Command Palette (`Ctrl+Shift+P`). The most c
 | **Export Markdown as HTML**               | Saves the rendered document as a standalone `.html` file.                                                       |                                                                      |
 | **Export Markdown as DOCX (Basic)**       | Saves the current document as a basic Word file. Pro automatically replaces this with its advanced DOCX export. |                                                                      |
 | **Generate Document (AI)**                | Creates a Markdown document from your brief.                                                                    |                                                                      |
-| **Generate Presentation (AI)**            | Creates a Markdown presentation from your brief.                                                                |                                                                      |
+| **Generate Presentation (AI)**            | Creates a Markdown presentation with Copilot, or copies a complete prompt for another AI assistant when Copilot is unavailable. |                                                                      |
+| **Install Presentation Agent Skill in Workspace** | Lets you choose a GitHub Copilot, Claude, or Codex presentation skill and installs it in that agent's workspace skill folder without overwriting an existing skill. | |
 | **Paste as New Markdown File**            | Turns clipboard text into a new Markdown file.                                                                  |                                                                      |
 | **Enable AI Features...**                 | Reviews the AI data-sharing notice and can enable or re-enable AI features.                                     |                                                                      |
 | **Toggle Frontmatter**                    | Shows or hides the rendered front-matter summary in the active preview.                                         |                                                                      |
@@ -70,16 +71,18 @@ All commands are available from the Command Palette (`Ctrl+Shift+P`). The most c
 
 ## Guided AI generation
 
-Community provides guided workflows for creating both documents and presentations. If GitHub Copilot is configured in VS Code, the AI commands appear in the Command Palette. With the default **`markdownAiStudio.aiAccess: "ask"`** setting, the disclosure appears the first time an AI feature actually tries to run. If you explicitly deny AI access, the AI commands hide again and only **Enable AI Features...** stays visible.
+Community provides guided workflows for creating both documents and presentations. **Generate Presentation (AI)** is always available: when Copilot generation is available, it offers native generation or prompt copy; otherwise it copies the same complete MPS prompt for another assistant. With the default **`markdownAiStudio.aiAccess: "ask"`** setting, the disclosure appears only after you choose native Copilot generation. If you explicitly deny AI access, presentation prompt copy and skill installation remain available, while Copilot-backed features stay unavailable.
 
 - **Generate Document (AI)** asks what you want to create, then lets you generate it with GitHub Copilot or copy the instructions for use with another AI tool.
-- **Generate Presentation (AI)** works the same way, while ensuring the result follows AI Markdown Studio's presentation format.
+- **Generate Presentation (AI)** ensures the result follows AI Markdown Studio's presentation format. Without Copilot, it copies the ready-to-use prompt automatically and never sends the brief to a model.
 
-Both workflows create a new Markdown file and open it for review without changing your current document. Choosing **Copy Prompt** does not contact Copilot; it copies the instructions to your clipboard.
+Both native-generation workflows create a new Markdown file and open it for review without changing your current document. Choosing **Copy Prompt**, or using the presentation workflow without Copilot, does not contact Copilot; it copies the instructions to your clipboard. The presentation prompt is self-contained: it includes the MPS front matter, slide separators, layouts, directives, notes, image guidance, and validation rules.
 
-## Copilot agent tools for MPS
+After the first presentation prompt is copied, Community can offer to install a workspace skill for a selected agent. You can also run **Install Presentation Agent Skill in Workspace** at any time. Choose **GitHub Copilot** to install the tool-first skill at `.github/skills/markdown-ai-studio-presentation-copilot/SKILL.md`; it directs Copilot to the extension's canonical prompt, validation, and confirmed-save tools. Choose **Claude** to install the complete standalone skill at `.claude/skills/markdown-ai-studio-presentation/SKILL.md`, or **Codex** to install that standalone skill at `.agents/skills/markdown-ai-studio-presentation/SKILL.md`. The complete skill embeds the MPS rules, so it remains useful when an agent cannot call extension tools. The packaged Copilot skill is manually invoked and therefore does not replace the existing tools automatically.
 
-Community exposes three tools in Copilot Chat agent mode:
+## MPS agent tools
+
+Community exposes three tools to VS Code chat agents:
 
 | Tool reference | Purpose |
 | --- | --- |
@@ -89,7 +92,7 @@ Community exposes three tools in Copilot Chat agent mode:
 
 The prompt builder and validator are deterministic and read-only; they do not call a model themselves. The save tool rejects absolute or parent-traversing destinations, displays the proposed filename and workspace-relative directory for confirmation, and never overwrites an existing file.
 
-Ask Copilot Chat to create an AI Markdown Studio presentation and it can chain the three tools around its own generation step. You can also invoke each tool explicitly by typing its `#` reference. AI access must be enabled because the tools run as part of a Copilot Chat workflow.
+Ask a VS Code chat agent to create an AI Markdown Studio presentation and it can chain the three tools around its own generation step. You can also invoke each tool explicitly by typing its `#` reference. The tools run locally and do not make model or network requests themselves; their inputs and results are visible only within the chat request the user has started. Native Copilot generation still requires AI access.
 
 ## AI Paste to Markdown
 
@@ -262,14 +265,17 @@ Open settings with **Change Settings...**, or `Ctrl+,` and search for `markdownA
 | `markdownAiStudio.previewPageWidth`     | `full`  | `full` lets standard preview pages use the whole panel width; `readable` constrains them to a centered column.                                                                                                                                                                                        |
 | `markdownAiStudio.documentPreviewTheme` | `auto`  | Default document preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Selection** settings section.                                                                                                                                                         |
 | `markdownAiStudio.documentTableLayout`  | `wide`  | Default layout for tables in document preview. `wide` preserves single-line cells and allows horizontal scrolling; `wrap` wraps cell text to fit the preview width. Individual preview tables can be toggled for the current session.                                                                 |
+| `markdownAiStudio.presentationDefaultTheme` | `auto` | Default presentation preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Selection** settings section. |
+| `markdownAiStudio.presentationContentOverflow` | `scroll` | Controls overflowing presentation content. `scroll` preserves scrolling; `scaleToFit` scales dense slide content down to fit, stopping at 60% before retaining scrolling. |
 | `markdownAiStudio.allowRemoteResources` | `true`  | Whether previews and exports may load images and other content from the internet.                                                                                                                                                                                                                     |
-| `markdownAiStudio.aiAccess`             | `ask`   | Controls AI consent. `ask` keeps AI commands visible and shows the disclosure the first time an AI feature tries to run, `enabled` allows AI-supported features to use the GitHub Copilot service already configured in VS Code, and `denied` hides AI commands except for **Enable AI Features...**. |
+| `markdownAiStudio.aiAccess`             | `ask`   | Controls native Copilot generation. `ask` shows the disclosure only after native generation is chosen, `enabled` allows Copilot-backed features, and `denied` disables them. Presentation prompt copy and presentation-skill installation remain local and available in all states. |
+| `markdownAiStudio.aiModel`              | `gpt-5.6-luna` | Preferred Copilot model family, with documented fallback models used if it is unavailable. |
 
 ## Privacy and remote resources
 
 AI Markdown Studio Community has no product account or server component and does not collect telemetry. Outbound network activity can occur in two user-controlled situations:
 
-- **AI commands:** after GitHub Copilot is configured in VS Code and you allow an AI feature to run, AI Markdown Studio may use the Copilot service already configured there for AI-supported functionality such as document generation, presentation generation, and AI Paste to Markdown. The content you provide is shared with that embedded AI service for processing. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. Only set **`markdownAiStudio.aiAccess`** to `enabled`, or accept a one-time disclosure from `ask`, if you are authorized to share that content through your configured Copilot service.
+- **AI commands:** after GitHub Copilot is configured in VS Code and you allow native generation, AI Markdown Studio may use the Copilot service already configured there for document generation, presentation generation, and AI Paste to Markdown. The content you provide is shared with that embedded AI service for processing. Copying a presentation prompt and installing the presentation skill are local operations; any content subsequently shared with Claude or another assistant is governed by that assistant and its configuration. AI Markdown Studio does not connect to another AI service or bring its own AI credentials. Only set **`markdownAiStudio.aiAccess`** to `enabled`, or accept a one-time disclosure from `ask`, if you are authorized to share content through the configured Copilot service.
 - **Remote resources:** previews and exported HTML can load resources that your Markdown explicitly references, such as an image at an `https://` URL.
 
 To prevent that — for example when reviewing untrusted documents or working in a restricted environment — set:
@@ -304,7 +310,7 @@ Pro will be distributed as its own standalone extension, built from a tested Com
 
 **A remote image doesn't load.** Check whether `markdownAiStudio.allowRemoteResources` is `false`, and confirm the URL is reachable and served over `https`.
 
-**An AI command is missing.** If GitHub Copilot is not configured in VS Code, the AI commands stay hidden. If **`markdownAiStudio.aiAccess`** is set to `denied`, use **Enable AI Features...** or change that setting to review the notice again.
+**A Copilot-backed command is missing or unavailable.** Configure GitHub Copilot in VS Code, then use **Enable AI Features...** or change **`markdownAiStudio.aiAccess`** if it is set to `denied`. **Generate Presentation (AI)** still copies a portable prompt without Copilot.
 
 **Mermaid diagram shows an error.** The diagram source has a syntax error; the preview shows Mermaid's parse message. Fix the diagram definition and the preview updates.
 

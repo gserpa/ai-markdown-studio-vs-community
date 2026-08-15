@@ -26,8 +26,13 @@ describe('Community generation prompts', () => {
       allowRemoteResources: true,
     });
     expect(prompt).toContain('document: presentation');
+    expect(prompt).toContain('filename, document: presentation, title, theme, and ratio');
     expect(prompt).toContain('9 slides');
     expect(prompt).toContain('Use ratio: 16:9');
+    expect(prompt).toContain('Allowed built-in slide directives');
+    expect(prompt).toContain('Every content slide must include a concise <!--notes: ...-->');
+    expect(prompt).toContain('place exactly one <!--slide: name--> comment immediately after the top-level --- separator and before the title');
+    expect(prompt).toContain('Choose each slide layout deliberately');
     expect(prompt).toContain('Remote image embeds are allowed in this workspace');
     expect(prompt).toContain('Treat remote image verification as mandatory');
   });

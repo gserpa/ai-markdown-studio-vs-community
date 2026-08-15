@@ -5,6 +5,7 @@ import { generateTextWithLanguageModel } from '../ai/languageModel';
 import { validatePresentation } from '../ai/presentationValidation';
 import { normalizeGeneratedPresentationImages } from './generatedPresentationImages';
 import { shouldGenerateWithLanguageModel } from './generationMode';
+import { offerPresentationSkillInstallation } from '../skills/presentationSkillInstaller';
 
 const THEMES = ['auto', 'default', 'galaxy', 'modern-blue', 'black'] as const;
 const RATIOS = ['16:9', '4:3'] as const;
@@ -17,7 +18,10 @@ type PresentationGenerationRequest = {
   ratio: '16:9' | '4:3';
 };
 
-export async function generatePresentationCommand(resource?: vscode.Uri): Promise<void> {
+export async function generatePresentationCommand(
+  resource?: vscode.Uri,
+  extensionContext?: vscode.ExtensionContext,
+): Promise<void> {
   const request = await collectRequest();
   if (!request) return;
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio').get<boolean>('allowRemoteResources', true);
@@ -31,7 +35,10 @@ export async function generatePresentationCommand(resource?: vscode.Uri): Promis
     presentationRatio: request.ratio,
     allowRemoteResources,
   });
-  if (!(await shouldGenerateWithLanguageModel(prompt))) return;
+  if (!(await shouldGenerateWithLanguageModel(
+    prompt,
+    extensionContext ? () => offerPresentationSkillInstallation(extensionContext, resource) : undefined,
+  ))) return;
 
   const folder = await resolveOutputFolder(resource);
   if (!folder) return;

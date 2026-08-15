@@ -28,6 +28,7 @@ try {
   copyRepoEntry('assets');
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/package.json', 'package.json');
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/media', 'media');
+  copyRepoEntryTo('apps/ai-markdown-studio-vs-community/skills', 'skills');
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/out', 'out');
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/.vscodeignore', '.vscodeignore');
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/README.md', 'README.md');

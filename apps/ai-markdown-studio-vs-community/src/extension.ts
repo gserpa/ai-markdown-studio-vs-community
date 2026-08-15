@@ -16,6 +16,7 @@ import { refreshCopilotConfiguredContext } from './ai/copilotAvailability';
 import { registerLanguageModelTools } from './ai/languageModelTools';
 import { generateDocumentCommand } from './generate/documentGenerationCommand';
 import { generatePresentationCommand } from './generate/presentationGenerationCommand';
+import { installPresentationSkillInWorkspace } from './skills/presentationSkillInstaller';
 import { createCommunityApi } from './api/communityApi';
 import { getBundledDocumentThemeDirectory } from './document/documentThemeSupport';
 import { MarkdownPreviewCustomEditor } from './panel/MarkdownPreviewCustomEditor';
@@ -103,7 +104,8 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
       await exportDocxBasicCommand(context.extensionUri, resource);
     }),
     vscode.commands.registerCommand('markdownAiStudio.generateDocument', generateDocumentCommand),
-    vscode.commands.registerCommand('markdownAiStudio.generatePresentation', generatePresentationCommand),
+    vscode.commands.registerCommand('markdownAiStudio.generatePresentation', (resource?: vscode.Uri) => generatePresentationCommand(resource, context)),
+    vscode.commands.registerCommand('markdownAiStudio.installPresentationSkill', (resource?: vscode.Uri) => installPresentationSkillInWorkspace(context, resource)),
     vscode.commands.registerCommand('markdownAiStudio.pasteAsMarkdown', pasteAsMarkdownCommand),
     vscode.commands.registerCommand('markdownAiStudio.enableAiFeatures', enableAiFeaturesCommand),
     vscode.commands.registerCommand('markdownAiStudio.openSettings', async () => {

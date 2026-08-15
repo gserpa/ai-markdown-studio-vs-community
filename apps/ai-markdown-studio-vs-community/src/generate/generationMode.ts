@@ -1,10 +1,20 @@
 import * as vscode from 'vscode';
 import { isLanguageModelAvailable } from '../ai/languageModel';
-import { ensureAiFeaturesEnabled } from '../ai/aiConsent';
+import { ensureAiFeaturesEnabled, isAiAuthorizationDenied } from '../ai/aiConsent';
 
-export async function shouldGenerateWithLanguageModel(prompt: string): Promise<boolean> {
+export async function shouldGenerateWithLanguageModel(
+  prompt: string,
+  onPromptCopied?: () => Promise<void>,
+): Promise<boolean> {
   if (!(await isLanguageModelAvailable())) {
     await copyPrompt(prompt, 'No Copilot model is available.');
+    await onPromptCopied?.();
+    return false;
+  }
+
+  if (isAiAuthorizationDenied()) {
+    await copyPrompt(prompt, 'GitHub Copilot generation is disabled.');
+    await onPromptCopied?.();
     return false;
   }
 
@@ -27,6 +37,7 @@ export async function shouldGenerateWithLanguageModel(prompt: string): Promise<b
 
   if (selected?.value === 'clipboard') {
     await copyPrompt(prompt, 'Prompt copied.');
+    await onPromptCopied?.();
   }
   return selected?.value === 'generate' && await ensureAiFeaturesEnabled();
 }

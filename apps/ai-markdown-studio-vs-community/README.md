@@ -8,9 +8,9 @@
   />
 </p>
 
-The open-source core of AI Markdown Studio: a VS Code extension for authoring Markdown with a live preview panel, Mermaid diagram support, KaTeX math, syntax highlighting, table formatting, document and presentation preview themes, a slide-based presentation preview, AI-assisted document and presentation generation, Copilot agent tools for MPS decks, AI Paste to Markdown, HTML export, and basic DOCX export.
+The open-source core of AI Markdown Studio: a VS Code extension for authoring Markdown with a live preview panel, Mermaid diagram support, KaTeX math, syntax highlighting, table formatting, document and presentation preview themes, a slide-based presentation preview, AI-assisted document and presentation generation, agent tools for MPS decks, AI Paste to Markdown, HTML export, and basic DOCX export.
 
-AI Markdown Studio Community is licensed under the MIT License and is useful entirely on its own. It includes AI-assisted document and presentation generation, a three-tool Copilot agent workflow for MPS decks, AI Paste to Markdown, HTML export, and basic DOCX. PDF/PPTX export, high-fidelity DOCX, broad file conversion, theme AI workflows, shared custom theme folders, additional document/theme agent tools, and corporate PowerPoint template automation are provided separately by **AI Markdown Studio Pro**.
+AI Markdown Studio Community is licensed under the MIT License and is useful entirely on its own. It includes AI-assisted document and presentation generation, a three-tool agent workflow for MPS decks, AI Paste to Markdown, HTML export, and basic DOCX. PDF/PPTX export, high-fidelity DOCX, broad file conversion, theme AI workflows, shared custom theme folders, additional document/theme agent tools, and corporate PowerPoint template automation are provided separately by **AI Markdown Studio Pro**.
 
 If AI Markdown Studio Community is useful to you, consider [supporting the project through GitHub Sponsors](https://github.com/sponsors/gserpa).
 
@@ -115,7 +115,7 @@ export, so your Markdown knowledge base stays useful to both people and AI every
   - [Table Formatting](#table-formatting)
   - [HTML Export](#html-export)
   - [AI-Assisted Generation](#ai-assisted-generation)
-  - [Copilot Agent Tools for MPS](#copilot-agent-tools-for-mps)
+  - [MPS Agent Tools and Skills](#mps-agent-tools-and-skills)
   - [AI Paste to Markdown](#ai-paste-to-markdown)
   - [Basic DOCX Export](#basic-docx-export)
   - [Command List](#command-list)
@@ -140,7 +140,7 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```bash
-code --install-extension markdown-ai-studio-1.1.1.vsix
+code --install-extension markdown-ai-studio-1.2.0.vsix
 ```
 
 If you are working on the repository itself, use the workspace root README for build
@@ -161,7 +161,7 @@ and verification commands.
 - **Presentation preview** - presentation-style Markdown files open in a slide viewer with slide navigation, a collapsible filmstrip, immersive fullscreen mode, fixed-canvas scaling, and speaker-note display.
 - **AI-assisted document generation** - create Markdown documents from prompts through the GitHub Copilot service already configured in VS Code, with consent gating.
 - **AI-assisted presentation generation** - generate presentation-style Markdown decks from prompts through the same Copilot-backed workflow.
-- **Copilot agent tools for MPS** - let Copilot Chat build the canonical presentation prompt, validate a generated deck, and save approved Markdown without overwriting an existing file.
+- **MPS agent tools and skills** - let Copilot use the canonical prompt, validation, and safe-save tools, while complete portable MPS skills support Claude, Codex, and other agents that cannot call extension tools.
 - **AI Paste to Markdown** - convert clipboard text into a new Markdown file.
 - **Basic DOCX export** - export rendered Markdown to DOCX through the Community DOCX path.
 - **Front matter toggle** - show or hide a rendered front-matter summary in the preview.
@@ -188,7 +188,8 @@ All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and th
 | **Format Markdown Tables**                | Auto-aligns all tables in the active file                                       | Command palette, command list, Format Document                               |
 | **`markdownAiStudio.formatTablesOnSave`** | `false`                                                                         | Automatically formats Markdown tables when you save a Markdown file.         |
 | **Generate Document (AI)**                | Creates a new Markdown document from a prompt                                   | Command palette, command list                                                |
-| **Generate Presentation (AI)**            | Creates a presentation-style Markdown deck from a prompt                        | Command palette, command list                                                |
+| **Generate Presentation (AI)**            | Generates a deck with Copilot or copies a complete MPS prompt for another assistant | Command palette, command list                                             |
+| **Install Presentation Agent Skill in Workspace** | Installs the selected Copilot, Claude, or Codex MPS skill in the workspace | Command palette, command list |
 | **Paste as New Markdown File**            | Converts clipboard text into a new Markdown file                                | Explorer folder context menu, command palette                                |
 | **Export Markdown as HTML**               | Saves the rendered document as a standalone `.html` file                        | Command palette, command list                                                |
 | **Export Markdown as DOCX (Basic)**       | Saves the rendered document as a DOCX file                                      | Command palette, command list                                                |
@@ -285,24 +286,32 @@ The setting **`markdownAiStudio.allowRemoteResources`** controls whether remote 
 
 ### AI-Assisted Generation
 
-When GitHub Copilot is configured in VS Code, AI Markdown Studio Community can create new Markdown documents or presentation decks from prompts. With the default `markdownAiStudio.aiAccess: "ask"` state, the commands stay visible and the disclosure appears only when an AI feature actually tries to run. If `markdownAiStudio.aiAccess` is `denied`, the AI commands hide again except for **Enable AI Features...**.
+When GitHub Copilot is configured in VS Code, AI Markdown Studio Community can create new Markdown documents or presentation decks from prompts. With the default `markdownAiStudio.aiAccess: "ask"` state, the Copilot-backed commands stay visible and the disclosure appears only when an extension-initiated model request actually tries to run. If `markdownAiStudio.aiAccess` is `denied`, those Copilot-backed commands hide again except for **Enable AI Features...**.
 
 AI actions are user-triggered and use the model made available through the user's VS Code/Copilot setup. The preferred model is configurable with `markdownAiStudio.aiModel`; if it is unavailable or unsuccessful, the extension tries `gpt-5.4-mini` and then the first available Copilot model. Depending on the Copilot plan or configured AI provider, requests may consume token quota or incur usage charges. The **Enable AI Features...** authorization notice explains this and requires the user to accept responsibility for those costs before AI features are enabled.
 
 - **Generate Document (AI)** creates a new Markdown document from a prompt.
-- **Generate Presentation (AI)** creates a new presentation-style Markdown deck from a prompt.
+- **Generate Presentation (AI)** creates a new presentation-style Markdown deck from a prompt. It is also available without Copilot, or after Copilot access is denied: it copies the same complete MPS prompt locally for use in Claude, Codex, or another assistant.
 
 Use **Enable AI Features...** if you need to review or re-enable the AI data-sharing notice, or change `markdownAiStudio.aiAccess` directly in Settings.
 
-### Copilot Agent Tools for MPS
+### MPS Agent Tools and Skills
 
-Community contributes three Language Model Tools to Copilot Chat so an agent can complete the MPS authoring loop without requiring you to remember every presentation rule:
+Community contributes three Language Model Tools so a VS Code chat agent can complete the MPS authoring loop without requiring you to remember every presentation rule:
 
 - `#markdownPresentationPrompt` builds the canonical, workspace-aware MPS generation prompt. It is deterministic, does not call a model itself, and does not write files.
 - `#validateMarkdownPresentation` validates raw Markdown or a file URI inside the current workspace. It is read-only.
 - `#saveMarkdownStudioFile` saves approved Markdown inside the current workspace. VS Code asks for confirmation, parent-directory traversal is rejected, and existing files are never overwritten.
 
-In Copilot Chat agent mode, ask for a presentation and allow the agent to chain prompt building, deck generation, validation, and saving. You can also reference any tool explicitly with the names above. Enable AI features first so the extension's Copilot consent requirements are satisfied.
+In a VS Code chat agent, ask for a presentation and allow the agent to chain prompt building, deck generation, validation, and saving. You can also reference any tool explicitly with the names above. The tools are local; the agent provider receives their inputs and results only as part of the chat request the user starts. Native Copilot generation still requires AI access.
+
+Use **Install Presentation Agent Skill in Workspace** when you want an agent to retain the MPS workflow in the current workspace:
+
+- **GitHub Copilot** installs a manual, tool-first skill at `.github/skills/markdown-ai-studio-presentation-copilot/SKILL.md`. It directs Copilot to build the canonical prompt, validate the deck, and confirm before saving.
+- **Claude** installs a complete standalone MPS skill at `.claude/skills/markdown-ai-studio-presentation/SKILL.md`.
+- **Codex in VS Code** installs that standalone skill at `.agents/skills/markdown-ai-studio-presentation/SKILL.md`.
+
+The standalone skill contains the presentation syntax and authoring rules, so it works with agents that cannot call extension tools. The Copilot skill is manually invoked, so it does not replace normal Copilot tool selection. **Generate Presentation (AI)** always offers a no-tool fallback: its copied prompt contains the same front matter, slide, layout, notes, image, and validation guidance needed to create a valid MPS deck.
 
 ### AI Paste to Markdown
 

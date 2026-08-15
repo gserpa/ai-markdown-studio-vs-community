@@ -3,7 +3,6 @@ import {
   createPresentationPrompt,
   validateMarkdownStudioPresentation,
 } from '@mfo/ai-core';
-import { assertAiFeaturesEnabled } from './aiConsent';
 import {
   createUniqueUri,
   ensureDirectory,
@@ -47,7 +46,6 @@ export function registerLanguageModelTools(context: vscode.ExtensionContext): vo
 
 class BuildPresentationPromptTool implements vscode.LanguageModelTool<BuildPresentationPromptInput> {
   invoke(options: vscode.LanguageModelToolInvocationOptions<BuildPresentationPromptInput>): vscode.LanguageModelToolResult {
-    assertAiFeaturesEnabled();
     const input = options.input;
     const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio').get<boolean>('allowRemoteResources', true);
     const prompt = createPresentationPrompt({
@@ -72,7 +70,6 @@ class ValidatePresentationTool implements vscode.LanguageModelTool<ValidatePrese
   async invoke(
     options: vscode.LanguageModelToolInvocationOptions<ValidatePresentationInput>,
   ): Promise<vscode.LanguageModelToolResult> {
-    assertAiFeaturesEnabled();
     const markdown = options.input.markdown?.trim()
       || await readWorkspaceTextFile(options.input.uri, 'Presentation');
     if (!markdown.trim()) {
@@ -91,7 +88,6 @@ class SaveMarkdownFileTool implements vscode.LanguageModelTool<SaveMarkdownFileI
   async invoke(
     options: vscode.LanguageModelToolInvocationOptions<SaveMarkdownFileInput>,
   ): Promise<vscode.LanguageModelToolResult> {
-    assertAiFeaturesEnabled();
     const workspaceFolder = getPrimaryWorkspaceFolder();
     const filename = normalizeMarkdownFilename(requireNonEmpty(options.input.filename, 'filename'));
     const content = requireNonEmpty(options.input.content, 'content');

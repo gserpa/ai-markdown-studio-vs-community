@@ -8,6 +8,7 @@ import { renderPresentationPreview } from '@mfo/preview-web';
 import { buildPreviewThemeStylesheet, buildDocumentThemeStylesheet, resolveDocumentThemeSelection } from '@mfo/preview-web';
 import { getResolvedDocumentPreviewThemeSetting } from '../document/documentPreviewThemeSettings';
 import { loadPreviewThemeRegistryForDocument } from '../presentation/previewThemeSupport';
+import { getResolvedPresentationPreviewThemeSetting } from '../presentation/presentationPreviewThemeSettings';
 import { loadDocumentThemeRegistryForDocument } from '../document/documentThemeSupport';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../util/extensionSupportRoot';
 import { isFrontMatterVisible } from './frontMatterDisplayState';
@@ -36,6 +37,7 @@ export function buildPreviewHtml(
   const previewPageWidth = getPreviewPageWidth(document);
   const documentTableLayout = getDocumentTableLayout(document);
   const presentationContentOverflow = getPresentationContentOverflow(document);
+  const presentationDefaultTheme = getResolvedPresentationPreviewThemeSetting(document.uri);
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const showFrontMatter = isFrontMatterVisible(document.uri);
   const renderer = createMarkdownRenderer({
@@ -101,7 +103,7 @@ export function buildPreviewHtml(
     try {
       const previewThemeRegistry = loadPreviewThemeRegistryForDocument(extensionUri, document.uri);
       previewThemeStylesheet = buildPreviewThemeStylesheet(previewThemeRegistry);
-      previewBody = renderPresentationPreview(source, renderMarkdown, previewThemeRegistry, createJsdomDocument).html;
+      previewBody = renderPresentationPreview(source, renderMarkdown, previewThemeRegistry, createJsdomDocument, presentationDefaultTheme).html;
     } catch (error) {
       previewMode = 'document';
       previewBody = buildDocumentPreviewBody(

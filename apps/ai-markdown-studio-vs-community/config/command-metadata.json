@@ -6,6 +6,7 @@
   { "command": "markdownAiStudio.exportDocxBasic", "title": "Export Markdown as DOCX (Basic)", "category": "AI Markdown Studio", "quickPickTitle": "Export: DOCX (Basic)" },
   { "command": "markdownAiStudio.generateDocument", "title": "Generate Document (AI)", "category": "AI Markdown Studio", "quickPickTitle": "AI: Generate Document" },
   { "command": "markdownAiStudio.generatePresentation", "title": "Generate Presentation (AI)", "category": "AI Markdown Studio", "quickPickTitle": "AI: Generate Presentation" },
+  { "command": "markdownAiStudio.installPresentationSkill", "title": "Install Presentation Agent Skill in Workspace", "category": "AI Markdown Studio", "quickPickTitle": "AI: Install Presentation Skill" },
   { "command": "markdownAiStudio.pasteAsMarkdown", "title": "Paste as New Markdown File", "category": "AI Markdown Studio" },
   { "command": "markdownAiStudio.enableAiFeatures", "title": "Enable AI Features...", "category": "AI Markdown Studio", "quickPickTitle": "AI: Enable Features..." },
   { "command": "markdownAiStudio.openSettings", "title": "Change Settings...", "category": "AI Markdown Studio", "quickPickTitle": "Change Settings..." },

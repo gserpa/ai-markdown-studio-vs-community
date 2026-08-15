@@ -2,7 +2,7 @@
   "name": "markdown-ai-studio",
   "displayName": "AI Markdown Studio Community",
   "description": "AI Markdown Studio Community combines open-source Markdown authoring with AI-assisted document and MPS generation, live previews, HTML export, and basic DOCX export.",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "license": "MIT",
   "publisher": "GustavoSerpa",
   "author": "Gustavo Serpa",
@@ -81,6 +81,11 @@
       {
         "command": "markdownAiStudio.generatePresentation",
         "title": "Generate Presentation (AI)",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.installPresentationSkill",
+        "title": "Install Presentation Agent Skill in Workspace",
         "category": "AI Markdown Studio"
       },
       {
@@ -240,6 +245,11 @@
         }
       }
     ],
+    "chatSkills": [
+      {
+        "path": "./skills/markdown-ai-studio-presentation-copilot/SKILL.md"
+      }
+    ],
     "menus": {
       "commandPalette": [
         {
@@ -248,10 +258,6 @@
         },
         {
           "command": "markdownAiStudio.generateDocument",
-          "when": "markdownAiStudio.copilotConfigured && !markdownAiStudio.aiAccessDenied"
-        },
-        {
-          "command": "markdownAiStudio.generatePresentation",
           "when": "markdownAiStudio.copilotConfigured && !markdownAiStudio.aiAccessDenied"
         },
         {
@@ -411,6 +417,36 @@
               "Wrap preview table cell text to fit the document width by default."
             ],
             "markdownDescription": "Default table layout for document preview. Individual preview tables can still be toggled between wide and wrapped layout for the current preview session."
+          },
+          "markdownAiStudio.presentationDefaultTheme": {
+            "type": "string",
+            "default": "auto",
+            "scope": "resource",
+            "markdownDescription": "Default presentation preview theme. Individual presentations can override this with the `theme` front-matter field.",
+            "enum": [
+              "auto",
+              "aurora-gold",
+              "autumn-ember",
+              "black",
+              "galaxy",
+              "modern-blue",
+              "pastel-cloud",
+              "spring-blossom",
+              "summer-solstice",
+              "winter-frost"
+            ],
+            "enumDescriptions": [
+              "Follows the active VS Code color theme automatically.",
+              "Aurora Gold — bundled presentation theme.",
+              "Autumn Ember — bundled presentation theme.",
+              "Black — bundled presentation theme.",
+              "Galaxy — bundled dark presentation theme.",
+              "Modern Blue — bundled light presentation theme.",
+              "Pastel Cloud — bundled presentation theme.",
+              "Spring Blossom — bundled presentation theme.",
+              "Summer Solstice — bundled presentation theme.",
+              "Winter Frost — bundled presentation theme."
+            ]
           },
           "markdownAiStudio.presentationContentOverflow": {
             "type": "string",

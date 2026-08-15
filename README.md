@@ -6,13 +6,13 @@
 
 AI Markdown Studio Community is the MIT-licensed open-source core of AI Markdown Studio.
 
-It provides preview-first Markdown authoring, live document and presentation previews, Mermaid, KaTeX, syntax highlighting, table formatting, document and presentation themes, speaker notes in presentation view, AI-assisted document and presentation generation, Copilot agent tools for creating valid MPS decks, AI Paste to Markdown, HTML export, and basic DOCX export.
+It provides preview-first Markdown authoring, live document and presentation previews, Mermaid, KaTeX, syntax highlighting, table formatting, document and presentation themes, speaker notes in presentation view, AI-assisted document and presentation generation, MPS agent tools and provider-specific skills, AI Paste to Markdown, HTML export, and basic DOCX export.
 
 AI Markdown Studio Pro is a separate product that extends Community with AI theme generation, file conversion, PDF/PPTX export, high-fidelity DOCX, additional document/theme Copilot tools, shared custom theme folders, and corporate PowerPoint template automation. Pro ships as its own standalone extension, built from a pinned Community revision plus a Pro overlay; Community contains no Pro implementation.
 
 ## Start Here
 
-- [Extension README](./apps/ai-markdown-studio-vs-community/README.md) - full user guide, feature tour, security notes, and Pro comparison
+- [Extension README](./apps/ai-markdown-studio-vs-community/README.md) - full user guide, feature tour, MPS tools and skills, security notes, and Pro comparison
 - [Why Upgrade to Pro?](./apps/ai-markdown-studio-vs-community/docs/user/upgrade-to-pro.md) - Community-to-Pro comparison focused on advanced conversion, export, theming, and Copilot workflows
 - [Extension Manifest](./apps/ai-markdown-studio-vs-community/package.json) - the VS Code extension entrypoint and contributed commands/settings
 - [Workspace Package](./package.json) - the private workspace scripts and shared dependency pins
@@ -28,7 +28,7 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```powershell
-code --install-extension markdown-ai-studio-1.1.1.vsix
+code --install-extension markdown-ai-studio-1.2.0.vsix
 ```
 
 ## Highlights
@@ -38,8 +38,9 @@ code --install-extension markdown-ai-studio-1.1.1.vsix
 - Mermaid diagrams with strict-mode rendering
 - KaTeX math rendering
 - Theme support for document and presentation views
-- AI-assisted document and presentation generation through the GitHub Copilot service already configured in VS Code
-- Copilot agent workflow for building, validating, and safely saving MPS presentation decks
+- AI-assisted document generation through the GitHub Copilot service already configured in VS Code
+- Presentation generation with native Copilot generation or a complete portable prompt for any AI assistant
+- Local MPS prompt, validation, and safe-save tools, plus installable skills for GitHub Copilot, Claude, and Codex
 - AI Paste to Markdown
 - HTML export and basic DOCX export
 - Command launcher and settings shortcuts built into the editor UI

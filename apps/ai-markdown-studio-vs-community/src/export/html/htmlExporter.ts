@@ -16,6 +16,7 @@ import {
 import { getResolvedDocumentPreviewThemeSetting } from '../../document/documentPreviewThemeSettings';
 import { loadDocumentThemeRegistryForDocument } from '../../document/documentThemeSupport';
 import { loadPreviewThemeRegistryForDocument } from '../../presentation/previewThemeSupport';
+import { getResolvedPresentationPreviewThemeSetting } from '../../presentation/presentationPreviewThemeSettings';
 import { resolveDocumentResource } from '../../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../../util/extensionSupportRoot';
 import * as path from 'path';
@@ -73,6 +74,7 @@ export async function buildExportHtmlString(
       renderMarkdown,
       registry,
       (html) => new JSDOM(html).window.document,
+      getResolvedPresentationPreviewThemeSetting(document.uri),
     );
 
     return buildPresentationStandaloneHtml({

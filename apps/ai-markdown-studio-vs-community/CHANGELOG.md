@@ -5,6 +5,19 @@ All notable changes to **AI Markdown Studio Community** are documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-08-15
+
+### Added
+
+- Added provider-specific workspace presentation skills: a manual, tool-first GitHub Copilot profile and complete standalone profiles for Claude and Codex.
+- Added a presentation-skill installer that lets users select GitHub Copilot, Claude, or Codex and writes the corresponding skill to that agent's workspace folder without overwriting an existing skill.
+- Made **Generate Presentation (AI)** a portable workflow: when native Copilot generation is unavailable or declined, it copies the complete canonical MPS prompt for use in another assistant.
+
+### Changed
+
+- Kept MPS prompt-building, validation, and confirmed-save tools local and available independently of extension-initiated Copilot consent. A chat provider receives their data only when the user starts a chat request.
+- Updated Community documentation to describe the Copilot, Claude, Codex, and Copy Prompt presentation workflows.
+
 ## [1.1.1] - 2026-08-12
 
 ### Fixed

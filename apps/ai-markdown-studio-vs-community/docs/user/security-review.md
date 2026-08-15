@@ -26,7 +26,7 @@ This review is part of the developer's ongoing due diligence to keep AI Markdown
 
 ## 1. Executive summary
 
-This review covers the **AI Markdown Studio Community** VS Code extension: the MIT-licensed open-source core that provides preview-first Markdown authoring, live document and presentation previews, AI-assisted document/MPS generation, Copilot agent tools for MPS prompt building, validation, and confirmed saves, AI Paste to Markdown, HTML export, and basic DOCX export.
+This review covers the **AI Markdown Studio Community** VS Code extension: the MIT-licensed open-source core that provides preview-first Markdown authoring, live document and presentation previews, AI-assisted document/MPS generation, MPS agent tools for prompt building, validation, and confirmed saves, AI Paste to Markdown, HTML export, and basic DOCX export.
 
 Community deliberately contains no PDF/PPTX export, Microsoft Word/PowerShell automation, broad file-conversion, document/theme agent-tool, or corporate-template code. Those surfaces live in the separate proprietary AI Markdown Studio Pro extension.
 
@@ -41,7 +41,7 @@ Community deliberately contains no PDF/PPTX export, Microsoft Word/PowerShell au
   - an automated boundary check that rejects Pro source, Pro dependencies, Pro commands, and packaged source/test files from the Community VSIX
   - workspace-confined MPS tool reads and confirmed, collision-free Markdown saves
 - `npm audit --omit=dev` reported **0 known vulnerabilities** on 2026-07-31 after applying patched dependency resolutions.
-- Some AI-supported features use only the GitHub Copilot service already configured in VS Code. If Copilot is not configured, those AI surfaces stay hidden. If Copilot is configured, the default `markdownAiStudio.aiAccess` state keeps AI surfaces visible and shows the consent flow only when an AI feature actually runs. If the user denies access, the AI surfaces hide again except for **Enable AI Features...**. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials.
+- Extension-initiated model features use only the GitHub Copilot service already configured in VS Code. If Copilot is not configured, those model features stay hidden. If Copilot is configured, the default `markdownAiStudio.aiAccess` state keeps them visible and shows the consent flow only when an extension-initiated model request actually runs. If the user denies access, those features hide again except for **Enable AI Features...**. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials.
 - The main residual risks are **content-trust risks** associated with rendering Markdown that references remote or local resources.
 
 ### Security posture summary
@@ -146,11 +146,11 @@ The extension host resolves links and images, loads theme files, invokes the VS 
 
 #### Network access
 
-Network activity can occur after a user enables and invokes Generate Document, Generate Presentation, Paste as New Markdown File, or an MPS tool through Copilot Chat. The MPS prompt builder and validator do not make their own model or network requests, and the save tool only writes locally, but they participate in a Copilot agent workflow. When remote resources are allowed, generated presentations also verify model-supplied remote image URLs before retaining them. Network activity can also occur when the preview or an exported HTML file loads remote resources referenced by the Markdown. There is no AI Markdown Studio server component and no telemetry.
+Network activity can occur after a user enables and invokes Generate Document, native Generate Presentation, or Paste as New Markdown File. The MPS prompt builder and validator do not make their own model or network requests, and the save tool only writes locally. When a user starts a chat request, the selected chat provider may receive tool inputs and results as part of that request. When remote resources are allowed, generated presentations also verify model-supplied remote image URLs before retaining them. Network activity can also occur when the preview or an exported HTML file loads remote resources referenced by the Markdown. There is no AI Markdown Studio server component and no telemetry.
 
 #### VS Code Language Model API
 
-AI-supported functionality is controlled by a simple three-state model. If GitHub Copilot is not configured in VS Code, the AI surfaces stay hidden. If Copilot is configured and `markdownAiStudio.aiAccess` is `ask`, the AI surfaces stay visible and the consent flow appears only when the user actually tries to run an AI feature. If `markdownAiStudio.aiAccess` is `enabled`, AI features run without repeating the disclosure. If `markdownAiStudio.aiAccess` is `denied`, the AI surfaces hide again except for **Enable AI Features...**. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The extension stores no provider API key. The copy-prompt path calls no model.
+Extension-initiated model functionality is controlled by a simple three-state model. If GitHub Copilot is not configured in VS Code, those model features stay hidden. If Copilot is configured and `markdownAiStudio.aiAccess` is `ask`, the consent flow appears only when the user actually chooses an extension-initiated model request. If `markdownAiStudio.aiAccess` is `enabled`, those requests run without repeating the disclosure. If `markdownAiStudio.aiAccess` is `denied`, the Copilot-backed features hide again except for **Enable AI Features...**. Local MPS tools remain available to a chat agent in all states. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The extension stores no provider API key. The copy-prompt path calls no model.
 
 ## 5. Existing security controls
 
@@ -222,7 +222,7 @@ The presentation prompt builder is deterministic and read-only. Presentation val
 
 #### Description
 
-Generate Document, Generate Presentation, Paste as New Markdown File, and MPS tools invoked through Copilot Chat are examples of AI-supported functionality that use only the GitHub Copilot service already configured in VS Code and may share the user-supplied brief, clipboard text, or presentation content with that embedded AI service for processing. The prompt builder and validator themselves are deterministic local functions, but Copilot supplies their inputs and consumes their results as part of the agent conversation. If GitHub Copilot is not configured, AI commands stay hidden and the tools have no calling agent. The consent flow appears on first real command use while the state is `ask`; tool invocation requires AI access to be enabled. Calls are explicit and user-driven; the extension does not upload documents in the background. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The copy-prompt option does not call Copilot.
+Generate Document, native Generate Presentation, and Paste as New Markdown File are extension-initiated AI features that use only the GitHub Copilot service already configured in VS Code and may share the user-supplied brief or clipboard text with that service for processing. The MPS prompt builder and validator are deterministic local functions, and the save tool writes locally after VS Code confirmation. A chat provider receives their inputs and results only when the user has explicitly started a chat request that invokes them. Tool invocation does not require Copilot AI access to be enabled. Calls are explicit and user-driven; the extension does not upload documents in the background. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials. The copy-prompt option does not call Copilot.
 
 #### Security impact
 

@@ -27,11 +27,12 @@ export function renderPresentationPreview(
   renderMarkdown: (markdown: string) => string,
   themeRegistry: PreviewThemeRegistry,
   createDocument: CreateDocument,
+  defaultThemeName = 'auto',
 ): PresentationPreview {
   const presentation = resolveMarkdownPresentation(parseMarkdownPresentation(source));
   const deckTitle = asString(presentation.meta.title) || 'Presentation';
   const deckAuthor = asString(presentation.meta.author);
-  const themeSelection = resolvePreviewThemeSelection(asString(presentation.meta.theme), themeRegistry);
+  const themeSelection = resolvePreviewThemeSelection(asString(presentation.meta.theme) || defaultThemeName, themeRegistry);
   const presentationRatio = asString(presentation.meta.ratio) || '16:9';
   const ratioClass = getRatioClass(presentationRatio);
   const canvasSize = getPresentationCanvasSize(presentationRatio);

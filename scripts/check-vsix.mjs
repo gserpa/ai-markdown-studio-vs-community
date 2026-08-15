@@ -22,6 +22,10 @@ const vsixPath = path.resolve(process.argv[2] ?? defaultVsixPath);
 const expectedExtensionReadme = normalizeText(readFileSync(extensionReadmePath, 'utf8'));
 const rootReadme = normalizeText(readFileSync(rootReadmePath, 'utf8'));
 const packagedReadmePath = 'extension/readme.md';
+const requiredPackageEntries = [
+  'extension/skills/markdown-ai-studio-presentation/SKILL.md',
+  'extension/skills/markdown-ai-studio-presentation-copilot/SKILL.md',
+];
 
 const maxCompressedBytes = 58 * 1024 * 1024;
 const maxUncompressedBytes = 140 * 1024 * 1024;
@@ -53,8 +57,9 @@ const report = await readVsix(vsixPath);
 const violations = findViolations(report.entries);
 const sizeViolations = findSizeViolations(report);
 const readmeViolations = findReadmeViolations(report.files);
+const requiredEntryViolations = findRequiredEntryViolations(report.entries);
 
-if (violations.length === 0 && sizeViolations.length === 0 && readmeViolations.length === 0) {
+if (violations.length === 0 && sizeViolations.length === 0 && readmeViolations.length === 0 && requiredEntryViolations.length === 0) {
   console.log(
     `VSIX check passed: ${formatBytes(report.compressedBytes)} on disk, ${formatBytes(report.uncompressedBytes)} unpacked, ${report.entries.length} entries.`,
   );
@@ -68,6 +73,10 @@ for (const violation of sizeViolations) {
 }
 
 for (const violation of readmeViolations) {
+  console.error(`- ${violation}`);
+}
+
+for (const violation of requiredEntryViolations) {
   console.error(`- ${violation}`);
 }
 
@@ -196,6 +205,13 @@ function findSizeViolations(report) {
   }
 
   return violations;
+}
+
+function findRequiredEntryViolations(entries) {
+  const packageEntries = new Set(entries.map((entry) => entry.fileName));
+  return requiredPackageEntries
+    .filter((entryPath) => !packageEntries.has(entryPath))
+    .map((entryPath) => `Missing required VSIX entry ${entryPath}.`);
 }
 
 function findReadmeViolations(files) {
