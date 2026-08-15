@@ -25,6 +25,9 @@ const packagedReadmePath = 'extension/readme.md';
 const requiredPackageEntries = [
   'extension/skills/markdown-ai-studio-presentation/SKILL.md',
   'extension/skills/markdown-ai-studio-presentation-copilot/SKILL.md',
+  'extension/assets/vendor/katex/dist/katex.min.css',
+  'extension/assets/vendor/mermaid/dist/mermaid.esm.min.mjs',
+  'extension/assets/vendor/mermaid/dist/mermaid.min.js',
 ];
 
 const maxCompressedBytes = 58 * 1024 * 1024;
@@ -203,6 +206,7 @@ function findSizeViolations(report) {
       `Unpacked VSIX contents ${formatBytes(report.uncompressedBytes)} exceed the limit of ${formatBytes(maxUncompressedBytes)}.`,
     );
   }
+
 
   return violations;
 }

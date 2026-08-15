@@ -17,6 +17,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Kept MPS prompt-building, validation, and confirmed-save tools local and available independently of extension-initiated Copilot consent. A chat provider receives their data only when the user starts a chat request.
 - Updated Community documentation to describe the Copilot, Claude, Codex, and Copy Prompt presentation workflows.
+- Bundled the extension host and package only the Mermaid and KaTeX webview assets instead of the full runtime dependency tree, substantially reducing the Community VSIX file count.
 
 ## [1.1.1] - 2026-08-12
 

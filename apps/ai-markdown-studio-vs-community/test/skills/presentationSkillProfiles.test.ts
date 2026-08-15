@@ -25,6 +25,11 @@ describe('presentation skill profiles', () => {
     expect(skill).toContain('document: presentation');
     expect(skill).toContain('<!--slide: name-->');
     expect(skill).toContain('<!--notes: ...-->');
+    expect(skill).toContain('every separator-delimited unit counts as one slide');
+    expect(skill).toContain('Never correct count by deleting only a separator, directive, or title');
+    expect(skill).toContain('do not claim visual rendering QA');
+    expect(skill).toContain('browser-tool safety rejection');
+    expect(skill).not.toContain('argument-hint:');
     expect(skill).not.toContain('#markdownPresentationPrompt');
   });
 });

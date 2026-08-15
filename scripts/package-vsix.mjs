@@ -36,15 +36,10 @@ try {
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/SUPPORT.md', 'SUPPORT.md');
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/docs', 'docs');
 
-  copyExternalNodeModules();
-  copyWorkspacePackage('packages/ai-core', path.join('node_modules', '@mfo', 'ai-core'));
-  copyWorkspacePackage('packages/md-core', path.join('node_modules', '@mfo', 'core'));
-  copyWorkspacePackage('packages/md-preview-web', path.join('node_modules', '@mfo', 'preview-web'));
-
-  pruneStageNodeModulesToRuntimeDependencies();
+  copyWebviewRuntimeAssets();
 
   const vsceCliPath = path.join(repoRoot, 'node_modules', '@vscode', 'vsce', 'vsce');
-  const packagingArguments = [vsceCliPath, 'package', '--out', vsixFilePath];
+  const packagingArguments = [vsceCliPath, 'package', '--no-dependencies', '--out', vsixFilePath];
   if (baseContentUrl) {
     packagingArguments.push('--baseContentUrl', baseContentUrl);
   }
@@ -98,66 +93,35 @@ function copyRepoEntryTo(sourceRelativePath, targetRelativePath) {
   });
 }
 
-function copyExternalNodeModules() {
+function copyWebviewRuntimeAssets() {
   const sourceDirectory = path.join(repoRoot, 'node_modules');
   const targetDirectory = path.join(stageDirectory, 'node_modules');
 
-  cpSync(sourceDirectory, targetDirectory, {
-    recursive: true,
-    dereference: true,
-    filter: (sourcePath) => {
-      const relativePath = path.relative(sourceDirectory, sourcePath);
-      if (!relativePath) {
-        return true;
-      }
-
-      const normalizedPath = relativePath.split(path.sep).join('/');
-      return normalizedPath !== '@mfo' && !normalizedPath.startsWith('@mfo/');
-    },
-  });
-}
-
-function copyWorkspacePackage(sourceRelativePath, targetRelativePath) {
-  const sourceDirectory = path.join(repoRoot, sourceRelativePath);
-  const targetDirectory = path.join(stageDirectory, targetRelativePath);
-  mkdirSync(targetDirectory, { recursive: true });
-
-  for (const entry of ['package.json', 'dist', 'assets']) {
-    const sourceEntry = path.join(sourceDirectory, entry);
-    if (!existsSync(sourceEntry)) {
-      continue;
-    }
-
-    cpSync(sourceEntry, path.join(targetDirectory, entry), {
-      recursive: true,
-      dereference: true,
-    });
+  for (const packageEntry of [
+    ['katex', 'dist'],
+    ['mermaid', 'dist'],
+  ]) {
+    const [packageName, entry] = packageEntry;
+    cpSync(
+      path.join(sourceDirectory, packageName, entry),
+      path.join(stageDirectory, 'assets', 'vendor', packageName, entry),
+      {
+        recursive: true,
+        dereference: true,
+        filter: (sourcePath) => isRuntimeVendorAsset(sourcePath),
+      },
+    );
   }
 }
 
-function pruneStageNodeModulesToRuntimeDependencies() {
-  const npmExecPath = process.env.npm_execpath;
-  const useNpmCli = !npmExecPath;
-  const command = npmExecPath ? process.execPath : process.platform === 'win32' ? 'cmd.exe' : 'npm';
-  const commandArguments = npmExecPath
-    ? [npmExecPath, 'prune', '--omit=dev', '--ignore-scripts']
-    : process.platform === 'win32'
-      ? ['/d', '/s', '/c', 'npm', 'prune', '--omit=dev', '--ignore-scripts']
-      : ['prune', '--omit=dev', '--ignore-scripts'];
-
-  const result = spawnSync(command, commandArguments, {
-    cwd: stageDirectory,
-    stdio: 'inherit',
-    windowsHide: useNpmCli && process.platform === 'win32',
-  });
-
-  if (result.error) {
-    throw result.error;
-  }
-
-  if (result.status !== 0) {
-    throw new Error(`npm prune failed with exit code ${result.status ?? 'unknown'}.`);
-  }
+function isRuntimeVendorAsset(sourcePath) {
+  const normalizedPath = sourcePath.split(path.sep).join('/');
+  return !normalizedPath.endsWith('.d.ts')
+    && !normalizedPath.endsWith('.map')
+    && !normalizedPath.includes('/__mocks__/')
+    && !normalizedPath.includes('/tests/')
+    && !normalizedPath.includes('/docs/')
+    && !/\.(?:spec|test)\.[cm]?js$/u.test(normalizedPath);
 }
 
 function verifyBuildOutputs() {

@@ -25,7 +25,11 @@ export function resolveExtensionAssetUri(extensionUri: vscode.Uri, ...segments: 
 }
 
 export function resolveExtensionNodeModulesUri(extensionUri: vscode.Uri, ...segments: string[]): vscode.Uri {
-  return vscode.Uri.joinPath(getExtensionSupportRootUri(extensionUri), 'node_modules', ...segments);
+  const supportRoot = getExtensionSupportRootUri(extensionUri);
+  const packagedVendorAssetUri = vscode.Uri.joinPath(supportRoot, 'assets', 'vendor', ...segments);
+  return fs.existsSync(packagedVendorAssetUri.fsPath)
+    ? packagedVendorAssetUri
+    : vscode.Uri.joinPath(supportRoot, 'node_modules', ...segments);
 }
 
 export function resolveRealPackageUri(extensionUri: vscode.Uri, ...segments: string[]): vscode.Uri {
@@ -39,5 +43,5 @@ export function resolveRealPackageUri(extensionUri: vscode.Uri, ...segments: str
 
 function isExtensionSupportRoot(rootPath: string): boolean {
   return fs.existsSync(path.join(rootPath, ...REQUIRED_ASSET_SEGMENTS))
-    && fs.existsSync(path.join(rootPath, 'node_modules'));
+    && (fs.existsSync(path.join(rootPath, 'node_modules')) || fs.existsSync(path.join(rootPath, 'assets', 'vendor')));
 }
