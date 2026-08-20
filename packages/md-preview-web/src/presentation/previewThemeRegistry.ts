@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { indentCss, stableCssHash, type ThemeCssArtifact } from '../themeCssArtifact';
 
 export type PreviewThemeMode = 'dark' | 'light';
 
@@ -277,6 +278,46 @@ export function buildPreviewThemeStylesheet(registry: PreviewThemeRegistry): str
     ].join('\n'));
   }
 
+  return sections.join('\n\n');
+}
+
+export function buildPreviewThemeCssArtifact(
+  registry: PreviewThemeRegistry,
+  requestedThemeName: string,
+): ThemeCssArtifact {
+  const selection = resolvePreviewThemeSelection(requestedThemeName, registry);
+  const css = selection.themeName === 'auto'
+    ? buildAutoPreviewThemeStylesheet(registry)
+    : buildExplicitPreviewThemeStylesheet(registry, selection.themeName);
+  const contentHash = stableCssHash(css);
+  return {
+    family: 'presentation',
+    themeName: selection.themeName,
+    themeClassName: selection.themeClassName,
+    css,
+    contentHash,
+    fileName: `themes/presentation/${toCssClassToken(selection.themeName)}.${contentHash}.css`,
+  };
+}
+
+function buildExplicitPreviewThemeStylesheet(registry: PreviewThemeRegistry, themeName: string): string {
+  const theme = registry.themes.get(themeName);
+  if (!theme) return buildAutoPreviewThemeStylesheet(registry);
+  return `[data-md-preview-root].presentation-preview.presentation-theme-${toCssClassToken(theme.name)} {\n${serializeThemeTokens(theme.tokens)}\n}`;
+}
+
+function buildAutoPreviewThemeStylesheet(registry: PreviewThemeRegistry): string {
+  const lightTheme = registry.themes.get(registry.defaultLightThemeName);
+  const darkTheme = registry.themes.get(registry.defaultDarkThemeName);
+  const sections: string[] = [];
+  if (lightTheme) {
+    sections.push(`[data-md-preview-root].presentation-preview.presentation-theme-auto {\n${serializeThemeTokens(lightTheme.tokens)}\n}`);
+  }
+  if (darkTheme) {
+    const tokens = serializeThemeTokens(darkTheme.tokens);
+    sections.push(`[data-md-host-scheme='dark'] [data-md-preview-root].presentation-preview.presentation-theme-auto,\n.vscode-dark [data-md-preview-root].presentation-preview.presentation-theme-auto,\n.vscode-high-contrast [data-md-preview-root].presentation-preview.presentation-theme-auto {\n${tokens}\n}`);
+    sections.push(`@media (prefers-color-scheme: dark) {\n  [data-md-host-scheme='auto'] [data-md-preview-root].presentation-preview.presentation-theme-auto {\n${indentCss(tokens, 2)}\n  }\n}`);
+  }
   return sections.join('\n\n');
 }
 

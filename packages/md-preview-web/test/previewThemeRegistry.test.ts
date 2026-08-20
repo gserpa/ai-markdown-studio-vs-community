@@ -4,6 +4,7 @@ import * as path from 'path';
 import { describe, expect, it } from 'vitest';
 import {
   buildPreviewThemeStylesheet,
+  buildPreviewThemeCssArtifact,
   getPreviewThemeTokenContract,
   loadPreviewThemeRegistry,
   loadPreviewThemeRegistryFromData,
@@ -53,6 +54,13 @@ describe('previewThemeRegistry', () => {
     expect(stylesheet).toContain('body.vscode-dark .presentation-preview.presentation-theme-auto');
     expect(stylesheet).toContain('body:not(.vscode-dark):not(.vscode-high-contrast) .presentation-preview.presentation-theme-auto');
     expect(stylesheet).toContain('--presentation-link-color: #93c5fd;');
+  });
+
+  it('builds only the requested presentation theme artifact', () => {
+    const selected = buildPreviewThemeCssArtifact(registry, 'modern-blue');
+    expect(selected.css).toContain('[data-md-preview-root].presentation-preview.presentation-theme-modern-blue');
+    expect(selected.css).not.toContain('presentation-theme-galaxy');
+    expect(selected).toEqual(buildPreviewThemeCssArtifact(registry, 'modern-blue'));
   });
 
   it('loads multiple theme directories and lets later directories override earlier ones', () => {

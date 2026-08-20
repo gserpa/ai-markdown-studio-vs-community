@@ -29,8 +29,25 @@ export interface ThemeSummary {
   readonly label: string;
 }
 
-export interface CommunityApiV1 {
-  readonly apiVersion: '1.0';
+export interface HtmlAsset {
+  readonly path: string;
+  readonly mediaType: string;
+  readonly contentHash: string;
+  readonly bytes: Uint8Array;
+}
+
+export interface HtmlArtifact {
+  readonly html: string;
+  readonly assets: readonly HtmlAsset[];
+}
+
+export interface HtmlArtifactOptions {
+  readonly assetMode: 'inline' | 'external';
+  readonly exportMode?: 'theme' | 'paper' | 'paper-borderless';
+}
+
+export interface CommunityApiV2 {
+  readonly apiVersion: '2.0';
   readonly extensionVersion: string;
   readonly rendering: {
     renderMarkdown(markdown: string): RenderedMarkdown;
@@ -41,6 +58,10 @@ export interface CommunityApiV1 {
         exportMode?: 'theme' | 'paper' | 'paper-borderless';
       },
     ): Promise<string>;
+    buildHtmlArtifact(
+      document: vscode.TextDocument,
+      options: HtmlArtifactOptions,
+    ): Promise<HtmlArtifact>;
   };
   readonly parsing: {
     detectDocumentKind(markdown: string): 'document' | 'presentation';

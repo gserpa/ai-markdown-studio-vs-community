@@ -1,0 +1,1 @@
+window.__mfoPreviewModeRuntime?.startPresentation();

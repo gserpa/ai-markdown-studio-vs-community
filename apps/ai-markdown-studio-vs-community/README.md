@@ -140,7 +140,7 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```bash
-code --install-extension markdown-ai-studio-1.2.0.vsix
+code --install-extension markdown-ai-studio-1.2.1.vsix
 ```
 
 If you are working on the repository itself, use the workspace root README for build
@@ -181,22 +181,22 @@ and verification commands.
 
 All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and the most common ones appear as icons in the **editor title bar** when a `.md` file is open.
 
-| Command                                   | Description                                                                     | Where                                                                        |
-| ----------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **Preview Markdown**                      | Opens or focuses preview for the current Markdown file                          | Title bar, command palette, command list                                     |
-| **Edit Markdown**                         | Switches the current file to the text editor, closing the preview surface first | Preview title bar, Explorer file context menu, command palette, command list |
-| **Format Markdown Tables**                | Auto-aligns all tables in the active file                                       | Command palette, command list, Format Document                               |
-| **`markdownAiStudio.formatTablesOnSave`** | `false`                                                                         | Automatically formats Markdown tables when you save a Markdown file.         |
-| **Generate Document (AI)**                | Creates a new Markdown document from a prompt                                   | Command palette, command list                                                |
-| **Generate Presentation (AI)**            | Generates a deck with Copilot or copies a complete MPS prompt for another assistant | Command palette, command list                                             |
-| **Install Presentation Agent Skill in Workspace** | Installs the selected Copilot, Claude, or Codex MPS skill in the workspace | Command palette, command list |
-| **Paste as New Markdown File**            | Converts clipboard text into a new Markdown file                                | Explorer folder context menu, command palette                                |
-| **Export Markdown as HTML**               | Saves the rendered document as a standalone `.html` file                        | Command palette, command list                                                |
-| **Export Markdown as DOCX (Basic)**       | Saves the rendered document as a DOCX file                                      | Command palette, command list                                                |
-| **Enable AI Features...**                 | Reviews the AI data-sharing notice and can enable or re-enable AI features      | Command palette, command list                                                |
-| **Toggle Frontmatter**                    | Shows or hides the rendered front-matter summary in the active preview          | Title bar, command palette, command list when applicable                     |
-| **Show AI Markdown Studio Commands**      | Lists the extension's main actions in a quick-pick menu                         | Title bar, command palette                                                   |
-| **Change Settings...**                    | Opens the VS Code Settings UI filtered to this extension                        | Command palette, command list                                                |
+| Command                                           | Description                                                                         | Where                                                                        |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Preview Markdown**                              | Opens or focuses preview for the current Markdown file                              | Title bar, command palette, command list                                     |
+| **Edit Markdown**                                 | Switches the current file to the text editor, closing the preview surface first     | Preview title bar, Explorer file context menu, command palette, command list |
+| **Format Markdown Tables**                        | Auto-aligns all tables in the active file                                           | Command palette, command list, Format Document                               |
+| **`markdownAiStudio.formatTablesOnSave`**         | `false`                                                                             | Automatically formats Markdown tables when you save a Markdown file.         |
+| **Generate Document (AI)**                        | Creates a new Markdown document from a prompt                                       | Command palette, command list                                                |
+| **Generate Presentation (AI)**                    | Generates a deck with Copilot or copies a complete MPS prompt for another assistant | Command palette, command list                                                |
+| **Install Presentation Agent Skill in Workspace** | Installs the selected Copilot, Claude, or Codex MPS skill in the workspace          | Command palette, command list                                                |
+| **Paste as New Markdown File**                    | Converts clipboard text into a new Markdown file                                    | Explorer folder context menu, command palette                                |
+| **Export Markdown as HTML**                       | Saves the rendered document as a standalone `.html` file                            | Command palette, command list                                                |
+| **Export Markdown as DOCX (Basic)**               | Saves the rendered document as a DOCX file                                          | Command palette, command list                                                |
+| **Enable AI Features...**                         | Reviews the AI data-sharing notice and can enable or re-enable AI features          | Command palette, command list                                                |
+| **Toggle Frontmatter**                            | Shows or hides the rendered front-matter summary in the active preview              | Title bar, command palette, command list when applicable                     |
+| **Show AI Markdown Studio Commands**              | Lists the extension's main actions in a quick-pick menu                             | Title bar, command palette                                                   |
+| **Change Settings...**                            | Opens the VS Code Settings UI filtered to this extension                            | Command palette, command list                                                |
 
 ## Feature Details
 
@@ -227,11 +227,11 @@ When a Markdown file declares `document: presentation` in front matter, the prev
 
 Preview-specific settings:
 
-| Setting                                     | Default | Description                                                                                                                                                                                                                                                                         |
-| ------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`markdownAiStudio.previewPageWidth`**     | `full`  | Uses `full` width for standard Markdown preview pages by default. Set to `readable` to constrain the page to a centred readable column.                                                                                                                                             |
-| **`markdownAiStudio.documentPreviewTheme`** | `auto`  | Selects the default document preview theme. Bundled options include `light`, `light-modern-blue`, `dark`, `dark-aurora-noir`, `dark-modern-aurora`, and `night-sky`. Can be overridden per file with the `theme` front matter field. Find it in Settings under **Theme Selection**. |
-| **`markdownAiStudio.presentationContentOverflow`** | `scroll` | Presentation previews keep overflowing content scrollable by default. Set to `scaleToFit` to fit overflowing slide content down to 60%; long code blocks are reduced locally first. |
+| Setting                                            | Default      | Description                                                                                                                                                                                                                                                                         |
+| -------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`markdownAiStudio.previewPageWidth`**            | `full`       | Uses `full` width for standard Markdown preview pages by default. Set to `readable` to constrain the page to a centred readable column.                                                                                                                                             |
+| **`markdownAiStudio.documentPreviewTheme`**        | `auto`       | Selects the default document preview theme. Bundled options include `light`, `light-modern-blue`, `dark`, `dark-aurora-noir`, `dark-modern-aurora`, and `night-sky`. Can be overridden per file with the `theme` front matter field. Find it in Settings under **Theme Selection**. |
+| **`markdownAiStudio.presentationContentOverflow`** | `scaleToFit` | Presentation previews fit overflowing slide content down to 60% by default; long code blocks are reduced locally first. Set to `scroll` to preserve scrolling instead.                                                                                                              |
 
 Mermaid diagrams in the standard document preview include a zoom control. Use the on-diagram **Zoom** button or double-click the rendered diagram to open it in an overlay viewer. Inside the viewer, use **+**, **-**, **Fit**, or the keyboard shortcuts `+`, `-`, `0`, and `Esc`.
 
@@ -246,7 +246,7 @@ Presentation preview features include:
 - a collapsible filmstrip of slides for quick navigation
 - immersive fullscreen mode, toggled with the on-screen control or the `F` key
 - fixed-canvas scaling so fullscreen preserves the same slide composition you see in the smaller preview panel
-- optional overflow fitting through `markdownAiStudio.presentationContentOverflow`; `scaleToFit` reduces dense slide content to 60% when needed and retains scrolling below that floor
+- overflow fitting through `markdownAiStudio.presentationContentOverflow`; `scaleToFit` is the default, reduces dense slide content to 60% when needed, and retains scrolling below that floor
 - template-aware layouts for supported slide types such as `cover`, `default`, `two-columns`, `image-right`, and `divider`
 - speaker notes displayed below the active slide when notes are present
 
@@ -363,7 +363,7 @@ AI Markdown Studio Community is the open-source core. **AI Markdown Studio Pro**
 - Corporate PowerPoint template-backed export with manifest inference/validation/generation and placeholder mapping
 - Additional GitHub Copilot document/theme agent tools and prompt builders
 
-Pro is packaged as a standalone extension built from a pinned Community revision plus a private Pro overlay, and it consumes Community's public `CommunityApiV1` surface internally. Installing Pro therefore gives you the complete AI Markdown Studio experience without a separate Community install. Community remains MIT-licensed; Pro features and assets are governed by the AI Markdown Studio Pro EULA, and nothing in that EULA limits the rights granted under the MIT License for Community components.
+Pro is packaged as a standalone extension built from a pinned Community revision plus a private Pro overlay, and it consumes Community's public `CommunityApiV2` surface internally. Installing Pro therefore gives you the complete AI Markdown Studio experience without a separate Community install. Community remains MIT-licensed; Pro features and assets are governed by the AI Markdown Studio Pro EULA, and nothing in that EULA limits the rights granted under the MIT License for Community components.
 
 ## Disclaimer
 

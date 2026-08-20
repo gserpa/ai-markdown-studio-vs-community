@@ -1,0 +1,1254 @@
+/* =========================================================
+   Document Preview: Base Layout + Content Primitives
+   ========================================================= */
+
+.markdown-body {
+  box-sizing: border-box;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: var(--md-preview-content-padding-block) var(--md-preview-content-padding-inline);
+  word-wrap: break-word;
+  background: var(--md-preview-content-bg);
+  border: 1px solid var(--md-preview-content-border);
+  border-radius: var(--md-preview-content-radius);
+  box-shadow: var(--md-preview-content-shadow);
+}
+
+body.preview-mode-document[data-preview-page-width='full'] .markdown-body {
+  max-width: none;
+}
+
+.markdown-body > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-body > *:last-child {
+  margin-bottom: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--md-preview-heading-color);
+  font-family: var(--md-preview-heading-font);
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  padding: var(--md-preview-heading-padding-block) var(--md-preview-heading-padding-inline);
+  border-radius: var(--md-preview-heading-radius);
+  box-shadow: var(--md-preview-heading-shadow);
+}
+
+h1,
+h2 {
+  border-bottom: 1px solid var(--md-preview-heading-divider-color);
+  padding-bottom: calc(0.3em + var(--md-preview-heading-padding-block));
+}
+
+h1 {
+  font-size: 2em;
+  margin-left: calc(var(--md-preview-heading-offset-inline-h1) * -1);
+  margin-right: calc(var(--md-preview-heading-offset-inline-h1) * -1);
+  padding: var(--md-preview-heading-padding-block-h1) var(--md-preview-heading-padding-inline-h1);
+  border-bottom-color: var(--md-preview-heading-divider-color-h1);
+  border-radius: var(--md-preview-heading-radius-h1);
+  box-shadow: var(--md-preview-heading-shadow-h1);
+  color: var(--md-preview-heading-surface-color-h1);
+  background: var(--md-preview-heading-bg-h1);
+}
+
+h2 {
+  font-size: 1.5em;
+  margin-left: calc(var(--md-preview-heading-offset-inline-h2) * -1);
+  margin-right: calc(var(--md-preview-heading-offset-inline-h2) * -1);
+  padding: var(--md-preview-heading-padding-block-h2) var(--md-preview-heading-padding-inline-h2);
+  border-bottom-color: var(--md-preview-heading-divider-color-h2);
+  border-radius: var(--md-preview-heading-radius-h2);
+  box-shadow: var(--md-preview-heading-shadow-h2);
+  color: var(--md-preview-heading-surface-color-h2);
+  background: var(--md-preview-heading-bg-h2);
+}
+
+h3 {
+  font-size: 1.25em;
+  padding-bottom: calc(0.2em + var(--md-preview-heading-padding-block));
+  border-bottom: var(--md-preview-subheading-divider-width-h3) solid var(--md-preview-subheading-divider-color-h3);
+  background: var(--md-preview-heading-bg-h3);
+}
+
+h4 {
+  font-size: 1em;
+  padding-bottom: calc(0.2em + var(--md-preview-heading-padding-block));
+  border-bottom: var(--md-preview-subheading-divider-width-h4) solid var(--md-preview-subheading-divider-color-h4);
+  background: var(--md-preview-heading-bg-h4);
+}
+
+h5 {
+  font-size: 0.875em;
+  padding-bottom: calc(0.2em + var(--md-preview-heading-padding-block));
+  border-bottom: var(--md-preview-subheading-divider-width-h5) solid var(--md-preview-subheading-divider-color-h5);
+  background: var(--md-preview-heading-bg-h5);
+}
+
+h6 {
+  font-size: 0.85em;
+  padding-bottom: calc(0.2em + var(--md-preview-heading-padding-block));
+  border-bottom: var(--md-preview-subheading-divider-width-h6) solid var(--md-preview-subheading-divider-color-h6);
+  background: var(--md-preview-heading-bg-h6);
+}
+
+p,
+ul,
+ol,
+pre,
+blockquote,
+table {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdown-body p code,
+.markdown-body li code,
+.markdown-body td code,
+.markdown-body th code {
+  font-size: 85%;
+}
+
+ul,
+ol {
+  padding-left: 2em;
+}
+
+li + li {
+  margin-top: 0.25em;
+}
+
+li > p {
+  margin-top: 16px;
+}
+
+ul ul,
+ul ol,
+ol ol,
+ol ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* =========================================================
+   Document Preview: Code, Links, and Blockquotes
+   ========================================================= */
+
+code,
+pre {
+  font-family: var(--md-preview-code-font);
+  font-size: 85%;
+}
+
+pre {
+  padding: 16px;
+  overflow-x: auto;
+  line-height: 1.45;
+  border: 1px solid var(--md-preview-border-color);
+  border-radius: 6px;
+  background: var(--md-preview-code-bg);
+  color: var(--md-preview-code-color);
+}
+
+code {
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  background: var(--md-preview-code-bg);
+  color: var(--md-preview-code-color);
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+blockquote {
+  margin-left: 0;
+  padding: 0 1em;
+  border-left: 4px solid var(--md-preview-blockquote-border);
+  color: var(--md-preview-blockquote-color);
+  background: var(--md-preview-blockquote-bg);
+  border-radius: 0 10px 10px 0;
+}
+
+.markdown-body blockquote > :first-child {
+  margin-top: 0;
+}
+
+.markdown-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body blockquote blockquote {
+  margin-top: 12px;
+  background: var(--md-preview-blockquote-nested-bg);
+}
+
+a {
+  color: var(--md-preview-link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--md-preview-link-hover-color);
+  text-decoration: underline;
+}
+
+a[data-href] {
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: 6px;
+}
+
+
+/* Wide table controls for document preview. */
+body.preview-mode-document .markdown-body table {
+  width: 100%;
+  min-width: 0;
+  table-layout: auto;
+}
+
+body.preview-mode-document .markdown-body th,
+body.preview-mode-document .markdown-body td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: clip;
+  --md-preview-table-control-width: 54px;
+  --md-preview-table-header-height: 40px;
+  --md-preview-table-edge-height: 96px;
+  --md-preview-table-scroll-left: 0px;
+  --md-preview-table-visible-width: 100%;
+  --md-preview-table-control-bg: color-mix(in srgb, var(--md-preview-table-header-bg, #f6f8fa) 88%, transparent);
+  --md-preview-table-control-hover-bg: color-mix(in srgb, var(--md-preview-table-row-hover-bg, #ddf4ff) 70%, var(--md-preview-table-header-bg, #f6f8fa) 30%);
+  --md-preview-table-control-border: color-mix(in srgb, var(--md-preview-table-cell-border, #d0d7de) 78%, transparent);
+  --md-preview-table-control-color: var(--md-preview-table-header-color, var(--md-preview-body-color, #24292f));
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wide'] table {
+  width: max-content;
+  min-width: 100%;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wide'] th,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wide'] td {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] {
+  overflow-x: hidden;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] table {
+  width: 100%;
+  min-width: 0;
+  table-layout: auto;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] th,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-overflow-capable='true'] table > thead > tr > :last-child,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-overflow-capable='true'] table > tbody > tr:first-child > th:last-child {
+  padding-right: calc(16px + var(--md-preview-table-control-width));
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-button,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  color: var(--md-preview-table-control-color);
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, background-color 120ms ease, border-color 120ms ease;
+  z-index: 4;
+  overflow: hidden;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-lane {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--md-preview-table-header-height);
+  margin: 0 0 calc(-1 * var(--md-preview-table-header-height));
+  pointer-events: none;
+  z-index: 4;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-lane {
+  position: sticky;
+  top: var(--md-preview-table-header-height);
+  left: 0;
+  width: 100%;
+  height: var(--md-preview-table-edge-height);
+  min-height: 42px;
+  margin: 0 0 calc(-1 * var(--md-preview-table-edge-height));
+  pointer-events: none;
+  z-index: 4;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-hover-side='left'][data-can-scroll-left='true'] .table-edge-scroll-button[data-table-scroll-direction='left'],
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-hover-side='right'][data-can-scroll-right='true'] .table-edge-scroll-button[data-table-scroll-direction='right'],
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:hover .table-overlay-button,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-hover-side='right'] .table-overlay-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--md-preview-table-computed-header-bg, var(--md-preview-table-header-bg, #f6f8fa));
+  opacity: 0.26;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  z-index: 0;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button:hover::before {
+  opacity: 0.34;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-button:focus-visible,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--vscode-focusBorder, #0969da);
+  outline-offset: 2px;
+  pointer-events: auto;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-control-icon {
+  display: block;
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  position: relative;
+  z-index: 1;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--md-preview-table-control-width);
+  height: var(--md-preview-table-header-height);
+  min-height: 34px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-button:hover {
+  background: transparent;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button {
+  position: absolute;
+  top: 0;
+  width: var(--md-preview-table-control-width);
+  height: 100%;
+  min-height: 42px;
+  margin: 0;
+  border-radius: 0;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button[data-table-scroll-direction='left'] {
+  left: 0;
+  border-right: 1px solid var(--md-preview-table-control-border);
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button[data-table-scroll-direction='right'] {
+  right: 0;
+  border-left: 1px solid var(--md-preview-table-control-border);
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:hover[data-hover-side='left'][data-can-scroll-left='true'] .table-edge-scroll-button[data-table-scroll-direction='left'],
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:hover[data-hover-side='right'][data-can-scroll-right='true'] .table-edge-scroll-button[data-table-scroll-direction='right'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:not([data-overflow-x='true']) .table-edge-scroll-button,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] .table-edge-scroll-button,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:not([data-overflow-x='true']) .table-edge-scroll-lane,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] .table-edge-scroll-lane {
+  display: none;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:not([data-overflow-capable='true']) .table-overlay-button {
+  display: none;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper::before,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper::after {
+  content: '';
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: block;
+  width: 26px;
+  height: 1px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper::before {
+  left: 0;
+  float: left;
+  box-shadow: 16px 0 18px 12px color-mix(in srgb, var(--md-preview-table-bg, #fff) 78%, transparent);
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper::after {
+  left: calc(100% - 26px);
+  float: right;
+  box-shadow: -16px 0 18px 12px color-mix(in srgb, var(--md-preview-table-bg, #fff) 78%, transparent);
+}
+
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-can-scroll-left='true']::before,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-can-scroll-right='true']::after {
+  opacity: 1;
+}
+
+@media print {
+  body.preview-mode-document .markdown-body .table-scroll-wrapper {
+    overflow: visible !important;
+  }
+
+  body.preview-mode-document .markdown-body .table-scroll-wrapper table,
+  body.preview-mode-document .markdown-body table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+  }
+
+  body.preview-mode-document .markdown-body .table-scroll-wrapper th,
+  body.preview-mode-document .markdown-body .table-scroll-wrapper td,
+  body.preview-mode-document .markdown-body th,
+  body.preview-mode-document .markdown-body td {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  body.preview-mode-document .markdown-body .table-overlay-button,
+  body.preview-mode-document .markdown-body .table-edge-scroll-button,
+  body.preview-mode-document .markdown-body .table-edge-scroll-lane {
+    display: none !important;
+  }
+}
+
+
+/* =========================================================
+   Document Preview: Tables + Utilities
+   ========================================================= */
+
+table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  border: 1px solid var(--md-preview-table-border);
+  border-radius: 12px;
+  background: var(--md-preview-table-bg);
+  box-shadow: var(--md-preview-table-shadow);
+}
+
+th,
+td {
+  padding: 12px 16px;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 1px solid var(--md-preview-table-cell-border);
+}
+
+thead th,
+table > tbody > tr:first-child > th {
+  font-weight: 600;
+  text-align: left;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--md-preview-table-header-color);
+  background: var(--md-preview-table-header-bg);
+  border-top: 0;
+}
+
+tbody td,
+tbody th,
+table > tbody > tr > td,
+table > tbody > tr > th {
+  color: var(--md-preview-table-cell-color);
+  background: var(--md-preview-table-row-bg);
+}
+
+tbody tr {
+  transition: background-color 120ms ease-in-out;
+}
+
+tbody tr:nth-child(2n) > :is(td, th) {
+  background: var(--md-preview-table-row-alt-bg);
+}
+
+tbody tr:hover > :is(td, th) {
+  background: var(--md-preview-table-row-hover-bg);
+}
+
+tbody tr:last-child > :is(td, th) {
+  border-bottom: 0;
+}
+
+thead th:first-child,
+table > tbody > tr:first-child > th:first-child {
+  border-top-left-radius: 12px;
+}
+
+thead th:last-child,
+table > tbody > tr:first-child > th:last-child {
+  border-top-right-radius: 12px;
+}
+
+td strong {
+  color: var(--md-preview-table-strong-color);
+}
+
+.presentation-slide-body td strong {
+  color: inherit;
+}
+
+.vscode-dark table,
+.vscode-high-contrast table {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--md-preview-border-color);
+  margin: 2rem 0;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 11px;
+  line-height: 10px;
+  color: var(--md-preview-body-color);
+  vertical-align: middle;
+  background: color-mix(in srgb, var(--md-preview-code-bg) 88%, var(--md-preview-body-color) 12%);
+  border: 1px solid var(--md-preview-border-color);
+  border-radius: 6px;
+  box-shadow: inset 0 -1px 0 var(--md-preview-border-color);
+}
+
+input[type='checkbox'] {
+  margin: 0 0.5em 0.2em 0;
+  vertical-align: middle;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.contains-task-list {
+  padding-left: 0;
+}
+
+.task-list-item {
+  list-style: none;
+}
+
+.task-list-item label {
+  cursor: default;
+  pointer-events: none;
+}
+
+.footnotes {
+  margin-top: 32px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+}
+
+sup.footnote-ref,
+.footnote-ref {
+  vertical-align: super;
+  font-size: 0.75em;
+  line-height: 0;
+}
+
+.footnote-ref a,
+a.footnote-backref {
+  text-decoration: none;
+}
+
+.footnote-ref a:hover,
+a.footnote-backref:hover {
+  text-decoration: underline;
+}
+
+.footnotes hr,
+hr.footnotes-sep {
+  margin-bottom: 16px;
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+.hljs {
+  color: var(--md-preview-code-color, #24292f);
+}
+
+.hljs-comment,
+.hljs-quote,
+.hljs-code,
+.hljs-formula {
+  color: var(--md-preview-code-comment-color, #6e7781);
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst,
+.hljs-template-tag,
+.hljs-variable.language_ {
+  color: var(--md-preview-code-keyword-color, #cf222e);
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag .hljs-attr,
+.hljs-operator,
+.hljs-selector-attr {
+  color: var(--md-preview-code-number-color, #0550ae);
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: var(--md-preview-code-string-color, #0a3069);
+}
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_,
+.hljs-section,
+.hljs-selector-id {
+  color: var(--md-preview-code-title-color, #8250df);
+}
+
+.hljs-type,
+.hljs-class .hljs-title {
+  color: var(--md-preview-code-type-color, #953800);
+}
+
+.hljs-attribute,
+.hljs-name,
+.hljs-regexp,
+.hljs-link,
+.hljs-selector-pseudo {
+  color: var(--md-preview-code-attribute-color, #116329);
+}
+
+.hljs-meta,
+.hljs-built_in,
+.hljs-builtin-name {
+  color: var(--md-preview-code-meta-color, #1f6feb);
+}
+
+.hljs-bullet,
+.hljs-symbol,
+.hljs-selector-class {
+  color: var(--md-preview-code-symbol-color, #bc4c00);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
+}
+
+.hljs-addition {
+  color: var(--md-preview-code-addition-color, #116329);
+  background-color: var(--md-preview-code-addition-bg, #dafbe1);
+}
+
+.hljs-deletion {
+  color: var(--md-preview-code-deletion-color, #cf222e);
+  background-color: var(--md-preview-code-deletion-bg, #ffebe9);
+}
+
+.vscode-dark .hljs,
+.vscode-high-contrast .hljs {
+  color: #c9d1d9;
+}
+
+.vscode-dark .hljs-comment,
+.vscode-dark .hljs-quote,
+.vscode-dark .hljs-code,
+.vscode-dark .hljs-formula,
+.vscode-high-contrast .hljs-comment,
+.vscode-high-contrast .hljs-quote,
+.vscode-high-contrast .hljs-code,
+.vscode-high-contrast .hljs-formula {
+  color: #8b949e;
+}
+
+.vscode-dark .hljs-keyword,
+.vscode-dark .hljs-selector-tag,
+.vscode-dark .hljs-subst,
+.vscode-dark .hljs-template-tag,
+.vscode-dark .hljs-variable.language_,
+.vscode-high-contrast .hljs-keyword,
+.vscode-high-contrast .hljs-selector-tag,
+.vscode-high-contrast .hljs-subst,
+.vscode-high-contrast .hljs-template-tag,
+.vscode-high-contrast .hljs-variable.language_ {
+  color: #ff7b72;
+}
+
+.vscode-dark .hljs-number,
+.vscode-dark .hljs-literal,
+.vscode-dark .hljs-variable,
+.vscode-dark .hljs-template-variable,
+.vscode-dark .hljs-tag .hljs-attr,
+.vscode-dark .hljs-operator,
+.vscode-dark .hljs-selector-attr,
+.vscode-high-contrast .hljs-number,
+.vscode-high-contrast .hljs-literal,
+.vscode-high-contrast .hljs-variable,
+.vscode-high-contrast .hljs-template-variable,
+.vscode-high-contrast .hljs-tag .hljs-attr,
+.vscode-high-contrast .hljs-operator,
+.vscode-high-contrast .hljs-selector-attr {
+  color: #79c0ff;
+}
+
+.vscode-dark .hljs-string,
+.vscode-dark .hljs-doctag,
+.vscode-high-contrast .hljs-string,
+.vscode-high-contrast .hljs-doctag {
+  color: #a5d6ff;
+}
+
+.vscode-dark .hljs-title,
+.vscode-dark .hljs-title.class_,
+.vscode-dark .hljs-title.class_.inherited__,
+.vscode-dark .hljs-title.function_,
+.vscode-dark .hljs-section,
+.vscode-dark .hljs-selector-id,
+.vscode-high-contrast .hljs-title,
+.vscode-high-contrast .hljs-title.class_,
+.vscode-high-contrast .hljs-title.class_.inherited__,
+.vscode-high-contrast .hljs-title.function_,
+.vscode-high-contrast .hljs-section,
+.vscode-high-contrast .hljs-selector-id {
+  color: #d2a8ff;
+}
+
+.vscode-dark .hljs-type,
+.vscode-dark .hljs-class .hljs-title,
+.vscode-high-contrast .hljs-type,
+.vscode-high-contrast .hljs-class .hljs-title {
+  color: #ffa657;
+}
+
+.vscode-dark .hljs-attribute,
+.vscode-dark .hljs-name,
+.vscode-dark .hljs-regexp,
+.vscode-dark .hljs-link,
+.vscode-dark .hljs-selector-pseudo,
+.vscode-high-contrast .hljs-attribute,
+.vscode-high-contrast .hljs-name,
+.vscode-high-contrast .hljs-regexp,
+.vscode-high-contrast .hljs-link,
+.vscode-high-contrast .hljs-selector-pseudo {
+  color: #7ee787;
+}
+
+.vscode-dark .hljs-meta,
+.vscode-dark .hljs-built_in,
+.vscode-dark .hljs-builtin-name,
+.vscode-high-contrast .hljs-meta,
+.vscode-high-contrast .hljs-built_in,
+.vscode-high-contrast .hljs-builtin-name {
+  color: #79c0ff;
+}
+
+.vscode-dark .hljs-bullet,
+.vscode-dark .hljs-symbol,
+.vscode-dark .hljs-selector-class,
+.vscode-high-contrast .hljs-bullet,
+.vscode-high-contrast .hljs-symbol,
+.vscode-high-contrast .hljs-selector-class {
+  color: #ffa657;
+}
+
+.vscode-dark .hljs-emphasis,
+.vscode-high-contrast .hljs-emphasis {
+  font-style: italic;
+}
+
+.vscode-dark .hljs-strong,
+.vscode-high-contrast .hljs-strong {
+  font-weight: 700;
+}
+
+.vscode-dark .hljs-addition,
+.vscode-high-contrast .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+
+.vscode-dark .hljs-deletion,
+.vscode-high-contrast .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre.hljs,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre code.hljs {
+  background: var(--md-preview-code-bg) !important;
+  color: var(--md-preview-code-color) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-comment,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-quote,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-code,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-formula {
+  color: var(--md-preview-code-comment-color, #59636e) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-keyword,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-tag,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-subst,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-template-tag,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-variable.language_ {
+  color: var(--md-preview-code-keyword-color, #cf222e) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-number,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-literal,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-variable,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-template-variable,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-tag .hljs-attr,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-operator,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-attr {
+  color: var(--md-preview-code-number-color, #0550ae) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-string,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-doctag {
+  color: var(--md-preview-code-string-color, #0a3069) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title.class_,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title.class_.inherited__,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title.function_,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-section,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-id {
+  color: var(--md-preview-code-title-color, #6639ba) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-type,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-class .hljs-title {
+  color: var(--md-preview-code-type-color, #953800) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-attribute,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-name,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-regexp,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-link,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-pseudo {
+  color: var(--md-preview-code-attribute-color, #116329) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-meta,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-built_in,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-builtin-name {
+  color: var(--md-preview-code-meta-color, #0969da) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-bullet,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-symbol,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-class {
+  color: var(--md-preview-code-symbol-color, #9a3d00) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-emphasis {
+  font-style: italic;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-strong {
+  font-weight: 700;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-addition {
+  color: var(--md-preview-code-addition-color, #116329) !important;
+  background-color: var(--md-preview-code-addition-bg, #dafbe1) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-deletion {
+  color: var(--md-preview-code-deletion-color, #cf222e) !important;
+  background-color: var(--md-preview-code-deletion-bg, #ffebe9) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre {
+  background: var(--md-preview-code-bg);
+  border-color: var(--md-preview-border-color);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body code {
+  background: var(--md-preview-code-bg);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre code {
+  background: transparent !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre:hover {
+  background: var(--md-hover-bg);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre.hljs,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre code.hljs {
+  background: var(--md-preview-code-bg) !important;
+  color: var(--md-preview-code-color) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-comment,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-quote,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-code,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-formula {
+  color: #8b949e !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-keyword,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-tag,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-subst,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-template-tag,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-variable.language_ {
+  color: #ff7b72 !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-number,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-literal,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-variable,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-template-variable,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-tag .hljs-attr,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-operator,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-attr {
+  color: #79c0ff !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-string,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-doctag {
+  color: #a5d6ff !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.class_,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.class_.inherited__,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.function_,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-section,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-id {
+  color: #d2a8ff !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-type,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-class .hljs-title {
+  color: #ffa657 !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-attribute,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-name,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-regexp,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-link,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-pseudo {
+  color: #7ee787 !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-meta,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-built_in,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-builtin-name {
+  color: #79c0ff !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-bullet,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-symbol,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-class {
+  color: #ffa657 !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-emphasis {
+  font-style: italic;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-strong {
+  font-weight: 700;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-addition {
+  color: #aff5b4 !important;
+  background-color: #033a16;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-deletion {
+  color: #ffdcd7 !important;
+  background-color: #67060c;
+}
+
+/* =========================================================
+   Document Preview: Interactive States
+   ========================================================= */
+
+:root {
+  --md-hover-accent: var(--md-preview-hover-accent, var(--md-preview-link-color, var(--vscode-focusBorder)));
+  --md-hover-bg: var(--md-preview-hover-bg, color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 84%, var(--md-preview-link-color) 16%));
+  --md-hover-bg-soft: var(--md-preview-hover-bg-soft, color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 90%, var(--md-preview-link-color) 10%));
+  --md-hover-border: var(--md-preview-hover-border, color-mix(in srgb, var(--md-preview-link-color) 35%, transparent));
+}
+
+.markdown-body table tbody tr,
+.markdown-body table tbody td,
+.markdown-body pre,
+.markdown-body blockquote,
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease;
+}
+
+.markdown-body table tbody tr:hover > td {
+  background: var(--md-hover-bg-soft);
+}
+
+.markdown-body table tbody tr:hover > td:first-child {
+  box-shadow: inset 3px 0 0 var(--md-hover-accent);
+}
+
+.markdown-body table tbody tr:hover > td:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.markdown-body table tbody tr:hover > td:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.markdown-body pre {
+  position: relative;
+  border: 1px solid transparent;
+}
+
+.markdown-body pre:hover {
+  background: var(--md-hover-bg);
+  border-color: var(--md-hover-border);
+  box-shadow: inset 3px 0 0 var(--md-hover-accent);
+}
+
+.markdown-body pre code {
+  background: transparent !important;
+}
+
+.markdown-body blockquote {
+  position: relative;
+  border-left-width: 4px;
+}
+
+.markdown-body blockquote:hover {
+  background: var(--md-hover-bg-soft);
+  border-left-color: var(--md-hover-accent);
+}
+
+.markdown-body h1:hover,
+.markdown-body h2:hover,
+.markdown-body h3:hover,
+.markdown-body h4:hover,
+.markdown-body h5:hover,
+.markdown-body h6:hover {
+  box-shadow:
+    var(--md-preview-heading-shadow),
+    inset 4px 0 0 var(--md-hover-accent),
+    0 0 0 1px var(--md-hover-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .markdown-body table tbody tr,
+  .markdown-body table tbody td,
+  .markdown-body pre,
+  .markdown-body blockquote,
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    transition: none;
+  }
+}
+
+
+/* Browser compatibility fallbacks for standalone exports in browsers without full color-mix/light-dark support. */
+@supports not ((color: color-mix(in srgb, #000000 50%, #ffffff)) and (color: light-dark(#ffffff, #000000))) {
+  body {
+    --md-preview-blockquote-bg: rgba(9, 105, 218, 0.06);
+    --md-preview-blockquote-nested-bg: rgba(9, 105, 218, 0.10);
+    --md-preview-code-bg: rgba(36, 41, 47, 0.06);
+    --md-preview-table-border: rgba(208, 215, 222, 0.80);
+    --md-preview-table-bg: rgba(255, 255, 255, 0.98);
+    --md-preview-table-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    --md-preview-table-cell-border: rgba(208, 215, 222, 0.72);
+    --md-preview-table-header-bg: rgba(31, 41, 55, 0.08);
+    --md-preview-table-row-bg: #ffffff;
+    --md-preview-table-row-alt-bg: rgba(31, 41, 55, 0.04);
+    --md-preview-table-row-hover-bg: rgba(9, 105, 218, 0.12);
+    --md-preview-hover-bg: rgba(9, 105, 218, 0.16);
+    --md-preview-hover-bg-soft: rgba(9, 105, 218, 0.10);
+    --md-preview-hover-border: rgba(9, 105, 218, 0.35);
+    --md-preview-lightbox-border: rgba(208, 215, 222, 0.78);
+    --md-preview-lightbox-bg: rgba(248, 250, 252, 0.96);
+    --md-preview-lightbox-button-border: rgba(208, 215, 222, 0.82);
+    --md-preview-lightbox-button-bg: rgba(31, 41, 55, 0.14);
+    --md-preview-lightbox-button-hover-bg: rgba(9, 105, 218, 0.28);
+    --md-preview-lightbox-viewport-bg: rgba(31, 41, 55, 0.08);
+    --md-preview-lightbox-scrollbar-track: rgba(31, 41, 55, 0.08);
+    --md-preview-lightbox-scrollbar-thumb: rgba(31, 41, 55, 0.28);
+    --md-preview-lightbox-scrollbar-thumb-hover: rgba(31, 41, 55, 0.40);
+  }
+
+  body.vscode-dark,
+  body.vscode-high-contrast {
+    --md-preview-blockquote-bg: rgba(88, 166, 255, 0.10);
+    --md-preview-blockquote-nested-bg: rgba(88, 166, 255, 0.16);
+    --md-preview-code-bg: rgba(255, 255, 255, 0.08);
+    --md-preview-table-border: rgba(139, 148, 158, 0.52);
+    --md-preview-table-bg: rgba(13, 17, 23, 0.98);
+    --md-preview-table-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+    --md-preview-table-cell-border: rgba(139, 148, 158, 0.42);
+    --md-preview-table-header-bg: rgba(255, 255, 255, 0.10);
+    --md-preview-table-row-bg: #0d1117;
+    --md-preview-table-row-alt-bg: rgba(255, 255, 255, 0.04);
+    --md-preview-table-row-hover-bg: rgba(88, 166, 255, 0.16);
+    --md-preview-hover-bg: rgba(88, 166, 255, 0.18);
+    --md-preview-hover-bg-soft: rgba(88, 166, 255, 0.12);
+    --md-preview-hover-border: rgba(88, 166, 255, 0.35);
+    --md-preview-lightbox-border: rgba(139, 148, 158, 0.46);
+    --md-preview-lightbox-bg: rgba(22, 27, 34, 0.96);
+    --md-preview-lightbox-button-border: rgba(139, 148, 158, 0.46);
+    --md-preview-lightbox-button-bg: rgba(255, 255, 255, 0.12);
+    --md-preview-lightbox-button-hover-bg: rgba(88, 166, 255, 0.24);
+    --md-preview-lightbox-viewport-bg: rgba(255, 255, 255, 0.08);
+    --md-preview-lightbox-scrollbar-track: rgba(255, 255, 255, 0.08);
+    --md-preview-lightbox-scrollbar-thumb: rgba(255, 255, 255, 0.24);
+    --md-preview-lightbox-scrollbar-thumb-hover: rgba(255, 255, 255, 0.36);
+  }
+
+  body.preview-mode-presentation {
+    --md-hover-bg: rgba(79, 70, 216, 0.16);
+    --md-hover-bg-soft: rgba(79, 70, 216, 0.10);
+    --md-hover-border: rgba(79, 70, 216, 0.26);
+  }
+
+  body.preview-mode-presentation.vscode-dark,
+  body.preview-mode-presentation.vscode-high-contrast {
+    --md-hover-bg: rgba(147, 197, 253, 0.18);
+    --md-hover-bg-soft: rgba(147, 197, 253, 0.12);
+    --md-hover-border: rgba(147, 197, 253, 0.28);
+  }
+
+  body.preview-mode-presentation .presentation-surface {
+    background: var(--presentation-surface-bg, linear-gradient(180deg, #eef2ff, #dde6ff));
+    box-shadow: var(--presentation-surface-shadow, 0 28px 80px rgba(44, 52, 105, 0.28));
+  }
+
+  body.preview-mode-presentation.vscode-dark .presentation-surface,
+  body.preview-mode-presentation.vscode-high-contrast .presentation-surface {
+    background: var(--presentation-surface-bg, linear-gradient(180deg, #20242c, #11151c));
+    box-shadow: var(--presentation-surface-shadow, 0 28px 80px rgba(0, 0, 0, 0.55));
+  }
+
+  body.preview-mode-presentation .presentation-slide-body.markdown-body code {
+    background: var(--presentation-inline-code-bg, rgba(79, 70, 216, 0.12));
+    border-color: var(--presentation-inline-code-border, rgba(79, 70, 216, 0.16));
+  }
+
+  body.preview-mode-presentation .presentation-slide-body.markdown-body pre,
+  body.preview-mode-presentation .presentation-slide-body.markdown-body pre code,
+  body.preview-mode-presentation .presentation-slide-body.markdown-body pre.hljs {
+    background: var(--presentation-code-bg, rgba(79, 70, 216, 0.08));
+    border-color: var(--presentation-code-border, rgba(79, 70, 216, 0.16));
+  }
+
+  body.preview-mode-presentation .presentation-slide-body.markdown-body th {
+    background: var(--presentation-table-header-bg, rgba(79, 70, 216, 0.12));
+  }
+
+  body.preview-mode-presentation .presentation-layout-media-shell,
+  body.preview-mode-presentation .presentation-image-frame {
+    background: var(--presentation-media-frame-bg, rgba(255, 255, 255, 0.90));
+  }
+
+  body.preview-mode-presentation.vscode-dark .presentation-layout-media-shell,
+  body.preview-mode-presentation.vscode-dark .presentation-image-frame,
+  body.preview-mode-presentation.vscode-high-contrast .presentation-layout-media-shell,
+  body.preview-mode-presentation.vscode-high-contrast .presentation-image-frame {
+    background: var(--presentation-media-frame-bg, rgba(21, 28, 38, 0.92));
+  }
+}

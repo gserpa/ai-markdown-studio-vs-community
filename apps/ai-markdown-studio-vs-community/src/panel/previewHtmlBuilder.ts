@@ -1,16 +1,16 @@
-import * as fs from 'node:fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { JSDOM } from 'jsdom';
 import { createMarkdownRenderer, sanitizeRenderedHtml, stripMarkdownFrontMatter } from '@mfo/core';
 import { isMarkdownPresentationSource, extractMarkdownFrontMatterMeta } from '@mfo/core';
 import { renderPresentationPreview } from '@mfo/preview-web';
-import { buildPreviewThemeStylesheet, buildDocumentThemeStylesheet, resolveDocumentThemeSelection } from '@mfo/preview-web';
+import { buildPreviewThemeCssArtifact, buildDocumentThemeCssArtifact, resolveDocumentThemeSelection } from '@mfo/preview-web';
 import { getResolvedDocumentPreviewThemeSetting } from '../document/documentPreviewThemeSettings';
 import { loadPreviewThemeRegistryForDocument } from '../presentation/previewThemeSupport';
 import { getResolvedPresentationPreviewThemeSetting } from '../presentation/presentationPreviewThemeSettings';
 import { loadDocumentThemeRegistryForDocument } from '../document/documentThemeSupport';
-import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../util/extensionSupportRoot';
+import { resolveExtensionNodeModulesUri } from '../util/extensionSupportRoot';
+import { loadPreviewAssetManifest, matchingThemeAsset, previewAssetUri, type PreviewAssetDescriptor } from '../util/previewAssetManifest';
 import { isFrontMatterVisible } from './frontMatterDisplayState';
 
 type PreviewPageWidth = 'readable' | 'full';
@@ -26,10 +26,12 @@ export function buildPreviewHtml(
   document: vscode.TextDocument,
   resolvePreviewResource: (rawPath: string) => string | undefined,
 ): string {
-  const stylesheetUri = webview.asWebviewUri(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.css'));
+  const assetManifest = loadPreviewAssetManifest(extensionUri);
+  const assetHref = (descriptor: PreviewAssetDescriptor): string => webview.asWebviewUri(previewAssetUri(extensionUri, descriptor)).toString();
+  const coreStylesheetUri = assetHref(assetManifest.assets.previewCore);
   const katexStylesheetUri = webview.asWebviewUri(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'katex.min.css'));
-  const previewThemeRuntimeScriptUri = webview.asWebviewUri(resolveExtensionAssetUri(extensionUri, 'preview', 'preview-theme-runtime.js'));
-  const scriptUri = webview.asWebviewUri(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.js'));
+  const previewThemeRuntimeScriptUri = assetHref(assetManifest.assets.previewThemeRuntime);
+  const scriptUri = assetHref(assetManifest.assets.previewCoreRuntime);
   const mermaidUri = webview.asWebviewUri(resolveExtensionNodeModulesUri(extensionUri, 'mermaid', 'dist', 'mermaid.esm.min.mjs'));
   const nonce = getNonce();
   const source = document.getText();
@@ -68,8 +70,8 @@ export function buildPreviewHtml(
   });
   const renderMarkdown = (markdown: string): string => sanitizeRenderedHtml(renderer.render(markdown));
   let previewMode: 'presentation' | 'document' = isPresentation ? 'presentation' : 'document';
-  let previewThemeStylesheet = '';
-  let documentThemeStylesheet = '';
+  let inlineThemeStylesheet = '';
+  let themeStylesheetUri = '';
   let documentThemeBodyClass = 'document-theme-auto';
   let documentThemeModeClass = 'document-theme-mode-auto';
   let documentMermaidThemeLight = 'default';
@@ -86,7 +88,10 @@ export function buildPreviewHtml(
       const frontMatterTheme = typeof meta['theme'] === 'string' ? meta['theme'] : '';
       const settingTheme = getResolvedDocumentPreviewThemeSetting(document.uri);
       const docThemeSelection = resolveDocumentThemeSelection(frontMatterTheme || settingTheme, documentThemeRegistry);
-      documentThemeStylesheet = buildDocumentThemeStylesheet(documentThemeRegistry);
+      const artifact = buildDocumentThemeCssArtifact(documentThemeRegistry, docThemeSelection.themeName);
+      const asset = matchingThemeAsset(assetManifest, artifact);
+      if (asset) themeStylesheetUri = assetHref(asset);
+      else inlineThemeStylesheet = artifact.css;
       documentThemeBodyClass = docThemeSelection.themeClassName;
       documentThemeModeClass = `document-theme-mode-${docThemeSelection.themeMode}`;
       documentMermaidThemeLight = docThemeSelection.lightMermaidTheme;
@@ -102,8 +107,12 @@ export function buildPreviewHtml(
   if (isPresentation) {
     try {
       const previewThemeRegistry = loadPreviewThemeRegistryForDocument(extensionUri, document.uri);
-      previewThemeStylesheet = buildPreviewThemeStylesheet(previewThemeRegistry);
-      previewBody = renderPresentationPreview(source, renderMarkdown, previewThemeRegistry, createJsdomDocument, presentationDefaultTheme).html;
+      const rendered = renderPresentationPreview(source, renderMarkdown, previewThemeRegistry, createJsdomDocument, presentationDefaultTheme);
+      previewBody = rendered.html;
+      const artifact = buildPreviewThemeCssArtifact(previewThemeRegistry, rendered.themeSelection.themeName);
+      const asset = matchingThemeAsset(assetManifest, artifact);
+      if (asset) themeStylesheetUri = assetHref(asset);
+      else inlineThemeStylesheet = artifact.css;
     } catch (error) {
       previewMode = 'document';
       previewBody = buildDocumentPreviewBody(
@@ -120,25 +129,32 @@ export function buildPreviewHtml(
     ? 'preview-mode-presentation'
     : `preview-mode-document ${documentThemeBodyClass} ${documentThemeModeClass}`;
   const title = getPreviewTitle(document, isPresentation);
-  const combinedThemeStylesheet = [previewThemeStylesheet, documentThemeStylesheet].filter(Boolean).join('\n\n');
+  const hasMermaid = /class="[^"]*\bmermaid(?:-rendered)?\b/u.test(previewBody);
+  const hasMath = /class="[^"]*\bkatex\b/u.test(previewBody);
+  const modeStylesheetUri = assetHref(assetManifest.assets[previewMode === 'presentation' ? 'previewPresentation' : 'previewDocument']);
+  const modeScriptUri = assetHref(assetManifest.assets[previewMode === 'presentation' ? 'previewPresentationRuntime' : 'previewDocumentRuntime']);
+  const mermaidStylesheetUri = hasMermaid ? assetHref(assetManifest.assets.previewMermaid) : '';
   const imgSrcPolicy = allowRemoteResources
     ? `${webview.cspSource} https: data:`
     : `${webview.cspSource} data:`;
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-md-host-scheme="auto">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${imgSrcPolicy}; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'nonce-${nonce}'; font-src ${webview.cspSource};" />
-  ${combinedThemeStylesheet ? `<style>${combinedThemeStylesheet}</style>` : ''}
-  <link rel="stylesheet" href="${stylesheetUri}" />
-  <link rel="stylesheet" href="${katexStylesheetUri}" />
+  <link rel="stylesheet" href="${coreStylesheetUri}" />
+  <link rel="stylesheet" href="${modeStylesheetUri}" />
+  ${mermaidStylesheetUri ? `<link rel="stylesheet" href="${mermaidStylesheetUri}" />` : ''}
+  ${hasMath ? `<link rel="stylesheet" href="${katexStylesheetUri}" />` : ''}
+  ${themeStylesheetUri ? `<link rel="stylesheet" href="${themeStylesheetUri}" />` : ''}
+  ${inlineThemeStylesheet ? `<style>${inlineThemeStylesheet}</style>` : ''}
   <title>${title}</title>
 </head>
-<body class="${bodyClass}" data-preview-mode="${previewMode}" data-preview-page-width="${previewPageWidth}" data-document-table-layout="${documentTableLayout}" data-presentation-content-overflow="${presentationContentOverflow}" data-document-theme="${documentThemeName}" data-document-theme-mode="${documentThemeModeClass.replace('document-theme-mode-', '')}" data-document-mermaid-theme-light="${documentMermaidThemeLight}" data-document-mermaid-theme-dark="${documentMermaidThemeDark}" data-document-mermaid-transparent-background-light="${documentMermaidTransparentBackgroundLight ? 'true' : 'false'}" data-document-mermaid-transparent-background-dark="${documentMermaidTransparentBackgroundDark ? 'true' : 'false'}">
+<body class="${bodyClass}" data-md-preview-root data-preview-mode="${previewMode}" data-preview-page-width="${previewPageWidth}" data-document-table-layout="${documentTableLayout}" data-presentation-content-overflow="${presentationContentOverflow}" data-document-theme="${documentThemeName}" data-document-theme-mode="${documentThemeModeClass.replace('document-theme-mode-', '')}" data-document-mermaid-theme-light="${documentMermaidThemeLight}" data-document-mermaid-theme-dark="${documentMermaidThemeDark}" data-document-mermaid-transparent-background-light="${documentMermaidTransparentBackgroundLight ? 'true' : 'false'}" data-document-mermaid-transparent-background-dark="${documentMermaidTransparentBackgroundDark ? 'true' : 'false'}">
   ${previewBody}
-  <div class="mermaid-lightbox" data-mermaid-lightbox hidden aria-hidden="true">
+  ${hasMermaid ? `<div class="mermaid-lightbox" data-md-theme-scope data-mermaid-lightbox hidden aria-hidden="true">
     <div class="mermaid-lightbox-backdrop" data-mermaid-lightbox-action="close"></div>
     <section class="mermaid-lightbox-shell" role="dialog" aria-modal="true" aria-label="Mermaid diagram viewer" tabindex="-1">
       <header class="mermaid-lightbox-toolbar">
@@ -156,9 +172,9 @@ export function buildPreviewHtml(
         </div>
       </div>
     </section>
-  </div>
+  </div>` : ''}
   <script nonce="${nonce}">
-    window.__MERMAID_URI__ = '${mermaidUri}';
+    ${hasMermaid ? `window.__MERMAID_URI__ = '${mermaidUri}';` : ''}
     (function () {
       const vscode = acquireVsCodeApi();
       window.__previewBridge = {
@@ -169,8 +185,9 @@ export function buildPreviewHtml(
       };
     }());
   </script>
-  <script nonce="${nonce}" src="${previewThemeRuntimeScriptUri}"></script>
+  ${previewMode === 'presentation' ? `<script nonce="${nonce}" src="${previewThemeRuntimeScriptUri}"></script>` : ''}
   <script nonce="${nonce}" src="${scriptUri}"></script>
+  <script nonce="${nonce}" src="${modeScriptUri}"></script>
 </body>
 </html>`;
 }
@@ -186,7 +203,7 @@ function getDocumentTableLayout(document: vscode.TextDocument): 'wide' | 'wrap' 
 }
 
 function getPresentationContentOverflow(document: vscode.TextDocument): PresentationContentOverflow {
-  const configured = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('presentationContentOverflow', 'scroll');
+  const configured = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<string>('presentationContentOverflow', 'scaleToFit');
   return configured === 'scaleToFit' ? 'scaleToFit' : 'scroll';
 }
 
@@ -227,22 +244,6 @@ function formatFrontMatterValue(value: unknown): string {
   }
 
   return JSON.stringify(value, null, 2) ?? '';
-}
-
-function createVersionedWebviewAssetUri(
-  webview: vscode.Webview,
-  extensionUri: vscode.Uri,
-  pathSegments: readonly string[],
-): string {
-  const assetUri = vscode.Uri.joinPath(extensionUri, ...pathSegments);
-  const webviewUri = webview.asWebviewUri(assetUri);
-
-  try {
-    const version = fs.statSync(assetUri.fsPath).mtimeMs.toString(36);
-    return `${webviewUri.toString()}?v=${version}`;
-  } catch {
-    return webviewUri.toString();
-  }
 }
 
 function getNonce(): string {

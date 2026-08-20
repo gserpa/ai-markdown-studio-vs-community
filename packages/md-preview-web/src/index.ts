@@ -15,6 +15,7 @@ export {
   loadPreviewThemeRegistryFromDirectories,
   loadPreviewThemeRegistryFromData,
   buildPreviewThemeStylesheet,
+  buildPreviewThemeCssArtifact,
   resolvePreviewThemeSelection,
   getPreviewThemeTokenContract,
 } from './presentation/previewThemeRegistry';
@@ -31,9 +32,11 @@ export {
   loadDocumentThemeRegistryFromDirectories,
   loadDocumentThemeRegistryFromData,
   buildDocumentThemeStylesheet,
+  buildDocumentThemeCssArtifact,
   resolveDocumentThemeSelection,
   getDocumentThemeTokenContract,
 } from './document/documentThemeRegistry';
+export type { ThemeCssArtifact } from './themeCssArtifact';
 export type {
   DocumentThemeMode,
   DocumentThemeDefinition,

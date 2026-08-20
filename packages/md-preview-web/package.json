@@ -10,9 +10,10 @@
     "assets"
   ],
   "scripts": {
-    "build": "tsc -p ./tsconfig.json",
+    "build": "tsc -p ./tsconfig.json && node build-assets.mjs",
+    "build:assets": "node build-assets.mjs",
     "build:browser": "node build-browser.mjs",
-    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "clean": "node -e \"const fs=require('node:fs');fs.rmSync('dist',{recursive:true,force:true});fs.rmSync('assets/generated',{recursive:true,force:true})\"",
     "test": "vitest run"
   },
   "dependencies": {

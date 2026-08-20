@@ -1,4 +1,4 @@
-import type { CommunityApiV1, ThemeSummary } from '@mfo/community-api';
+import type { CommunityApiV2, ThemeSummary } from '@mfo/community-api';
 import * as vscode from 'vscode';
 import {
   createMarkdownRenderer,
@@ -16,15 +16,15 @@ import {
 import { JSDOM } from 'jsdom';
 import { resolveDocumentResource } from '../util/documentResourceResolver';
 import { registerFeatureContribution, listFeatureContributions } from './featureContributions';
-import { buildExportHtmlString } from '../export/html/htmlExporter';
+import { buildExportHtmlArtifact, buildExportHtmlString } from '../export/html/htmlExporter';
 import { assertAiFeaturesEnabled, ensureAiFeaturesEnabled, isAiAuthorizationDenied } from '../ai/aiConsent';
 import { hasConfiguredCopilotAccount, refreshCopilotConfiguredContext } from '../ai/copilotAvailability';
 
-export function createCommunityApi(extensionVersion: string, extensionUri: vscode.Uri, documentThemeDirectory: string, presentationThemeDirectory: string): CommunityApiV1 {
+export function createCommunityApi(extensionVersion: string, extensionUri: vscode.Uri, documentThemeDirectory: string, presentationThemeDirectory: string): CommunityApiV2 {
   const renderMarkdown = (markdown: string): string => sanitizeRenderedHtml(createMarkdownRenderer().render(markdown));
 
   return Object.freeze({
-    apiVersion: '1.0',
+    apiVersion: '2.0',
     extensionVersion,
     rendering: Object.freeze({
       renderMarkdown: (markdown: string) => Object.freeze({ html: renderMarkdown(markdown) }),
@@ -38,6 +38,10 @@ export function createCommunityApi(extensionVersion: string, extensionUri: vscod
         document: vscode.TextDocument,
         options?: { exportMode?: 'theme' | 'paper' | 'paper-borderless' },
       ) => buildExportHtmlString(extensionUri, document, options),
+      buildHtmlArtifact: (
+        document: vscode.TextDocument,
+        options: { assetMode: 'inline' | 'external'; exportMode?: 'theme' | 'paper' | 'paper-borderless' },
+      ) => buildExportHtmlArtifact(extensionUri, document, options),
     }),
     parsing: Object.freeze({
       detectDocumentKind: (markdown: string) => isMarkdownPresentationSource(markdown) ? 'presentation' : 'document',

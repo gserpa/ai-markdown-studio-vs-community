@@ -1,6 +1,6 @@
 ---
 date: 2026-08-12
-version: 1.2.0
+version: 1.2.1
 ---
 
 # AI Markdown Studio Community — User Guide
@@ -52,22 +52,22 @@ You can switch modes in several ways:
 
 All commands are available from the Command Palette (`Ctrl+Shift+P`). The most common ones also appear in the editor title bar for `.md` files.
 
-| Command                                   | What it does                                                                                                    |                                                                      |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| **Preview Markdown**                      | Opens or focuses the rendered preview for the current file.                                                     |                                                                      |
-| **Edit Markdown**                         | Switches the current file to the text editor.                                                                   |                                                                      |
-| **Format Markdown Tables**                | Aligns every Markdown table in the active file. Also runs via **Format Document**.                              |                                                                      |
-| **`markdownAiStudio.formatTablesOnSave`** | `false`                                                                                                         | Automatically formats Markdown tables when you save a Markdown file. |
-| **Export Markdown as HTML**               | Saves the rendered document as a standalone `.html` file.                                                       |                                                                      |
-| **Export Markdown as DOCX (Basic)**       | Saves the current document as a basic Word file. Pro automatically replaces this with its advanced DOCX export. |                                                                      |
-| **Generate Document (AI)**                | Creates a Markdown document from your brief.                                                                    |                                                                      |
-| **Generate Presentation (AI)**            | Creates a Markdown presentation with Copilot, or copies a complete prompt for another AI assistant when Copilot is unavailable. |                                                                      |
-| **Install Presentation Agent Skill in Workspace** | Lets you choose a GitHub Copilot, Claude, or Codex presentation skill and installs it in that agent's workspace skill folder without overwriting an existing skill. | |
-| **Paste as New Markdown File**            | Turns clipboard text into a new Markdown file.                                                                  |                                                                      |
-| **Enable AI Features...**                 | Reviews the AI data-sharing notice and can enable or re-enable AI features.                                     |                                                                      |
-| **Toggle Frontmatter**                    | Shows or hides the rendered front-matter summary in the active preview.                                         |                                                                      |
-| **Show AI Markdown Studio Commands**      | Opens a quick-pick launcher of the extension's main actions.                                                    |                                                                      |
-| **Change Settings...**                    | Opens the VS Code Settings UI filtered to this extension.                                                       |                                                                      |
+| Command                                           | What it does                                                                                                                                                        |                                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Preview Markdown**                              | Opens or focuses the rendered preview for the current file.                                                                                                         |                                                                      |
+| **Edit Markdown**                                 | Switches the current file to the text editor.                                                                                                                       |                                                                      |
+| **Format Markdown Tables**                        | Aligns every Markdown table in the active file. Also runs via **Format Document**.                                                                                  |                                                                      |
+| **`markdownAiStudio.formatTablesOnSave`**         | `false`                                                                                                                                                             | Automatically formats Markdown tables when you save a Markdown file. |
+| **Export Markdown as HTML**                       | Saves the rendered document as a standalone `.html` file.                                                                                                           |                                                                      |
+| **Export Markdown as DOCX (Basic)**               | Saves the current document as a basic Word file. Pro automatically replaces this with its advanced DOCX export.                                                     |                                                                      |
+| **Generate Document (AI)**                        | Creates a Markdown document from your brief.                                                                                                                        |                                                                      |
+| **Generate Presentation (AI)**                    | Creates a Markdown presentation with Copilot, or copies a complete prompt for another AI assistant when Copilot is unavailable.                                     |                                                                      |
+| **Install Presentation Agent Skill in Workspace** | Lets you choose a GitHub Copilot, Claude, or Codex presentation skill and installs it in that agent's workspace skill folder without overwriting an existing skill. |                                                                      |
+| **Paste as New Markdown File**                    | Turns clipboard text into a new Markdown file.                                                                                                                      |                                                                      |
+| **Enable AI Features...**                         | Reviews the AI data-sharing notice and can enable or re-enable AI features.                                                                                         |                                                                      |
+| **Toggle Frontmatter**                            | Shows or hides the rendered front-matter summary in the active preview.                                                                                             |                                                                      |
+| **Show AI Markdown Studio Commands**              | Opens a quick-pick launcher of the extension's main actions.                                                                                                        |                                                                      |
+| **Change Settings...**                            | Opens the VS Code Settings UI filtered to this extension.                                                                                                           |                                                                      |
 
 ## Guided AI generation
 
@@ -84,11 +84,11 @@ After the first presentation prompt is copied, Community can offer to install a 
 
 Community exposes three tools to VS Code chat agents:
 
-| Tool reference | Purpose |
-| --- | --- |
-| `#markdownPresentationPrompt` | Builds the canonical MPS prompt, including layout, slide-density, image, notes, theme, ratio, and workspace remote-resource guidance. |
-| `#validateMarkdownPresentation` | Validates raw presentation Markdown or a file URI inside the current workspace. |
-| `#saveMarkdownStudioFile` | Saves approved Markdown under the current workspace after confirmation, using a unique name rather than overwriting. |
+| Tool reference                  | Purpose                                                                                                                               |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `#markdownPresentationPrompt`   | Builds the canonical MPS prompt, including layout, slide-density, image, notes, theme, ratio, and workspace remote-resource guidance. |
+| `#validateMarkdownPresentation` | Validates raw presentation Markdown or a file URI inside the current workspace.                                                       |
+| `#saveMarkdownStudioFile`       | Saves approved Markdown under the current workspace after confirmation, using a unique name rather than overwriting.                  |
 
 The prompt builder and validator are deterministic and read-only; they do not call a model themselves. The save tool rejects absolute or parent-traversing destinations, displays the proposed filename and workspace-relative directory for confirmation, and never overwrites an existing file.
 
@@ -260,16 +260,16 @@ When **AI Markdown Studio Pro** is installed, its advanced DOCX export takes ove
 
 Open settings with **Change Settings...**, or `Ctrl+,` and search for `markdownAiStudio`.
 
-| Setting                                 | Default | Description                                                                                                                                                                                                                                                                                           |
-| --------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `markdownAiStudio.previewPageWidth`     | `full`  | `full` lets standard preview pages use the whole panel width; `readable` constrains them to a centered column.                                                                                                                                                                                        |
-| `markdownAiStudio.documentPreviewTheme` | `auto`  | Default document preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Selection** settings section.                                                                                                                                                         |
-| `markdownAiStudio.documentTableLayout`  | `wide`  | Default layout for tables in document preview. `wide` preserves single-line cells and allows horizontal scrolling; `wrap` wraps cell text to fit the preview width. Individual preview tables can be toggled for the current session.                                                                 |
-| `markdownAiStudio.presentationDefaultTheme` | `auto` | Default presentation preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Selection** settings section. |
-| `markdownAiStudio.presentationContentOverflow` | `scroll` | Controls overflowing presentation content. `scroll` preserves scrolling; `scaleToFit` scales dense slide content down to fit, stopping at 60% before retaining scrolling. |
-| `markdownAiStudio.allowRemoteResources` | `true`  | Whether previews and exports may load images and other content from the internet.                                                                                                                                                                                                                     |
-| `markdownAiStudio.aiAccess`             | `ask`   | Controls native Copilot generation. `ask` shows the disclosure only after native generation is chosen, `enabled` allows Copilot-backed features, and `denied` disables them. Presentation prompt copy and presentation-skill installation remain local and available in all states. |
-| `markdownAiStudio.aiModel`              | `gpt-5.6-luna` | Preferred Copilot model family, with documented fallback models used if it is unavailable. |
+| Setting                                        | Default        | Description                                                                                                                                                                                                                                                                         |
+| ---------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `markdownAiStudio.previewPageWidth`            | `full`         | `full` lets standard preview pages use the whole panel width; `readable` constrains them to a centered column.                                                                                                                                                                      |
+| `markdownAiStudio.documentPreviewTheme`        | `auto`         | Default document preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Selection** settings section.                                                                                                                                       |
+| `markdownAiStudio.documentTableLayout`         | `wide`         | Default layout for tables in document preview. `wide` preserves single-line cells and allows horizontal scrolling; `wrap` wraps cell text to fit the preview width. Individual preview tables can be toggled for the current session.                                               |
+| `markdownAiStudio.presentationDefaultTheme`    | `auto`         | Default presentation preview theme. Overridable per file via the `theme` front-matter field. Find it in the **Theme Selection** settings section.                                                                                                                                   |
+| `markdownAiStudio.presentationContentOverflow` | `scaleToFit`   | Controls overflowing presentation content. `scaleToFit` scales dense slide content down to fit, stopping at 60% before retaining scrolling; `scroll` preserves scrolling instead.                                                                                                   |
+| `markdownAiStudio.allowRemoteResources`        | `true`         | Whether previews and exports may load images and other content from the internet.                                                                                                                                                                                                   |
+| `markdownAiStudio.aiAccess`                    | `ask`          | Controls native Copilot generation. `ask` shows the disclosure only after native generation is chosen, `enabled` allows Copilot-backed features, and `denied` disables them. Presentation prompt copy and presentation-skill installation remain local and available in all states. |
+| `markdownAiStudio.aiModel`                     | `gpt-5.6-luna` | Preferred Copilot model family, with documented fallback models used if it is unavailable.                                                                                                                                                                                          |
 
 ## Privacy and remote resources
 

@@ -2,6 +2,7 @@ import * as path from 'path';
 import { describe, expect, it } from 'vitest';
 import {
   buildDocumentThemeStylesheet,
+  buildDocumentThemeCssArtifact,
   getDocumentThemeTokenContract,
   loadDocumentThemeRegistryFromData,
   loadDocumentThemeRegistryFromDirectories,
@@ -64,6 +65,18 @@ describe('documentThemeRegistry', () => {
     expect(stylesheet).toContain('--md-preview-content-bg: #111111;');
     expect(stylesheet).not.toContain('--md-preview-page-bg-image:');
     expect(stylesheet).toContain('--md-preview-code-bg: #161b22;');
+  });
+
+  it('builds deterministic selected and auto artifacts scoped to preview roots', () => {
+    const selected = buildDocumentThemeCssArtifact(registry, 'light');
+    const repeated = buildDocumentThemeCssArtifact(registry, 'light');
+    const auto = buildDocumentThemeCssArtifact(registry, 'auto');
+
+    expect(selected).toEqual(repeated);
+    expect(selected.css).toContain('[data-md-preview-root].document-theme-light');
+    expect(selected.css).not.toContain('document-theme-dark');
+    expect(auto.css).toContain('[data-md-host-scheme=\'dark\'] [data-md-preview-root].document-theme-auto');
+    expect(auto.css).toContain('@media (prefers-color-scheme: dark)');
   });
 
   it('exposes a grouped document token contract', () => {

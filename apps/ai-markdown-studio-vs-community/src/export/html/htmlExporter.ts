@@ -1,4 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import type { HtmlArtifact, HtmlArtifactOptions, HtmlAsset } from '@mfo/community-api';
 import {
   createMarkdownRenderer,
   extractMarkdownFrontMatterMeta,
@@ -8,8 +10,8 @@ import {
 } from '@mfo/core';
 import { JSDOM } from 'jsdom';
 import {
-  buildDocumentThemeStylesheet,
-  buildPreviewThemeStylesheet,
+  buildDocumentThemeCssArtifact,
+  buildPreviewThemeCssArtifact,
   renderPresentationPreview,
   resolveDocumentThemeSelection,
 } from '@mfo/preview-web';
@@ -19,6 +21,7 @@ import { loadPreviewThemeRegistryForDocument } from '../../presentation/previewT
 import { getResolvedPresentationPreviewThemeSetting } from '../../presentation/presentationPreviewThemeSettings';
 import { resolveDocumentResource } from '../../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../../util/extensionSupportRoot';
+import { loadPreviewAssetManifest, previewAssetUri, type PreviewAssetDescriptor } from '../../util/previewAssetManifest';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
@@ -29,14 +32,32 @@ export async function buildExportHtmlString(
   document: vscode.TextDocument,
   options: { exportMode?: ExportMode } = {},
 ): Promise<string> {
+  return (await buildExportHtmlArtifact(extensionUri, document, {
+    assetMode: 'inline',
+    exportMode: options.exportMode,
+  })).html;
+}
+
+export async function buildExportHtmlArtifact(
+  extensionUri: vscode.Uri,
+  document: vscode.TextDocument,
+  options: HtmlArtifactOptions,
+): Promise<HtmlArtifact> {
   const exportMode = options.exportMode ?? 'theme';
-  const [previewCss, katexCss, mermaidScript, previewThemeRuntimeScript, previewScript] = await Promise.all([
-    readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.css').fsPath, 'utf8'),
+  const manifest = loadPreviewAssetManifest(extensionUri);
+  const readPreviewAsset = (descriptor: PreviewAssetDescriptor): Promise<string> => readFile(previewAssetUri(extensionUri, descriptor).fsPath, 'utf8');
+  const [rawPreviewCoreCss, previewDocumentCss, previewPresentationCss, previewMermaidCss, katexCss, mermaidScript, previewThemeRuntimeScript, previewCoreRuntimeScript, previewPresentationRuntimeScript] = await Promise.all([
+    readPreviewAsset(manifest.assets.previewCore),
+    readPreviewAsset(manifest.assets.previewDocument),
+    readPreviewAsset(manifest.assets.previewPresentation),
+    readPreviewAsset(manifest.assets.previewMermaid),
     readFile(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'katex.min.css').fsPath, 'utf8'),
     readFile(resolveExtensionNodeModulesUri(extensionUri, 'mermaid', 'dist', 'mermaid.min.js').fsPath, 'utf8'),
-    readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview-theme-runtime.js').fsPath, 'utf8'),
-    readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'preview.js').fsPath, 'utf8'),
+    readPreviewAsset(manifest.assets.previewThemeRuntime),
+    readPreviewAsset(manifest.assets.previewCoreRuntime),
+    readPreviewAsset(manifest.assets.previewPresentationRuntime),
   ]);
+  const previewCoreCss = await inlinePreviewFontUrls(rawPreviewCoreCss, extensionUri);
 
   const source = document.getText();
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
@@ -77,18 +98,22 @@ export async function buildExportHtmlString(
       getResolvedPresentationPreviewThemeSetting(document.uri),
     );
 
-    return buildPresentationStandaloneHtml({
+    const hasMermaid = containsMermaid(rendered.html);
+    const hasMath = containsMath(rendered.html);
+    const html = buildPresentationStandaloneHtml({
       title: path.basename(document.fileName),
       body: rendered.html,
-      previewCss,
-      katexCss: rewriteKatexCssUrls(katexCss),
-      mermaidScript,
+      previewCss: [previewCoreCss, previewPresentationCss, hasMermaid ? previewMermaidCss : ''].filter(Boolean).join('\n\n'),
+      katexCss: hasMath ? rewriteKatexCssUrls(katexCss) : '',
+      mermaidScript: hasMermaid ? mermaidScript : '',
       previewThemeRuntimeScript,
-      previewScript,
+      previewCoreRuntimeScript,
+      previewPresentationRuntimeScript,
       exportMode,
       hostThemeClass: exportMode === 'theme' ? getHostThemeClass() : '',
-      previewThemeCss: buildPreviewThemeStylesheet(registry),
+      previewThemeCss: buildPreviewThemeCssArtifact(registry, rendered.themeSelection.themeName).css,
     });
+    return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
   }
 
   const exportMarkdown = getExportMarkdown(source);
@@ -96,18 +121,21 @@ export async function buildExportHtmlString(
   const theme = resolveExportDocumentTheme(extensionUri, document, source, exportMode);
   const documentTableLayout = getDocumentTableLayout(document);
 
-  return buildStandaloneHtml({
+  const hasMermaid = containsMermaid(body);
+  const hasMath = containsMath(body);
+  const html = buildStandaloneHtml({
     title: path.basename(document.fileName),
     body,
-    previewCss,
-    katexCss: rewriteKatexCssUrls(katexCss),
-    mermaidScript,
+    previewCss: [previewCoreCss, previewDocumentCss, hasMermaid ? previewMermaidCss : ''].filter(Boolean).join('\n\n'),
+    katexCss: hasMath ? rewriteKatexCssUrls(katexCss) : '',
+    mermaidScript: hasMermaid ? mermaidScript : '',
     htmlClass: theme.hostThemeClass,
     bodyClass: theme.bodyClass,
     bodyAttributes: `${theme.bodyAttributes} data-preview-page-width="${documentTableLayout === 'wide' ? 'full' : 'readable'}" data-document-table-layout="${documentTableLayout}"`,
     documentThemeCss: theme.documentThemeCss,
     exportMode,
   });
+  return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
 }
 
 export async function exportMarkdownAsHtml(extensionUri: vscode.Uri, document: vscode.TextDocument): Promise<vscode.Uri | undefined> {
@@ -129,8 +157,76 @@ export async function exportMarkdownAsHtml(extensionUri: vscode.Uri, document: v
   return targetUri;
 }
 
+function externalizeHtmlArtifact(html: string): HtmlArtifact {
+  const dom = new JSDOM(html);
+  const outputDocument = dom.window.document;
+  const assets: HtmlAsset[] = [];
+  const styleElements = [...outputDocument.querySelectorAll<HTMLStyleElement>('style[data-ams-export-asset="styles"]')];
+  const css = styleElements.map((element) => element.textContent ?? '').filter(Boolean).join('\n\n');
+  if (css) {
+    const asset = createHtmlAsset('markdown-ai-studio', 'css', 'text/css; charset=utf-8', css);
+    assets.push(asset);
+    const link = outputDocument.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = asset.path;
+    styleElements[0]?.before(link);
+    styleElements.forEach((element) => element.remove());
+  }
+
+  for (const script of outputDocument.querySelectorAll<HTMLScriptElement>('script[data-ams-export-asset]')) {
+    const logicalName = script.dataset.amsExportAsset;
+    const source = script.textContent ?? '';
+    if (!logicalName || !source) continue;
+    const asset = createHtmlAsset(logicalName, 'js', 'text/javascript; charset=utf-8', source);
+    assets.push(asset);
+    script.textContent = '';
+    script.src = asset.path;
+    script.removeAttribute('data-ams-export-asset');
+  }
+
+  return {
+    html: dom.serialize(),
+    assets: deduplicateHtmlAssets(assets),
+  };
+}
+
+function createHtmlAsset(logicalName: string, extension: string, mediaType: string, source: string): HtmlAsset {
+  const bytes = Buffer.from(source, 'utf8');
+  const contentHash = createHash('sha256').update(bytes).digest('base64url').slice(0, 18);
+  return {
+    path: `_assets/${logicalName}.${contentHash}.${extension}`,
+    mediaType,
+    contentHash,
+    bytes,
+  };
+}
+
+function deduplicateHtmlAssets(assets: readonly HtmlAsset[]): readonly HtmlAsset[] {
+  return [...new Map(assets.map((asset) => [`${asset.contentHash}:${asset.mediaType}`, asset])).values()];
+}
+
+function containsMermaid(html: string): boolean {
+  return /class="[^"]*\bmermaid(?:-rendered)?\b/u.test(html);
+}
+
+function containsMath(html: string): boolean {
+  return /class="[^"]*\bkatex\b/u.test(html);
+}
+
 function rewriteKatexCssUrls(css: string): string {
   return css.replace(/url\((?:\.\/)?fonts\//gu, 'url(https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/fonts/');
+}
+
+async function inlinePreviewFontUrls(css: string, extensionUri: vscode.Uri): Promise<string> {
+  const names = [...new Set([...css.matchAll(/url\(['"]?\.\.\/fonts\/([^'"\)]+)['"]?\)/gu)].map((match) => match[1]))];
+  let output = css;
+  await Promise.all(names.map(async (name) => {
+    const bytes = await readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'fonts', name).fsPath);
+    const mediaType = name.toLowerCase().endsWith('.woff2') ? 'font/woff2' : 'application/octet-stream';
+    const dataUri = `data:${mediaType};base64,${bytes.toString('base64')}`;
+    output = output.replaceAll(`../fonts/${name}`, dataUri);
+  }));
+  return output;
 }
 
 function getExportMarkdown(source: string): string {
@@ -155,38 +251,38 @@ function buildStandaloneHtml(input: {
   exportMode: ExportMode;
 }): string {
   return `<!DOCTYPE html>
-<html lang="en"${input.htmlClass ? ` class="${escapeHtml(input.htmlClass)}"` : ''}>
+<html lang="en" data-md-host-scheme="auto"${input.htmlClass ? ` class="${escapeHtml(input.htmlClass)}"` : ''}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(input.title)}</title>
-  <style>
-${getExportThemeCss()}
-  </style>
-  ${input.documentThemeCss ? `<style>
-${input.documentThemeCss}
-  </style>` : ''}
-  <style>
-${input.katexCss}
-  </style>
-  <style>
+  <style data-ams-export-asset="styles">
 ${input.previewCss}
   </style>
-  ${input.exportMode !== 'theme' ? `<style>
+  ${input.katexCss ? `<style data-ams-export-asset="styles">
+${input.katexCss}
+  </style>` : ''}
+  ${input.documentThemeCss ? `<style data-ams-export-asset="styles">
+${input.documentThemeCss}
+  </style>` : ''}
+  <style data-ams-export-asset="styles">
+${getExportThemeCss()}
+  </style>
+  ${input.exportMode !== 'theme' ? `<style data-ams-export-asset="styles">
 ${getPrinterFriendlyExportCss(input.exportMode)}
   </style>` : ''}
-  <style>
+  <style data-ams-export-asset="styles">
 ${getExportScrollCss()}
   </style>
 </head>
-<body class="${escapeHtml(input.bodyClass)}" data-preview-mode="document"${input.bodyAttributes}>
+<body class="${escapeHtml(input.bodyClass)}" data-md-preview-root data-preview-mode="document"${input.bodyAttributes}>
   <main class="markdown-body">${input.body}</main>
-  <script>
+  ${input.mermaidScript ? `<script data-ams-export-asset="mermaid">
 ${input.mermaidScript}
   </script>
   <script>
 ${getMermaidBootstrapScript()}
-  </script>
+  </script>` : ''}
 </body>
 </html>`;
 }
@@ -198,46 +294,50 @@ function buildPresentationStandaloneHtml(input: {
   katexCss: string;
   mermaidScript: string;
   previewThemeRuntimeScript: string;
-  previewScript: string;
+  previewCoreRuntimeScript: string;
+  previewPresentationRuntimeScript: string;
   previewThemeCss: string;
   hostThemeClass: string;
   exportMode: ExportMode;
 }): string {
   return `<!DOCTYPE html>
-<html lang="en"${input.hostThemeClass ? ` class="${escapeHtml(input.hostThemeClass)}"` : ''}>
+<html lang="en" data-md-host-scheme="auto"${input.hostThemeClass ? ` class="${escapeHtml(input.hostThemeClass)}"` : ''}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(input.title)}</title>
-  <style>
-${getExportThemeCss()}
-  </style>
-  <style>
-${input.previewThemeCss}
-  </style>
-  <style>
-${input.katexCss}
-  </style>
-  <style>
+  <style data-ams-export-asset="styles">
 ${input.previewCss}
   </style>
-  ${input.exportMode !== 'theme' ? `<style>
+  ${input.katexCss ? `<style data-ams-export-asset="styles">
+${input.katexCss}
+  </style>` : ''}
+  <style data-ams-export-asset="styles">
+${input.previewThemeCss}
+  </style>
+  <style data-ams-export-asset="styles">
+${getExportThemeCss()}
+  </style>
+  ${input.exportMode !== 'theme' ? `<style data-ams-export-asset="styles">
 ${getPrinterFriendlyExportCss(input.exportMode)}
   </style>` : ''}
 </head>
-<body class="${escapeHtml(['preview-mode-presentation', input.hostThemeClass].filter(Boolean).join(' '))}" data-preview-mode="presentation">
+<body class="${escapeHtml(['preview-mode-presentation', input.hostThemeClass].filter(Boolean).join(' '))}" data-preview-mode="presentation" data-presentation-content-overflow="scaleToFit">
   ${input.body}
   <script>
 ${getStandalonePreviewBridgeScript()}
   </script>
-  <script>
+  ${input.mermaidScript ? `<script data-ams-export-asset="mermaid">
 ${input.mermaidScript}
-  </script>
-  <script>
+  </script>` : ''}
+  <script data-ams-export-asset="preview-theme-runtime">
 ${input.previewThemeRuntimeScript}
   </script>
-  <script>
-${input.previewScript}
+  <script data-ams-export-asset="preview-core-runtime">
+${input.previewCoreRuntimeScript}
+  </script>
+  <script data-ams-export-asset="preview-presentation-runtime">
+${input.previewPresentationRuntimeScript}
   </script>
 </body>
 </html>`;
@@ -604,7 +704,6 @@ function resolveExportDocumentTheme(
         .filter(Boolean)
         .join(' '),
       bodyAttributes: buildBodyAttributes({
-        previewMode: 'document',
         documentTheme: selection.themeName,
         documentThemeMode: selection.themeMode,
         documentMermaidThemeLight: selection.lightMermaidTheme,
@@ -612,7 +711,7 @@ function resolveExportDocumentTheme(
         documentMermaidTransparentBackgroundLight: selection.lightMermaidTransparentBackground ? 'true' : 'false',
         documentMermaidTransparentBackgroundDark: selection.darkMermaidTransparentBackground ? 'true' : 'false',
       }),
-      documentThemeCss: buildDocumentThemeStylesheet(documentThemeRegistry),
+      documentThemeCss: buildDocumentThemeCssArtifact(documentThemeRegistry, selection.themeName).css,
     };
   } catch (error) {
     console.warn('[markdown-ai-studio] Failed to resolve export document theme. Falling back to auto theme.', error);
@@ -622,7 +721,6 @@ function resolveExportDocumentTheme(
         .filter(Boolean)
         .join(' '),
       bodyAttributes: buildBodyAttributes({
-        previewMode: 'document',
         documentTheme: 'auto',
         documentThemeMode: 'auto',
         documentMermaidThemeLight: 'default',

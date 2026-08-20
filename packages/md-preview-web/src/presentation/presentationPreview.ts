@@ -1,11 +1,12 @@
 import { parseMarkdownPresentation, resolveMarkdownPresentation } from '@mfo/core';
 import { distributeItemsAcrossSlots } from '@mfo/core';
-import { resolvePreviewThemeSelection, type PreviewThemeRegistry } from './previewThemeRegistry';
+import { resolvePreviewThemeSelection, type PreviewThemeRegistry, type PreviewThemeSelection } from './previewThemeRegistry';
 
 export type PresentationPreview = {
   deckTitle: string;
   slideCount: number;
   html: string;
+  themeSelection: PreviewThemeSelection;
 };
 
 type SlideLayoutContext = {
@@ -84,7 +85,7 @@ export function renderPresentationPreview(
   }))));
 
   const html = `
-    <section class="presentation-preview ${themeSelection.themeClassName}" data-slide-count="${slides.length}" data-presentation-theme="${escapeHtml(themeSelection.themeName)}" data-presentation-mermaid-theme-light="${escapeHtml(themeSelection.lightMermaidTheme)}" data-presentation-mermaid-theme-dark="${escapeHtml(themeSelection.darkMermaidTheme)}" data-presentation-mermaid-transparent-background-light="${themeSelection.lightMermaidTransparentBackground ? 'true' : 'false'}" data-presentation-mermaid-transparent-background-dark="${themeSelection.darkMermaidTransparentBackground ? 'true' : 'false'}">
+    <section class="presentation-preview ${themeSelection.themeClassName}" data-md-preview-root data-slide-count="${slides.length}" data-presentation-theme="${escapeHtml(themeSelection.themeName)}" data-presentation-mermaid-theme-light="${escapeHtml(themeSelection.lightMermaidTheme)}" data-presentation-mermaid-theme-dark="${escapeHtml(themeSelection.darkMermaidTheme)}" data-presentation-mermaid-transparent-background-light="${themeSelection.lightMermaidTransparentBackground ? 'true' : 'false'}" data-presentation-mermaid-transparent-background-dark="${themeSelection.darkMermaidTransparentBackground ? 'true' : 'false'}">
       <header class="presentation-header">
         <div class="presentation-header-heading">
           <h1 class="presentation-header-title">${escapeHtml(deckTitle)}</h1>
@@ -144,6 +145,7 @@ export function renderPresentationPreview(
     deckTitle,
     slideCount: slides.length,
     html,
+    themeSelection,
   };
 }
 

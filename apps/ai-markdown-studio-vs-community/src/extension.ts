@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { CommunityApiV1 } from '@mfo/community-api';
+import type { CommunityApiV2 } from '@mfo/community-api';
 import {
   createMarkdownTableFormattingProvider,
   exportDocxBasicCommand,
@@ -30,7 +30,7 @@ import {
   toggleFrontMatterVisibility,
 } from './panel/frontMatterDisplayState';
 
-export function activate(context: vscode.ExtensionContext): CommunityApiV1 {
+export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
   const previews = new Map<string, MarkdownPreviewPanel>();
   const markdownTableFormattingProvider = createMarkdownTableFormattingProvider();
   const customEditor = new MarkdownPreviewCustomEditor(context.extensionUri);

@@ -11,7 +11,8 @@ import { createMarkdownRenderer, isMarkdownPresentationSource } from '@mfo/core'
 
 import { renderPresentationPreview } from './presentation/presentationPreview';
 import type { CreateDocument } from './presentation/presentationPreview';
-import { loadPreviewThemeRegistryFromData, buildPreviewThemeStylesheet } from './presentation/previewThemeRegistry';
+import { buildPreviewThemeCssArtifact, loadPreviewThemeRegistryFromData } from './presentation/previewThemeRegistry';
+import type { ThemeCssArtifact } from './themeCssArtifact';
 
 // @ts-expect-error — JSON theme files are resolved by the esbuild bundler at build time.
 import blackTheme from '../assets/themes/presentation/black.json';
@@ -23,7 +24,6 @@ import modernBlueTheme from '../assets/themes/presentation/modern-blue.json';
 const md = createMarkdownRenderer();
 
 const previewThemeRegistry = loadPreviewThemeRegistryFromData([blackTheme, galaxyTheme, modernBlueTheme]);
-const themeStylesheet = buildPreviewThemeStylesheet(previewThemeRegistry);
 
 const additionalTags = [
   'math',
@@ -118,10 +118,10 @@ const createDocument: CreateDocument = (html: string): Document => {
   return isMarkdownPresentationSource(rawMarkdown);
 };
 
-(window as any).renderPresentationToHtml = function (rawMarkdown: string): { html: string; themeStylesheet: string } {
+(window as any).renderPresentationToHtml = function (rawMarkdown: string): { html: string; themeArtifact: ThemeCssArtifact } {
   const preview = renderPresentationPreview(rawMarkdown, renderMarkdown, previewThemeRegistry, createDocument);
   return {
     html: preview.html,
-    themeStylesheet,
+    themeArtifact: buildPreviewThemeCssArtifact(previewThemeRegistry, preview.themeSelection.themeName),
   };
 };

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:fs/promises', () => ({
   readFile: vi.fn(async (filePath: string) => {
-    if (filePath.endsWith('preview.css')) {
+    if (filePath.endsWith('.css') && !filePath.endsWith('katex.min.css')) {
       return '.markdown-body { color: black; }';
     }
 
@@ -16,22 +16,44 @@ vi.mock('node:fs/promises', () => ({
 }));
 
 vi.mock('@mfo/preview-web', () => ({
-  buildDocumentThemeStylesheet: vi.fn(() => [
-    'body.document-theme-light {',
+  buildDocumentThemeCssArtifact: vi.fn((_registry, themeName: string) => ({
+    family: 'document',
+    themeName: themeName || 'auto',
+    themeClassName: themeName === 'light' ? 'document-theme-light' : 'document-theme-auto',
+    contentHash: 'document-theme-hash',
+    fileName: 'themes/document/test.css',
+    css: [
+    '[data-md-preview-root].document-theme-light {',
     '  --md-preview-body-color: #111111;',
     '  --md-preview-heading-color: #1e3a8a;',
     '  --md-preview-link-color: #0969da;',
     '  --md-preview-content-bg: linear-gradient(180deg, #ffffff, #eff6ff);',
     '  --md-preview-code-bg: #d7e8ff;',
     '}',
-  ].join('\n')),
-  buildPreviewThemeStylesheet: vi.fn(() => '.presentation-preview { color: white; }'),
+  ].join('\n'),
+  })),
+  buildPreviewThemeCssArtifact: vi.fn((_registry, themeName: string) => ({
+    family: 'presentation',
+    themeName: themeName || 'auto',
+    themeClassName: `presentation-theme-${themeName || 'auto'}`,
+    contentHash: 'presentation-theme-hash',
+    fileName: 'themes/presentation/test.css',
+    css: '.presentation-preview { color: white; }',
+  })),
   renderPresentationPreview: vi.fn((source: string) => ({
     deckTitle: 'Deck Title',
     slideCount: 2,
     html: source.includes('document: presentation')
       ? '<section class="presentation-preview"><div class="presentation-stage"><section class="presentation-slide is-active"><article class="presentation-slide-body markdown-body"><h1>Deck Title</h1></article></section><section class="presentation-slide"><article class="presentation-slide-body markdown-body"><h1>Opening</h1></article></section></div></section>'
       : '',
+    themeSelection: {
+      themeName: 'auto',
+      themeClassName: 'presentation-theme-auto',
+      lightMermaidTheme: 'default',
+      darkMermaidTheme: 'dark',
+      lightMermaidTransparentBackground: false,
+      darkMermaidTransparentBackground: false,
+    },
   })),
   resolveDocumentThemeSelection: vi.fn((themeName: string) => ({
     themeName: themeName || 'auto',
@@ -93,7 +115,7 @@ vi.mock('vscode', () => ({
   },
 }));
 
-import { buildExportHtmlString } from '../../../src/export/html/htmlExporter';
+import { buildExportHtmlArtifact, buildExportHtmlString } from '../../../src/export/html/htmlExporter';
 import * as vscode from 'vscode';
 
 describe('buildExportHtmlString', () => {
@@ -191,7 +213,7 @@ describe('buildExportHtmlString', () => {
       { exportMode: 'paper-borderless' },
     );
 
-    expect(html).toContain('<html lang="en">');
+    expect(html).toContain('<html lang="en" data-md-host-scheme="auto">');
     expect(html).toContain('<body class="preview-mode-document document-theme-light document-theme-mode-light"');
     expect(html).toContain('data-document-theme="light"');
     expect(html).toContain('border: 0 !important;');
@@ -354,8 +376,8 @@ describe('buildExportHtmlString', () => {
 
     const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
 
-    expect(html).toContain('<html lang="en" class="vscode-dark">');
-    expect(html).toContain('<body class="preview-mode-presentation vscode-dark" data-preview-mode="presentation">');
+    expect(html).toContain('<html lang="en" data-md-host-scheme="auto" class="vscode-dark">');
+    expect(html).toContain('<body class="preview-mode-presentation vscode-dark" data-preview-mode="presentation" data-presentation-content-overflow="scaleToFit">');
   });
 
   it('pins auto-theme exports to the current VS Code dark mode when preview is dark', async () => {
@@ -373,8 +395,8 @@ describe('buildExportHtmlString', () => {
 
     const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
 
-    expect(html).toContain('<html lang="en" class="vscode-dark">');
-    expect(html).toContain('class="preview-mode-document document-theme-auto document-theme-mode-auto vscode-dark" data-preview-mode="document"');
+    expect(html).toContain('<html lang="en" data-md-host-scheme="auto" class="vscode-dark">');
+    expect(html).toContain('class="preview-mode-document document-theme-auto document-theme-mode-auto vscode-dark" data-md-preview-root data-preview-mode="document"');
     expect(html).toContain('data-document-mermaid-theme-dark="dark"');
   });
 
@@ -396,6 +418,49 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('htmlLabels: true');
     expect(html).toContain("document.querySelectorAll('.mermaid, .mermaid-rendered[data-mermaid-source]')");
     expect(html).toContain('normalizeRenderedMermaidSvgSizing(block);');
+  });
+
+  it('omits Mermaid and KaTeX assets from plain inline document exports', async () => {
+    const document = {
+      fileName: 'plain.md',
+      uri: {
+        fsPath: 'C:/docs/plain.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/plain.md',
+      },
+      getText: () => '# Plain document\n\nNo optional renderers are needed.',
+    } as never;
+
+    const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+
+    expect(html).not.toContain('window.mermaid = {};');
+    expect(html).not.toContain('data-ams-export-asset="mermaid"');
+    expect(html).not.toContain('katex.min.css');
+  });
+
+  it('returns declared fingerprinted assets for external website exports', async () => {
+    const document = {
+      fileName: 'diagram.md',
+      uri: {
+        fsPath: 'C:/docs/diagram.md',
+        scheme: 'file',
+        toString: () => 'file:///C:/docs/diagram.md',
+      },
+      getText: () => '```mermaid\nflowchart TD\nA-->B\n```',
+    } as never;
+
+    const artifact = await buildExportHtmlArtifact(
+      { fsPath: 'C:/extension', scheme: 'file' } as never,
+      document,
+      { assetMode: 'external' },
+    );
+
+    expect(artifact.assets.some((asset) => /^_assets\/markdown-ai-studio\.[A-Za-z0-9_-]+\.css$/u.test(asset.path))).toBe(true);
+    expect(artifact.assets.some((asset) => /^_assets\/mermaid\.[A-Za-z0-9_-]+\.js$/u.test(asset.path))).toBe(true);
+    expect(artifact.assets.every((asset) => asset.bytes.byteLength > 0 && asset.contentHash.length > 0)).toBe(true);
+    expect(artifact.html).toContain('<link rel="stylesheet" href="_assets/markdown-ai-studio.');
+    expect(artifact.html).toContain('<script src="_assets/mermaid.');
+    expect(artifact.html).not.toContain('data-ams-export-asset');
   });
 
   it('preserves Mermaid anchor hrefs in exported HTML', async () => {

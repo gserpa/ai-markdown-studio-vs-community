@@ -710,7 +710,7 @@ body.preview-mode-document .markdown-body td {
   word-break: normal;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper {
   position: relative;
   width: 100%;
   box-sizing: border-box;
@@ -727,40 +727,40 @@ body.preview-mode-document .markdown-body .table-scroll-wrapper {
   --md-preview-table-control-color: var(--md-preview-table-header-color, var(--md-preview-body-color, #24292f));
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wide'] table {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wide'] table {
   width: max-content;
   min-width: 100%;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wide'] th,
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wide'] td {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wide'] th,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wide'] td {
   white-space: nowrap;
   overflow-wrap: normal;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] {
   overflow-x: hidden;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] table {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] table {
   width: 100%;
   min-width: 0;
   table-layout: auto;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] th,
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] td {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] th,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] td {
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-overflow-capable='true'] table > thead > tr > :last-child,
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-overflow-capable='true'] table > tbody > tr:first-child > th:last-child {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-overflow-capable='true'] table > thead > tr > :last-child,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-overflow-capable='true'] table > tbody > tr:first-child > th:last-child {
   padding-right: calc(16px + var(--md-preview-table-control-width));
 }
 
-body.preview-mode-document .markdown-body .table-overlay-button,
-body.preview-mode-document .markdown-body .table-edge-scroll-button {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-button,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button {
   appearance: none;
   display: flex;
   align-items: center;
@@ -777,7 +777,7 @@ body.preview-mode-document .markdown-body .table-edge-scroll-button {
   overflow: hidden;
 }
 
-body.preview-mode-document .markdown-body .table-overlay-lane {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-lane {
   position: sticky;
   top: 0;
   left: 0;
@@ -788,7 +788,7 @@ body.preview-mode-document .markdown-body .table-overlay-lane {
   z-index: 4;
 }
 
-body.preview-mode-document .markdown-body .table-edge-scroll-lane {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-lane {
   position: sticky;
   top: var(--md-preview-table-header-height);
   left: 0;
@@ -800,15 +800,15 @@ body.preview-mode-document .markdown-body .table-edge-scroll-lane {
   z-index: 4;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-hover-side='left'][data-can-scroll-left='true'] .table-edge-scroll-button[data-table-scroll-direction='left'],
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-hover-side='right'][data-can-scroll-right='true'] .table-edge-scroll-button[data-table-scroll-direction='right'],
-body.preview-mode-document .markdown-body .table-scroll-wrapper:hover .table-overlay-button,
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-hover-side='right'] .table-overlay-button {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-hover-side='left'][data-can-scroll-left='true'] .table-edge-scroll-button[data-table-scroll-direction='left'],
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-hover-side='right'][data-can-scroll-right='true'] .table-edge-scroll-button[data-table-scroll-direction='right'],
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:hover .table-overlay-button,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-hover-side='right'] .table-overlay-button {
   opacity: 1;
   pointer-events: auto;
 }
 
-body.preview-mode-document .markdown-body .table-edge-scroll-button::before {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -819,19 +819,19 @@ body.preview-mode-document .markdown-body .table-edge-scroll-button::before {
   z-index: 0;
 }
 
-body.preview-mode-document .markdown-body .table-edge-scroll-button:hover::before {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button:hover::before {
   opacity: 0.34;
 }
 
-body.preview-mode-document .markdown-body .table-overlay-button:focus-visible,
-body.preview-mode-document .markdown-body .table-edge-scroll-button:focus-visible {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-button:focus-visible,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button:focus-visible {
   opacity: 1;
   outline: 2px solid var(--vscode-focusBorder, #0969da);
   outline-offset: 2px;
   pointer-events: auto;
 }
 
-body.preview-mode-document .markdown-body .table-control-icon {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-control-icon {
   display: block;
   width: 19px;
   height: 19px;
@@ -844,7 +844,7 @@ body.preview-mode-document .markdown-body .table-control-icon {
   z-index: 1;
 }
 
-body.preview-mode-document .markdown-body .table-overlay-button {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-button {
   position: absolute;
   top: 0;
   right: 0;
@@ -857,11 +857,11 @@ body.preview-mode-document .markdown-body .table-overlay-button {
   background: transparent;
 }
 
-body.preview-mode-document .markdown-body .table-overlay-button:hover {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-button:hover {
   background: transparent;
 }
 
-body.preview-mode-document .markdown-body .table-edge-scroll-button {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button {
   position: absolute;
   top: 0;
   width: var(--md-preview-table-control-width);
@@ -871,40 +871,40 @@ body.preview-mode-document .markdown-body .table-edge-scroll-button {
   border-radius: 0;
 }
 
-body.preview-mode-document .markdown-body .table-edge-scroll-button[data-table-scroll-direction='left'] {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button[data-table-scroll-direction='left'] {
   left: 0;
   border-right: 1px solid var(--md-preview-table-control-border);
 }
 
-body.preview-mode-document .markdown-body .table-edge-scroll-button[data-table-scroll-direction='right'] {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button[data-table-scroll-direction='right'] {
   right: 0;
   border-left: 1px solid var(--md-preview-table-control-border);
 }
 
-body.preview-mode-document .markdown-body .table-edge-scroll-button:disabled {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button:disabled {
   opacity: 0;
   pointer-events: none;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper:hover[data-hover-side='left'][data-can-scroll-left='true'] .table-edge-scroll-button[data-table-scroll-direction='left'],
-body.preview-mode-document .markdown-body .table-scroll-wrapper:hover[data-hover-side='right'][data-can-scroll-right='true'] .table-edge-scroll-button[data-table-scroll-direction='right'] {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:hover[data-hover-side='left'][data-can-scroll-left='true'] .table-edge-scroll-button[data-table-scroll-direction='left'],
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:hover[data-hover-side='right'][data-can-scroll-right='true'] .table-edge-scroll-button[data-table-scroll-direction='right'] {
   opacity: 1;
   pointer-events: auto;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper:not([data-overflow-x='true']) .table-edge-scroll-button,
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] .table-edge-scroll-button,
-body.preview-mode-document .markdown-body .table-scroll-wrapper:not([data-overflow-x='true']) .table-edge-scroll-lane,
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] .table-edge-scroll-lane {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:not([data-overflow-x='true']) .table-edge-scroll-button,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] .table-edge-scroll-button,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:not([data-overflow-x='true']) .table-edge-scroll-lane,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wrap'] .table-edge-scroll-lane {
   display: none;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper:not([data-overflow-capable='true']) .table-overlay-button {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper:not([data-overflow-capable='true']) .table-overlay-button {
   display: none;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper::before,
-body.preview-mode-document .markdown-body .table-scroll-wrapper::after {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper::before,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper::after {
   content: '';
   position: sticky;
   top: 0;
@@ -916,20 +916,20 @@ body.preview-mode-document .markdown-body .table-scroll-wrapper::after {
   opacity: 0;
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper::before {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper::before {
   left: 0;
   float: left;
   box-shadow: 16px 0 18px 12px color-mix(in srgb, var(--md-preview-table-bg, #fff) 78%, transparent);
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper::after {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper::after {
   left: calc(100% - 26px);
   float: right;
   box-shadow: -16px 0 18px 12px color-mix(in srgb, var(--md-preview-table-bg, #fff) 78%, transparent);
 }
 
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-can-scroll-left='true']::before,
-body.preview-mode-document .markdown-body .table-scroll-wrapper[data-can-scroll-right='true']::after {
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-can-scroll-left='true']::before,
+:is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-can-scroll-right='true']::after {
   opacity: 1;
 }
 
@@ -2019,6 +2019,21 @@ body.preview-mode-presentation {
   line-height: 1.55;
 }
 
+/* In scale-to-fit mode the runtime fits these regions to the slide frame.
+   Keep template-level overflow containers from reintroducing a nested
+   scrollbar when browser layout rounds a fitted dimension by a pixel. */
+body[data-presentation-content-overflow='scaleToFit'] .presentation-standard-content,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-side-banner-content,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-side-picture-content,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-default-side-content,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-table-legend-copy,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-table-legend-table,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-divider-c-subtitle,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-thanks-note,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-slide-body pre {
+  overflow: hidden;
+}
+
 .presentation-content-fit {
   box-sizing: border-box;
   width: var(--presentation-content-fit-width, 100%);
@@ -2064,6 +2079,99 @@ body.preview-mode-presentation {
 
 .presentation-slide-body table {
   font-size: 1rem;
+}
+
+.presentation-table-scroll {
+  max-width: 100%;
+  margin: 0 0 8px;
+  padding: 0;
+  --md-preview-table-control-color: var(--presentation-table-header-color, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)));
+  --md-preview-table-control-bg: color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 88%, transparent);
+  --md-preview-table-control-hover-bg: color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 76%, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 24%);
+  --md-preview-table-control-border: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 26%, transparent);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%) color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+  -webkit-overflow-scrolling: touch;
+}
+
+.presentation-table-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.presentation-table-scroll::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-table-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%);
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 40%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 60%);
+}
+
+.presentation-table-scroll table {
+  margin: 0;
+}
+
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll[data-table-layout='wrap'] {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll[data-table-layout='wrap'] table {
+  display: table;
+  height: auto;
+}
+
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll::before,
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll::after {
+  display: none !important;
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-control-icon {
+  color: var(--presentation-table-header-color, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)));
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-overlay-button {
+  align-items: flex-start;
+  padding-top: 12px;
+  box-sizing: border-box;
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-overlay-lane {
+  position: sticky;
+  height: var(--md-preview-table-header-height);
+  margin: 0 0 calc(-1 * var(--md-preview-table-header-height));
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-lane {
+  position: sticky;
+  top: var(--md-preview-table-header-height);
+  height: var(--md-preview-table-edge-height);
+  min-height: 42px;
+  margin: 0 0 calc(-1 * var(--md-preview-table-edge-height));
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button {
+  height: 100%;
+  min-height: 42px;
+  color: var(--presentation-table-header-color, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)));
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button::before {
+  display: block;
+  background: var(--presentation-table-header-bg, var(--presentation-panel-bg-soft, transparent));
+  opacity: 0.18;
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button:hover::before {
+  opacity: 0.32;
 }
 
 .presentation-slide-body pre {
@@ -3159,5 +3267,112 @@ body.presentation-is-immersive .presentation-surface {
 
   .presentation-header-controls {
     gap: 6px;
+  }
+}
+/* Browser compatibility fallbacks for standalone exports in browsers without full color-mix/light-dark support. */
+@supports not ((color: color-mix(in srgb, #000000 50%, #ffffff)) and (color: light-dark(#ffffff, #000000))) {
+  body {
+    --md-preview-blockquote-bg: rgba(9, 105, 218, 0.06);
+    --md-preview-blockquote-nested-bg: rgba(9, 105, 218, 0.10);
+    --md-preview-code-bg: rgba(36, 41, 47, 0.06);
+    --md-preview-table-border: rgba(208, 215, 222, 0.80);
+    --md-preview-table-bg: rgba(255, 255, 255, 0.98);
+    --md-preview-table-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    --md-preview-table-cell-border: rgba(208, 215, 222, 0.72);
+    --md-preview-table-header-bg: rgba(31, 41, 55, 0.08);
+    --md-preview-table-row-bg: #ffffff;
+    --md-preview-table-row-alt-bg: rgba(31, 41, 55, 0.04);
+    --md-preview-table-row-hover-bg: rgba(9, 105, 218, 0.12);
+    --md-preview-hover-bg: rgba(9, 105, 218, 0.16);
+    --md-preview-hover-bg-soft: rgba(9, 105, 218, 0.10);
+    --md-preview-hover-border: rgba(9, 105, 218, 0.35);
+    --md-preview-lightbox-border: rgba(208, 215, 222, 0.78);
+    --md-preview-lightbox-bg: rgba(248, 250, 252, 0.96);
+    --md-preview-lightbox-button-border: rgba(208, 215, 222, 0.82);
+    --md-preview-lightbox-button-bg: rgba(31, 41, 55, 0.14);
+    --md-preview-lightbox-button-hover-bg: rgba(9, 105, 218, 0.28);
+    --md-preview-lightbox-viewport-bg: rgba(31, 41, 55, 0.08);
+    --md-preview-lightbox-scrollbar-track: rgba(31, 41, 55, 0.08);
+    --md-preview-lightbox-scrollbar-thumb: rgba(31, 41, 55, 0.28);
+    --md-preview-lightbox-scrollbar-thumb-hover: rgba(31, 41, 55, 0.40);
+  }
+
+  body.vscode-dark,
+  body.vscode-high-contrast {
+    --md-preview-blockquote-bg: rgba(88, 166, 255, 0.10);
+    --md-preview-blockquote-nested-bg: rgba(88, 166, 255, 0.16);
+    --md-preview-code-bg: rgba(255, 255, 255, 0.08);
+    --md-preview-table-border: rgba(139, 148, 158, 0.52);
+    --md-preview-table-bg: rgba(13, 17, 23, 0.98);
+    --md-preview-table-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+    --md-preview-table-cell-border: rgba(139, 148, 158, 0.42);
+    --md-preview-table-header-bg: rgba(255, 255, 255, 0.10);
+    --md-preview-table-row-bg: #0d1117;
+    --md-preview-table-row-alt-bg: rgba(255, 255, 255, 0.04);
+    --md-preview-table-row-hover-bg: rgba(88, 166, 255, 0.16);
+    --md-preview-hover-bg: rgba(88, 166, 255, 0.18);
+    --md-preview-hover-bg-soft: rgba(88, 166, 255, 0.12);
+    --md-preview-hover-border: rgba(88, 166, 255, 0.35);
+    --md-preview-lightbox-border: rgba(139, 148, 158, 0.46);
+    --md-preview-lightbox-bg: rgba(22, 27, 34, 0.96);
+    --md-preview-lightbox-button-border: rgba(139, 148, 158, 0.46);
+    --md-preview-lightbox-button-bg: rgba(255, 255, 255, 0.12);
+    --md-preview-lightbox-button-hover-bg: rgba(88, 166, 255, 0.24);
+    --md-preview-lightbox-viewport-bg: rgba(255, 255, 255, 0.08);
+    --md-preview-lightbox-scrollbar-track: rgba(255, 255, 255, 0.08);
+    --md-preview-lightbox-scrollbar-thumb: rgba(255, 255, 255, 0.24);
+    --md-preview-lightbox-scrollbar-thumb-hover: rgba(255, 255, 255, 0.36);
+  }
+
+  body.preview-mode-presentation {
+    --md-hover-bg: rgba(79, 70, 216, 0.16);
+    --md-hover-bg-soft: rgba(79, 70, 216, 0.10);
+    --md-hover-border: rgba(79, 70, 216, 0.26);
+  }
+
+  body.preview-mode-presentation.vscode-dark,
+  body.preview-mode-presentation.vscode-high-contrast {
+    --md-hover-bg: rgba(147, 197, 253, 0.18);
+    --md-hover-bg-soft: rgba(147, 197, 253, 0.12);
+    --md-hover-border: rgba(147, 197, 253, 0.28);
+  }
+
+  body.preview-mode-presentation .presentation-surface {
+    background: var(--presentation-surface-bg, linear-gradient(180deg, #eef2ff, #dde6ff));
+    box-shadow: var(--presentation-surface-shadow, 0 28px 80px rgba(44, 52, 105, 0.28));
+  }
+
+  body.preview-mode-presentation.vscode-dark .presentation-surface,
+  body.preview-mode-presentation.vscode-high-contrast .presentation-surface {
+    background: var(--presentation-surface-bg, linear-gradient(180deg, #20242c, #11151c));
+    box-shadow: var(--presentation-surface-shadow, 0 28px 80px rgba(0, 0, 0, 0.55));
+  }
+
+  body.preview-mode-presentation .presentation-slide-body.markdown-body code {
+    background: var(--presentation-inline-code-bg, rgba(79, 70, 216, 0.12));
+    border-color: var(--presentation-inline-code-border, rgba(79, 70, 216, 0.16));
+  }
+
+  body.preview-mode-presentation .presentation-slide-body.markdown-body pre,
+  body.preview-mode-presentation .presentation-slide-body.markdown-body pre code,
+  body.preview-mode-presentation .presentation-slide-body.markdown-body pre.hljs {
+    background: var(--presentation-code-bg, rgba(79, 70, 216, 0.08));
+    border-color: var(--presentation-code-border, rgba(79, 70, 216, 0.16));
+  }
+
+  body.preview-mode-presentation .presentation-slide-body.markdown-body th {
+    background: var(--presentation-table-header-bg, rgba(79, 70, 216, 0.12));
+  }
+
+  body.preview-mode-presentation .presentation-layout-media-shell,
+  body.preview-mode-presentation .presentation-image-frame {
+    background: var(--presentation-media-frame-bg, rgba(255, 255, 255, 0.90));
+  }
+
+  body.preview-mode-presentation.vscode-dark .presentation-layout-media-shell,
+  body.preview-mode-presentation.vscode-dark .presentation-image-frame,
+  body.preview-mode-presentation.vscode-high-contrast .presentation-layout-media-shell,
+  body.preview-mode-presentation.vscode-high-contrast .presentation-image-frame {
+    background: var(--presentation-media-frame-bg, rgba(21, 28, 38, 0.92));
   }
 }

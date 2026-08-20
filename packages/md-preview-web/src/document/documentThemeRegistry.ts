@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { indentCss, stableCssHash, type ThemeCssArtifact } from '../themeCssArtifact';
 
 export type DocumentThemeMode = 'dark' | 'light';
 
@@ -313,6 +314,47 @@ export function buildDocumentThemeStylesheet(registry: DocumentThemeRegistry): s
     ].join('\n'));
   }
 
+  return sections.join('\n\n');
+}
+
+export function buildDocumentThemeCssArtifact(
+  registry: DocumentThemeRegistry,
+  requestedThemeName: string,
+): ThemeCssArtifact {
+  const selection = resolveDocumentThemeSelection(requestedThemeName, registry);
+  const css = selection.themeName === 'auto'
+    ? buildAutoDocumentThemeStylesheet(registry)
+    : buildExplicitDocumentThemeStylesheet(registry, selection.themeName);
+  const contentHash = stableCssHash(css);
+  return {
+    family: 'document',
+    themeName: selection.themeName,
+    themeClassName: selection.themeClassName,
+    css,
+    contentHash,
+    fileName: `themes/document/${toCssClassToken(selection.themeName)}.${contentHash}.css`,
+  };
+}
+
+function buildExplicitDocumentThemeStylesheet(registry: DocumentThemeRegistry, themeName: string): string {
+  const theme = registry.themes.get(themeName);
+  if (!theme) return buildAutoDocumentThemeStylesheet(registry);
+  const selector = `[data-md-preview-root].document-theme-${toCssClassToken(theme.name)},\n[data-md-theme-scope].document-theme-${toCssClassToken(theme.name)}`;
+  return `${selector} {\n${serializeThemeTokens(theme.tokens)}\n}`;
+}
+
+function buildAutoDocumentThemeStylesheet(registry: DocumentThemeRegistry): string {
+  const lightTheme = registry.themes.get(registry.defaultLightThemeName);
+  const darkTheme = registry.themes.get(registry.defaultDarkThemeName);
+  const sections: string[] = [];
+  if (lightTheme) {
+    sections.push(`[data-md-preview-root].document-theme-auto,\n[data-md-theme-scope].document-theme-auto {\n${serializeThemeTokens(lightTheme.tokens)}\n}`);
+  }
+  if (darkTheme) {
+    const tokens = serializeThemeTokens(darkTheme.tokens);
+    sections.push(`[data-md-preview-root].vscode-dark.document-theme-auto,\n[data-md-preview-root].vscode-high-contrast.document-theme-auto,\n[data-md-host-scheme='dark'] [data-md-preview-root].document-theme-auto,\n[data-md-host-scheme='dark'] [data-md-theme-scope].document-theme-auto,\n.vscode-dark [data-md-preview-root].document-theme-auto,\n.vscode-high-contrast [data-md-preview-root].document-theme-auto,\n.vscode-dark [data-md-theme-scope].document-theme-auto,\n.vscode-high-contrast [data-md-theme-scope].document-theme-auto {\n${tokens}\n}`);
+    sections.push(`@media (prefers-color-scheme: dark) {\n  [data-md-host-scheme='auto'] [data-md-preview-root].document-theme-auto,\n  [data-md-host-scheme='auto'] [data-md-theme-scope].document-theme-auto {\n${indentCss(tokens, 2)}\n  }\n}`);
+  }
   return sections.join('\n\n');
 }
 

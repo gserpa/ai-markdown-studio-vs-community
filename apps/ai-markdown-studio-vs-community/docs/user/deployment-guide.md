@@ -1,6 +1,6 @@
 ---
 date: 2026-08-12
-version: 1.2.0
+version: 1.2.1
 ---
 
 # Deployment Guide — AI Markdown Studio Community
@@ -46,13 +46,13 @@ Community includes VS Code Language Model API workflows for document/MPS generat
 
 Defined in the repository-root `package.json`:
 
-| Script | Purpose |
-| --- | --- |
-| `npm run check:boundary` | Fails if Pro tokens/dependencies/source leak into Community |
-| `npm run compile` | Cleans, builds `@mfo/core` and `@mfo/preview-web`, syncs preview assets, compiles the extension |
-| `npm test` | Runs the Vitest suite (requires the workspace packages to be compiled first) |
-| `npm run package` | Compiles and produces the `.vsix` (runs the VSIX boundary/size check) |
-| `npm run verify` | Full gate: `check:boundary` → `compile` → `test` → `package` |
+| Script                   | Purpose                                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `npm run check:boundary` | Fails if Pro tokens/dependencies/source leak into Community                                     |
+| `npm run compile`        | Cleans, builds `@mfo/core` and `@mfo/preview-web`, syncs preview assets, compiles the extension |
+| `npm test`               | Runs the Vitest suite (requires the workspace packages to be compiled first)                    |
+| `npm run package`        | Compiles and produces the `.vsix` (runs the VSIX boundary/size check)                           |
+| `npm run verify`         | Full gate: `check:boundary` → `compile` → `test` → `package`                                    |
 
 > **Important:** `npm test` on its own imports the compiled `@mfo/core` / `@mfo/preview-web` packages. Run `npm run compile` first, or just run `npm run verify`, which compiles before testing. CI uses the compile-then-test order.
 
@@ -77,7 +77,7 @@ npm install
 npm run verify
 ```
 
-`npm run verify` produces a `.vsix` in the repository root, named from the extension name and version, for example `markdown-ai-studio-1.2.0.vsix`.
+`npm run verify` produces a `.vsix` in the repository root, named from the extension name and version, for example `markdown-ai-studio-1.2.1.vsix`.
 
 To package without the full gate (after a successful compile):
 
@@ -96,7 +96,7 @@ Distribute the file by email, internal file share, a GitHub/Azure DevOps release
 **Command line:**
 
 ```powershell
-code --install-extension markdown-ai-studio-1.2.0.vsix
+code --install-extension markdown-ai-studio-1.2.1.vsix
 ```
 
 ### Updating a `.vsix` deployment
@@ -156,7 +156,7 @@ AI Markdown Studio Pro is a **separate standalone** extension built from a pinne
 
 1. Community can be published to the Marketplace or distributed as a `.vsix` on its own schedule.
 2. Pro can be published independently because it no longer declares a runtime `extensionDependencies` relationship to Community.
-3. Keep the Community public API version (`CommunityApiV1`, currently `"1.0"`) backward-compatible. Pro pins and validates the source-level contract it composes against; if you make a breaking API change, bump the Community API version and ship a matching Pro update.
+3. Keep the Community public API version (`CommunityApiV2`, currently `"2.0"`) backward-compatible. Pro pins and validates the source-level contract it composes against; if you make a breaking API change, bump the Community API version and ship a matching Pro update.
 4. Users install either Community or Pro. Pro already contains the tested Community foundation used for that Pro release.
 
 ## 8. CI/CD recommendations

@@ -243,7 +243,7 @@ describe('buildPreviewHtml', () => {
     );
 
     expect(html).toContain('data-document-theme="lumen-paper"');
-    expect(html).toContain('body.document-theme-lumen-paper {');
+    expect(html).toContain('[data-md-preview-root].document-theme-lumen-paper');
     expect(html).toContain('--md-preview-body-color: #123456;');
   });
 });
