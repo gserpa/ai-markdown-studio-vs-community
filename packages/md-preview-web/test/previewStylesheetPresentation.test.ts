@@ -78,8 +78,8 @@ body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.pr
   color: var(--presentation-table-header-color, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)));
 }`);
     expect(previewStylesheet).toContain(`body.preview-mode-presentation .presentation-table-scroll .table-overlay-button {
-  align-items: flex-start;
-  padding-top: 12px;
+  align-items: center;
+  padding-top: 0;
   box-sizing: border-box;
 }`);
     expect(previewStylesheet).toContain(`body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-lane {
@@ -102,10 +102,10 @@ body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.pr
     expect(previewStylesheet).toContain(`body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button::before {
   display: block;
   background: var(--presentation-table-header-bg, var(--presentation-panel-bg-soft, transparent));
-  opacity: 0.18;
+  opacity: 0.34;
 }`);
     expect(previewStylesheet).toContain(`body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button:hover::before {
-  opacity: 0.32;
+  opacity: 0.44;
 }`);
     expect(previewStylesheet).toContain(`.presentation-table-scroll table {
   margin: 0;

@@ -813,14 +813,14 @@ body.preview-mode-document .markdown-body td {
   position: absolute;
   inset: 0;
   background: var(--md-preview-table-computed-header-bg, var(--md-preview-table-header-bg, #f6f8fa));
-  opacity: 0.26;
+  opacity: 0.34;
   pointer-events: none;
   transition: opacity 120ms ease;
   z-index: 0;
 }
 
 :is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-edge-scroll-button:hover::before {
-  opacity: 0.34;
+  opacity: 0.44;
 }
 
 :is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-overlay-button:focus-visible,
@@ -2139,8 +2139,8 @@ body.preview-mode-presentation .presentation-table-scroll .table-control-icon {
 }
 
 body.preview-mode-presentation .presentation-table-scroll .table-overlay-button {
-  align-items: flex-start;
-  padding-top: 12px;
+  align-items: center;
+  padding-top: 0;
   box-sizing: border-box;
 }
 
@@ -2167,11 +2167,11 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button::before {
   display: block;
   background: var(--presentation-table-header-bg, var(--presentation-panel-bg-soft, transparent));
-  opacity: 0.18;
+  opacity: 0.34;
 }
 
 body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button:hover::before {
-  opacity: 0.32;
+  opacity: 0.44;
 }
 
 .presentation-slide-body pre {
