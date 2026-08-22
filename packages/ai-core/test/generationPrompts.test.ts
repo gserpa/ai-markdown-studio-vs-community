@@ -34,7 +34,9 @@ describe('generation prompt builders', () => {
     expect(prompt).toContain('Avoid the pattern where every slide has exactly three bullets.');
     expect(prompt).toContain('roughly 8-10 short lines');
     expect(prompt).toContain('Choose each slide layout deliberately');
-    expect(prompt).toContain('Use image-right for naturally visual concepts');
+    expect(prompt).toContain('Use default for large-width images or diagrams');
+    expect(prompt).toContain('Use image-center for an image-centric or stronger message');
+    expect(prompt).toContain('Use image-right only for narrower images or diagrams');
     expect(prompt).toContain('Use two-columns only for real comparisons');
     expect(prompt).toContain('Every content slide must include a concise <!--notes: ...-->');
     expect(prompt).toContain('use Google Images or a similar image search');

@@ -172,7 +172,7 @@ Presentation preview features:
 - **Fullscreen** — immersive mode via the on-screen control or the `F` key; press `Esc` to exit.
 - **Fixed-canvas scaling** — fullscreen preserves the exact slide composition from the smaller panel.
 - **Speaker notes** — shown below the active slide when present.
-- **Template-aware layouts** — `cover`, `default`, `two-columns`, `image-right`, and `divider`.
+- **Template-aware layouts** — `cover`, `default`, `two-columns`, `image-right`, `image-center`, `side-banner`, `side-picture`, `default-side`, `table`, `table-legend`, `divider`, `section-divider`, `divider-b`, `divider-c`, and `thanks`.
 
 ### Authoring a presentation
 
@@ -207,6 +207,17 @@ Opening slide.
 ## Roadmap
 
 ![Roadmap](./images/roadmap.png)
+
+---
+
+<!--slide: image-center-->
+# System Flow
+
+The request enters through the gateway.
+
+![System flow](./images/system-flow.png)
+
+The service returns a validated response.
 ```
 
 - The information block at the top must include `document: presentation`. It can also include `title`, `author`, `theme`, and `ratio`.

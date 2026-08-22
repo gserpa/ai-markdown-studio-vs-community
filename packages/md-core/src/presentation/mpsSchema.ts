@@ -31,6 +31,7 @@ const BUILT_IN_TEMPLATE_NAMES = [
   'divider-c',
   'two-columns',
   'image-right',
+  'image-center',
   'table',
   'thanks',
 ] as const;

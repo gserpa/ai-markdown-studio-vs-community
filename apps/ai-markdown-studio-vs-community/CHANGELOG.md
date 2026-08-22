@@ -7,6 +7,22 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-08-22
+
+### Added
+
+- Added the built-in `image-center` presentation layout for centered, image-led slides with supporting text above and below the media.
+
+### Changed
+
+- Improved default, `image-right`, and cover presentation media handling so images fit their available placeholders and remain bounded by the slide layout.
+- Added layout-aware guidance and examples for choosing presentation media layouts.
+
+### Fixed
+
+- Empty Markdown files opened from Explorer now remain in the text editor instead of producing a preview error.
+- Prevented oversized presentation images from eclipsing slide content or being clipped without an available overflow boundary.
+
 ## [1.2.1] - 2026-08-20
 
 ### Added

@@ -169,8 +169,10 @@ function createSlideBodyLayout(context: SlideLayoutContext, templateName: string
 
 const slideLayoutBuilders: Record<string, SlideLayoutBuilder> = {
   cover: createCoverLayout,
+  default: createStandardLayout,
   'two-columns': createTwoColumnLayout,
   'image-right': createImageRightLayout,
+  'image-center': createImageCenterLayout,
   'side-banner': createSideBannerLayout,
   'side-picture': createSidePictureLayout,
   'default-side': createDefaultSideLayout,
@@ -185,8 +187,23 @@ const slideLayoutBuilders: Record<string, SlideLayoutBuilder> = {
 
 function createStandardLayout(context: SlideLayoutContext): string {
   const title = extractPrimaryHeading(context.body);
-  const contentHtml = context.body.innerHTML.trim();
-  return wrapStandardLayout(title, contentHtml);
+  const { leadingHtml, media, trailingHtml } = extractCenteredMediaContent(context.body);
+  if (!media) {
+    return wrapStandardLayout(title, leadingHtml);
+  }
+
+  const contentClasses = [
+    'presentation-default-media-layout',
+    leadingHtml ? 'has-leading-content' : '',
+    trailingHtml ? 'has-trailing-content' : '',
+  ].filter(Boolean).join(' ');
+  const contentHtml = `
+    <div class="${contentClasses}">
+      <section class="presentation-default-media-leading">${leadingHtml}</section>
+      <aside class="presentation-default-media"><div class="presentation-image-frame">${renderMediaSlotContent(media)}</div></aside>
+      <footer class="presentation-default-media-trailing">${trailingHtml}</footer>
+    </div>`;
+  return wrapStandardLayout(title, contentHtml, ' presentation-standard-layout-default-media');
 }
 
 function createCoverLayout(context: SlideLayoutContext): string {
@@ -240,6 +257,19 @@ function createImageRightLayout(context: SlideLayoutContext): string {
     </div>`;
 
   return wrapStandardLayout(title, contentHtml, ' presentation-standard-layout-image-right');
+}
+
+function createImageCenterLayout(context: SlideLayoutContext): string {
+  const title = extractPrimaryHeading(context.body);
+  const { leadingHtml, media, trailingHtml } = extractCenteredMediaContent(context.body);
+  const contentHtml = `
+    <div class="presentation-image-center-layout${media ? '' : ' is-text-only'}">
+      <section class="presentation-image-center-body">${leadingHtml}</section>
+      ${media ? `<aside class="presentation-image-center-media"><div class="presentation-image-frame">${renderMediaSlotContent(media)}</div></aside>` : ''}
+      <footer class="presentation-image-center-footer">${trailingHtml}</footer>
+    </div>`;
+
+  return wrapStandardLayout(title, contentHtml, ' presentation-standard-layout-image-center');
 }
 
 function createSideBannerLayout(context: SlideLayoutContext): string {
@@ -458,6 +488,29 @@ function extractFirstElement(body: HTMLElement, selector: string): Element | und
 
 function extractFirstRenderableMedia(body: HTMLElement): Element | undefined {
   return extractFirstElement(body, 'img, div.mermaid');
+}
+
+function extractCenteredMediaContent(body: HTMLElement): { leadingHtml: string; media: Element | undefined; trailingHtml: string } {
+  const media = body.querySelector('img, div.mermaid');
+  if (!media) {
+    return { leadingHtml: body.innerHTML.trim(), media: undefined, trailingHtml: '' };
+  }
+
+  const mediaContainer = media.tagName === 'IMG' && media.parentElement?.tagName === 'P'
+    ? media.parentElement
+    : media;
+  const children = [...body.children];
+  const mediaIndex = children.indexOf(mediaContainer);
+  if (mediaIndex < 0) {
+    media.remove();
+    return { leadingHtml: body.innerHTML.trim(), media, trailingHtml: '' };
+  }
+
+  return {
+    leadingHtml: children.slice(0, mediaIndex).map((child) => child.outerHTML).join(''),
+    media,
+    trailingHtml: children.slice(mediaIndex + 1).map((child) => child.outerHTML).join(''),
+  };
 }
 
 function renderMediaSlotContent(media: Element | undefined): string {

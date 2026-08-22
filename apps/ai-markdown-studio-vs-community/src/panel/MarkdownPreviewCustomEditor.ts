@@ -50,8 +50,8 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
     const textDocument = await vscode.workspace.openTextDocument(document.uri);
 
     if (textDocument.getText().trim().length === 0) {
-      webviewPanel.dispose();
       await vscode.window.showTextDocument(textDocument, { preview: false });
+      webviewPanel.dispose();
       return;
     }
 

@@ -194,6 +194,89 @@ Intro text.
     expect(preview.html).toContain('https://example.com/test.png');
   });
 
+  it('renders image-center slides with copy above and below the centered media', () => {
+    const preview = renderPresentationPreview(`---
+document: presentation
+---
+
+<!--slide: image-center-->
+# System flow
+
+The request enters through the gateway.
+
+![System flow](https://example.com/system-flow.png)
+
+The service returns a validated response.
+`, (markdown) => markdown
+      .replace(/^# (.+)$/gmu, '<h1>$1</h1>')
+      .replace(/^(The request enters through the gateway\.|The service returns a validated response\.)$/gmu, '<p>$1</p>')
+      .replace(/!\[(.*?)\]\((.*?)\)/gu, '<img alt="$1" src="$2" />')
+      .replace(/\n\n+/gu, ''), previewThemeRegistry, createDocument);
+
+    const document = createDocument(preview.html);
+    const layout = document.querySelector('.presentation-image-center-layout');
+
+    expect(layout).not.toBeNull();
+    expect(layout?.querySelector('.presentation-image-center-body')).not.toBeNull();
+    expect(layout?.querySelector('.presentation-image-center-body')?.textContent).toContain('The request enters through the gateway.');
+    expect(layout?.querySelector('.presentation-image-center-media img')?.getAttribute('src')).toBe('https://example.com/system-flow.png');
+    expect(layout?.querySelector('.presentation-image-center-footer')).not.toBeNull();
+    expect(layout?.querySelector('.presentation-image-center-footer')?.textContent).toContain('The service returns a validated response.');
+  });
+
+  it('bounds default-layout media between the surrounding Markdown content', () => {
+    const preview = renderPresentationPreview(`---
+document: presentation
+---
+
+<!--slide: default-->
+# Landmark
+
+Context before the image.
+
+![Landmark](https://example.com/landmark.png)
+
+Context after the image.
+`, (markdown) => markdown
+      .replace(/^# (.+)$/gmu, '<h1>$1</h1>')
+      .replace(/^(Context before the image\.|Context after the image\.)$/gmu, '<p>$1</p>')
+      .replace(/!\[(.*?)\]\((.*?)\)/gu, '<img alt="$1" src="$2" />')
+      .replace(/\n\n+/gu, ''), previewThemeRegistry, createDocument);
+
+    const document = createDocument(preview.html);
+    const layout = document.querySelector('.presentation-default-media-layout');
+
+    expect(layout?.classList.contains('has-leading-content')).toBe(true);
+    expect(layout?.classList.contains('has-trailing-content')).toBe(true);
+    expect(layout?.querySelector('.presentation-default-media-leading')?.textContent).toContain('Context before the image.');
+    expect(layout?.querySelector('.presentation-default-media img')?.getAttribute('src')).toBe('https://example.com/landmark.png');
+    expect(layout?.querySelector('.presentation-default-media-trailing')?.textContent).toContain('Context after the image.');
+  });
+
+  it('does not reserve an empty trailing text region on default media slides', () => {
+    const preview = renderPresentationPreview(`---
+document: presentation
+---
+
+<!--slide: default-->
+# Landmark
+
+Context before the image.
+
+![Landmark](https://example.com/landmark.png)
+`, (markdown) => markdown
+      .replace(/^# (.+)$/gmu, '<h1>$1</h1>')
+      .replace(/^Context before the image\.$/gmu, '<p>Context before the image.</p>')
+      .replace(/!\[(.*?)\]\((.*?)\)/gu, '<img alt="$1" src="$2" />')
+      .replace(/\n\n+/gu, ''), previewThemeRegistry, createDocument);
+
+    const document = createDocument(preview.html);
+    const layout = document.querySelector('.presentation-default-media-layout');
+
+    expect(layout?.classList.contains('has-leading-content')).toBe(true);
+    expect(layout?.classList.contains('has-trailing-content')).toBe(false);
+  });
+
   it('distributes overflow two-column sections across both columns in order', () => {
     const preview = renderPresentationPreview(`---
 document: presentation

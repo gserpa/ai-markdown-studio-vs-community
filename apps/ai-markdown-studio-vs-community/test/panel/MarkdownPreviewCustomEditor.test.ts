@@ -83,7 +83,7 @@ describe('MarkdownPreviewCustomEditor', () => {
     expect(webviewPanel.webview.html).toContain('preview');
   });
 
-  it('opens empty Markdown files directly in the text editor', async () => {
+  it('opens empty Markdown files in the text editor', async () => {
     const extensionUri = vscode.Uri.file('C:/extension');
     const documentUri = vscode.Uri.file('C:/workspace/empty.md');
     const textDocument = {
@@ -99,8 +99,8 @@ describe('MarkdownPreviewCustomEditor', () => {
 
     await editor.resolveCustomEditor({ uri: documentUri, dispose: vi.fn() }, webviewPanel as never, {} as never);
 
-    expect(webviewPanel.dispose).toHaveBeenCalledOnce();
     expect(vscodeMocks.showTextDocument).toHaveBeenCalledWith(textDocument, { preview: false });
+    expect(webviewPanel.dispose).toHaveBeenCalledOnce();
     expect(webviewPanel.webview.html).toBe('');
   });
 });

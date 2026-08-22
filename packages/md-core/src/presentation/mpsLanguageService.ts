@@ -519,7 +519,7 @@ function getDirectiveCompletions(line: SourceLine, prefix: string, schema: MpsDo
       kind: 'directive',
       detail: 'Insert a slide template directive.',
       documentation: 'Must appear exactly once as the first non-whitespace content after the slide separator and before the slide title. Built-in layouts resolve automatically, and custom names can resolve through PPTX template markers or manifest aliases/overrides.',
-      insertText: '<!--slide: ${1|default,cover,divider,section-divider,two-columns,image-right|}-->',
+      insertText: '<!--slide: ${1|default,cover,divider,section-divider,two-columns,image-right,image-center|}-->',
       isSnippet: true,
       replaceStart,
       replaceEnd,

@@ -2354,7 +2354,9 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 }
 
 .presentation-standard-layout-image-right .presentation-standard-content,
-.presentation-standard-layout-two-columns .presentation-standard-content {
+.presentation-standard-layout-two-columns .presentation-standard-content,
+.presentation-standard-layout-image-center .presentation-standard-content,
+.presentation-standard-layout-default-media .presentation-standard-content {
   padding-top: 24px;
 }
 
@@ -2416,6 +2418,8 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 
 .presentation-image-right-media {
   display: flex;
+  min-height: 0;
+  overflow: hidden;
   align-items: center;
   justify-content: center;
 }
@@ -2437,9 +2441,169 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 .presentation-image-right-media img {
   display: block;
   width: auto;
-  height: auto;
+  height: 100%;
   max-width: 100%;
   max-height: 100%;
+  object-fit: contain;
+}
+
+.presentation-image-right-media .presentation-image-frame {
+  height: 100%;
+}
+
+.presentation-default-media-layout {
+  display: grid;
+  gap: 14px;
+  height: 100%;
+}
+
+.presentation-default-media-layout.has-leading-content.has-trailing-content {
+  grid-template-rows: max-content minmax(calc(4 * 1lh), 1fr) max-content;
+}
+
+.presentation-default-media-layout.has-leading-content:not(.has-trailing-content) {
+  grid-template-rows: max-content minmax(calc(4 * 1lh), 1fr);
+}
+
+.presentation-default-media-layout:not(.has-leading-content).has-trailing-content {
+  grid-template-rows: minmax(calc(4 * 1lh), 1fr) max-content;
+}
+
+.presentation-default-media-layout:not(.has-leading-content):not(.has-trailing-content) {
+  grid-template-rows: minmax(calc(4 * 1lh), 1fr);
+}
+
+.presentation-default-media-leading,
+.presentation-default-media-trailing {
+  min-width: 0;
+}
+
+.presentation-default-media-leading {
+  grid-row: 1;
+}
+
+.presentation-default-media {
+  grid-row: 1;
+}
+
+.presentation-default-media-layout.has-leading-content .presentation-default-media {
+  grid-row: 2;
+}
+
+.presentation-default-media-trailing {
+  grid-row: 2;
+}
+
+.presentation-default-media-layout.has-leading-content .presentation-default-media-trailing {
+  grid-row: 3;
+}
+
+.presentation-default-media-leading:empty,
+.presentation-default-media-trailing:empty {
+  display: none;
+}
+
+.presentation-default-media-leading > :first-child,
+.presentation-default-media-trailing > :first-child {
+  margin-top: 0;
+}
+
+.presentation-default-media-leading > :last-child,
+.presentation-default-media-trailing > :last-child {
+  margin-bottom: 0;
+}
+
+.presentation-default-media {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.presentation-default-media .presentation-image-frame {
+  height: 100%;
+}
+
+.presentation-default-media img {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.presentation-image-center-layout {
+  display: grid;
+  grid-template-rows: minmax(min-content, 1fr) minmax(0, 56%) minmax(min-content, 1fr);
+  gap: 14px;
+  height: 100%;
+}
+
+.presentation-image-center-layout.is-text-only {
+  display: block;
+}
+
+.presentation-image-center-body,
+.presentation-image-center-footer {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: center;
+}
+
+.presentation-image-center-body {
+  grid-row: 1;
+  justify-content: flex-end;
+}
+
+.presentation-image-center-media {
+  grid-row: 2;
+}
+
+.presentation-image-center-footer {
+  grid-row: 3;
+  justify-content: flex-start;
+}
+
+.presentation-image-center-body:empty,
+.presentation-image-center-footer:empty {
+  display: none;
+}
+
+.presentation-image-center-body > :first-child,
+.presentation-image-center-footer > :first-child {
+  margin-top: 0;
+}
+
+.presentation-image-center-body > :last-child,
+.presentation-image-center-footer > :last-child {
+  margin-bottom: 0;
+}
+
+.presentation-image-center-media {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+}
+
+.presentation-image-center-media .presentation-image-frame {
+  width: fit-content;
+  height: 100%;
+  max-width: min(100%, 1040px);
+  max-height: 100%;
+}
+
+.presentation-image-center-media img {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .presentation-cover-layout,
@@ -2536,6 +2700,10 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   height: 100%;
   border-radius: 0;
   object-fit: cover;
+}
+
+.presentation-cover-media .presentation-layout-media-shell.is-image img {
+  object-fit: contain;
 }
 
 .presentation-image-frame .presentation-layout-media-shell.is-image img {

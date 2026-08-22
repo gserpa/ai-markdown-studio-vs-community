@@ -247,7 +247,7 @@ Presentation preview features include:
 - immersive fullscreen mode, toggled with the on-screen control or the `F` key
 - fixed-canvas scaling so fullscreen preserves the same slide composition you see in the smaller preview panel
 - overflow fitting through `markdownAiStudio.presentationContentOverflow`; `scaleToFit` is the default, reduces dense slide content to 60% when needed, and retains scrolling below that floor
-- template-aware layouts for supported slide types such as `cover`, `default`, `two-columns`, `image-right`, and `divider`
+- template-aware layouts for supported slide types including `cover`, `default`, `two-columns`, `image-right`, `image-center`, `side-banner`, `side-picture`, `default-side`, `table`, `table-legend`, `divider`, `section-divider`, `divider-b`, `divider-c`, and `thanks`
 - speaker notes displayed below the active slide when notes are present
 
 Presentation preview themes are bundled only in Community (`black`, `galaxy`, `modern-blue`). Custom presentation theme folders are available in Pro.

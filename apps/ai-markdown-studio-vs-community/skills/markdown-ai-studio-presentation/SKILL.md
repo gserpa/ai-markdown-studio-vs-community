@@ -18,8 +18,8 @@ Create a complete Markdown file, not an outline. Do not assume AI Markdown Studi
 
 - Start with YAML front matter containing `filename`, `document: presentation`, `title`, `theme`, and `ratio` (`16:9` or `4:3`). Keep `filename` consistent with the output basename.
 - Separate slides with top-level `---` after the front matter. Give every slide exactly one `# H1` title.
-- Use at most one `<!--slide: name-->` directive per slide, immediately after its separator and before its title. Supported directives: `cover`, `default`, `two-columns`, `image-right`, `divider`, `section-divider`, `table`, `table-legend`, and `thanks`.
-- Use `## H2` headings for the sections of a `two-columns` slide. Put the first image or Mermaid diagram on an `image-right` slide in its media panel, and do not place another image before it.
+- Use at most one `<!--slide: name-->` directive per slide, immediately after its separator and before its title. Supported directives: `cover`, `default`, `two-columns`, `image-right`, `image-center`, `side-banner`, `side-picture`, `default-side`, `table`, `table-legend`, `divider`, `section-divider`, `divider-b`, `divider-c`, and `thanks`.
+- Use `## H2` headings for the sections of a `two-columns` slide. Use `default` for large-width media in the natural, left-aligned Markdown sequence. Use `image-center` for image-centric or stronger messages that benefit from centered text and media, with short text above and below. Use `image-right` only for narrower media that can share the slide with substantive text in the left column.
 - Add concise `<!--notes: ...-->` speaker notes to content slides. Cover, divider, section-divider, and thanks slides may omit notes. Keep visible slide content concise and vary layouts deliberately.
 
 ## Images
