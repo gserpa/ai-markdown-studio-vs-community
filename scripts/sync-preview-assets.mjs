@@ -14,7 +14,7 @@
  *   node scripts/sync-preview-assets.mjs
  */
 
-import { cpSync, mkdirSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -26,6 +26,10 @@ const sourceDir = path.join(repoRoot, 'packages', 'md-preview-web', 'assets');
 const targets = [path.join(repoRoot, 'assets', 'preview')];
 
 for (const target of targets) {
+  if (directoriesMatch(sourceDir, target)) {
+    console.log(`  unchanged → ${path.relative(repoRoot, target)}`);
+    continue;
+  }
   rmSync(target, { recursive: true, force: true });
   mkdirSync(target, { recursive: true });
   cpSync(sourceDir, target, { recursive: true, dereference: true });
@@ -33,3 +37,33 @@ for (const target of targets) {
 }
 
 console.log('sync-preview-assets: done');
+
+function directoriesMatch(sourcePath, targetPath) {
+  if (!statExists(targetPath)) return false;
+
+  const sourceEntries = listFiles(sourcePath);
+  const targetEntries = listFiles(targetPath);
+  if (sourceEntries.length !== targetEntries.length) return false;
+
+  return sourceEntries.every((relativePath, index) => (
+    relativePath === targetEntries[index]
+    && readFileSync(path.join(sourcePath, relativePath)).equals(readFileSync(path.join(targetPath, relativePath)))
+  ));
+}
+
+function listFiles(directory, prefix = '') {
+  return readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => {
+      const relativePath = path.join(prefix, entry.name);
+      return entry.isDirectory() ? listFiles(path.join(directory, entry.name), relativePath) : [relativePath];
+    })
+    .sort();
+}
+
+function statExists(filePath) {
+  try {
+    return statSync(filePath).isDirectory();
+  } catch {
+    return false;
+  }
+}
