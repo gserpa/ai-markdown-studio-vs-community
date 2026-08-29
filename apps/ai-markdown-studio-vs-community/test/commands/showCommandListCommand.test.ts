@@ -91,10 +91,11 @@ describe('showCommandListCommand', () => {
 
     expect(capturedLabels).toEqual([
       'Open Preview',
+      'Open Native WYSIWYG Editor',
       'Format Tables',
-      'AI: Generate Document',
       'AI: Generate Document Theme',
       'AI: Generate Presentation Theme',
+      'AI: Generate Document',
       'AI: Generate Presentation',
       'AI: Install Presentation Skill',
       'Export: DOCX',

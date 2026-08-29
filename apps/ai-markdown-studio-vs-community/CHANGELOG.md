@@ -7,6 +7,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-08-30
+
+### Added
+
+- Added a Markdown editor title-bar button and command-palette entry for opening the native VS Code WYSIWYG Markdown editor from a Markdown preview.
+
+### Changed
+
+- Improved preview asset synchronization so unchanged asset folders are left intact during Community builds.
+
 ## [1.2.2] - 2026-08-22
 
 ### Added
