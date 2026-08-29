@@ -1,6 +1,7 @@
 [
   { "command": "markdownAiStudio.openPreview", "title": "Preview Markdown", "category": "AI Markdown Studio", "icon": "$(eye)", "quickPickTitle": "Open Preview" },
   { "command": "markdownAiStudio.editAsText", "title": "Edit Markdown", "category": "AI Markdown Studio", "icon": "$(pencil)", "quickPickTitle": "Edit Markdown" },
+  { "command": "markdownAiStudio.openNativeMarkdownEditor", "title": "Open Native WYSIWYG Markdown Editor", "category": "AI Markdown Studio", "icon": "$(layout)", "quickPickTitle": "Open Native WYSIWYG Editor" },
   { "command": "markdownAiStudio.formatTables", "title": "Format Markdown Tables", "category": "AI Markdown Studio", "quickPickTitle": "Format Tables" },
   { "command": "markdownAiStudio.exportHtml", "title": "Export Markdown as HTML", "category": "AI Markdown Studio", "quickPickTitle": "Export: HTML" },
   { "command": "markdownAiStudio.exportDocxBasic", "title": "Export Markdown as DOCX (Basic)", "category": "AI Markdown Studio", "quickPickTitle": "Export: DOCX (Basic)" },

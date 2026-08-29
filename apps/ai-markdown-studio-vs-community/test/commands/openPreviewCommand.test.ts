@@ -31,7 +31,7 @@ vi.mock('vscode', () => ({
 }));
 
 import * as vscode from 'vscode';
-import { openPreviewCommand } from '../../src/commands/markdownCommands';
+import { openNativeMarkdownEditorCommand, openPreviewCommand } from '../../src/commands/markdownCommands';
 import { MarkdownPreviewCustomEditor } from '../../src/panel/MarkdownPreviewCustomEditor';
 
 describe('openPreviewCommand', () => {
@@ -76,5 +76,16 @@ describe('openPreviewCommand', () => {
     await openPreviewCommand(vscode.Uri.file('C:/extension'), new Map());
 
     expect(vscodeMocks.showInformationMessage).toHaveBeenCalledWith('Open a Markdown file to preview it.');
+  });
+
+  it('opens the native WYSIWYG Markdown editor for the selected document', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    vscodeMocks.openTextDocument.mockResolvedValue({ uri: documentUri, languageId: 'markdown' });
+
+    await openNativeMarkdownEditorCommand(documentUri);
+
+    expect(vscodeMocks.executeCommand).toHaveBeenCalledWith('vscode.openWith', documentUri, 'vscode.markdown.editor', {
+      preview: false,
+    });
   });
 });

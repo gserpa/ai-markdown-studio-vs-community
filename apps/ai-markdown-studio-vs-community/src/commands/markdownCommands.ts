@@ -31,6 +31,7 @@ type CommandListContext = {
 const QUICK_PICK_COMMAND_ORDER = [
   'markdownAiStudio.openPreview',
   'markdownAiStudio.editAsText',
+  'markdownAiStudio.openNativeMarkdownEditor',
   'markdownAiStudio.toggleFrontMatter',
   'markdownAiStudio.formatTables',
   'markdownAiStudio.generateDocument',
@@ -76,6 +77,17 @@ export async function openPreviewCommand(extensionUri: vscode.Uri, _previews: Ma
     await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
   }
   await vscode.commands.executeCommand('vscode.openWith', document.uri, MarkdownPreviewCustomEditor.viewType, {
+    preview: false,
+  });
+}
+
+export async function openNativeMarkdownEditorCommand(targetUri?: vscode.Uri): Promise<void> {
+  const document = await resolveMarkdownDocument(targetUri);
+  if (!document) {
+    return;
+  }
+
+  await vscode.commands.executeCommand('vscode.openWith', document.uri, 'vscode.markdown.editor', {
     preview: false,
   });
 }

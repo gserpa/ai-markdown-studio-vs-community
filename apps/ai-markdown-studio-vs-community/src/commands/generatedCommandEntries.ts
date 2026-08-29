@@ -3,6 +3,7 @@
 export const commandEntries = [
   { command: "markdownAiStudio.openPreview", title: "Open Preview" },
   { command: "markdownAiStudio.editAsText", title: "Edit Markdown" },
+  { command: "markdownAiStudio.openNativeMarkdownEditor", title: "Open Native WYSIWYG Editor" },
   { command: "markdownAiStudio.formatTables", title: "Format Tables" },
   { command: "markdownAiStudio.exportHtml", title: "Export: HTML" },
   { command: "markdownAiStudio.exportDocxBasic", title: "Export: DOCX (Basic)" },

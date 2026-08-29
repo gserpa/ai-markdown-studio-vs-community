@@ -7,6 +7,7 @@ import {
   getMarkdownTableFormattingEdits,
   formatTablesCommand,
   openSettingsCommand,
+  openNativeMarkdownEditorCommand,
   openPreviewCommand,
   showCommandListCommand,
 } from './commands/markdownCommands';
@@ -93,6 +94,18 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
     }),
     vscode.commands.registerCommand('markdownAiStudio.openPreview', async (resource?: vscode.Uri) => {
       await openPreviewCommand(context.extensionUri, previews, resource);
+    }),
+    vscode.commands.registerCommand('markdownAiStudio.openNativeMarkdownEditor', async (resource?: vscode.Uri) => {
+      const target = (resource?.scheme === 'file' ? resource : undefined)
+        ?? MarkdownPreviewCustomEditor.getActiveDocumentUri()
+        ?? MarkdownPreviewPanel.getActivePreviewDocumentUri()
+        ?? vscode.window.activeTextEditor?.document.uri;
+      if (!target) {
+        return;
+      }
+
+      customEditor.closeForUri(target);
+      await openNativeMarkdownEditorCommand(target);
     }),
     vscode.commands.registerCommand('markdownAiStudio.formatTables', async (resource?: vscode.Uri) => {
       await formatTablesCommand(resource);

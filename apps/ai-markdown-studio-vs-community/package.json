@@ -59,6 +59,12 @@
         "icon": "$(pencil)"
       },
       {
+        "command": "markdownAiStudio.openNativeMarkdownEditor",
+        "title": "Open Native WYSIWYG Markdown Editor",
+        "category": "AI Markdown Studio",
+        "icon": "$(layout)"
+      },
+      {
         "command": "markdownAiStudio.formatTables",
         "title": "Format Markdown Tables",
         "category": "AI Markdown Studio"
@@ -289,8 +295,13 @@
         },
         {
           "command": "markdownAiStudio.editAsText",
-          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview'",
+          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' || activeCustomEditorId == 'vscode.markdown.editor'",
           "group": "navigation@1"
+        },
+        {
+          "command": "markdownAiStudio.openNativeMarkdownEditor",
+          "when": "resourceExtname == .md && activeCustomEditorId != 'vscode.markdown.editor'",
+          "group": "navigation@1.5"
         },
         {
           "command": "markdownAiStudio.showFrontMatter",
