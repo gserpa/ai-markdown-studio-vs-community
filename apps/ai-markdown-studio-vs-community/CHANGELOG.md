@@ -7,6 +7,15 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.4] - 2026-09-30
+
+### Fixed
+
+- Kept presentation headers and controls fixed while overflowing slide content scrolls within its content area.
+- Bounded tall Mermaid diagrams within their slide frames and kept the Zoom control available.
+- Matched presentation scrollbars and Mermaid Zoom surfaces to the selected presentation theme.
+- Removed horizontal scrollbars from near-fit code blocks when only trailing padding overflows, while preserving scrolling for long lines.
+
 ## [1.2.3] - 2026-08-30
 
 ### Added

@@ -2019,19 +2019,43 @@ body.preview-mode-presentation {
   line-height: 1.55;
 }
 
-/* In scale-to-fit mode the runtime fits these regions to the slide frame.
-   Keep template-level overflow containers from reintroducing a nested
-   scrollbar when browser layout rounds a fitted dimension by a pixel. */
-body[data-presentation-content-overflow='scaleToFit'] .presentation-standard-content,
+/* Fit layout regions first. The standard content panel and code blocks keep
+   their own automatic overflow when fitting reaches its minimum scale. */
 body[data-presentation-content-overflow='scaleToFit'] .presentation-side-banner-content,
 body[data-presentation-content-overflow='scaleToFit'] .presentation-side-picture-content,
 body[data-presentation-content-overflow='scaleToFit'] .presentation-default-side-content,
 body[data-presentation-content-overflow='scaleToFit'] .presentation-table-legend-copy,
 body[data-presentation-content-overflow='scaleToFit'] .presentation-table-legend-table,
 body[data-presentation-content-overflow='scaleToFit'] .presentation-divider-c-subtitle,
-body[data-presentation-content-overflow='scaleToFit'] .presentation-thanks-note,
-body[data-presentation-content-overflow='scaleToFit'] .presentation-slide-body pre {
+body[data-presentation-content-overflow='scaleToFit'] .presentation-thanks-note {
   overflow: hidden;
+}
+
+body.preview-mode-presentation .presentation-slide-body pre {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--presentation-body-color, #1f2937) 32%, var(--presentation-code-bg, #f8faff) 68%) var(--presentation-code-bg, #f8faff);
+}
+
+body.preview-mode-presentation .presentation-slide-body pre.presentation-code-trailing-padding-overflow {
+  overflow-x: hidden;
+}
+
+body.preview-mode-presentation .presentation-slide-body pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+body.preview-mode-presentation .presentation-slide-body pre::-webkit-scrollbar-track {
+  background: var(--presentation-code-bg, #f8faff);
+}
+
+body.preview-mode-presentation .presentation-slide-body pre::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--presentation-body-color, #1f2937) 32%, var(--presentation-code-bg, #f8faff) 68%);
+  border-radius: 999px;
 }
 
 .presentation-content-fit {
@@ -2324,8 +2348,10 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 }
 
 .presentation-standard-content {
+  min-width: 0;
   min-height: 0;
   overflow: auto;
+  overflow-wrap: anywhere;
   padding: 24px 28px 28px;
   border: 0;
   border-radius: 0 0 28px 28px;
@@ -2715,6 +2741,12 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   box-sizing: border-box;
   display: grid;
   place-items: center;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   padding: 24px;
   background: color-mix(in srgb, var(--presentation-panel-bg-soft, #ffffff) 86%, white 14%);
 }
@@ -2724,6 +2756,8 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   display: grid;
   place-items: center;
   width: 100%;
+  min-width: 0;
+  min-height: 0;
   height: 100%;
 }
 
@@ -2778,6 +2812,7 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 .presentation-side-picture-main {
   display: grid;
   min-width: 0;
+  min-height: 0;
 }
 
 .presentation-side-banner-main {
@@ -3543,4 +3578,54 @@ body.presentation-is-immersive .presentation-surface {
   body.preview-mode-presentation.vscode-high-contrast .presentation-image-frame {
     background: var(--presentation-media-frame-bg, rgba(21, 28, 38, 0.92));
   }
+}
+
+/* Presentation controls and native scrollbars follow the selected slide
+   palette, even when VS Code itself uses a different color scheme. */
+body.preview-mode-presentation .presentation-standard-content {
+  scrollbar-color: color-mix(in srgb, var(--presentation-body-color, #1f2937) 32%, var(--presentation-panel-bg, #ffffff) 68%) var(--presentation-panel-bg, #ffffff);
+}
+
+body.preview-mode-presentation .presentation-standard-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body.preview-mode-presentation .presentation-standard-content::-webkit-scrollbar-track {
+  background: var(--presentation-panel-bg, #ffffff);
+}
+
+body.preview-mode-presentation .presentation-standard-content::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--presentation-body-color, #1f2937) 32%, var(--presentation-panel-bg, #ffffff) 68%);
+  border: 2px solid var(--presentation-panel-bg, #ffffff);
+  border-radius: 999px;
+}
+
+body.preview-mode-presentation .presentation-standard-content::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--presentation-body-color, #1f2937) 46%, var(--presentation-panel-bg, #ffffff) 54%);
+}
+
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll .table-overlay-button {
+  display: flex;
+}
+
+body.preview-mode-presentation .mermaid-zoom-trigger {
+  --md-preview-lightbox-button-border: var(--presentation-panel-border, rgba(79, 70, 216, 0.24));
+  --md-preview-lightbox-button-color: var(--presentation-body-color, #1f2937);
+  --md-preview-lightbox-button-bg: var(--presentation-panel-bg, #ffffff);
+  --md-preview-lightbox-button-hover-bg: color-mix(in srgb, var(--presentation-panel-bg, #ffffff) 72%, var(--presentation-accent, #4f46d8) 28%);
+}
+
+.mermaid-lightbox[data-presentation-theme-active='true'] {
+  --md-preview-lightbox-bg: var(--presentation-panel-bg, #ffffff);
+  --md-preview-lightbox-border: var(--presentation-panel-border, rgba(79, 70, 216, 0.24));
+  --md-preview-lightbox-button-border: var(--presentation-panel-border, rgba(79, 70, 216, 0.24));
+  --md-preview-lightbox-button-color: var(--presentation-body-color, #1f2937);
+  --md-preview-lightbox-button-bg: var(--presentation-panel-bg-soft, #f8faff);
+  --md-preview-lightbox-button-hover-bg: color-mix(in srgb, var(--presentation-panel-bg-soft, #f8faff) 72%, var(--presentation-accent, #4f46d8) 28%);
+  --md-preview-lightbox-zoom-color: var(--presentation-muted-color, #475569);
+  --md-preview-lightbox-viewport-bg: var(--presentation-body-bg, #f8faff);
+  --md-preview-lightbox-scrollbar-track: var(--presentation-panel-bg-soft, #f8faff);
+  --md-preview-lightbox-scrollbar-thumb: color-mix(in srgb, var(--presentation-body-color, #1f2937) 30%, var(--presentation-panel-bg-soft, #f8faff) 70%);
+  --md-preview-lightbox-scrollbar-thumb-hover: color-mix(in srgb, var(--presentation-body-color, #1f2937) 44%, var(--presentation-panel-bg-soft, #f8faff) 56%);
 }

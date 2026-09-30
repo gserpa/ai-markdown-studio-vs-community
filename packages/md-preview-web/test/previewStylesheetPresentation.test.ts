@@ -149,8 +149,22 @@ body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.pr
 
   it('keeps image-center regions in separate tracks when text overflows', () => {
     expect(previewStylesheet).toContain(`.presentation-standard-content {
+  min-width: 0;
   min-height: 0;
   overflow: auto;`);
+    expect(previewStylesheet).toContain(`.presentation-slide-body.markdown-body {
+  flex: 1;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border-radius: inherit;
+  overflow: hidden;`);
+    expect(previewStylesheet).toContain(`.presentation-layout-media-shell.is-diagram {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;`);
+    expect(previewStylesheet).toContain(`.mermaid-lightbox[data-presentation-theme-active='true'] {
+  --md-preview-lightbox-bg: var(--presentation-panel-bg, #ffffff);`);
     expect(previewStylesheet).toContain(`.presentation-image-center-layout {
   display: grid;
   grid-template-rows: minmax(min-content, 1fr) minmax(0, 56%) minmax(min-content, 1fr);`);
@@ -208,8 +222,15 @@ body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.pr
   });
 
   it('keeps long code local and finds the largest fitting slide scale down to 60%', () => {
-    expect(previewStylesheet).toContain("body[data-presentation-content-overflow='scaleToFit'] .presentation-standard-content");
-    expect(previewStylesheet).toContain("body[data-presentation-content-overflow='scaleToFit'] .presentation-slide-body pre {");
+    expect(previewStylesheet).toContain(`.presentation-standard-content {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;`);
+    expect(previewStylesheet).toContain(`body.preview-mode-presentation .presentation-slide-body pre {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;`);
     expect(previewStylesheet).toContain(`.presentation-slide-body pre {
   font-size: calc(0.96em * var(--presentation-code-scale, 1));
 }`);

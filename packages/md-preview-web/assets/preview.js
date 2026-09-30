@@ -97,6 +97,12 @@
           renderMermaidError(block, source, diagramError);
         }
       }
+
+      // Rendering is asynchronous and can change a media slot's overflow
+      // without resizing the slide itself. Refit using the finished diagrams.
+      if (previewMode === 'presentation') {
+        window.dispatchEvent(new Event('resize'));
+      }
     };
 
     const scheduleMermaidRefresh = () => {
@@ -919,6 +925,15 @@ function positionMermaidZoomTrigger(trigger, block) {
   trigger.style.left = '';
   trigger.style.right = '';
 
+  // Dedicated Mermaid frames never scroll; keep Zoom inside the bounded
+  // frame so the control stays visible and does not widen its scroll area.
+  if (block.closest('.presentation-layout-media-shell.is-diagram')) {
+    trigger.style.top = '0';
+    trigger.style.left = 'auto';
+    trigger.style.right = '0';
+    return;
+  }
+
   const blockRect = block.getBoundingClientRect();
   const triggerWidth = trigger.offsetWidth || 72;
   const viewportWidth = document.documentElement?.clientWidth || window.innerWidth || 0;
@@ -1346,6 +1361,38 @@ function readPreviewCssVariable(name, fallbackValue, element = document.body) {
   return value || fallbackValue;
 }
 
+function applyPresentationThemeToMermaidLightbox(lightboxRoot) {
+  if (!(lightboxRoot instanceof HTMLElement)) {
+    return;
+  }
+
+  const presentationRoot = document.querySelector('.presentation-preview');
+  const themeVariables = [
+    '--presentation-accent',
+    '--presentation-body-bg',
+    '--presentation-body-color',
+    '--presentation-muted-color',
+    '--presentation-panel-bg',
+    '--presentation-panel-bg-soft',
+    '--presentation-panel-border',
+  ];
+
+  for (const variable of themeVariables) {
+    lightboxRoot.style.removeProperty(variable);
+  }
+
+  if (!(presentationRoot instanceof HTMLElement) || !document.body.classList.contains('preview-mode-presentation')) {
+    lightboxRoot.removeAttribute('data-presentation-theme-active');
+    return;
+  }
+
+  const themeStyle = getComputedStyle(presentationRoot);
+  for (const variable of themeVariables) {
+    lightboxRoot.style.setProperty(variable, themeStyle.getPropertyValue(variable).trim());
+  }
+  lightboxRoot.setAttribute('data-presentation-theme-active', 'true');
+}
+
 function initializeMermaidLightbox() {
   const root = document.querySelector('[data-mermaid-lightbox]');
   const viewport = root?.querySelector('[data-mermaid-lightbox-viewport]');
@@ -1536,6 +1583,18 @@ function initializeMermaidLightbox() {
     root.hidden = true;
     root.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('mermaid-lightbox-open');
+    root?.removeAttribute('data-presentation-theme-active');
+    for (const variable of [
+      '--presentation-accent',
+      '--presentation-body-bg',
+      '--presentation-body-color',
+      '--presentation-muted-color',
+      '--presentation-panel-bg',
+      '--presentation-panel-bg-soft',
+      '--presentation-panel-border',
+    ]) {
+      root?.style.removeProperty(variable);
+    }
     stage.replaceChildren();
     stage.style.removeProperty('width');
     stage.style.removeProperty('height');
@@ -1576,6 +1635,7 @@ function initializeMermaidLightbox() {
     clone.classList.add('mermaid-lightbox-diagram');
 
     stage.replaceChildren(clone);
+    applyPresentationThemeToMermaidLightbox(root);
     root.hidden = false;
     root.setAttribute('aria-hidden', 'false');
     document.body.classList.add('mermaid-lightbox-open');
@@ -1982,7 +2042,22 @@ function clearPresentationCodeScales(contentFit) {
   for (const codeBlock of contentFit.querySelectorAll('pre')) {
     if (codeBlock instanceof HTMLElement) {
       codeBlock.style.removeProperty('--presentation-code-scale');
+      codeBlock.classList.remove('presentation-code-trailing-padding-overflow');
     }
+  }
+}
+
+function updatePresentationCodeOverflow(contentFit) {
+  for (const codeBlock of contentFit.querySelectorAll('pre')) {
+    if (!(codeBlock instanceof HTMLElement)) {
+      continue;
+    }
+    const extraWidth = codeBlock.scrollWidth - codeBlock.clientWidth;
+    // scrollWidth includes the trailing padding. If the excess fits inside that
+    // padding, every glyph is visible and a scrollbar would only move blank space.
+    const rightPadding = Number.parseFloat(getComputedStyle(codeBlock).paddingRight) || 0;
+    const safeOverflow = Math.max(1, Math.floor(rightPadding) - 4);
+    codeBlock.classList.toggle('presentation-code-trailing-padding-overflow', extraWidth <= safeOverflow);
   }
 }
 
@@ -1993,6 +2068,7 @@ function fitPresentationCodeBlocks(contentFit) {
     }
 
     codeBlock.style.removeProperty('--presentation-code-scale');
+    codeBlock.classList.remove('presentation-code-trailing-padding-overflow');
     if (codeBlock.clientWidth <= 0 || codeBlock.scrollWidth <= codeBlock.clientWidth + 1) {
       continue;
     }
@@ -2054,6 +2130,7 @@ function fitPresentationContent(slide) {
   if (document.body.dataset.presentationContentOverflow !== 'scaleToFit') {
     clearPresentationContentScale(contentFit);
     clearPresentationCodeScales(contentFit);
+    updatePresentationCodeOverflow(contentFit);
     return;
   }
 
@@ -2065,6 +2142,7 @@ function fitPresentationContent(slide) {
   // size as possible, then make one final whole-slide fit pass if necessary.
   fitPresentationCodeBlocks(contentFit);
   findLargestPresentationContentScale(contentFit);
+  updatePresentationCodeOverflow(contentFit);
 }
 
 function createPresentationFrameFitScheduler(slides) {
