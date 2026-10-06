@@ -7,6 +7,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.5] - 2026-10-06
+
+### Fixed
+
+- Kept short labels and acronyms intact in wrapped presentation tables, while allowing exceptionally long tokens to wrap within their own cells.
+
 ## [1.2.4] - 2026-09-30
 
 ### Fixed
