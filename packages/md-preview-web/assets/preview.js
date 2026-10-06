@@ -302,7 +302,12 @@ function wrapTablesForScroll({ forceWrap = false } = {}) {
 
 function wrapPresentationTablesForScroll() {
   for (const table of document.querySelectorAll('.presentation-slide-body table')) {
-    if (!(table instanceof HTMLTableElement) || table.parentElement?.classList.contains('table-scroll-wrapper')) {
+    if (!(table instanceof HTMLTableElement)) {
+      continue;
+    }
+
+    markPresentationTableLongTokens(table);
+    if (table.parentElement?.classList.contains('table-scroll-wrapper')) {
       continue;
     }
 
@@ -313,6 +318,19 @@ function wrapPresentationTablesForScroll() {
     table.parentElement?.insertBefore(wrapper, table);
     wrapper.appendChild(table);
     enhanceTableScrollWrapper(wrapper, 'wrap');
+  }
+}
+
+function markPresentationTableLongTokens(table) {
+  // More than 40 consecutive characters is exceptional; whitespace, soft hyphens,
+  // and zero-width spaces already provide wrapping opportunities.
+  const longToken = /[^\s\u00ad\u200b]{41}/u;
+  const cells = [...table.rows].flatMap(row => [...row.cells]);
+  // Read before writing flags to avoid repeated layout work. innerText preserves
+  // authored line breaks and block boundaries without separating inline formatting.
+  const flags = cells.map(cell => longToken.test(cell.innerText ?? cell.textContent ?? ''));
+  for (let index = 0; index < cells.length; index += 1) {
+    cells[index].toggleAttribute('data-table-long-token', flags[index]);
   }
 }
 

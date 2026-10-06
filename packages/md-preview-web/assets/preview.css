@@ -2153,6 +2153,19 @@ body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.pr
   height: auto;
 }
 
+/* Preserve whole-word minimum widths so prose wraps before compact columns shrink. */
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper[data-table-layout='wrap'] th,
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper[data-table-layout='wrap'] td {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+/* Exceptionally long tokens must not dictate the minimum width of a column. */
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper[data-table-layout='wrap'] :is(th, td)[data-table-long-token] {
+  overflow-wrap: anywhere;
+}
+
 body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll::before,
 body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll::after {
   display: none !important;
