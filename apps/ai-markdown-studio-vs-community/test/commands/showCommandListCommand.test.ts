@@ -95,6 +95,7 @@ describe('showCommandListCommand', () => {
       'Format Tables',
       'AI: Generate Document Theme',
       'AI: Generate Presentation Theme',
+      'Embed Linked Images in File',
       'AI: Generate Document',
       'AI: Generate Presentation',
       'AI: Install Presentation Skill',

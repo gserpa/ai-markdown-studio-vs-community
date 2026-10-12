@@ -89,7 +89,13 @@
 /* ────────────────────────────────────────────────────────────── */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+}
+
+:root:has(body.preview-mode-document.document-theme-mode-dark),
+:root:has(body.preview-mode-document.document-theme-mode-auto:is(.vscode-dark, .vscode-high-contrast)),
+:root:has(body.preview-mode-presentation:is(.vscode-dark, .vscode-high-contrast) .presentation-preview.presentation-theme-auto) {
+  color-scheme: dark;
 }
 
 body {
@@ -485,6 +491,18 @@ img {
 .mermaid-rendered:focus-within .mermaid-zoom-trigger {
   opacity: 1;
   transform: translateY(0);
+}
+
+.image-zoom-trigger {
+  position: fixed;
+  z-index: 1100;
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.image-zoom-trigger[hidden] {
+  display: none;
 }
 
 .mermaid-zoom-trigger:hover {
@@ -1380,7 +1398,7 @@ hr.footnotes-sep {
 
 .vscode-dark .hljs,
 .vscode-high-contrast .hljs {
-  color: #c9d1d9;
+  color: var(--md-preview-code-color, #c9d1d9);
 }
 
 .vscode-dark .hljs-comment,
@@ -1391,7 +1409,7 @@ hr.footnotes-sep {
 .vscode-high-contrast .hljs-quote,
 .vscode-high-contrast .hljs-code,
 .vscode-high-contrast .hljs-formula {
-  color: #8b949e;
+  color: var(--md-preview-code-comment-color, #8b949e);
 }
 
 .vscode-dark .hljs-keyword,
@@ -1404,7 +1422,7 @@ hr.footnotes-sep {
 .vscode-high-contrast .hljs-subst,
 .vscode-high-contrast .hljs-template-tag,
 .vscode-high-contrast .hljs-variable.language_ {
-  color: #ff7b72;
+  color: var(--md-preview-code-keyword-color, #ff7b72);
 }
 
 .vscode-dark .hljs-number,
@@ -1421,14 +1439,14 @@ hr.footnotes-sep {
 .vscode-high-contrast .hljs-tag .hljs-attr,
 .vscode-high-contrast .hljs-operator,
 .vscode-high-contrast .hljs-selector-attr {
-  color: #79c0ff;
+  color: var(--md-preview-code-number-color, #79c0ff);
 }
 
 .vscode-dark .hljs-string,
 .vscode-dark .hljs-doctag,
 .vscode-high-contrast .hljs-string,
 .vscode-high-contrast .hljs-doctag {
-  color: #a5d6ff;
+  color: var(--md-preview-code-string-color, #a5d6ff);
 }
 
 .vscode-dark .hljs-title,
@@ -1443,14 +1461,14 @@ hr.footnotes-sep {
 .vscode-high-contrast .hljs-title.function_,
 .vscode-high-contrast .hljs-section,
 .vscode-high-contrast .hljs-selector-id {
-  color: #d2a8ff;
+  color: var(--md-preview-code-title-color, #d2a8ff);
 }
 
 .vscode-dark .hljs-type,
 .vscode-dark .hljs-class .hljs-title,
 .vscode-high-contrast .hljs-type,
 .vscode-high-contrast .hljs-class .hljs-title {
-  color: #ffa657;
+  color: var(--md-preview-code-type-color, #ffa657);
 }
 
 .vscode-dark .hljs-attribute,
@@ -1463,7 +1481,7 @@ hr.footnotes-sep {
 .vscode-high-contrast .hljs-regexp,
 .vscode-high-contrast .hljs-link,
 .vscode-high-contrast .hljs-selector-pseudo {
-  color: #7ee787;
+  color: var(--md-preview-code-attribute-color, #7ee787);
 }
 
 .vscode-dark .hljs-meta,
@@ -1472,7 +1490,7 @@ hr.footnotes-sep {
 .vscode-high-contrast .hljs-meta,
 .vscode-high-contrast .hljs-built_in,
 .vscode-high-contrast .hljs-builtin-name {
-  color: #79c0ff;
+  color: var(--md-preview-code-meta-color, #79c0ff);
 }
 
 .vscode-dark .hljs-bullet,
@@ -1481,7 +1499,7 @@ hr.footnotes-sep {
 .vscode-high-contrast .hljs-bullet,
 .vscode-high-contrast .hljs-symbol,
 .vscode-high-contrast .hljs-selector-class {
-  color: #ffa657;
+  color: var(--md-preview-code-symbol-color, #ffa657);
 }
 
 .vscode-dark .hljs-emphasis,
@@ -1496,14 +1514,14 @@ hr.footnotes-sep {
 
 .vscode-dark .hljs-addition,
 .vscode-high-contrast .hljs-addition {
-  color: #aff5b4;
-  background-color: #033a16;
+  color: var(--md-preview-code-addition-color, #aff5b4);
+  background-color: var(--md-preview-code-addition-bg, #033a16);
 }
 
 .vscode-dark .hljs-deletion,
 .vscode-high-contrast .hljs-deletion {
-  color: #ffdcd7;
-  background-color: #67060c;
+  color: var(--md-preview-code-deletion-color, #ffdcd7);
+  background-color: var(--md-preview-code-deletion-bg, #67060c);
 }
 
 body.preview-mode-document.document-theme-mode-light .markdown-body pre.hljs,
@@ -1621,7 +1639,7 @@ body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-au
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-quote,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-code,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-formula {
-  color: #8b949e !important;
+  color: var(--md-preview-code-comment-color, #8b949e) !important;
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-keyword,
@@ -1629,7 +1647,7 @@ body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-au
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-subst,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-template-tag,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-variable.language_ {
-  color: #ff7b72 !important;
+  color: var(--md-preview-code-keyword-color, #ff7b72) !important;
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-number,
@@ -1639,12 +1657,12 @@ body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-au
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-tag .hljs-attr,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-operator,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-attr {
-  color: #79c0ff !important;
+  color: var(--md-preview-code-number-color, #79c0ff) !important;
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-string,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-doctag {
-  color: #a5d6ff !important;
+  color: var(--md-preview-code-string-color, #a5d6ff) !important;
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title,
@@ -1653,12 +1671,12 @@ body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-au
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.function_,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-section,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-id {
-  color: #d2a8ff !important;
+  color: var(--md-preview-code-title-color, #d2a8ff) !important;
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-type,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-class .hljs-title {
-  color: #ffa657 !important;
+  color: var(--md-preview-code-type-color, #ffa657) !important;
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-attribute,
@@ -1666,19 +1684,19 @@ body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-au
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-regexp,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-link,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-pseudo {
-  color: #7ee787 !important;
+  color: var(--md-preview-code-attribute-color, #7ee787) !important;
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-meta,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-built_in,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-builtin-name {
-  color: #79c0ff !important;
+  color: var(--md-preview-code-meta-color, #79c0ff) !important;
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-bullet,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-symbol,
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-class {
-  color: #ffa657 !important;
+  color: var(--md-preview-code-symbol-color, #ffa657) !important;
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-emphasis {
@@ -1690,13 +1708,13 @@ body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-au
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-addition {
-  color: #aff5b4 !important;
-  background-color: #033a16;
+  color: var(--md-preview-code-addition-color, #aff5b4) !important;
+  background-color: var(--md-preview-code-addition-bg, #033a16);
 }
 
 body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-deletion {
-  color: #ffdcd7 !important;
-  background-color: #67060c;
+  color: var(--md-preview-code-deletion-color, #ffdcd7) !important;
+  background-color: var(--md-preview-code-deletion-bg, #67060c);
 }
 
 /* =========================================================

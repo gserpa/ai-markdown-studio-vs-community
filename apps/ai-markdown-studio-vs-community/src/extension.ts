@@ -4,6 +4,7 @@ import {
   createMarkdownTableFormattingProvider,
   exportDocxBasicCommand,
   exportHtmlCommand,
+  embedLinkedImagesCommand,
   getMarkdownTableFormattingEdits,
   formatTablesCommand,
   openSettingsCommand,
@@ -110,6 +111,7 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
     vscode.commands.registerCommand('markdownAiStudio.formatTables', async (resource?: vscode.Uri) => {
       await formatTablesCommand(resource);
     }),
+    vscode.commands.registerCommand('markdownAiStudio.embedLinkedImages', embedLinkedImagesCommand),
     vscode.commands.registerCommand('markdownAiStudio.exportHtml', async (resource?: vscode.Uri) => {
       await exportHtmlCommand(context.extensionUri, resource);
     }),

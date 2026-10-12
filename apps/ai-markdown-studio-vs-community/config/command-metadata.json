@@ -3,6 +3,7 @@
   { "command": "markdownAiStudio.editAsText", "title": "Edit Markdown", "category": "AI Markdown Studio", "icon": "$(pencil)", "quickPickTitle": "Edit Markdown" },
   { "command": "markdownAiStudio.openNativeMarkdownEditor", "title": "Open Native WYSIWYG Markdown Editor", "category": "AI Markdown Studio", "icon": "$(layout)", "quickPickTitle": "Open Native WYSIWYG Editor" },
   { "command": "markdownAiStudio.formatTables", "title": "Format Markdown Tables", "category": "AI Markdown Studio", "quickPickTitle": "Format Tables" },
+  { "command": "markdownAiStudio.embedLinkedImages", "title": "Embed Linked Images in File", "category": "AI Markdown Studio", "quickPickTitle": "Embed Linked Images in File" },
   { "command": "markdownAiStudio.exportHtml", "title": "Export Markdown as HTML", "category": "AI Markdown Studio", "quickPickTitle": "Export: HTML" },
   { "command": "markdownAiStudio.exportDocxBasic", "title": "Export Markdown as DOCX (Basic)", "category": "AI Markdown Studio", "quickPickTitle": "Export: DOCX (Basic)" },
   { "command": "markdownAiStudio.generateDocument", "title": "Generate Document (AI)", "category": "AI Markdown Studio", "quickPickTitle": "AI: Generate Document" },

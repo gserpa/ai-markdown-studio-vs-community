@@ -45,6 +45,15 @@ export function guessMimeType(filePath: string, fallback = 'application/octet-st
       return 'image/svg+xml';
     case '.webp':
       return 'image/webp';
+    case '.avif':
+      return 'image/avif';
+    case '.bmp':
+      return 'image/bmp';
+    case '.ico':
+      return 'image/x-icon';
+    case '.tif':
+    case '.tiff':
+      return 'image/tiff';
     default:
       return fallback;
   }

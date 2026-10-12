@@ -192,6 +192,7 @@ All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and th
 | **Install Presentation Agent Skill in Workspace** | Installs the selected Copilot, Claude, or Codex MPS skill in the workspace          | Command palette, command list                                                |
 | **Paste as New Markdown File**                    | Converts clipboard text into a new Markdown file                                    | Explorer folder context menu, command palette                                |
 | **Export Markdown as HTML**                       | Saves the rendered document as a standalone `.html` file                            | Command palette, command list                                                |
+| **Embed Linked Images in File**                   | Embeds local and remote images into the current Markdown file                       | Command palette, command list                                                |
 | **Export Markdown as DOCX (Basic)**               | Saves the rendered document as a DOCX file                                          | Command palette, command list                                                |
 | **Enable AI Features...**                         | Reviews the AI data-sharing notice and can enable or re-enable AI features          | Command palette, command list                                                |
 | **Toggle Frontmatter**                            | Shows or hides the rendered front-matter summary in the active preview              | Title bar, command palette, command list when applicable                     |
@@ -234,6 +235,8 @@ Preview-specific settings:
 | **`markdownAiStudio.presentationContentOverflow`** | `scaleToFit` | Presentation previews fit overflowing slide content down to 60% by default; long code blocks are reduced locally first. Set to `scroll` to preserve scrolling instead.                                                                                                              |
 
 Mermaid diagrams in the standard document preview include a zoom control. Use the on-diagram **Zoom** button or double-click the rendered diagram to open it in an overlay viewer. Inside the viewer, use **+**, **-**, **Fit**, or the keyboard shortcuts `+`, `-`, `0`, and `Esc`.
+
+Images use the same viewer in document and presentation previews. Hover an image and click **Zoom**, or focus an unlinked image and press `Enter`. Double-clicking an unlinked image also opens the viewer. Zoom, fit, mouse-wheel zoom, and pan work the same way as for Mermaid diagrams.
 
 ### Presentation Preview
 
@@ -281,6 +284,10 @@ Set the resource-scoped **`markdownAiStudio.documentTableLayout`** setting to ch
 ### HTML Export
 
 Run **Export Markdown as HTML** from the Command Palette or the command list to save the current Markdown file as a self-contained `.html` file. The exported file includes the extension's styling and rendered content for sharing outside VS Code.
+
+Local images are always embedded in the exported HTML, including presentation images and HTML image tags. Moving the HTML file to another folder or computer keeps those images available. If a local image cannot be read, export reports the failing image instead of creating an incomplete portable preview. Image and Mermaid zoom viewers work in the exported file as well.
+
+To embed images in the Markdown itself, run **Embed Linked Images in File**. It replaces image uses with embedded data, supports local files and remote URLs, and preserves normal links, code examples, and reference definitions. Save the Markdown afterward; the edit can be undone. Images that cannot be loaded keep their original links and are reported. Remote downloads respect **`markdownAiStudio.allowRemoteResources`**. Run this command before exporting if remote images must also travel with the HTML file; otherwise remote image URLs remain remote.
 
 The setting **`markdownAiStudio.allowRemoteResources`** controls whether remote `http(s)` resources referenced in your Markdown may be loaded. Set it to `false` in privacy-sensitive environments.
 

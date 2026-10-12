@@ -3,6 +3,7 @@
   const mermaidModuleUri = window.__MERMAID_URI__;
   const previewMode = document.body.dataset.previewMode;
   const mermaidLightbox = initializeMermaidLightbox();
+  initializeImageZoom(mermaidLightbox);
   enforceReadOnlyTaskCheckboxes();
   let modeStarted = false;
   window.__mfoPreviewModeRuntime = {
@@ -1411,8 +1412,89 @@ function applyPresentationThemeToMermaidLightbox(lightboxRoot) {
   lightboxRoot.setAttribute('data-presentation-theme-active', 'true');
 }
 
+
+/** One floating control avoids wrapping images or changing presentation layout. */
+function initializeImageZoom(lightbox) {
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'mermaid-zoom-trigger image-zoom-trigger';
+  trigger.textContent = 'Zoom';
+  trigger.setAttribute('aria-label', 'Zoom image');
+  trigger.hidden = true;
+  document.body.append(trigger);
+  let image = null;
+  const eligibleImage = (target) => target instanceof HTMLImageElement
+    && target.closest('.markdown-body') && !target.closest('.mermaid-rendered, [data-mermaid-lightbox]');
+  const hide = () => { trigger.hidden = true; image = null; };
+  const position = () => {
+    if (!image?.isConnected || document.body.classList.contains('mermaid-lightbox-open')) { hide(); return; }
+    const rect = image.getBoundingClientRect();
+    if (!rect.width || !rect.height || rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) { hide(); return; }
+    trigger.style.left = Math.max(4, Math.min(rect.right - trigger.offsetWidth - 8, window.innerWidth - trigger.offsetWidth - 8)) + 'px';
+    trigger.style.top = Math.max(4, rect.top + 8) + 'px';
+  };
+  const show = (target) => {
+    if (!eligibleImage(target) || document.body.classList.contains('mermaid-lightbox-open')) return;
+    image = target;
+    trigger.hidden = false;
+    position();
+  };
+  const open = () => { if (image) lightbox.open(image); hide(); };
+  document.addEventListener('mouseover', (event) => {
+    if (event.target === trigger) return;
+    if (eligibleImage(event.target)) show(event.target);
+    else hide();
+  });
+  document.addEventListener('mouseout', (event) => {
+    if ((event.target === image || event.target === trigger) && event.relatedTarget !== image && event.relatedTarget !== trigger) hide();
+  });
+  document.addEventListener('focusin', (event) => {
+    if (eligibleImage(event.target)) show(event.target);
+    else if (event.target !== trigger) hide();
+  });
+  document.addEventListener('dblclick', (event) => {
+    if (!eligibleImage(event.target) || event.target.closest('a')) return;
+    event.preventDefault(); show(event.target); open();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && eligibleImage(event.target) && !event.target.closest('a')) {
+      event.preventDefault(); show(event.target); open();
+    }
+  });
+  trigger.addEventListener('click', (event) => { event.preventDefault(); event.stopPropagation(); open(); });
+  document.addEventListener('scroll', () => { if (image) position(); }, true);
+  window.addEventListener('resize', () => { if (image) position(); });
+  for (const target of document.querySelectorAll('.markdown-body img')) {
+    if (eligibleImage(target) && !target.closest('a') && !target.hasAttribute('tabindex')) target.tabIndex = 0;
+  }
+}
+
 function initializeMermaidLightbox() {
-  const root = document.querySelector('[data-mermaid-lightbox]');
+  let root = document.querySelector('[data-mermaid-lightbox]');
+  if (!root) {
+    root = document.createElement('div');
+    root.className = 'mermaid-lightbox';
+    root.setAttribute('data-mermaid-lightbox', '');
+    root.setAttribute('data-md-theme-scope', '');
+    root.hidden = true;
+    root.setAttribute('aria-hidden', 'true');
+    root.innerHTML = `<div class="mermaid-lightbox-backdrop" data-mermaid-lightbox-action="close"></div>
+      <section class="mermaid-lightbox-shell" role="dialog" aria-modal="true" aria-label="Media viewer" tabindex="-1">
+        <header class="mermaid-lightbox-toolbar">
+          <div class="mermaid-lightbox-toolbar-group">
+            <button type="button" class="mermaid-lightbox-button" data-mermaid-lightbox-action="zoom-out" aria-label="Zoom out">−</button>
+            <span class="mermaid-lightbox-zoom" data-mermaid-lightbox-zoom>100%</span>
+            <button type="button" class="mermaid-lightbox-button" data-mermaid-lightbox-action="zoom-in" aria-label="Zoom in">+</button>
+            <button type="button" class="mermaid-lightbox-button" data-mermaid-lightbox-action="reset" aria-label="Fit media">Fit</button>
+          </div>
+          <button type="button" class="mermaid-lightbox-button" data-mermaid-lightbox-action="close" aria-label="Close media viewer">Close</button>
+        </header>
+        <div class="mermaid-lightbox-viewport" data-mermaid-lightbox-viewport>
+          <div class="mermaid-lightbox-stage-wrap"><div class="mermaid-lightbox-stage" data-mermaid-lightbox-stage></div></div>
+        </div>
+      </section>`;
+    document.body.append(root);
+  }
   const viewport = root?.querySelector('[data-mermaid-lightbox-viewport]');
   const stage = root?.querySelector('[data-mermaid-lightbox-stage]');
   const zoomLabel = root?.querySelector('[data-mermaid-lightbox-zoom]');
@@ -1556,10 +1638,13 @@ function initializeMermaidLightbox() {
       return;
     }
 
-    const horizontalPadding = 28;
-    const verticalPadding = 28;
-    const availableWidth = Math.max(viewport.clientWidth - horizontalPadding, 160);
-    const availableHeight = Math.max(viewport.clientHeight - verticalPadding, 160);
+    const stageWrapStyle = getComputedStyle(stage.parentElement);
+    const padding = (side) => parseFloat(stageWrapStyle.getPropertyValue(`padding-${side}`)) || 0;
+    const horizontalPadding = padding('left') + padding('right');
+    const verticalPadding = padding('top') + padding('bottom');
+    // Leave one pixel for fractional layout rounding, even in small viewports.
+    const availableWidth = Math.max(viewport.clientWidth - horizontalPadding - 1, 1);
+    const availableHeight = Math.max(viewport.clientHeight - verticalPadding - 1, 1);
     fitScale = Math.min(availableWidth / baseWidth, availableHeight / baseHeight);
     if (!Number.isFinite(fitScale) || fitScale <= 0) {
       fitScale = 1;
@@ -1629,28 +1714,39 @@ function initializeMermaidLightbox() {
       return;
     }
 
-    const svg = block.querySelector('svg');
-    if (!(svg instanceof SVGSVGElement)) {
-      return;
-    }
+    const media = block instanceof HTMLImageElement ? block : block.querySelector('svg');
+    if (!(media instanceof SVGSVGElement) && !(media instanceof HTMLImageElement)) return;
+    if (media instanceof HTMLImageElement && (!media.complete || !media.naturalWidth)) return;
 
-    lastFocusedElement = document.activeElement;
-    const clone = svg.cloneNode(true);
-    if (!(clone instanceof SVGSVGElement)) {
-      return;
-    }
-
-    const dimensions = getSvgDimensions(svg, block);
+    lastFocusedElement = media instanceof HTMLImageElement ? (media.closest('a') || media) : document.activeElement;
+    const clone = media.cloneNode(true);
+    const dimensions = media instanceof HTMLImageElement
+      ? { width: media.naturalWidth, height: media.naturalHeight }
+      : getSvgDimensions(media, block);
     baseWidth = dimensions.width;
     baseHeight = dimensions.height;
 
     clone.removeAttribute('width');
     clone.removeAttribute('height');
+    clone.removeAttribute('tabindex');
     clone.style.width = '100%';
     clone.style.height = '100%';
     clone.style.maxWidth = 'none';
     clone.style.maxHeight = 'none';
     clone.classList.add('mermaid-lightbox-diagram');
+    if (media instanceof HTMLImageElement) {
+      clone.removeAttribute('id');
+      clone.src = media.currentSrc || media.src;
+      clone.removeAttribute('srcset');
+      clone.removeAttribute('data-source-src');
+      clone.removeAttribute('loading');
+      clone.draggable = false;
+      clone.style.objectFit = 'contain';
+    }
+    if (shell instanceof HTMLElement) {
+      shell.tabIndex = -1;
+      shell.setAttribute('aria-label', media instanceof HTMLImageElement ? 'Image viewer' : 'Mermaid diagram viewer');
+    }
 
     stage.replaceChildren(clone);
     applyPresentationThemeToMermaidLightbox(root);
@@ -2038,11 +2134,11 @@ function measurePresentationContentScale(contentFit) {
   let scale = 1;
 
   for (const target of getPresentationContentOverflowTargets(contentFit)) {
-    if (target.clientWidth > 0 && target.scrollWidth > target.clientWidth + 1) {
+    if (target.clientWidth > 0 && target.scrollWidth > target.clientWidth) {
       scale = Math.min(scale, target.clientWidth / target.scrollWidth);
     }
 
-    if (target.clientHeight > 0 && target.scrollHeight > target.clientHeight + 1) {
+    if (target.clientHeight > 0 && target.scrollHeight > target.clientHeight) {
       scale = Math.min(scale, target.clientHeight / target.scrollHeight);
     }
   }
@@ -2102,7 +2198,7 @@ function fitPresentationCodeBlocks(contentFit) {
 }
 
 function applyPresentationContentScale(contentFit, scale) {
-  if (scale >= 0.999) {
+  if (scale >= 1) {
     clearPresentationContentScale(contentFit);
     return;
   }
@@ -2114,12 +2210,14 @@ function applyPresentationContentScale(contentFit, scale) {
 
 function findLargestPresentationContentScale(contentFit) {
   clearPresentationContentScale(contentFit);
-  if (measurePresentationContentScale(contentFit) >= 0.999) {
+  // Even one CSS pixel of overflow creates a real scrollbar. Do not round a
+  // near-fit ratio up to one, including on large canvases or fractional scales.
+  if (measurePresentationContentScale(contentFit) >= 1) {
     return 1;
   }
 
   applyPresentationContentScale(contentFit, presentationContentFitMinimumScale);
-  if (measurePresentationContentScale(contentFit) < 0.999) {
+  if (measurePresentationContentScale(contentFit) < 1) {
     return presentationContentFitMinimumScale;
   }
 
@@ -2128,7 +2226,7 @@ function findLargestPresentationContentScale(contentFit) {
   for (let iteration = 0; iteration < 7; iteration += 1) {
     const candidateScale = (fittingScale + overflowingScale) / 2;
     applyPresentationContentScale(contentFit, candidateScale);
-    if (measurePresentationContentScale(contentFit) >= 0.999) {
+    if (measurePresentationContentScale(contentFit) >= 1) {
       fittingScale = candidateScale;
     } else {
       overflowingScale = candidateScale;

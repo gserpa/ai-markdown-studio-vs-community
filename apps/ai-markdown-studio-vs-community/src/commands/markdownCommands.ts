@@ -8,6 +8,8 @@ import { exportMarkdownAsHtml } from '../export/html/htmlExporter';
 import { hasDisplayableFrontMatter } from '../panel/frontMatterDisplayState';
 import { MarkdownPreviewCustomEditor } from '../panel/MarkdownPreviewCustomEditor';
 import { MarkdownPreviewPanel } from '../panel/MarkdownPreviewPanel';
+import { embedMarkdownImages } from '../images/embedMarkdownImages';
+import { imageDataUri } from '../images/imageDataUri';
 import { commandEntries } from './generatedCommandEntries';
 
 type CommandListEntry = {
@@ -103,6 +105,33 @@ export async function formatTablesCommand(resource?: vscode.Uri): Promise<void> 
   await vscode.workspace.applyEdit(edit);
 }
 
+export async function embedLinkedImagesCommand(resource?: vscode.Uri): Promise<void> {
+  const document = await resolveMarkdownDocument(resource);
+  if (!document) return;
+  const original = document.getText();
+  const version = document.version;
+  const allowRemote = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
+  const result = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Embedding linked images' },
+    () => embedMarkdownImages(original, (source) => imageDataUri(document, source, allowRemote)));
+  if (document.version !== version) {
+    void vscode.window.showWarningMessage('The Markdown changed while images were loading. Run Embed Linked Images in File again.');
+    return;
+  }
+  if (result.markdown !== original) {
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(document.uri, new vscode.Range(document.positionAt(0), document.positionAt(original.length)), result.markdown);
+    if (!await vscode.workspace.applyEdit(edit)) {
+      void vscode.window.showErrorMessage('Could not apply the embedded images to the Markdown file.');
+      return;
+    }
+  }
+  const summary = result.embedded ? 'Embedded ' + result.embedded + ' image(s). Save the Markdown file to keep them.' : 'No linked images were embedded.';
+  if (result.failures.length) {
+    const details = result.failures.map((failure) => failure.source + ': ' + failure.message).join('\n');
+    void vscode.window.showWarningMessage(summary + ' ' + result.failures.length + ' image(s) could not be embedded: ' + details);
+  } else void vscode.window.showInformationMessage(summary);
+}
+
 export async function exportHtmlCommand(extensionUri: vscode.Uri, resource?: vscode.Uri): Promise<void> {
   const document = await resolveMarkdownDocument(resource);
   if (!document) return;
@@ -194,7 +223,7 @@ function collectAvailableCommandEntries(): Map<string, CommandListEntry> {
     entries.set(entry.command, {
       command: entry.command,
       title: entry.title,
-      order: QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number]) >= 0
+      order: entry.command === 'markdownAiStudio.embedLinkedImages' ? 4.3 : QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number]) >= 0
         ? QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number])
         : 100 + order,
       requiresAi: AI_DEPENDENT_COMMANDS.has(entry.command),

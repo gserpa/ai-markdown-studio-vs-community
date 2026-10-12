@@ -19,6 +19,7 @@ export type ResolvedPreviewTheme = {
   name: string;
   label: string;
   aliases: string[];
+  defaultForModes?: PreviewThemeMode[];
   mermaidTheme: string;
   mermaidTransparentBackground: boolean;
   tokens: Record<string, string>;
@@ -214,6 +215,9 @@ function buildPreviewThemeRegistry(definitions: PreviewThemeDefinition[]): Previ
       name: definition.name,
       label: definition.label ?? humanizeThemeName(definition.name),
       aliases: uniqueStrings(definition.aliases),
+      defaultForModes: definition.defaultForModes.length > 0
+        ? [...definition.defaultForModes]
+        : [...(baseTheme?.defaultForModes ?? [])],
       mermaidTheme: definition.mermaidTheme ?? baseTheme?.mermaidTheme ?? 'default',
       mermaidTransparentBackground: definition.mermaidTransparentBackground ?? baseTheme?.mermaidTransparentBackground ?? false,
       tokens: {
@@ -257,6 +261,7 @@ export function buildPreviewThemeStylesheet(registry: PreviewThemeRegistry): str
       serializeThemeTokens(theme.tokens),
       '}',
     ].join('\n'));
+    sections.push(buildRootColorSchemeRule(theme));
   }
 
   const darkAutoTheme = registry.themes.get(registry.defaultDarkThemeName);
@@ -303,7 +308,20 @@ export function buildPreviewThemeCssArtifact(
 function buildExplicitPreviewThemeStylesheet(registry: PreviewThemeRegistry, themeName: string): string {
   const theme = registry.themes.get(themeName);
   if (!theme) return buildAutoPreviewThemeStylesheet(registry);
-  return `[data-md-preview-root].presentation-preview.presentation-theme-${toCssClassToken(theme.name)} {\n${serializeThemeTokens(theme.tokens)}\n}`;
+  return [
+    `[data-md-preview-root].presentation-preview.presentation-theme-${toCssClassToken(theme.name)} {\n${serializeThemeTokens(theme.tokens)}\n}`,
+    buildRootColorSchemeRule(theme),
+  ].join('\n\n');
+}
+
+function buildRootColorSchemeRule(theme: ResolvedPreviewTheme): string {
+  const defaultForModes = theme.defaultForModes ?? [];
+  const colorScheme = defaultForModes.includes('dark') && !defaultForModes.includes('light')
+    ? 'dark'
+    : defaultForModes.includes('light') && !defaultForModes.includes('dark')
+      ? 'light'
+      : theme.mermaidTheme === 'dark' ? 'dark' : 'light';
+  return `:root:has(.presentation-preview.presentation-theme-${toCssClassToken(theme.name)}) {\n  color-scheme: ${colorScheme};\n}`;
 }
 
 function buildAutoPreviewThemeStylesheet(registry: PreviewThemeRegistry): string {
@@ -316,7 +334,9 @@ function buildAutoPreviewThemeStylesheet(registry: PreviewThemeRegistry): string
   if (darkTheme) {
     const tokens = serializeThemeTokens(darkTheme.tokens);
     sections.push(`[data-md-host-scheme='dark'] [data-md-preview-root].presentation-preview.presentation-theme-auto,\n.vscode-dark [data-md-preview-root].presentation-preview.presentation-theme-auto,\n.vscode-high-contrast [data-md-preview-root].presentation-preview.presentation-theme-auto {\n${tokens}\n}`);
+    sections.push(`:root:has(body.preview-mode-presentation:is(.vscode-dark, .vscode-high-contrast) .presentation-preview.presentation-theme-auto),\n:root:has([data-md-host-scheme='dark'] [data-md-preview-root].presentation-preview.presentation-theme-auto) {\n  color-scheme: dark;\n}`);
     sections.push(`@media (prefers-color-scheme: dark) {\n  [data-md-host-scheme='auto'] [data-md-preview-root].presentation-preview.presentation-theme-auto {\n${indentCss(tokens, 2)}\n  }\n}`);
+    sections.push(`@media (prefers-color-scheme: dark) {\n  :root:has([data-md-host-scheme='auto'] [data-md-preview-root].presentation-preview.presentation-theme-auto) {\n    color-scheme: dark;\n  }\n}`);
   }
   return sections.join('\n\n');
 }

@@ -5,6 +5,7 @@ export const commandEntries = [
   { command: "markdownAiStudio.editAsText", title: "Edit Markdown" },
   { command: "markdownAiStudio.openNativeMarkdownEditor", title: "Open Native WYSIWYG Editor" },
   { command: "markdownAiStudio.formatTables", title: "Format Tables" },
+  { command: "markdownAiStudio.embedLinkedImages", title: "Embed Linked Images in File" },
   { command: "markdownAiStudio.exportHtml", title: "Export: HTML" },
   { command: "markdownAiStudio.exportDocxBasic", title: "Export: DOCX (Basic)" },
   { command: "markdownAiStudio.generateDocument", title: "AI: Generate Document" },

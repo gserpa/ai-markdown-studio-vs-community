@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('node:fs/promises', () => ({
+vi.mock('node:fs/promises', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  return {
   readFile: vi.fn(async (filePath: string) => {
+    if (filePath.includes('preview-mermaid.') && filePath.endsWith('.css')) return '.mermaid-lightbox { position: fixed; }';
     if (filePath.endsWith('.css') && !filePath.endsWith('katex.min.css')) {
       return '.markdown-body { color: black; }';
     }
@@ -10,10 +14,16 @@ vi.mock('node:fs/promises', () => ({
       return '';
     }
 
+    if (filePath.includes('preview-core-runtime.')) return fs.readFileSync(path.resolve(__dirname, '../../../../../packages/md-preview-web/assets/preview.js'), 'utf8');
+    if (filePath.includes('preview-theme-runtime.')) return fs.readFileSync(path.resolve(__dirname, '../../../../../packages/md-preview-web/assets/preview-theme-runtime.js'), 'utf8');
+    if (filePath.includes('preview-document-runtime.')) return 'window.__mfoPreviewModeRuntime?.startDocument();';
+    if (filePath.includes('preview-presentation-runtime.')) return 'window.__mfoPreviewModeRuntime?.startPresentation();';
+
     return 'window.mermaid = {};';
   }),
   writeFile: vi.fn(),
-}));
+  };
+});
 
 vi.mock('@mfo/preview-web', () => ({
   buildDocumentThemeCssArtifact: vi.fn((_registry, themeName: string) => ({
@@ -80,6 +90,10 @@ vi.mock('../../../src/presentation/previewThemeSupport', () => ({
   loadPreviewThemeRegistryForDocument: vi.fn(() => ({ themes: new Map(), aliases: new Map(), warnings: [] })),
 }));
 
+vi.mock('../../../src/images/imageDataUri', () => ({
+  imageDataUri: vi.fn(async () => 'data:image/png;base64,aGVsbG8='),
+}));
+
 vi.mock('vscode', () => ({
   ColorThemeKind: {
     Light: 1,
@@ -99,6 +113,7 @@ vi.mock('vscode', () => ({
     },
   },
   Uri: {
+    parse: (value: string) => ({ scheme: 'file', fsPath: value.replace(/^file:\/\/\/?/u, ''), toString: () => value }),
     file: (fsPath: string) => ({
       fsPath,
       scheme: 'file',
@@ -110,20 +125,62 @@ vi.mock('vscode', () => ({
         fsPath,
         scheme: 'file',
         toString: () => `file://${fsPath}`,
+        with: () => ({ fsPath, scheme: 'file', toString: () => `file://${fsPath}` }),
       };
     },
   },
 }));
 
-import { buildExportHtmlArtifact, buildExportHtmlString } from '../../../src/export/html/htmlExporter';
+import { buildExportHtmlArtifact, buildExportHtmlString, embedLocalHtmlImages } from '../../../src/export/html/htmlExporter';
+import { imageDataUri } from '../../../src/images/imageDataUri';
+import { renderPresentationPreview } from '@mfo/preview-web';
 import * as vscode from 'vscode';
 
 describe('buildExportHtmlString', () => {
   beforeEach(() => {
+    vi.mocked(imageDataUri).mockReset().mockResolvedValue('data:image/png;base64,aGVsbG8=');
     vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
       get: vi.fn((key: string, fallback: unknown) => key === 'documentPreviewTheme' ? 'auto' : fallback),
     } as never);
     vscode.window.activeColorTheme.kind = vscode.ColorThemeKind.Light;
+  });
+
+  it('embeds Markdown local images and preserves already embedded and remote sources', async () => {
+    const document = {
+      fileName: 'images.md', uri: { fsPath: 'C:/docs/images.md', scheme: 'file', toString: () => 'file:///C:/docs/images.md' },
+      getText: () => '![Local](local.png)\n\n![Embedded](data:image/png;base64,AA==)\n\n![Remote](https://example.com/image.png)',
+    } as never;
+    const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
+    expect(html).toContain('src="data:image/png;base64,aGVsbG8="');
+    expect(html).toContain('src="data:image/png;base64,AA=="');
+    expect(html).toContain('src="https://example.com/image.png"');
+    expect(html).not.toContain('src="file:');
+    expect(imageDataUri).toHaveBeenCalledTimes(1);
+    expect(html).toContain('.mermaid-lightbox { position: fixed; }');
+    expect(html).toContain('function initializeMermaidLightbox()');
+    expect(html).toContain('window.__mfoPreviewModeRuntime?.startDocument();');
+  });
+
+  it('embeds rendered presentation images in inline and external HTML exports', async () => {
+    const document = {
+      fileName: 'slides.md', uri: { fsPath: 'C:/docs/slides.md', scheme: 'file', toString: () => 'file:///C:/docs/slides.md' },
+      getText: () => '---\ndocument: presentation\n---\n# Images',
+    } as never;
+    for (const assetMode of ['inline', 'external'] as const) {
+      vi.mocked(renderPresentationPreview).mockReturnValueOnce({
+        html: '<section class="presentation-preview"><img src="file:///C:/docs/local.png" data-source-src="local.png"></section>',
+        themeSelection: { themeName: 'auto' },
+      } as never);
+      const artifact = await buildExportHtmlArtifact({ fsPath: 'C:/extension', scheme: 'file' } as never, document, { assetMode });
+      expect(artifact.html).toContain('src="data:image/png;base64,aGVsbG8="');
+      expect(artifact.html).not.toContain('data-source-src="local.png"');
+      expect(artifact.html).not.toContain('src="file:');
+    }
+  });
+
+  it('refuses a portable export when a local image cannot be read', async () => {
+    vi.mocked(imageDataUri).mockRejectedValueOnce(new Error('File not found'));
+    await expect(embedLocalHtmlImages('<img src="missing.png">', {} as never)).rejects.toThrow('Cannot export portable HTML');
   });
 
   it('omits leading frontmatter while preserving body horizontal rules', async () => {
@@ -463,7 +520,7 @@ describe('buildExportHtmlString', () => {
     expect(artifact.html).not.toContain('data-ams-export-asset');
   });
 
-  it('preserves Mermaid anchor hrefs in exported HTML', async () => {
+  it('uses the standalone bridge for Mermaid links just like preview', async () => {
     const document = {
       fileName: 'example.md',
       uri: {
@@ -476,8 +533,9 @@ describe('buildExportHtmlString', () => {
 
     const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
 
-    expect(html).toContain("anchor.setAttribute('href', linkTarget);");
-    expect(html).not.toContain("anchor.removeAttribute('href');");
+    expect(html).toContain("anchor.setAttribute('data-href', linkTarget);");
+    expect(html).toContain("bridge.openLink(linkedHref);");
+    expect(html).toContain("window.open(href, '_blank', 'noopener,noreferrer');");
   });
 
   it('omits remote image src attributes when allowRemoteResources is false', async () => {

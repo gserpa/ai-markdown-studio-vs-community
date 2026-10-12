@@ -133,7 +133,8 @@ export function buildPreviewHtml(
   const hasMath = /class="[^"]*\bkatex\b/u.test(previewBody);
   const modeStylesheetUri = assetHref(assetManifest.assets[previewMode === 'presentation' ? 'previewPresentation' : 'previewDocument']);
   const modeScriptUri = assetHref(assetManifest.assets[previewMode === 'presentation' ? 'previewPresentationRuntime' : 'previewDocumentRuntime']);
-  const mermaidStylesheetUri = hasMermaid ? assetHref(assetManifest.assets.previewMermaid) : '';
+  const hasZoomMedia = hasMermaid || /<img\b/iu.test(previewBody);
+  const mermaidStylesheetUri = hasZoomMedia ? assetHref(assetManifest.assets.previewMermaid) : '';
   const imgSrcPolicy = allowRemoteResources
     ? `${webview.cspSource} https: data:`
     : `${webview.cspSource} data:`;
