@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { JSDOM } from 'jsdom';
 
 vi.mock('node:fs/promises', async () => {
   const fs = await import('node:fs');
@@ -18,6 +21,8 @@ vi.mock('node:fs/promises', async () => {
     if (filePath.includes('preview-theme-runtime.')) return fs.readFileSync(path.resolve(__dirname, '../../../../../packages/md-preview-web/assets/preview-theme-runtime.js'), 'utf8');
     if (filePath.includes('preview-document-runtime.')) return 'window.__mfoPreviewModeRuntime?.startDocument();';
     if (filePath.includes('preview-presentation-runtime.')) return 'window.__mfoPreviewModeRuntime?.startPresentation();';
+    if (filePath.includes('preview-visualizations-runtime.')) return 'window.__exportChartRuntime = "</script><img id=script-breakout>";';
+    if (filePath.includes('preview-visualizations-notices.')) return 'Chart dependencies\nCopyright <authors> & contributors\n</template><script>bad()</script>\n';
 
     return 'window.mermaid = {};';
   }),
@@ -134,6 +139,7 @@ vi.mock('vscode', () => ({
 import { buildExportHtmlArtifact, buildExportHtmlString, embedLocalHtmlImages } from '../../../src/export/html/htmlExporter';
 import { imageDataUri } from '../../../src/images/imageDataUri';
 import { renderPresentationPreview } from '@mfo/preview-web';
+import { createMarkdownRenderer, sanitizeRenderedHtml } from '@mfo/core';
 import * as vscode from 'vscode';
 
 describe('buildExportHtmlString', () => {
@@ -564,5 +570,70 @@ describe('buildExportHtmlString', () => {
     expect(html).toContain('class="remote-resource-placeholder"');
     expect(html).toContain('data-source-src="https://example.com/image.png"');
     expect(html).toContain('Extension settings restrict access to remote resources.');
+  });
+});
+
+describe('visualization HTML export', () => {
+  const json = JSON.stringify({ title: 'Chart <title>', mark: 'bar', data: { values: [{ x: 'A', y: 1 }] }, encoding: { x: { field: 'x', type: 'nominal' }, y: { field: 'y', type: 'quantitative' } } });
+  const chart = '```vega-lite\n' + json + '\n```';
+  const metric = '```metric\n{"title":"Debt","value":89.2,"unit":"% GDP"}\n```';
+  const notices = 'Chart dependencies\nCopyright <authors> & contributors\n</template><script>bad()</script>\n';
+  const extensionUri = { fsPath: 'C:/extension', scheme: 'file' } as never;
+  const document = (source: string, name = 'charts.md') => ({ fileName: name, uri: { fsPath: 'C:/docs/' + name, scheme: 'file', toString: () => 'file:///C:/docs/' + name }, getText: () => source }) as never;
+  beforeEach(() => {
+    vi.mocked(readFile).mockClear();
+    vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({ get: vi.fn((_key: string, fallback: unknown) => fallback) } as never);
+  });
+  function sourceFor(mode: 'document' | 'presentation') {
+    if (mode === 'document') return chart + '\n\n' + metric;
+    vi.mocked(renderPresentationPreview).mockReturnValueOnce({
+      html: '<section class="presentation-preview"><article class="markdown-body">' + sanitizeRenderedHtml(createMarkdownRenderer().render(chart + '\n\n' + metric)) + '</article></section>',
+      themeSelection: { themeName: 'auto' },
+    } as never);
+    return '---\ndocument: presentation\n---\n# Charts\n\n' + chart + '\n\n' + metric;
+  }
+
+  it.each(['# Plain document', metric, '```vega-lite\n{"data":{"url":"https://example.invalid/data"}}\n```'])('omits chart libraries and notices when no valid chart needs them', async source => {
+    const artifact = await buildExportHtmlArtifact(extensionUri, document(source), { assetMode: 'external' });
+    expect(artifact.assets.some(asset => /visualizations/u.test(asset.path))).toBe(false);
+    expect(vi.mocked(readFile).mock.calls.some(([file]) => String(file).includes('preview-visualizations-'))).toBe(false);
+    expect(artifact.html).not.toContain('data-ams-visualization-notices');
+  });
+
+  it.each(['document', 'presentation'] as const)('embeds one safe chart runtime and complete inert notices in a single-file %s', async mode => {
+    const artifact = await buildExportHtmlArtifact(extensionUri, document(sourceFor(mode)), { assetMode: 'inline' });
+    const dom = new JSDOM(artifact.html);
+    try {
+      const output = dom.window.document;
+      expect(artifact.assets).toEqual([]);
+      const scripts = output.querySelectorAll('script[data-ams-export-asset="preview-visualizations-runtime"]');
+      expect(scripts).toHaveLength(1);
+      expect(scripts[0].textContent).toContain('<\\/script>');
+      expect(output.querySelector('#script-breakout')).toBeNull();
+      expect(output.querySelector<HTMLTemplateElement>('template[data-ams-visualization-notices]')!.content.textContent).toBe(notices);
+      expect(output.querySelector('.md-visualization-chart code')!.textContent).toBe(json + '\n');
+      expect(output.querySelector<HTMLDetailsElement>('.md-visualization-chart details')!.open).toBe(true);
+      expect(output.querySelector('.md-metric-value')!.textContent).toContain('89.2');
+      expect(output.querySelector('.md-visualization-chart')!.getAttribute('aria-label')).toBe('Chart <title>');
+    } finally { dom.window.close(); }
+  });
+
+  it.each(['document', 'presentation'] as const)('declares reusable runtime and license assets for external %s exports', async mode => {
+    const first = await buildExportHtmlArtifact(extensionUri, document(sourceFor(mode)), { assetMode: 'external' });
+    const second = await buildExportHtmlArtifact(extensionUri, document(sourceFor(mode).replace('"y":1', '"y":2'), 'second.md'), { assetMode: 'external' });
+    const assets = first.assets.filter(asset => /visualizations/u.test(asset.path));
+    expect(assets).toHaveLength(2);
+    expect(assets.map(asset => asset.path)).toEqual(second.assets.filter(asset => /visualizations/u.test(asset.path)).map(asset => asset.path));
+    const dom = new JSDOM(first.html);
+    try {
+      const runtime = assets.find(asset => asset.mediaType.startsWith('text/javascript'))!;
+      const license = assets.find(asset => asset.mediaType.startsWith('text/plain'))!;
+      expect(dom.window.document.querySelector('script[src*="preview-visualizations-runtime"]')!.getAttribute('src')).toBe(runtime.path);
+      expect(dom.window.document.querySelector('link[rel="license"]')!.getAttribute('href')).toBe(license.path);
+      expect(Buffer.from(license.bytes).toString('utf8')).toBe(notices);
+      expect(first.html).not.toContain('data-ams-visualization-notices');
+      expect(first.html).not.toContain('data-ams-export-asset');
+      for (const asset of assets) expect(createHash('sha256').update(asset.bytes).digest('base64url').slice(0, 18)).toBe(asset.contentHash);
+    } finally { dom.window.close(); }
   });
 });

@@ -1,6 +1,6 @@
 ---
-date: 2026-08-12
-version: 1.2.1
+date: 2026-10-24
+version: 1.3.0
 ---
 
 # AI Markdown Studio Community — User Guide
@@ -18,6 +18,7 @@ This guide covers everything in the Community edition. Advanced conversion, them
 - [MPS agent tools](#mps-agent-tools)
 - [AI Paste to Markdown](#ai-paste-to-markdown)
 - [Markdown preview](#markdown-preview)
+- [Visualization blocks](visualizations.md)
 - [Document themes](#document-themes)
 - [Presentation preview](#presentation-preview)
 - [Presentation themes](#presentation-themes)
@@ -256,6 +257,8 @@ Set **`markdownAiStudio.documentTableLayout`** to choose a document's default la
 ## HTML export
 
 Run **Export Markdown as HTML** to save the current document as a self-contained `.html` file you can share or open in any browser. The export bundles the extension's rendered styling so the output looks like the preview.
+
+Supported [visualization blocks](./visualizations.md) render as interactive charts and HTML metric cards in exported documents and presentations. The chart runtime is bundled locally. Chart source stays available if JavaScript is disabled or rendering fails.
 
 Whether remote resources referenced in the document may be loaded is governed by **`markdownAiStudio.allowRemoteResources`** (see below).
 

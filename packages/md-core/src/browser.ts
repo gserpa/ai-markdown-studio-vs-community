@@ -40,6 +40,8 @@ const additionalTags = [
   'video',
   'source',
   'track',
+  'details',
+  'summary',
 ];
 
 const additionalAttributes = [
@@ -48,6 +50,9 @@ const additionalAttributes = [
   'style',
   'title',
   'aria-hidden',
+  'aria-label',
+  'role',
+  'open',
   'target',
   'rel',
   'data-href',

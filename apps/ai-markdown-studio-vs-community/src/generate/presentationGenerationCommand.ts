@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { createPresentationPrompt, createPresentationRepairPrompt } from '@mfo/ai-core';
+import { createPresentationPrompt, createPresentationRepairPrompt, validateVisualizationFences } from '@mfo/ai-core';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
 import { validatePresentation } from '../ai/presentationValidation';
 import { normalizeGeneratedPresentationImages } from './generatedPresentationImages';
@@ -72,6 +72,8 @@ export async function generatePresentationCommand(
           void vscode.window.showWarningMessage(`Generated presentation needs review: ${remainingIssues.slice(0, 3).join(' ')}`);
         }
       }
+      const visualizationIssues = validateVisualizationFences(markdown);
+      if (visualizationIssues.length) throw new Error(`Generated visualizations need correction: ${visualizationIssues.slice(0, 3).join(' ')}`);
       const normalizedImages = await normalizeGeneratedPresentationImages(markdown, {
         allowRemoteResources,
         providedImageSource: request.brief,

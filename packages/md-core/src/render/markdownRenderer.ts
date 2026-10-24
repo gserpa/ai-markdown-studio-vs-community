@@ -2,6 +2,7 @@ import hljs from 'highlight.js';
 import katex from 'katex';
 import MarkdownIt from 'markdown-it';
 import sanitizeHtml from 'sanitize-html';
+import { renderVisualizationBlock } from '../visualizations/visualizationHtml';
 
 const markdownItAnchor = require('markdown-it-anchor');
 const markdownItEmoji = require('markdown-it-emoji');
@@ -107,6 +108,10 @@ export function createMarkdownRenderer(options: MarkdownRendererOptions = {}): M
       return `<div class="mermaid">${md.utils.escapeHtml(token.content)}</div>`;
     }
 
+    if (info === 'vega-lite' || info === 'metric') {
+      return renderVisualizationBlock(info, token.content);
+    }
+
     return defaultFence
       ? defaultFence(tokens, idx, renderOptions, env, self)
       : self.renderToken(tokens, idx, renderOptions);
@@ -202,6 +207,8 @@ export function sanitizeRenderedHtml(html: string): string {
     'div',
     'span',
     'section',
+    'details',
+    'summary',
     'video',
     'source',
     'track',
@@ -252,6 +259,8 @@ export function sanitizeRenderedHtml(html: string): string {
       td: ['colspan', 'rowspan', 'align'],
       ol: ['start'],
       annotation: ['encoding'],
+      section: ['role', 'aria-label'],
+      details: ['open'],
     },
     allowedSchemes: ['http', 'https', 'mailto', 'data', 'file'],
     allowedStyles: {

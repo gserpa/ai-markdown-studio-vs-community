@@ -1,7 +1,8 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { guessMimeType } from '../util/imageMime';
-import { buildPreviewHtml, getPreviewTitle } from './previewHtmlBuilder';
+import { buildPreviewPage, getPreviewTitle } from './previewHtmlBuilder';
+import { PreviewDocumentUpdater } from './PreviewDocumentUpdater';
 import { resolveDocumentResource } from '../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri, resolveRealPackageUri } from '../util/extensionSupportRoot';
 import {
@@ -14,6 +15,7 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
   public static readonly viewType = 'markdownAiStudio.markdownPreview';
   private static activeDocumentUri: vscode.Uri | undefined;
   private readonly panels = new Map<string, Set<vscode.WebviewPanel>>();
+  private readonly updaters = new Map<vscode.WebviewPanel, PreviewDocumentUpdater>();
 
   public constructor(private readonly extensionUri: vscode.Uri) {}
 
@@ -68,6 +70,8 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
     const openPanels = this.panels.get(key) ?? new Set<vscode.WebviewPanel>();
     openPanels.add(webviewPanel);
     this.panels.set(key, openPanels);
+    const updater = new PreviewDocumentUpdater(webviewPanel.webview);
+    this.updaters.set(webviewPanel, updater);
 
     webviewPanel.onDidChangeViewState((event) => {
       if (event.webviewPanel.active) {
@@ -85,6 +89,8 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
     });
 
     webviewPanel.onDidDispose(() => {
+      updater.dispose();
+      this.updaters.delete(webviewPanel);
       openPanels.delete(webviewPanel);
       if (openPanels.size === 0) {
         this.panels.delete(key);
@@ -97,6 +103,7 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
     });
 
     webviewPanel.webview.onDidReceiveMessage(async (message: { command?: string; href?: string; requestId?: string; src?: string }) => {
+      if (updater.handleMessage(message)) return;
       if (message.command === 'openLink' && message.href) {
         if (/^https?:/i.test(message.href)) {
           await vscode.env.openExternal(vscode.Uri.parse(message.href));
@@ -113,6 +120,7 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
 
       if (message.command === 'resolveImage' && message.requestId && message.src) {
         const dataUrl = await this.resolveImageToDataUrl(document.uri, message.src);
+        if (!this.updaters.has(webviewPanel)) return;
         await webviewPanel.webview.postMessage({
           command: 'resolveImageResult',
           requestId: message.requestId,
@@ -122,14 +130,14 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
     });
 
     webviewPanel.title = getPreviewTitle(textDocument);
-    webviewPanel.webview.html = this.getHtml(webviewPanel.webview, textDocument);
+    updater.refresh(() => this.getPage(webviewPanel.webview, textDocument));
     if (webviewPanel.active) {
       MarkdownPreviewCustomEditor.activeDocumentUri = document.uri;
       await activatePreviewFrontMatterContext(frontMatterContextOwner, textDocument);
     }
   }
 
-  public async refreshDocument(document: vscode.TextDocument): Promise<void> {
+  public async refreshDocument(document: vscode.TextDocument, debounce = false): Promise<void> {
     const panels = this.panels.get(document.uri.toString());
     if (!panels) {
       return;
@@ -137,7 +145,7 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
 
     for (const panel of panels) {
       panel.title = getPreviewTitle(document);
-      panel.webview.html = this.getHtml(panel.webview, document);
+      this.updaters.get(panel)?.refresh(() => this.getPage(panel.webview, document), debounce);
     }
     await refreshPreviewFrontMatterContext(document);
   }
@@ -147,14 +155,14 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
       const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(key));
       for (const panel of panels) {
         panel.title = getPreviewTitle(document);
-        panel.webview.html = this.getHtml(panel.webview, document);
+        this.updaters.get(panel)?.refresh(() => this.getPage(panel.webview, document));
       }
       await refreshPreviewFrontMatterContext(document);
     }
   }
 
-  private getHtml(webview: vscode.Webview, document: vscode.TextDocument): string {
-    return buildPreviewHtml(this.extensionUri, webview, document, (rawPath) => this.resolvePreviewResource(webview, document, rawPath));
+  private getPage(webview: vscode.Webview, document: vscode.TextDocument) {
+    return buildPreviewPage(this.extensionUri, webview, document, (rawPath) => this.resolvePreviewResource(webview, document, rawPath));
   }
 
   private async openResolvedLink(target: vscode.Uri): Promise<void> {

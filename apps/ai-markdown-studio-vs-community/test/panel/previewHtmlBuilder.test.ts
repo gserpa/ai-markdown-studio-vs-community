@@ -45,7 +45,7 @@ vi.mock('vscode', () => ({
 }));
 
 import { buildDocumentPreviewBody, buildFrontMatterPanel } from '../../src/panel/previewHtmlBuilder';
-import { buildPreviewHtml } from '../../src/panel/previewHtmlBuilder';
+import { buildPreviewHtml, buildPreviewPage } from '../../src/panel/previewHtmlBuilder';
 import * as vscode from 'vscode';
 
 function createThemeFile(directory: string, fileName: string, name: string): string {
@@ -60,6 +60,58 @@ function createThemeFile(directory: string, fileName: string, name: string): str
   }), 'utf8');
   return filePath;
 }
+
+describe('visualization runtime assets', () => {
+  function preview(source: string) {
+    return buildPreviewHtml(
+      { fsPath: 'C:/extension', scheme: 'file' } as never,
+      { cspSource: 'vscode-resource:', asWebviewUri: (value: { fsPath: string }) => ({ toString: () => value.fsPath }) } as never,
+      { uri: { fsPath: 'C:/docs/example.md', scheme: 'file' }, fileName: 'C:/docs/example.md', getText: () => source } as never,
+      path => path,
+    );
+  }
+  it('loads local chart code only when chart placeholders are present', () => {
+    const source = '```vega-lite\n' + JSON.stringify({ mark: 'bar', data: { values: [{ x: 'A', y: 1 }] }, encoding: { x: { field: 'x', type: 'nominal' }, y: { field: 'y', type: 'quantitative' } } }) + '\n```';
+    const html = preview(source);
+    expect(html).toContain('preview-visualizations-runtime.');
+    expect(html).toMatch(/<script nonce="[^"]+" src="[^"]*preview-visualizations-runtime\./u);
+    expect(html).not.toContain('unsafe-eval');
+    expect(preview('# Ordinary Markdown')).not.toContain('preview-visualizations-runtime.');
+    expect(preview('```metric\n{"title":"Debt","value":89.2}\n```')).not.toContain('preview-visualizations-runtime.');
+    expect(preview('```vega-lite\n{"data":{"url":"https://example.com"}}\n```')).not.toContain('preview-visualizations-runtime.');
+  });
+});
+
+describe('document update compatibility', () => {
+  const spec = '```vega-lite\n' + JSON.stringify({ mark: 'bar', data: { values: [{ x: 'A', y: 1 }] }, encoding: { x: { field: 'x', type: 'nominal' }, y: { field: 'y', type: 'quantitative' } } }) + '\n```';
+  function page(source: string) {
+    return buildPreviewPage(
+      { fsPath: path.resolve(__dirname, '../../../..'), scheme: 'file' } as never,
+      { cspSource: 'vscode-resource:', asWebviewUri: (value: { fsPath: string }) => ({ toString: () => value.fsPath }) } as never,
+      { uri: { fsPath: 'C:/docs/example.md', scheme: 'file' }, fileName: 'C:/docs/example.md', getText: () => source } as never,
+      path => path,
+    );
+  }
+  it('keeps content edits compatible while giving full loads separate sessions', () => {
+    const initial = page(spec);
+    const edited = page('# New prose\n\n' + spec.replace('"y":1', '"y":2'));
+    expect(edited.compatibilityKey).toBe(initial.compatibilityKey);
+    expect(edited.sessionId).not.toBe(initial.sessionId);
+    expect(edited.body).not.toBe(initial.body);
+    expect(edited.body).not.toContain('<script');
+    expect(edited.html).toContain(`previewSessionId: '${edited.sessionId}'`);
+  });
+  it('requires a full load for asset presence, mode, or selected theme changes', () => {
+    const initial = page(spec);
+    for (const source of [
+      '# No charts',
+      spec + '\n\n```mermaid\ngraph LR\nA-->B\n```',
+      spec + '\n\n$1+1$',
+      '---\ntheme: dark\n---\n' + spec,
+      '---\ndocument: presentation\n---\n# Slide\n\n' + spec,
+    ]) expect(page(source).compatibilityKey, source).not.toBe(initial.compatibilityKey);
+  });
+});
 
 describe('buildFrontMatterPanel', () => {
   it('renders frontmatter as a plain escaped metadata grid', () => {

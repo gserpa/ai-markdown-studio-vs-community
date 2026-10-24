@@ -1,7 +1,8 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { guessMimeType } from '../util/imageMime';
-import { buildPreviewHtml, getPreviewTitle } from './previewHtmlBuilder';
+import { buildPreviewPage, getPreviewTitle } from './previewHtmlBuilder';
+import { PreviewDocumentUpdater } from './PreviewDocumentUpdater';
 import { resolveDocumentResource } from '../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri, resolveRealPackageUri } from '../util/extensionSupportRoot';
 import {
@@ -14,6 +15,8 @@ export class MarkdownPreviewPanel {
   private static activePreviewDocumentUri: vscode.Uri | undefined;
   private readonly frontMatterContextOwner = {};
   private readonly panel: vscode.WebviewPanel;
+  private readonly updater: PreviewDocumentUpdater;
+  private disposed = false;
   private document: vscode.TextDocument;
 
   public constructor(
@@ -39,7 +42,10 @@ export class MarkdownPreviewPanel {
       },
     );
 
+    this.updater = new PreviewDocumentUpdater(this.panel.webview);
     this.panel.onDidDispose(() => {
+      this.disposed = true;
+      this.updater.dispose();
       if (MarkdownPreviewPanel.activePreviewDocumentUri?.toString() === this.document.uri.toString()) {
         MarkdownPreviewPanel.activePreviewDocumentUri = undefined;
         void deactivatePreviewFrontMatterContext(this.frontMatterContextOwner);
@@ -61,6 +67,7 @@ export class MarkdownPreviewPanel {
     });
 
     this.panel.webview.onDidReceiveMessage(async (message: { command?: string; href?: string; requestId?: string; src?: string }) => {
+      if (this.updater.handleMessage(message)) return;
       if (message.command === 'openLink' && message.href) {
         if (/^https?:/i.test(message.href)) {
           await vscode.env.openExternal(vscode.Uri.parse(message.href));
@@ -78,6 +85,7 @@ export class MarkdownPreviewPanel {
 
       if (message.command === 'resolveImage' && message.requestId && message.src) {
         const dataUrl = await this.resolveImageToDataUrl(message.src);
+        if (this.disposed) return;
         await this.panel.webview.postMessage({
           command: 'resolveImageResult',
           requestId: message.requestId,
@@ -95,10 +103,10 @@ export class MarkdownPreviewPanel {
     return MarkdownPreviewPanel.activePreviewDocumentUri;
   }
 
-  public async refresh(document?: vscode.TextDocument): Promise<void> {
+  public async refresh(document?: vscode.TextDocument, debounce = false): Promise<void> {
     this.document = document ?? this.document;
     this.panel.title = this.getTitle(this.document);
-    this.panel.webview.html = this.getHtml(this.panel.webview, this.document);
+    this.updater.refresh(() => this.getPage(this.panel.webview, this.document), debounce);
     if (this.panel.active) {
       MarkdownPreviewPanel.activePreviewDocumentUri = this.document.uri;
       await activatePreviewFrontMatterContext(this.frontMatterContextOwner, this.document);
@@ -152,8 +160,8 @@ export class MarkdownPreviewPanel {
     }
   }
 
-  private getHtml(webview: vscode.Webview, document: vscode.TextDocument): string {
-    return buildPreviewHtml(this.extensionUri, webview, document, (rawPath) => this.resolvePreviewResource(rawPath));
+  private getPage(webview: vscode.Webview, document: vscode.TextDocument) {
+    return buildPreviewPage(this.extensionUri, webview, document, (rawPath) => this.resolvePreviewResource(rawPath));
   }
 
     private async resolveImageToDataUrl(rawPath: string): Promise<string | undefined> {

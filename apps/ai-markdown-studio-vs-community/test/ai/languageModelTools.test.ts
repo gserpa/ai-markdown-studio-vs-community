@@ -159,6 +159,15 @@ describe('Community MPS language model tools', () => {
     expect(vscodeMocks.writeFile).toHaveBeenCalledTimes(1);
   });
 
+  it('reports invalid visualization definitions through the presentation validation tool', async () => {
+    const tools = captureTools();
+    const result = await invokeToolAsync(tools.markdown_ai_studio_validate_presentation, {
+      markdown: '---\ndocument: presentation\n---\n# Deck\n\n---\n# Data\n\n```metric\n{"title":"Debt","value":1,"trend":{"value":-1,"direction":"up"}}\n```',
+    });
+    expect(result).toContain('"valid": false');
+    expect(result).toContain('metric block at body line');
+  });
+
   it('reports common presentation and directive issues', async () => {
     const tools = captureTools();
     const result = await invokeToolAsync(tools.markdown_ai_studio_validate_presentation, {

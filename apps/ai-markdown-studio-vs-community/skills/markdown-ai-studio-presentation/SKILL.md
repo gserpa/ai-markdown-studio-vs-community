@@ -22,6 +22,10 @@ Create a complete Markdown file, not an outline. Do not assume AI Markdown Studi
 - Use `## H2` headings for the sections of a `two-columns` slide. Use `default` for large-width media in the natural, left-aligned Markdown sequence. Use `image-center` for image-centric or stronger messages that benefit from centered text and media, with short text above and below. Use `image-right` only for narrower media that can share the slide with substantive text in the left column.
 - Add concise `<!--notes: ...-->` speaker notes to content slides. Cover, divider, section-divider, and thanks slides may omit notes. Keep visible slide content concise and vary layouts deliberately.
 
+## Charts and metrics
+
+When the user requests data visualizations, read [the visualization authoring reference](references/visualizations.md). Use native `vega-lite` line/bar fences and `metric` fences with supplied inline data. Prefer a `default` slide with one chart and a short takeaway. Validate these JSON blocks as well as the deck structure. Other viewers retain the JSON source; native DOCX/PPTX chart conversion is not provided.
+
 ## Images
 
 - Do not invent image URLs or local file paths. Use a verified direct image URL only when remote resources are permitted; otherwise add an image suggestion in notes or a blockquote.

@@ -15,7 +15,7 @@ const syncedPreviewRuntime = fs.readFileSync(
 describe('preview Mermaid links', () => {
   it('keeps Mermaid URL links usable while stripping callback handlers in strict mode', () => {
     expect(canonicalPreviewRuntime).toContain("suppressErrorRendering: true");
-    expect(canonicalPreviewRuntime).toContain('const renderId = `preview-mermaid-${index + 1}`;');
+    expect(canonicalPreviewRuntime).toContain('const renderId = `preview-mermaid-${++mermaidRenderId}-${index + 1}`;');
     expect(canonicalPreviewRuntime).toContain('function getAnchorLinkTarget(anchor)');
     expect(canonicalPreviewRuntime).toContain('function isMermaidLink(anchor)');
     expect(canonicalPreviewRuntime).toContain("const href = anchor?.getAttribute('data-href')?.trim()");

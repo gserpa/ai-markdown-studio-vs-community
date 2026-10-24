@@ -1,6 +1,6 @@
 ---
-date: 2026-08-12
-version: 1.2.1
+date: 2026-10-24
+version: 1.3.0
 ---
 
 # Deployment Guide — AI Markdown Studio Community
@@ -77,7 +77,7 @@ npm install
 npm run verify
 ```
 
-`npm run verify` produces a `.vsix` in the repository root, named from the extension name and version, for example `markdown-ai-studio-1.2.1.vsix`.
+`npm run verify` produces a `.vsix` in the repository root, named from the extension name and version, for example `markdown-ai-studio-1.3.0.vsix`.
 
 To package without the full gate (after a successful compile):
 
@@ -96,7 +96,7 @@ Distribute the file by email, internal file share, a GitHub/Azure DevOps release
 **Command line:**
 
 ```powershell
-code --install-extension markdown-ai-studio-1.2.1.vsix
+code --install-extension markdown-ai-studio-1.3.0.vsix
 ```
 
 ### Updating a `.vsix` deployment

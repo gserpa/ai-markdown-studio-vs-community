@@ -80,14 +80,17 @@ export async function installPresentationSkillInWorkspace(
   }
 
   const target = skillFileUri(workspaceFolder, targetProfile);
-  if (await uriExists(target)) {
+  const referenceTarget = vscode.Uri.joinPath(workspaceFolder.uri, ...targetProfile.workspacePath, 'references', 'visualizations.md');
+  if (await uriExists(target) || await uriExists(referenceTarget)) {
     void vscode.window.showInformationMessage(`${targetProfile.label} presentation skill already exists in this workspace. It was not changed.`);
     return;
   }
 
   const source = vscode.Uri.joinPath(context.extensionUri, 'skills', targetProfile.sourceSkillName, SKILL_FILE_NAME);
-  const content = await vscode.workspace.fs.readFile(source);
-  await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(workspaceFolder.uri, ...targetProfile.workspacePath));
+  const referenceSource = vscode.Uri.joinPath(context.extensionUri, 'skills', targetProfile.sourceSkillName, 'references', 'visualizations.md');
+  const [content, reference] = await Promise.all([vscode.workspace.fs.readFile(source), vscode.workspace.fs.readFile(referenceSource)]);
+  await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(workspaceFolder.uri, ...targetProfile.workspacePath, 'references'));
+  await vscode.workspace.fs.writeFile(referenceTarget, reference);
   await vscode.workspace.fs.writeFile(target, content);
   void vscode.window.showInformationMessage(`Installed the ${targetProfile.label} presentation skill at ${target.fsPath}.`);
 }

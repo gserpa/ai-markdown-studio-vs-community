@@ -176,10 +176,10 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
     vscode.workspace.onDidChangeTextDocument(async (event) => {
       const preview = previews.get(event.document.uri.toString());
       if (preview) {
-        await preview.refresh(event.document);
+        await preview.refresh(event.document, true);
       }
 
-      await customEditor.refreshDocument(event.document);
+      await customEditor.refreshDocument(event.document, true);
     }),
     vscode.workspace.onDidSaveTextDocument(async (document) => {
       const preview = previews.get(document.uri.toString());

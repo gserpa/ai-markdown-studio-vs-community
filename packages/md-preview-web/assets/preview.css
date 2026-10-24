@@ -448,6 +448,121 @@ img {
   border-radius: 6px;
 }
 
+.markdown-body .md-visualization {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 1.25em 0;
+  padding: 1.25em;
+  border: 1px solid var(--md-preview-border-color);
+  border-radius: 8px;
+  color: inherit;
+  overflow-wrap: anywhere;
+  break-inside: avoid;
+}
+
+.markdown-body .md-visualization-title,
+.markdown-body .md-metric-title {
+  margin: 0 0 0.5em;
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.markdown-body .md-metric-value {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.markdown-body .md-metric-value strong {
+  color: inherit;
+  font-size: 2.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.markdown-body .md-metric-unit {
+  font-size: 1em;
+}
+
+.markdown-body .md-metric-subtitle,
+.markdown-body .md-metric-trend {
+  margin: 0.6em 0 0;
+  color: var(--md-preview-muted-color);
+}
+
+.markdown-body .md-visualization-source {
+  margin-top: 0.8em;
+  font-size: 0.85em;
+}
+
+.markdown-body .md-visualization-source summary {
+  cursor: pointer;
+}
+
+.markdown-body .md-visualization-source pre {
+  max-height: 24rem;
+  overflow: auto;
+}
+
+.markdown-body .md-visualization-error-message {
+  margin: 0 0 0.5em;
+}
+
+.md-visualization-canvas {
+  width: 100%;
+  min-width: 0;
+}
+
+.md-visualization-canvas svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.md-visualization-chart[data-md-visualization-state='rendered'] > .md-visualization-title {
+  display: none;
+}
+
+.md-visualization-tooltip {
+  position: fixed;
+  z-index: 10000;
+  max-width: min(320px, calc(100vw - 16px));
+  max-height: min(400px, calc(100vh - 16px));
+  overflow: auto;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  pointer-events: none;
+  padding: 8px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 15%);
+  font: 13px/1.5 system-ui, sans-serif;
+}
+
+.md-visualization-tooltip[hidden] {
+  display: none !important;
+}
+
+.presentation-preview .md-visualization {
+  border-color: var(--presentation-panel-border, var(--md-preview-border-color));
+}
+
+.presentation-preview .md-metric-subtitle,
+.presentation-preview .md-metric-trend {
+  color: var(--presentation-muted-color, inherit);
+}
+
+@media print {
+  .md-visualization-tooltip,
+  .md-visualization[data-md-visualization-state='rendered'] > .md-visualization-source {
+    display: none !important;
+  }
+
+  .md-visualization-source pre {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
 /* =========================================================
    Document Preview: Mermaid + Lightbox
    ========================================================= */
@@ -3505,7 +3620,7 @@ body.presentation-is-immersive .presentation-surface {
 }
 /* Browser compatibility fallbacks for standalone exports in browsers without full color-mix/light-dark support. */
 @supports not ((color: color-mix(in srgb, #000000 50%, #ffffff)) and (color: light-dark(#ffffff, #000000))) {
-  body {
+  body:is(.document-theme-mode-light, .document-theme-mode-auto:not(.vscode-dark):not(.vscode-high-contrast)) {
     --md-preview-blockquote-bg: rgba(9, 105, 218, 0.06);
     --md-preview-blockquote-nested-bg: rgba(9, 105, 218, 0.10);
     --md-preview-code-bg: rgba(36, 41, 47, 0.06);
@@ -3531,8 +3646,7 @@ body.presentation-is-immersive .presentation-surface {
     --md-preview-lightbox-scrollbar-thumb-hover: rgba(31, 41, 55, 0.40);
   }
 
-  body.vscode-dark,
-  body.vscode-high-contrast {
+  body:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) {
     --md-preview-blockquote-bg: rgba(88, 166, 255, 0.10);
     --md-preview-blockquote-nested-bg: rgba(88, 166, 255, 0.16);
     --md-preview-code-bg: rgba(255, 255, 255, 0.08);

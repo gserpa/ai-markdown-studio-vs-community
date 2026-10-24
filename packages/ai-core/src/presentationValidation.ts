@@ -3,6 +3,7 @@ import {
   parseMarkdownPresentation,
   validateMpsSource,
 } from '@mfo/core';
+import { validateVisualizationFences } from './visualizationAuthoring';
 
 export type PresentationValidationResult = {
   valid: boolean;
@@ -48,6 +49,7 @@ export function validateMarkdownStudioPresentation(markdown: string): Presentati
     issues.push(error instanceof Error ? error.message : String(error));
   }
 
+  issues.push(...validateVisualizationFences(markdown));
   const uniqueIssues = [...new Set(issues)];
   return {
     valid: uniqueIssues.length === 0,

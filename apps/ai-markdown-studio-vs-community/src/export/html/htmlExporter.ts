@@ -27,6 +27,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 export type ExportMode = 'theme' | 'paper' | 'paper-borderless';
+type VisualizationExportAssets = { runtime: string; notices: string };
 
 export async function buildExportHtmlString(
   extensionUri: vscode.Uri,
@@ -47,6 +48,14 @@ export async function buildExportHtmlArtifact(
   const exportMode = options.exportMode ?? 'theme';
   const manifest = loadPreviewAssetManifest(extensionUri);
   const readPreviewAsset = (descriptor: PreviewAssetDescriptor): Promise<string> => readFile(previewAssetUri(extensionUri, descriptor).fsPath, 'utf8');
+  const visualizationAssets = async (body: string): Promise<VisualizationExportAssets | undefined> => {
+    if (!body.includes('data-md-visualization="vega-lite"')) return undefined;
+    const [runtime, notices] = await Promise.all([
+      readPreviewAsset(manifest.assets.previewVisualizationsRuntime),
+      readPreviewAsset(manifest.assets.previewVisualizationsNotices),
+    ]);
+    return { runtime, notices };
+  };
   const [rawPreviewCoreCss, previewDocumentCss, previewPresentationCss, previewMermaidCss, katexCss, mermaidScript, previewThemeRuntimeScript, previewCoreRuntimeScript, previewPresentationRuntimeScript, previewDocumentRuntimeScript] = await Promise.all([
     readPreviewAsset(manifest.assets.previewCore),
     readPreviewAsset(manifest.assets.previewDocument),
@@ -113,6 +122,7 @@ export async function buildExportHtmlArtifact(
       previewThemeRuntimeScript,
       previewCoreRuntimeScript,
       previewPresentationRuntimeScript,
+      visualizations: await visualizationAssets(presentationBody),
       exportMode,
       hostThemeClass: exportMode === 'theme' ? getHostThemeClass() : '',
       previewThemeCss: buildPreviewThemeCssArtifact(registry, rendered.themeSelection.themeName).css,
@@ -136,6 +146,7 @@ export async function buildExportHtmlArtifact(
     previewThemeRuntimeScript,
     previewCoreRuntimeScript,
     previewDocumentRuntimeScript,
+    visualizations: await visualizationAssets(body),
     htmlClass: theme.hostThemeClass,
     bodyClass: theme.bodyClass,
     bodyAttributes: `${theme.bodyAttributes} data-preview-page-width="${documentTableLayout === 'wide' ? 'full' : 'readable'}" data-document-table-layout="${documentTableLayout}"`,
@@ -189,6 +200,18 @@ function externalizeHtmlArtifact(html: string): HtmlArtifact {
     script.textContent = '';
     script.src = asset.path;
     script.removeAttribute('data-ams-export-asset');
+  }
+
+  const notices = outputDocument.querySelector<HTMLTemplateElement>('template[data-ams-visualization-notices]');
+  if (notices) {
+    const asset = createHtmlAsset('visualizations-notices', 'txt', 'text/plain; charset=utf-8', notices.content.textContent ?? '');
+    assets.push(asset);
+    const link = outputDocument.createElement('link');
+    link.rel = 'license';
+    link.type = 'text/plain';
+    link.href = asset.path;
+    outputDocument.head.append(link);
+    notices.remove();
   }
 
   return {
@@ -280,6 +303,7 @@ function buildStandaloneHtml(input: {
   previewThemeRuntimeScript: string;
   previewCoreRuntimeScript: string;
   previewDocumentRuntimeScript: string;
+  visualizations?: VisualizationExportAssets;
   htmlClass: string;
   bodyClass: string;
   bodyAttributes: string;
@@ -328,6 +352,7 @@ ${input.previewCoreRuntimeScript}
   <script data-ams-export-asset="preview-document-runtime">
 ${input.previewDocumentRuntimeScript}
   </script>
+  ${visualizationExportHtml(input.visualizations)}
 </body>
 </html>`;
 }
@@ -341,6 +366,7 @@ function buildPresentationStandaloneHtml(input: {
   previewThemeRuntimeScript: string;
   previewCoreRuntimeScript: string;
   previewPresentationRuntimeScript: string;
+  visualizations?: VisualizationExportAssets;
   previewThemeCss: string;
   hostThemeClass: string;
   exportMode: ExportMode;
@@ -384,8 +410,19 @@ ${input.previewCoreRuntimeScript}
   <script data-ams-export-asset="preview-presentation-runtime">
 ${input.previewPresentationRuntimeScript}
   </script>
+  ${visualizationExportHtml(input.visualizations)}
 </body>
 </html>`;
+}
+
+function visualizationExportHtml(assets: VisualizationExportAssets | undefined): string {
+  if (!assets) return '';
+  // Keep the complete distribution notices inert and portable in a single file.
+  // Website exports extract this template into one fingerprinted license asset.
+  return `<template data-ams-visualization-notices>${escapeHtml(assets.notices)}</template>
+  <script data-ams-export-asset="preview-visualizations-runtime">
+${assets.runtime.replace(/<\/script/giu, '<\\/script')}
+  </script>`;
 }
 
 function getStandalonePreviewBridgeScript(): string {
@@ -475,6 +512,15 @@ body.preview-mode-presentation .presentation-slide-body.markdown-body {
   --md-preview-content-bg: #ffffff;
   --md-preview-content-border: transparent;
   --md-preview-content-shadow: none;
+}
+
+body.preview-mode-presentation .md-visualization {
+  color: #24292f !important;
+  border-color: #d0d7de !important;
+  --presentation-accent: #0969da;
+  --presentation-accent-soft: #0969da;
+  --presentation-muted-color: #57606a;
+  --presentation-panel-bg: #ffffff;
 }
 `;
 }

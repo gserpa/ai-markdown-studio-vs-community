@@ -29,6 +29,9 @@
     "@types/node": "^22.10.2",
     "esbuild": "^0.25.0",
     "typescript": "^5.7.2",
+    "vega": "6.4.0",
+    "vega-interpreter": "2.3.2",
+    "vega-lite": "6.5.0",
     "vitest": "^4.0.18"
   }
 }

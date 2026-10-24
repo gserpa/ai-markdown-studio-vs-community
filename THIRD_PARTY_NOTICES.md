@@ -21,6 +21,7 @@ license texts are distributed alongside the fonts under
 | markdown-it-task-lists | ISC |
 | markdown-it-texmath | MIT |
 | mermaid | MIT |
+| Vega-Lite, Vega, vega-interpreter (browser chart bundle) | BSD-3-Clause |
 | sanitize-html | MIT |
 | DOMPurify | Apache-2.0 OR MPL-2.0 (used unmodified; distributed under the Apache-2.0 option) |
 | highlight.js | BSD-3-Clause |
@@ -33,6 +34,10 @@ license texts are distributed alongside the fonts under
 | argparse (via js-yaml/mermaid) | Python-2.0 |
 
 ## Bundled fonts
+
+Complete license texts for the chart bundle and its transitive dependencies ship
+in the generated `preview-visualizations-notices.*.txt` asset. The preview asset
+manifest identifies the exact file alongside the locally bundled chart runtime.
 
 The following fonts are bundled and licensed under the **SIL Open Font License 1.1**. Their
 full license texts ship under `packages/md-preview-web/assets/fonts/`:

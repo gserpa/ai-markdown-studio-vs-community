@@ -3,6 +3,7 @@
 android/**
 docs/**
 !docs/
+!docs/user/**
 !docs/user-guide.md
 !docs/deployment-guide.md
 !docs/community-api.md

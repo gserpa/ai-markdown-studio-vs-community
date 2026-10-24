@@ -5,6 +5,11 @@
   "description": "Shared Markdown rendering, MPS parsing, and presentation logic for AI Markdown Studio.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./visualizations": { "types": "./dist/visualizations/visualizationSpec.d.ts", "default": "./dist/visualizations/visualizationSpec.js" },
+    "./*": "./*"
+  },
   "files": [
     "dist"
   ],

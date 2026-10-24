@@ -31,6 +31,13 @@ describe('generated asset manifest', () => {
     expect(manifest.assetSetHash).toBe(expected);
   });
 
+  it('ships the Community license and chart library notices for portable redistribution', () => {
+    const notices = fs.readFileSync(path.join(assetsRoot, manifest.assets.previewVisualizationsNotices.path), 'utf8');
+    const license = fs.readFileSync(path.resolve(__dirname, '../../../LICENSE'), 'utf8');
+    expect(notices).toContain(license);
+    for (const name of ['vega', 'vega-lite', 'vega-interpreter']) expect(notices).toContain(name + '@');
+  });
+
   it('keeps the shared Markdown primitives in the presentation stylesheet', () => {
     const presentation = manifest.assets.previewPresentation as { path: string };
     const stylesheet = fs

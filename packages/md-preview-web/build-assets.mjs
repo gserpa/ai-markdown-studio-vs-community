@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import assert from 'node:assert/strict';
+import { build } from 'esbuild';
 
 import {
   buildDocumentThemeCssArtifact,
@@ -45,6 +47,32 @@ assets.previewThemeRuntime = writeTextAsset(
   readFileSync(path.join(assetsRoot, 'preview-theme-runtime.js'), 'utf8'),
   'text/javascript; charset=utf-8',
 );
+
+const visualizations = await build({
+  absWorkingDir: packageRoot,
+  entryPoints: ['src/visualizations/browser.mts'],
+  bundle: true, minify: true, format: 'iife', platform: 'browser', target: 'es2022',
+  write: false, metafile: true, legalComments: 'eof', outfile: 'visualizations.js',
+});
+assert(Object.values(visualizations.metafile.outputs).every(output => output.imports.every(entry => !entry.external)), 'Visualization assets must bundle every import locally.');
+assets.previewVisualizationsRuntime = writeTextAsset('preview-visualizations-runtime.js', visualizations.outputFiles[0].text, 'text/javascript; charset=utf-8');
+
+// Ship complete license texts for the packages actually included in the bundle.
+const bundledDirectories = [...new Set(Object.keys(visualizations.metafile.inputs).flatMap(input => {
+  const match = [...input.matchAll(/(?:^|\/)node_modules\/((?:@[^/]+\/)?[^/]+)/gu)].at(-1);
+  return match ? [input.slice(0, match.index + match[0].length)] : [];
+}))].sort();
+const notices = bundledDirectories.map(directory => {
+  const dependencyRoot = path.resolve(packageRoot, directory);
+  const dependency = JSON.parse(readFileSync(path.join(dependencyRoot, 'package.json'), 'utf8'));
+  const licenses = readdirSync(dependencyRoot).filter(name => /^(?:licen[cs]e|copying|notice)(?:\.|$)/iu.test(name)).sort();
+  assert(licenses.length, `Missing bundled license: ${dependency.name}`);
+  return `${dependency.name}@${dependency.version} (${dependency.license})\n${licenses.map(name => readFileSync(path.join(dependencyRoot, name), 'utf8')).join('\n')}`;
+});
+assets.previewVisualizationsNotices = writeTextAsset('preview-visualizations-notices.txt', [
+  `Markdown AI Studio Community\n${readFileSync(path.resolve(packageRoot, '../../LICENSE'), 'utf8')}`,
+  ...notices,
+].join('\n\n' + '='.repeat(72) + '\n\n') + '\n', 'text/plain; charset=utf-8');
 
 const documentRegistry = loadDocumentThemeRegistryFromDirectories([
   path.join(assetsRoot, 'themes', 'document'),

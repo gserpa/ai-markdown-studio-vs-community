@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { createDocumentPrompt } from '@mfo/ai-core';
+import { createDocumentPrompt, createVisualizationRepairPrompt, validateVisualizationFences } from '@mfo/ai-core';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
 import { shouldGenerateWithLanguageModel } from './generationMode';
 
@@ -37,7 +37,15 @@ export async function generateDocumentCommand(resource?: vscode.Uri): Promise<vo
       cancellable: true,
     }, async (_progress, token) => {
       const raw = await generateTextWithLanguageModel(prompt, token, 'Generate a Markdown document');
-      const markdown = normalizeMarkdown(raw, request);
+      let markdown = normalizeMarkdown(raw, request);
+      const issues = validateVisualizationFences(markdown);
+      if (issues.length) {
+        markdown = normalizeMarkdown(await generateTextWithLanguageModel(
+          createVisualizationRepairPrompt(markdown, issues), token, 'Repair generated visualizations',
+        ), request);
+        const remaining = validateVisualizationFences(markdown);
+        if (remaining.length) throw new Error(`Generated visualizations need correction: ${remaining.slice(0, 3).join(' ')}`);
+      }
       await vscode.workspace.fs.writeFile(target, Buffer.from(markdown, 'utf8'));
       await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(target));
     });

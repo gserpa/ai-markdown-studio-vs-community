@@ -28,7 +28,7 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```powershell
-code --install-extension markdown-ai-studio-1.2.1.vsix
+code --install-extension markdown-ai-studio-1.3.0.vsix
 ```
 
 ## Highlights
@@ -46,6 +46,8 @@ code --install-extension markdown-ai-studio-1.2.1.vsix
 - Command launcher and settings shortcuts built into the editor UI
 
 ## Development
+
+Use Node.js 22 or newer to build the locally bundled visualization libraries.
 
 ```powershell
 npm install

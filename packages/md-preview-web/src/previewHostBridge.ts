@@ -7,6 +7,10 @@
  * APIs like `acquireVsCodeApi()` or Android `JavascriptInterface`.
  */
 export type PreviewHostBridge = {
+  /** Optional document update protocol, supplied by hosts that retain the page. */
+  previewSessionId?: string;
+  previewReady?(): void;
+  documentUpdateResult?(revision: number, applied: boolean): void;
   /**
    * Open a link in the host's default handler.
    * External URLs open in a browser; local paths open via the host's file system.

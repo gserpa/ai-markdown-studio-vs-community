@@ -4,6 +4,7 @@ const CLIPBOARD_TO_MARKDOWN_PROMPT = [
   'Do not summarize, paraphrase, normalize, or invent content.',
   'Use Markdown structure only where it reflects the source content, such as headings, lists, tables, blockquotes, and fenced code blocks.',
   'If the input is already Markdown, keep it structurally faithful and make only minor formatting cleanup.',
+  'Preserve existing vega-lite and metric fenced JSON verbatim. Do not invent chart definitions or turn tables into charts during faithful conversion.',
   'Return raw Markdown only, without a code fence around the complete response.',
   'Start the file with YAML front matter containing only a filename field when a filename can be inferred from the content.',
   'Choose a concise descriptive filename in Title Case and end it with .md.',

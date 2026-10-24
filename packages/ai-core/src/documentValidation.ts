@@ -1,3 +1,5 @@
+import { validateVisualizationFences } from './visualizationAuthoring';
+
 export type DocumentValidationResult = {
   valid: boolean;
   summary: string;
@@ -33,6 +35,7 @@ export function validateMarkdownStudioDocument(markdown: string): DocumentValida
     issues.push('Markdown document should include one # H1 title.');
   }
 
+  issues.push(...validateVisualizationFences(markdown));
   const uniqueIssues = [...new Set(issues)];
   return {
     valid: uniqueIssues.length === 0,

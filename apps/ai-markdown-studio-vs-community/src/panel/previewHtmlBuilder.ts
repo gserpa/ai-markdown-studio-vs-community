@@ -26,6 +26,23 @@ export function buildPreviewHtml(
   document: vscode.TextDocument,
   resolvePreviewResource: (rawPath: string) => string | undefined,
 ): string {
+  return buildPreviewPage(extensionUri, webview, document, resolvePreviewResource).html;
+}
+
+export type PreviewPage = {
+  html: string;
+  body: string;
+  mode: 'document' | 'presentation';
+  compatibilityKey: string;
+  sessionId: string;
+};
+
+export function buildPreviewPage(
+  extensionUri: vscode.Uri,
+  webview: vscode.Webview,
+  document: vscode.TextDocument,
+  resolvePreviewResource: (rawPath: string) => string | undefined,
+): PreviewPage {
   const assetManifest = loadPreviewAssetManifest(extensionUri);
   const assetHref = (descriptor: PreviewAssetDescriptor): string => webview.asWebviewUri(previewAssetUri(extensionUri, descriptor)).toString();
   const coreStylesheetUri = assetHref(assetManifest.assets.previewCore);
@@ -131,6 +148,8 @@ export function buildPreviewHtml(
   const title = getPreviewTitle(document, isPresentation);
   const hasMermaid = /class="[^"]*\bmermaid(?:-rendered)?\b/u.test(previewBody);
   const hasMath = /class="[^"]*\bkatex\b/u.test(previewBody);
+  const hasCharts = previewBody.includes('data-md-visualization="vega-lite"');
+  const visualizationsScriptUri = hasCharts ? assetHref(assetManifest.assets.previewVisualizationsRuntime) : '';
   const modeStylesheetUri = assetHref(assetManifest.assets[previewMode === 'presentation' ? 'previewPresentation' : 'previewDocument']);
   const modeScriptUri = assetHref(assetManifest.assets[previewMode === 'presentation' ? 'previewPresentationRuntime' : 'previewDocumentRuntime']);
   const hasZoomMedia = hasMermaid || /<img\b/iu.test(previewBody);
@@ -139,7 +158,18 @@ export function buildPreviewHtml(
     ? `${webview.cspSource} https: data:`
     : `${webview.cspSource} data:`;
 
-  return `<!DOCTYPE html>
+  // Everything outside the document shell must stay compatible with the loaded
+  // page. Adding the first chart/diagram, for example, requires its assets.
+  const compatibilityKey = JSON.stringify([
+    document.fileName, previewMode, assetManifest.assetSetHash, webview.cspSource,
+    coreStylesheetUri, modeStylesheetUri, modeScriptUri, scriptUri,
+    themeStylesheetUri, inlineThemeStylesheet, bodyClass, imgSrcPolicy,
+    hasMermaid, String(mermaidUri), mermaidStylesheetUri, hasMath, String(katexStylesheetUri), visualizationsScriptUri,
+    previewPageWidth, documentTableLayout, presentationContentOverflow, documentThemeName,
+    documentMermaidThemeLight, documentMermaidThemeDark,
+    documentMermaidTransparentBackgroundLight, documentMermaidTransparentBackgroundDark,
+  ]);
+  const html = `<!DOCTYPE html>
 <html lang="en" data-md-host-scheme="auto">
 <head>
   <meta charset="UTF-8" />
@@ -179,6 +209,9 @@ export function buildPreviewHtml(
     (function () {
       const vscode = acquireVsCodeApi();
       window.__previewBridge = {
+        previewSessionId: '${nonce}',
+        previewReady: function () { vscode.postMessage({ command: 'previewReady', sessionId: '${nonce}' }); },
+        documentUpdateResult: function (revision, applied) { vscode.postMessage({ command: 'documentUpdateResult', sessionId: '${nonce}', revision: revision, applied: applied }); },
         openLink: function (href) { vscode.postMessage({ command: 'openLink', href: href }); },
         resolveImage: function (requestId, src) { vscode.postMessage({ command: 'resolveImage', requestId: requestId, src: src }); },
         setState: function (state) { vscode.setState(state); },
@@ -189,8 +222,10 @@ export function buildPreviewHtml(
   ${previewMode === 'presentation' ? `<script nonce="${nonce}" src="${previewThemeRuntimeScriptUri}"></script>` : ''}
   <script nonce="${nonce}" src="${scriptUri}"></script>
   <script nonce="${nonce}" src="${modeScriptUri}"></script>
+  ${visualizationsScriptUri ? `<script nonce="${nonce}" src="${visualizationsScriptUri}"></script>` : ''}
 </body>
 </html>`;
+  return { html, body: previewBody, mode: previewMode, compatibilityKey, sessionId: nonce };
 }
 
 function getPreviewPageWidth(document: vscode.TextDocument): PreviewPageWidth {

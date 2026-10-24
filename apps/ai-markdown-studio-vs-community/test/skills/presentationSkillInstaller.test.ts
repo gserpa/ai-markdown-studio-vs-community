@@ -64,9 +64,13 @@ describe('presentation skill installer', () => {
     await installPresentationSkillInWorkspace(context as never);
 
     expect(mocks.readFile).toHaveBeenCalledWith(expect.objectContaining({ fsPath: 'C:/extension/skills/markdown-ai-studio-presentation-copilot/SKILL.md' }));
-    expect(mocks.createDirectory).toHaveBeenCalledWith(expect.objectContaining({ fsPath: 'C:/workspace/project/.github/skills/markdown-ai-studio-presentation-copilot' }));
+    expect(mocks.createDirectory).toHaveBeenCalledWith(expect.objectContaining({ fsPath: 'C:/workspace/project/.github/skills/markdown-ai-studio-presentation-copilot/references' }));
     expect(mocks.writeFile).toHaveBeenCalledWith(
       expect.objectContaining({ fsPath: 'C:/workspace/project/.github/skills/markdown-ai-studio-presentation-copilot/SKILL.md' }),
+      Buffer.from('skill content'),
+    );
+    expect(mocks.writeFile).toHaveBeenCalledWith(
+      expect.objectContaining({ fsPath: 'C:/workspace/project/.github/skills/markdown-ai-studio-presentation-copilot/references/visualizations.md' }),
       Buffer.from('skill content'),
     );
   });
@@ -86,6 +90,10 @@ describe('presentation skill installer', () => {
       expect.objectContaining({ fsPath: `C:/workspace/project/${workspacePath.join('/')}/SKILL.md` }),
       Buffer.from('skill content'),
     );
+    expect(mocks.writeFile).toHaveBeenCalledWith(
+      expect.objectContaining({ fsPath: `C:/workspace/project/${workspacePath.join('/')}/references/visualizations.md` }),
+      Buffer.from('skill content'),
+    );
   });
 
   it('does not overwrite an existing workspace skill', async () => {
@@ -96,5 +104,17 @@ describe('presentation skill installer', () => {
     expect(mocks.readFile).not.toHaveBeenCalled();
     expect(mocks.writeFile).not.toHaveBeenCalled();
     expect(mocks.showInformationMessage).toHaveBeenCalledWith(expect.stringContaining('already exists'));
+  });
+
+  it('does not overwrite an existing reference when SKILL.md is absent', async () => {
+    mocks.stat.mockRejectedValueOnce(new Error('missing')).mockResolvedValueOnce({});
+    await installPresentationSkillInWorkspace(context as never);
+    expect(mocks.writeFile).not.toHaveBeenCalled();
+  });
+
+  it('reads the complete packaged skill before creating workspace files', async () => {
+    mocks.readFile.mockRejectedValueOnce(new Error('Missing packaged reference'));
+    await expect(installPresentationSkillInWorkspace(context as never)).rejects.toThrow('Missing packaged reference');
+    expect(mocks.writeFile).not.toHaveBeenCalled();
   });
 });

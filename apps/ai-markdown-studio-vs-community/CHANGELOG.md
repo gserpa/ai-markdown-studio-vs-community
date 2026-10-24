@@ -7,6 +7,19 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-24
+
+### Added
+
+- Added native `vega-lite` line/bar charts and `metric` cards with bounded JSON validation, local bundles, CSP-compatible rendering, tooltips, theme colors, responsive sizing, and readable source/error fallbacks.
+- Added interactive charts to single-file HTML and external website artifacts, including complete license notices and print styling.
+- Added shared AI authoring guidance, visualization validation and one repair attempt during generation, plus portable agent references installed alongside presentation skills.
+
+### Changed
+
+- Debounced document preview edits and retained unchanged charts, diagrams, images, and tables across updates in both preview hosts.
+- Verified packaged preview asset hashes, chart licenses, documentation, and agent references.
+
 ## [1.2.6] - 2026-10-12
 
 ## [1.2.5] - 2026-10-06

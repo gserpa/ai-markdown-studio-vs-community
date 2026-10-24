@@ -1,7 +1,14 @@
+const tableWrapperCleanups = new Map();
+
 (async () => {
   const bridge = window.__previewBridge;
+  // Capture source markup before charts, tables, images or Mermaid mutate it.
+  const documentUpdates = initializeDocumentUpdates(bridge);
   const mermaidModuleUri = window.__MERMAID_URI__;
   const previewMode = document.body.dataset.previewMode;
+  document.addEventListener('md-visualizations-rendered', () => {
+    if (previewMode === 'presentation') window.dispatchEvent(new Event('resize'));
+  });
   const mermaidLightbox = initializeMermaidLightbox();
   initializeImageZoom(mermaidLightbox);
   enforceReadOnlyTaskCheckboxes();
@@ -31,6 +38,9 @@
   const linkTooltips = initializeLinkHoverTooltips(document);
   let mermaidRenderSignature = '';
   let mermaidRefreshPending = false;
+  let refreshNewMermaid = () => {};
+  let mermaidRenderId = 0;
+  let mermaidQueue = Promise.resolve();
 
   const hasMermaidBlocks = Boolean(document.querySelector('.mermaid, .mermaid-rendered[data-mermaid-source]'));
   let mermaid = window.mermaid;
@@ -46,10 +56,11 @@
   if (mermaid) {
     mermaid.startOnLoad = false;
 
-    const renderMermaidBlocks = async (force = false) => {
+    const renderMermaidBlocks = (force = false, onlyNew = false) => mermaidQueue = mermaidQueue.then(async () => {
       const previewThemeState = resolvePreviewThemeState();
       const nextSignature = `${previewThemeState.mermaidTheme}:${previewThemeState.mermaidTransparentBackground ? '1' : '0'}`;
-      if (!force && nextSignature === mermaidRenderSignature) {
+      const themeChanged = nextSignature !== mermaidRenderSignature;
+      if (!force && !onlyNew && nextSignature === mermaidRenderSignature) {
         return;
       }
 
@@ -70,16 +81,17 @@
 
       const blocks = [...document.querySelectorAll('.mermaid, .mermaid-rendered[data-mermaid-source]')];
       for (const [index, block] of blocks.entries()) {
+        if (!block.isConnected || (onlyNew && !themeChanged && block.classList.contains('mermaid-rendered'))) continue;
         const source = block.getAttribute('data-mermaid-source')?.trim() || block.textContent?.trim();
         if (!source) {
           continue;
         }
 
-        const renderId = `preview-mermaid-${index + 1}`;
+        const renderId = `preview-mermaid-${++mermaidRenderId}-${index + 1}`;
         try {
           const renderResult = await mermaid.render(renderId, source);
           const svg = typeof renderResult === 'string' ? renderResult : renderResult?.svg;
-          if (typeof svg === 'string' && svg.trim()) {
+          if (block.isConnected && typeof svg === 'string' && svg.trim()) {
             block.innerHTML = svg;
             block.classList.remove('mermaid');
             block.classList.add('mermaid-rendered');
@@ -95,7 +107,7 @@
         } catch (diagramError) {
           console.warn('[preview] Failed to render Mermaid diagram:', diagramError);
           cleanupMermaidRenderArtifacts(renderId);
-          renderMermaidError(block, source, diagramError);
+          if (block.isConnected) renderMermaidError(block, source, diagramError);
         }
       }
 
@@ -104,7 +116,8 @@
       if (previewMode === 'presentation') {
         window.dispatchEvent(new Event('resize'));
       }
-    };
+    });
+    refreshNewMermaid = () => { void renderMermaidBlocks(false, true); };
 
     const scheduleMermaidRefresh = () => {
       if (mermaidRefreshPending) {
@@ -218,7 +231,88 @@
   });
 
   initializeImageFallback(bridge, previewMode === 'presentation');
+  documentUpdates.ready(() => {
+    linkTooltips.hide();
+    mermaidLightbox.close();
+    for (const [wrapper, cleanup] of tableWrapperCleanups) {
+      if (!wrapper.isConnected) { cleanup(); tableWrapperCleanups.delete(wrapper); }
+    }
+    enforceReadOnlyTaskCheckboxes();
+    wrapTablesForScroll();
+    refreshNewMermaid();
+    void window.__mfoVisualizationsRuntime?.refresh();
+    document.dispatchEvent(new Event('md-document-updated'));
+    window.dispatchEvent(new Event('resize'));
+  });
 })();
+
+/** Retain rich content by its original sanitized markup, in occurrence order. */
+function initializeDocumentUpdates(bridge) {
+  if (document.body.dataset.previewMode !== 'document' || !bridge?.previewSessionId) return { ready() {} };
+  const shell = document.querySelector('.document-preview-shell');
+  const main = shell?.querySelector('.document-preview-scroll > main.markdown-body');
+  const scroller = main?.parentElement;
+  if (!(shell instanceof HTMLElement) || !(main instanceof HTMLElement)) return { ready() {} };
+  const selector = 'section.md-visualization-chart[data-md-visualization], .mermaid, .mermaid-rendered[data-mermaid-source], .mermaid-render-error, table, img';
+  const originals = new WeakMap();
+  const candidates = root => [...root.querySelectorAll(selector)].filter(node => !node.parentElement?.closest(selector));
+  const remember = root => {
+    for (const node of candidates(root)) if (!originals.has(node)) originals.set(node, node.outerHTML);
+  };
+  remember(main);
+  let revision = 0;
+  return {
+    ready(onUpdate) {
+      window.addEventListener('message', event => {
+        const message = event.data;
+        if (message?.command !== 'updateDocument' || message.sessionId !== bridge.previewSessionId) return;
+        if (!Number.isSafeInteger(message.revision) || message.revision <= revision || typeof message.body !== 'string') return;
+        try {
+          // This fragment is rendered and sanitized by the host, exactly as on
+          // a full load. No executable source or script tags are transported.
+          const template = document.createElement('template');
+          template.innerHTML = message.body;
+          const nextShell = template.content.firstElementChild;
+          const nextScroller = nextShell?.querySelector(':scope > .document-preview-scroll');
+          const nextMain = nextScroller?.querySelector(':scope > main.markdown-body');
+          if (!nextShell?.matches('.document-preview-shell') || !nextMain || template.content.children.length !== 1) throw new Error('Invalid document update.');
+          const available = new Map();
+          for (const node of candidates(main)) {
+            const key = originals.get(node);
+            if (!key) continue;
+            const queue = available.get(key) ?? { nodes: [], index: 0 };
+            queue.nodes.push(node);
+            available.set(key, queue);
+          }
+          remember(nextMain);
+          const scrollTop = scroller.scrollTop;
+          const scrollLeft = scroller.scrollLeft;
+          for (const node of candidates(nextMain)) {
+            const queue = available.get(originals.get(node));
+            const previous = queue?.nodes[queue.index++];
+            if (previous) {
+              const retained = previous.matches('table') && previous.parentElement?.matches('.table-scroll-wrapper') ? previous.parentElement : previous;
+              node.replaceWith(retained);
+            }
+          }
+          main.replaceChildren(...nextMain.childNodes);
+          shell.querySelector(':scope > .frontmatter-shell')?.remove();
+          const frontMatter = nextShell.querySelector(':scope > .frontmatter-shell');
+          if (frontMatter) shell.prepend(frontMatter);
+          scroller.scrollTop = scrollTop;
+          scroller.scrollLeft = scrollLeft;
+          revision = message.revision;
+          onUpdate();
+          bridge.documentUpdateResult?.(revision, true);
+        } catch (error) {
+          console.warn('[preview] Document update failed.', error);
+          bridge.documentUpdateResult?.(message.revision, false);
+        }
+      });
+      bridge.previewReady?.();
+    },
+  };
+}
 
 function getPreviewThemeRuntime() {
   const helper = window.__mfoPreviewThemeRuntime;
@@ -427,8 +521,10 @@ function enhanceTableScrollWrapper(wrapper, defaultLayout) {
     delete wrapper.dataset.hoverSide;
   });
 
-  configureTableEdgeButton(leftButton, wrapper, -1);
-  configureTableEdgeButton(rightButton, wrapper, 1);
+  const cleanups = [
+    configureTableEdgeButton(leftButton, wrapper, -1),
+    configureTableEdgeButton(rightButton, wrapper, 1),
+  ];
   updateToggle();
   queueTableOverflowUpdate(wrapper);
 
@@ -438,9 +534,13 @@ function enhanceTableScrollWrapper(wrapper, defaultLayout) {
     if (table) {
       observer.observe(table);
     }
+    cleanups.push(() => observer.disconnect());
   }
 
-  window.addEventListener('resize', () => queueTableOverflowUpdate(wrapper));
+  const resized = () => queueTableOverflowUpdate(wrapper);
+  window.addEventListener('resize', resized);
+  cleanups.push(() => window.removeEventListener('resize', resized));
+  tableWrapperCleanups.set(wrapper, () => { for (const cleanup of cleanups) cleanup(); });
 }
 
 function createTableEdgeButton(direction) {
@@ -556,6 +656,10 @@ function configureTableEdgeButton(button, wrapper, direction) {
   });
 
   window.addEventListener('blur', stopContinuousScroll);
+  return () => {
+    stopContinuousScroll();
+    window.removeEventListener('blur', stopContinuousScroll);
+  };
 }
 
 function scrollTableByPage(wrapper, direction) {
@@ -618,7 +722,7 @@ function measureTableWideOverflow(wrapper) {
 }
 
 function updateTableOverflowState(wrapper) {
-  if (!(wrapper instanceof HTMLElement)) {
+  if (!(wrapper instanceof HTMLElement) || !wrapper.isConnected) {
     return;
   }
 
@@ -3035,6 +3139,7 @@ function initializeImageFallback(bridge, eagerlyResolvePresentationImages) {
     }
 
     pendingRequests.delete(message.requestId);
+    if (!image.isConnected) return;
     if (typeof message.dataUrl === 'string' && message.dataUrl) {
       image.src = message.dataUrl;
       image.dataset.imageResolved = 'true';
@@ -3085,6 +3190,15 @@ function initializeImageFallback(bridge, eagerlyResolvePresentationImages) {
       requestResolution(image);
     }
   }
+  document.addEventListener('md-document-updated', () => {
+    for (const [requestId, image] of pendingRequests) {
+      if (!image.isConnected) pendingRequests.delete(requestId);
+    }
+    // A cached failure can finish before an inserted image emits an event.
+    for (const image of document.querySelectorAll('.markdown-body img')) {
+      if (image.complete && !image.naturalWidth) requestResolution(image);
+    }
+  });
 }
 
 function clampIndex(index, totalSlides) {

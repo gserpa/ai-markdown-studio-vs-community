@@ -1,4 +1,5 @@
 import { readFileSync, statSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +29,7 @@ const requiredPackageEntries = [
   'extension/assets/vendor/katex/dist/katex.min.css',
   'extension/assets/vendor/mermaid/dist/mermaid.esm.min.mjs',
   'extension/assets/vendor/mermaid/dist/mermaid.min.js',
+  'extension/docs/user/visualizations.md',
 ];
 
 const maxCompressedBytes = 58 * 1024 * 1024;
@@ -63,6 +65,9 @@ const readmeViolations = findReadmeViolations(report.files);
 const requiredEntryViolations = findRequiredEntryViolations(report.entries);
 
 if (violations.length === 0 && sizeViolations.length === 0 && readmeViolations.length === 0 && requiredEntryViolations.length === 0) {
+  const previewCheck = spawnSync(process.execPath, [path.join(scriptDirectory, 'check-preview-package.mjs'), vsixPath], { stdio: 'inherit' });
+  if (previewCheck.error) throw previewCheck.error;
+  if (previewCheck.status !== 0) process.exit(previewCheck.status ?? 1);
   console.log(
     `VSIX check passed: ${formatBytes(report.compressedBytes)} on disk, ${formatBytes(report.uncompressedBytes)} unpacked, ${report.entries.length} entries.`,
   );

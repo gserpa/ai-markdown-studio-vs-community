@@ -1,6 +1,10 @@
 // Markdown rendering
 export { createMarkdownRenderer, sanitizeRenderedHtml } from './render/markdownRenderer';
 
+// Declarative visualization validation, shared with browser renderers and AI tools.
+export { parseVisualizationBlock, VISUALIZATION_LIMITS } from './visualizations/visualizationSpec';
+export type { VisualizationKind, VisualizationBlock, VisualizationParseResult, VegaLiteSpec, VegaLiteFieldDefinition, MetricSpec } from './visualizations/visualizationSpec';
+
 // Presentation parsing
 export {
   parseMarkdownPresentation,

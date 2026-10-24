@@ -1,3 +1,5 @@
+import { createVisualizationAuthoringInstructions } from './visualizationAuthoring';
+
 export type GenerationPromptRequest = {
   brief: string;
   audience: string;
@@ -24,6 +26,8 @@ export function createDocumentPrompt(request: GenerationPromptRequest): string {
     'Start with YAML front matter containing filename and theme only. Do not set document: presentation.',
     `Use theme: ${theme}.`,
     'Do not invent citations or external facts. If a fact would need verification, mark it as a note for the user to verify.',
+    '',
+    createVisualizationAuthoringInstructions(),
     '',
     `Brief: ${request.brief}`,
     `Audience: ${request.audience}`,
@@ -143,6 +147,8 @@ export function createPresentationPrompt(request: GenerationPromptRequest): stri
     '',
     '<!--notes: Use this as a fast taxonomy slide. Keep the table compact and explain one row verbally.-->',
     '',
+    createVisualizationAuthoringInstructions(),
+    '',
     presentationImageInstruction(allowRemoteResources),
     '',
     `Brief: ${request.brief}`,
@@ -172,6 +178,8 @@ export function createPresentationRepairPrompt(markdown: string, errors: string[
     '',
     'Validation errors:',
     ...errors.map((error) => `- ${error}`),
+    '',
+    createVisualizationAuthoringInstructions(),
     '',
     'Markdown to repair:',
     markdown,
