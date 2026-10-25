@@ -6,15 +6,23 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-    "./visualizations": { "types": "./dist/visualizations/visualizationSpec.d.ts", "default": "./dist/visualizations/visualizationSpec.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./visualizations": {
+      "types": "./dist/visualizations/visualizationSpec.d.ts",
+      "default": "./dist/visualizations/visualizationSpec.js"
+    },
     "./*": "./*"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p ./tsconfig.json",
+    "build": "node generate-vega-lite-contract.mjs --check && tsc -p ./tsconfig.json && node copy-native-validator.mjs",
+    "generate:vega-lite": "node generate-vega-lite-contract.mjs",
+    "check:vega-lite": "node generate-vega-lite-contract.mjs --check",
     "build:browser": "node build-browser.mjs",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "test": "vitest run"
@@ -37,6 +45,7 @@
     "@types/jsdom": "^21.1.7",
     "@types/markdown-it": "^14.1.2",
     "@types/sanitize-html": "^2.16.0",
+    "ajv": "8.20.0",
     "esbuild": "^0.25.0",
     "typescript": "^5.7.2",
     "vitest": "^4.0.18"

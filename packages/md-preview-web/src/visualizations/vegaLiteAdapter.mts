@@ -1,14 +1,31 @@
 import { compile, type TopLevelSpec } from 'vega-lite';
 import { parse, View, logger, Warn } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
+import { chartImageUrls, prepareVegaLiteSpec, validateChartImageUrl } from '@mfo/core/visualizations';
 import type { VisualizationAdapter } from './visualizationTypes.js';
 
 export const vegaLiteAdapter: VisualizationAdapter = {
   kind: 'vega-lite',
-  async mount(container, block, { theme, signal }) {
+  async mount(container, block, { theme, signal, allowRemoteImages = false }) {
     if (block.kind !== 'vega-lite') throw new Error('Unsupported visualization specification.');
     signal.throwIfAborted();
     const spec = block.spec;
+    const imageUrls = chartImageUrls(spec);
+    if (!allowRemoteImages && imageUrls.some(url => url.startsWith('https:'))) {
+      throw new Error('Remote chart images are disabled by allowRemoteResources. Use an inline raster image or enable remote resources.');
+    }
+    await Promise.all(imageUrls.map(url => new Promise<void>((resolve, reject) => {
+      const image = new container.ownerDocument.defaultView!.Image();
+      const cleanup = () => { image.onload = image.onerror = null; signal.removeEventListener('abort', abort); };
+      const abort = () => { cleanup(); image.src = ''; reject(signal.reason ?? new Error('Chart rendering was cancelled.')); };
+      image.onload = () => { cleanup(); resolve(); };
+      image.onerror = () => { cleanup(); reject(new Error('A chart image could not be loaded. Check its URL and image policy.')); };
+      image.crossOrigin = 'anonymous';
+      signal.addEventListener('abort', abort, { once: true });
+      if (signal.aborted) { abort(); return; }
+      image.src = url;
+    })));
+    signal.throwIfAborted();
     const tooltip = container.ownerDocument.createElement('div');
     tooltip.className = 'md-visualization-tooltip';
     tooltip.setAttribute('role', 'tooltip');
@@ -43,12 +60,7 @@ export const vegaLiteAdapter: VisualizationAdapter = {
     try {
       // Defaults make ordinary specifications responsive; explicit dimensions win.
       const compiled = compile({
-        width: 'container', height: 280,
-        autosize: { type: 'fit', contains: 'padding' },
-        ...spec,
-        mark: typeof spec.mark === 'string'
-          ? { type: spec.mark, tooltip: spec.encoding.tooltip !== null }
-          : { tooltip: spec.encoding.tooltip !== null, ...spec.mark },
+        ...prepareVegaLiteSpec(spec, width),
         config: {
           background: 'transparent', font: theme.fontFamily,
           mark: { color: theme.accent },
@@ -64,7 +76,12 @@ export const vegaLiteAdapter: VisualizationAdapter = {
         // Resource requests can start at construction: never install this later.
         loader: {
           load: async () => { throw new Error('External visualization resources are disabled.'); },
-          sanitize: async () => { throw new Error('Visualization links and images are disabled.'); },
+          sanitize: async (uri: string, options?: { context?: string }) => {
+            if (options?.context !== 'image') throw new Error('Visualization navigation is disabled.');
+            const href = validateChartImageUrl(uri);
+            if (!imageUrls.includes(href) || href.startsWith('https:') && !allowRemoteImages) throw new Error('Chart image is outside the approved image policy.');
+            return { href, crossOrigin: 'anonymous' };
+          },
           http: async () => { throw new Error('External visualization resources are disabled.'); },
           file: async () => { throw new Error('External visualization resources are disabled.'); },
         },

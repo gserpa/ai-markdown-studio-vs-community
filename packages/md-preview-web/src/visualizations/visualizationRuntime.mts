@@ -1,4 +1,4 @@
-import { parseVisualizationBlock, type VisualizationKind } from '@mfo/core/visualizations';
+import { chartTitle, parseVisualizationBlock, type VisualizationKind } from '@mfo/core/visualizations';
 import type { VisualizationAdapter, VisualizationHandle, VisualizationTheme } from './visualizationTypes.js';
 
 type Entry = {
@@ -47,7 +47,7 @@ export function createVisualizationRuntime(root: HTMLElement, adapters: readonly
       // Markers may come from raw document HTML. Revalidate at this boundary.
       const result = parseVisualizationBlock(kind, source);
       if (!result.valid) throw new Error(result.error);
-      const title = result.block.spec.title || 'Chart';
+      const title = result.block.kind === 'vega-lite' ? chartTitle(result.block.spec) : result.block.spec.title;
       block.setAttribute('aria-label', title);
       const heading = block.querySelector<HTMLElement>(':scope > .md-visualization-title');
       if (heading && heading.textContent !== title) heading.textContent = title;
@@ -58,7 +58,8 @@ export function createVisualizationRuntime(root: HTMLElement, adapters: readonly
       block.prepend(canvas);
       entry.canvas = canvas;
       block.dataset.mdVisualizationState = 'rendering';
-      const handle = await adapter.mount(canvas, result.block, { theme, signal: entry.abort.signal });
+      const handle = await adapter.mount(canvas, result.block, { theme, signal: entry.abort.signal,
+        allowRemoteImages: document.body.dataset.mdChartRemoteImages === 'true' });
       if (disposed || entry.abort.signal.aborted || entries.get(block) !== entry || !root.contains(block)) {
         handle.dispose();
         return;
@@ -82,7 +83,7 @@ export function createVisualizationRuntime(root: HTMLElement, adapters: readonly
     for (const block of root.querySelectorAll<HTMLElement>(selector)) {
       const source = block.querySelector(':scope > details.md-visualization-source > pre > code')?.textContent ?? '';
       const theme = readTheme(block);
-      const signature = JSON.stringify([block.dataset.mdVisualization, source, theme]);
+      const signature = JSON.stringify([block.dataset.mdVisualization, source, theme, document.body.dataset.mdChartRemoteImages]);
       const previous = entries.get(block);
       if (previous?.signature === signature) continue;
       if (previous) remove(previous);
@@ -125,7 +126,7 @@ export function createVisualizationRuntime(root: HTMLElement, adapters: readonly
   });
   observer.observe(document.documentElement, {
     childList: true, subtree: true, characterData: true, attributes: true,
-    attributeFilter: ['class', 'style', 'data-document-theme', 'data-document-theme-mode', 'data-presentation-theme', 'data-md-host-scheme', 'data-md-visualization'],
+    attributeFilter: ['class', 'style', 'data-document-theme', 'data-document-theme-mode', 'data-presentation-theme', 'data-md-host-scheme', 'data-md-visualization', 'data-md-chart-remote-images'],
   });
   const media = win.matchMedia?.('(prefers-color-scheme: dark)');
   media?.addEventListener('change', schedule);

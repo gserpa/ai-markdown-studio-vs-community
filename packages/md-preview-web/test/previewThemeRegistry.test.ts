@@ -63,6 +63,13 @@ describe('previewThemeRegistry', () => {
     expect(selected).toEqual(buildPreviewThemeCssArtifact(registry, 'modern-blue'));
   });
 
+  it('clears light-only tokens when auto switches to the dark theme', () => {
+    const css = buildPreviewThemeCssArtifact(registry, 'auto').css;
+    const darkRules = css.slice(css.indexOf("[data-md-host-scheme='dark']"));
+    expect(darkRules).toContain('--presentation-table-cell-color: initial;');
+    expect(darkRules).toContain('--presentation-body-color: #e5e7eb;');
+  });
+
   it('loads multiple theme directories and lets later directories override earlier ones', () => {
     const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'mfo-preview-themes-'));
     const customThemePath = path.join(tempDirectory, 'galaxy.json');

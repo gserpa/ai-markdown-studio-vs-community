@@ -7,6 +7,15 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Replaced the chart property allowlist with a precompiled validator from the installed Vega-Lite schema, covering all 17 primitive/composite marks and all six composition operators. Added a 26-example gallery, inherited data/encoding support, map fitting, resource-aware image marks, and schema-drift checks.
+- Updated shared AI guidance and portable references to describe the supported chart grammar.
+
+### Fixed
+
+- Preserved intrinsic proportions and frames for presentation preview images, and corrected light/dark table colors and contrast across built-in presentation themes.
+
 ## [1.3.0] - 2026-10-24
 
 ### Added

@@ -187,23 +187,19 @@ const slideLayoutBuilders: Record<string, SlideLayoutBuilder> = {
 
 function createStandardLayout(context: SlideLayoutContext): string {
   const title = extractPrimaryHeading(context.body);
-  const { leadingHtml, media, trailingHtml } = extractCenteredMediaContent(context.body);
-  if (!media) {
-    return wrapStandardLayout(title, leadingHtml);
+  for (const media of [...context.body.querySelectorAll('img, div.mermaid')]) {
+    if (media.closest('.presentation-layout-media-shell')) continue;
+    const tag = media.tagName === 'IMG' && media.closest('p') ? 'span' : 'div';
+    const wrapper = context.body.ownerDocument.createElement(tag);
+    wrapper.className = 'presentation-flow-media' + (media.tagName === 'IMG' ? ' presentation-image-frame' : '');
+    const shell = context.body.ownerDocument.createElement(tag);
+    shell.className = 'presentation-layout-media-shell ' + (media.matches('div.mermaid') ? 'is-diagram' : 'is-image');
+    media.replaceWith(wrapper);
+    wrapper.appendChild(shell);
+    shell.appendChild(media);
   }
-
-  const contentClasses = [
-    'presentation-default-media-layout',
-    leadingHtml ? 'has-leading-content' : '',
-    trailingHtml ? 'has-trailing-content' : '',
-  ].filter(Boolean).join(' ');
-  const contentHtml = `
-    <div class="${contentClasses}">
-      <section class="presentation-default-media-leading">${leadingHtml}</section>
-      <aside class="presentation-default-media"><div class="presentation-image-frame">${renderMediaSlotContent(media)}</div></aside>
-      <footer class="presentation-default-media-trailing">${trailingHtml}</footer>
-    </div>`;
-  return wrapStandardLayout(title, contentHtml, ' presentation-standard-layout-default-media');
+  // Keep all blocks in source order; media does not reserve a separate body slot.
+  return wrapStandardLayout(title, context.body.innerHTML.trim(), ' presentation-standard-layout-flow');
 }
 
 function createCoverLayout(context: SlideLayoutContext): string {

@@ -14,6 +14,15 @@ Use the extension tools in this order:
 3. Call `#validateMarkdownPresentation`; repair every structural issue and validate again.
 4. Ask the user to approve the destination, then call `#saveMarkdownStudioFile`. Never overwrite an existing file.
 
-For requested charts or metrics, follow [the visualization authoring reference](references/visualizations.md) as well as the canonical prompt. Use supplied inline data in `vega-lite` line/bar and `metric` JSON fences; repair visualization errors reported by the validator before saving.
+For requested charts or metrics, follow [the visualization authoring reference](references/visualizations.md) as well as the canonical prompt. Use supplied inline data in supported `vega-lite` chart and `metric` JSON fences; repair visualization errors reported by the validator before saving.
 
 If a tool is unavailable, use this backup specification: include YAML front matter with `filename`, `document: presentation`, `title`, `theme`, and `ratio`; separate slides with top-level `---`; use one `# H1` title per slide; place at most one supported `<!--slide: name-->` directive immediately after a separator and before the title; use concise `<!--notes: ...-->` comments on content slides; and do not invent image URLs or local paths. Use `default` for large-width media in the natural, left-aligned Markdown sequence; use `image-center` for image-centric or stronger messages with centered text and media; use `image-right` only for narrower media beside substantive left-column text. Supported directives are `cover`, `default`, `two-columns`, `image-right`, `image-center`, `side-banner`, `side-picture`, `default-side`, `table`, `table-legend`, `divider`, `section-divider`, `divider-b`, `divider-c`, and `thanks`.
+
+## Mixed body content and template defaults
+
+Prefer `default` for ordinary slides containing paragraphs, tables, images, and Mermaid diagrams.
+Preserve their Markdown sequence, including text between multiple tables or media blocks.
+Use specialized layouts for intentional structural differences rather than each content combination.
+Do not add template or manifest paths merely to repeat a configured default: Pro uses workspace/global
+PPTX defaults automatically, while explicit document front matter takes precedence. Never invent a
+local filesystem path. Template onboarding and approved flow regions handle placement during export.

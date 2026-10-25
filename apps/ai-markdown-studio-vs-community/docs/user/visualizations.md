@@ -113,37 +113,53 @@ precedence over the mark setting, following Vega-Lite's behavior.
 Source is available below each chart. Invalid definitions or render
 failures keep the source open alongside an error, without stopping other charts.
 
-The supported subset uses native Vega-Lite v6 syntax:
+Native chart syntax follows the installed Vega-Lite v6 schema. The browser and
+server use the same precompiled validator; source validation requires no dynamic
+code generation. Compiler upgrades must regenerate the contract, and coverage
+checks compare it against the installed schema.
 
-| Location | Supported properties |
-| --- | --- |
-| Root | Optional `$schema` (exact URL above), `title`, `description`, `width`, `height`, `autosize`; required `data`, `mark`, `encoding` |
-| `data` | `values`: 1–5,000 flat objects, each with 1–32 fields containing strings, finite numbers, booleans, or null |
-| `mark` | `"line"`, `"bar"`, or an object with `type`, optional boolean `tooltip`, hexadecimal `color`, `opacity` (0–1), `strokeWidth` (0–20), and boolean `point` for line charts |
-| `encoding` | Required `x` and `y`; optional `color` and `tooltip` |
-| Field definitions | Required `field` and `type`; optional `title` (string or null). Types: `quantitative`, `ordinal`, `nominal`, `temporal`. Fields must exist in at least one inline row. |
-| `x` and `y` | Optional `axis`, `scale`, `sort` |
-| `color` | Optional `scale`, `sort`, `legend: null` to hide the legend |
-| `tooltip` | A field definition, 1–16 field definitions, or null; optional `format` per definition |
-| `axis` | Null, or an object with `title`, `labelAngle` (-360–360), `format`, boolean `grid`, `labels`, `ticks`, integer `tickCount` (1–100), and `labelLimit` (0–500) |
-| `scale` | Boolean `zero`, `nice`, and `reverse` |
-| `sort` | `"ascending"`, `"descending"`, null, or up to 64 scalar values |
-| Dimensions | Width: `"container"` or 40–4,096; height: 40–4,096 |
-| `autosize` | `"fit"`, `"fit-x"`, `"fit-y"`, `"pad"`, `"none"`, or an object with one of these as `type`, optional `contains` (`"padding"` or `"content"`), and boolean `resize` |
+All **17 built-in marks** are supported: arc, area, bar, circle, geoshape, image,
+line, point, rect, rule, square, text, tick, trail, boxplot, errorband, and errorbar.
+Native static mark properties and encoding channels are accepted, including
+constant values, sorting objects, grouped offsets, labels, secondary positions,
+aggregation, and uncertainty intervals.
 
-Unknown properties are rejected at each configuration level. External datasets,
-image marks, links, expressions, transforms, configuration overrides, parameters,
-and multi-view composition are outside this subset. Data fields named `url` or
-`expr` are permitted as literal data; they are not interpreted as configuration.
-Data field names must be nonempty literal names without dots, brackets, or
-backslashes; nested field paths are outside this subset.
+All **six composition operators** are supported: layer, facet, repeat, concat,
+hconcat, and vconcat. Child views may inherit parent inline data; layers may also
+inherit encoding. Facet/repeat use their native spec property. Repeat field
+references must name a declared repeat dimension and supplied inline fields.
+Compositions are bounded to 32 expanded rendered views. Dimensions on a composite
+root are applied to its child views; the preview contains the resulting grid.
+
+The [complete gallery](../../../../examples/vega-lite-chart-gallery.md) covers all
+built-in marks and composition forms, including map, image, reference-rule,
+text-label, variable-width trail, and uncertainty examples.
+
+The application applies resource and size rules in addition to native syntax:
+
+- Supply or inherit inline data.values. Ordinary rows contain scalar values;
+  geoshape also accepts inline GeoJSON with finite coordinate arrays. Safe dotted
+  field paths may reference nested GeoJSON properties.
+- Image marks accept HTTPS URLs and inline PNG/JPEG/GIF/WebP data URLs. HTTPS
+  images follow markdownAiStudio.allowRemoteResources and need network access.
+  Inline raster images work offline. A blocked or failed image produces a
+  resource diagnostic rather than an unsupported-chart error.
+- External chart datasets, custom config, transforms, parameters, executable
+  expressions, conditions, hyperlinks, and SVG/HTML image data remain outside
+  the application contract. Image loading does not enable external data loading.
+- Width/height are container-responsive or 40–4,096 pixels. Mark dimensions and
+  font sizes are bounded to 4,096. Explicit bin parameters use maxbins from 1 to
+  100; step-based unbounded binning is excluded.
+- Field paths cannot access prototype properties. Unknown native syntax is
+  rejected by the installed schema, rather than by a separate property list.
 
 ## Bounds and errors
 
 Both fence types require JSON without comments or trailing commas. Each block is
 limited to 128 KiB of UTF-8 source, 12 levels of nesting, and 50,000 JSON values.
-Property names are limited to 120 characters and strings to 2,048 characters,
-with the smaller limits above applying to individual labels. Prototype-related
+Property names are limited to 120 characters and ordinary strings to 2,048 characters.
+Inline raster image data is bounded by the overall 128 KiB source limit.
+Smaller limits above apply to individual labels. Prototype-related
 property names (`__proto__`, `prototype`, `constructor`) are rejected.
 
 Invalid blocks show an error and escaped source. Error previews are truncated at

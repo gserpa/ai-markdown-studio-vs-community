@@ -176,6 +176,7 @@ describe('buildPreviewHtml', () => {
     );
 
     expect(html).toContain('img-src vscode-resource: data:;');
+    expect(html).toContain('data-md-chart-remote-images="false"');
     expect(html).toContain('class="remote-resource-placeholder"');
     expect(html).toContain('data-source-src="https://example.com/image.png"');
     expect(html).toContain('Extension settings restrict access to remote resources.');

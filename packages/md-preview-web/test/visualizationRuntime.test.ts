@@ -34,6 +34,14 @@ function setup(customMount?: VisualizationAdapter['mount']) {
 }
 
 describe('visualization coordinator', () => {
+  it('passes the trusted image setting to adapters and rechecks it after changes', async () => {
+    const { document, runtime, mount } = setup();
+    await runtime.refresh();
+    expect(mount.mock.calls[0][2].allowRemoteImages).toBe(false);
+    document.body.dataset.mdChartRemoteImages = 'true';
+    await vi.waitFor(() => expect(mount).toHaveBeenCalledTimes(2));
+    expect(mount.mock.calls[1][2].allowRemoteImages).toBe(true);
+  });
   it('keeps successful source accessible and reuses unchanged charts', async () => {
     const { document, runtime, mount } = setup();
     await runtime.refresh();

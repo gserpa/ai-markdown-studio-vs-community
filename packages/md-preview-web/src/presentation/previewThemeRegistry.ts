@@ -332,7 +332,12 @@ function buildAutoPreviewThemeStylesheet(registry: PreviewThemeRegistry): string
     sections.push(`[data-md-preview-root].presentation-preview.presentation-theme-auto {\n${serializeThemeTokens(lightTheme.tokens)}\n}`);
   }
   if (darkTheme) {
-    const tokens = serializeThemeTokens(darkTheme.tokens);
+    // Auto starts with light tokens. Clear light-only values so the dark
+    // theme can use CSS fallbacks instead of retaining light foregrounds.
+    const tokens = serializeThemeTokens({
+      ...Object.fromEntries(Object.keys(lightTheme?.tokens ?? {}).map((name) => [name, 'initial'])),
+      ...darkTheme.tokens,
+    });
     sections.push(`[data-md-host-scheme='dark'] [data-md-preview-root].presentation-preview.presentation-theme-auto,\n.vscode-dark [data-md-preview-root].presentation-preview.presentation-theme-auto,\n.vscode-high-contrast [data-md-preview-root].presentation-preview.presentation-theme-auto {\n${tokens}\n}`);
     sections.push(`:root:has(body.preview-mode-presentation:is(.vscode-dark, .vscode-high-contrast) .presentation-preview.presentation-theme-auto),\n:root:has([data-md-host-scheme='dark'] [data-md-preview-root].presentation-preview.presentation-theme-auto) {\n  color-scheme: dark;\n}`);
     sections.push(`@media (prefers-color-scheme: dark) {\n  [data-md-host-scheme='auto'] [data-md-preview-root].presentation-preview.presentation-theme-auto {\n${indentCss(tokens, 2)}\n  }\n}`);

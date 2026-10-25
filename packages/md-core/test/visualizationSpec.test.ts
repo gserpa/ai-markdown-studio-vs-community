@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseVisualizationBlock, VISUALIZATION_LIMITS, type VisualizationKind } from '../src/visualizations/visualizationSpec';
+import { parseVisualizationBlock, prepareVegaLiteSpec, chartImageUrls, VISUALIZATION_LIMITS, type VegaLiteSpec, type VisualizationKind } from '../src/visualizations/visualizationSpec';
 
 function chart() {
   return {
@@ -63,7 +63,7 @@ describe('visualization specifications', () => {
     { mark: { type: 'line', point: { expr: 'true' } } },
     { transform: [{ calculate: 'alert(1)', as: 'x' }] },
     { params: [{ name: 'x', expr: 'event.view' }] },
-    { layer: [chart()] }, { config: { customFormatTypes: true } },
+    { config: { customFormatTypes: true } },
     { datasets: { remote: { url: 'file:///secret' } } },
     { $schema: 'https://example.com/schema.json' },
   ])('rejects resources, expressions, unsupported marks and composition: %j', patch => {
@@ -103,6 +103,111 @@ describe('visualization specifications', () => {
       '{"title":"Debt","value":1e999}',
     ]) expect(parseVisualizationBlock('metric', source).valid).toBe(false);
     expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+
+  it('accepts bounded mark styles, grouped offsets, aggregates and bins', () => {
+    for (const mark of [
+      { type: 'point', filled: true, size: 90, color: '#123abc' },
+      { type: 'area', line: true, point: true },
+      { type: 'boxplot', extent: 1.5 }, { type: 'boxplot', extent: 'min-max' },
+      { type: 'tick', thickness: 2, size: 18 }, 'circle', 'square', 'rect',
+    ]) expect(parse('vega-lite', { ...chart(), mark }).valid).toBe(true);
+    expect(parse('vega-lite', { ...chart(), mark: 'bar', encoding: {
+      ...chart().encoding, x: { field: 'year', type: 'ordinal', sort: '-y' }, xOffset: { field: 'series' },
+    } }).valid).toBe(true);
+    for (const bin of [true, { maxbins: 20 }]) {
+      expect(parse('vega-lite', { ...chart(), mark: 'bar', encoding: {
+        x: { field: 'debt', type: 'quantitative', bin },
+        y: { aggregate: 'count', type: 'quantitative' }, tooltip: [{ aggregate: 'count', type: 'quantitative' }],
+      } }).valid).toBe(true);
+    }
+    expect(parse('vega-lite', { ...chart(), mark: { type: 'arc', innerRadius: 58, outerRadius: 105 }, encoding: {
+      theta: { field: 'debt', type: 'quantitative', aggregate: 'sum' }, color: { field: 'series', type: 'nominal' },
+    } }).valid).toBe(true);
+  });
+
+  it.each([
+    { type: 'arc', innerRadius: -1 }, { type: 'arc', outerRadius: 4097 },
+    { type: 'arc', innerRadius: 90, outerRadius: 20 },
+    { type: 'arc', innerRadius: { expr: 'datum.value' } },
+    { type: 'point', filled: { expr: 'true' } }, { type: 'point', size: -1 },
+    { type: 'area', line: { color: 'url(https://example.com)' } },
+    { type: 'tick', thickness: -1 },
+    { type: 'boxplot', extent: -1 }, { type: 'boxplot', extent: 101 },
+    { type: 'boxplot', extent: { expr: '1' } },
+  ])('rejects invalid or executable mark options: %j', mark => {
+    expect(parse('vega-lite', { ...chart(), mark }).valid).toBe(false);
+  });
+
+  it.each([
+    { x: { field: 'debt', type: 'quantitative', bin: { step: 0.0000001 } } },
+    { x: { field: 'debt', type: 'quantitative', bin: { maxbins: 101 } } },
+    { x: { field: 'debt', type: 'quantitative', bin: { maxbins: 2.5 } } },
+    { x: { field: 'debt', type: 'quantitative', bin: { maxbins: { expr: '100' } } } },
+    { y: { aggregate: 'sum', type: 'quantitative' } },
+    { y: { field: 'debt', aggregate: 'unknown', type: 'quantitative' } },
+    { xOffset: { field: 'missing' } },
+    { xOffset: { field: 'series', expr: 'datum.series' } },
+  ])('rejects invalid or executable encoding options: %j', encoding => {
+    expect(parse('vega-lite', { ...chart(), mark: 'bar', encoding: { ...chart().encoding, ...encoding } }).valid).toBe(false);
+  });
+
+  it('accepts native constant arcs and one-axis rules', () => {
+    expect(parse('vega-lite', { ...chart(), mark: 'arc', encoding: {} }).valid).toBe(true);
+    expect(parse('vega-lite', { ...chart(), mark: 'rule', encoding: { y: { field: 'debt', type: 'quantitative' } } }).valid).toBe(true);
+  });
+
+  it('supports inherited data and encoding in native layers without rewriting source', () => {
+    const spec = { ...chart(), mark: undefined, layer: [{ mark: 'line' }, { mark: { type: 'point', filled: true } }] };
+    expect(parse('vega-lite', spec).valid).toBe(true);
+    const source = JSON.stringify(spec);
+    prepareVegaLiteSpec(spec as unknown as VegaLiteSpec, 800);
+    expect(JSON.stringify(spec)).toBe(source);
+  });
+
+  it('preserves native properties whose names also name JSON Schema annotations', () => {
+    const spec = { ...chart(), description: 'A chart description', mark: { type: 'point', description: 'A point description' }, encoding: { ...chart().encoding, description: { field: 'series', type: 'nominal' } } };
+    expect(parse('vega-lite', spec).valid).toBe(true);
+    expect(parse('vega-lite', { ...chart(), title: { text: ['Debt', 'By year'], subtitle: 'Native structured title' } }).valid).toBe(true);
+  });
+
+  it.each(['layer', 'hconcat', 'vconcat', 'concat'])('rejects nested external data in %s', key => {
+    const spec = { data: chart().data, [key]: [{ ...chart(), data: { url: 'https://example.invalid/data.json' } }] };
+    expect(error('vega-lite', spec)).toContain('data.url');
+  });
+
+  it('checks expressions, field references, and image URLs inside child views', () => {
+    const base = { data: chart().data, repeat: { column: ['debt'] }, spec: { mark: 'point', encoding: chart().encoding } };
+    expect(parse('vega-lite', base).valid).toBe(true);
+    expect(parse('vega-lite', { ...base, spec: { ...base.spec, transform: [{ calculate: 'datum.debt', as: 'x' }] } }).valid).toBe(false);
+    expect(parse('vega-lite', { ...base, repeat: { column: ['missing'] } }).valid).toBe(false);
+    expect(parse('vega-lite', { ...base, spec: { mark: 'bar', encoding: { x: { field: { repeat: 'row' }, type: 'quantitative' } } } }).valid).toBe(false);
+  });
+
+  it('bounds the expanded rendered-view count for concat, repeat, and facet', () => {
+    expect(error('vega-lite', { hconcat: Array.from({ length: 33 }, chart) })).toContain('rendered views');
+    const values = Array.from({ length: 6 }, (_, index) => Object.fromEntries(Array.from({ length: 6 }, (_, field) => ['f' + field, index])));
+    const fields = Object.keys(values[0]);
+    expect(error('vega-lite', { data: { values }, repeat: { row: fields, column: fields }, spec: { mark: 'point', encoding: {} } })).toContain('rendered views');
+    expect(error('vega-lite', { data: { values: Array.from({ length: 33 }, (_, i) => ({ group: 'g' + i, value: i })) }, facet: { field: 'group', type: 'nominal' }, spec: { mark: 'point', encoding: {} } })).toContain('rendered views');
+  });
+
+  it('accepts image syntax independently of the remote-resource rendering setting', () => {
+    const spec = { data: { values: [{ image: 'https://example.invalid/photo.png', x: 1 }] }, mark: 'image', encoding: { x: { field: 'x', type: 'quantitative' }, url: { field: 'image', type: 'nominal' } } };
+    expect(parse('vega-lite', spec).valid).toBe(true);
+    expect(chartImageUrls(spec as VegaLiteSpec)).toEqual(['https://example.invalid/photo.png']);
+    expect(chartImageUrls({ data: spec.data, layer: [{ mark: 'image', encoding: spec.encoding }] } as VegaLiteSpec)).toEqual(['https://example.invalid/photo.png']);
+    for (const image of ['javascript:alert(1)', 'file:///secret.png', 'data:image/svg+xml,<svg/>', 'https://user:secret@example.invalid/image.png', '../secret.png']) {
+      expect(parse('vega-lite', { ...spec, data: { values: [{ image, x: 1 }] } }).valid).toBe(false);
+    }
+  });
+
+  it('validates GeoJSON coordinates and safe nested property paths', () => {
+    const feature = { type: 'Feature', properties: { place: 'Region' }, geometry: { type: 'Point', coordinates: [-9, 39] } };
+    const spec = { data: { values: [feature] }, mark: 'geoshape', encoding: { shape: { field: 'geometry', type: 'geojson' }, tooltip: { field: 'properties.place', type: 'nominal' } } };
+    expect(parse('vega-lite', spec).valid).toBe(true);
+    expect(parse('vega-lite', { ...spec, data: { values: [{ ...feature, geometry: { type: 'Point', coordinates: ['wrong', 39] } }] } }).valid).toBe(false);
+    expect(parse('vega-lite', { ...spec, encoding: { tooltip: { field: 'properties.constructor', type: 'nominal' } } }).valid).toBe(false);
   });
 
   it('bounds source by UTF-8 bytes before parsing', () => {

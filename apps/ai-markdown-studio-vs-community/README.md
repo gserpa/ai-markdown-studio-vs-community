@@ -151,7 +151,7 @@ and verification commands.
 - **Preview-first custom editor** - opening a Markdown file uses the extension's preview custom editor by default, and switching to edit mode closes the preview surface for that file.
 - **Live preview** - renders standard Markdown documents and presentation-style Markdown decks in a panel as you type.
 - **Mermaid diagrams** - fenced ` ```mermaid ``` ` blocks are rendered as diagrams, with strict-mode initialization for untrusted content.
-- **Interactive charts and metrics** - use validated `vega-lite` line/bar and `metric` JSON fences in documents and presentations, with tooltips, theme colors, readable source, and offline HTML export. See [visualization syntax](./docs/user/visualizations.md) and the [reusable AI authoring reference](./skills/markdown-ai-studio-presentation/references/visualizations.md).
+- **Interactive charts and metrics** - use schema-validated `vega-lite` charts and `metric` JSON fences in documents and presentations. All 17 built-in marks and six composition operators are supported, with tooltips, theme colors, readable source, and offline HTML export. HTTPS image marks follow the remote-resource setting. See [visualization syntax](./docs/user/visualizations.md) and the [reusable AI authoring reference](./skills/markdown-ai-studio-presentation/references/visualizations.md).
 - **Mermaid diagram zoom** - zoom a rendered diagram in place from the preview through an overlay viewer.
 - **Syntax highlighting** - code blocks highlighted via highlight.js.
 - **Math equations** - KaTeX-rendered inline and block math (`$...$` / `$$...$$`).

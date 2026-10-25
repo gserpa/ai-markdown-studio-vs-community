@@ -1,4 +1,4 @@
-import { parseVisualizationBlock, type MetricSpec, type VisualizationKind } from './visualizationSpec';
+import { chartTitle, parseVisualizationBlock, type MetricSpec, type VisualizationKind } from './visualizationSpec';
 
 const maxErrorSourceLength = 16_384;
 
@@ -14,7 +14,7 @@ ${truncated ? '<p>Source preview truncated. The complete definition remains in t
 </section>\n`;
   }
   if (result.block.kind === 'metric') return metricHtml(result.block.spec, source);
-  const title = result.block.spec.title || 'Chart';
+  const title = chartTitle(result.block.spec);
   return `<section class="md-visualization md-visualization-chart" role="group" aria-label="${escapeHtml(title)}" data-md-visualization="vega-lite" data-md-visualization-state="pending">
 <p class="md-visualization-title">${escapeHtml(title)}</p>
 <div class="md-visualization-canvas"></div>

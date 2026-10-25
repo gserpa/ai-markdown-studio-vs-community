@@ -113,7 +113,7 @@ export async function buildExportHtmlArtifact(
     const presentationBody = await embedLocalHtmlImages(rendered.html, document);
     const hasMermaid = containsMermaid(presentationBody);
     const hasMath = containsMath(rendered.html);
-    const html = buildPresentationStandaloneHtml({
+    const rawHtml = buildPresentationStandaloneHtml({
       title: path.basename(document.fileName),
       body: presentationBody,
       previewCss: [previewCoreCss, previewPresentationCss, (hasMermaid || containsImages(presentationBody)) ? previewMermaidCss : ''].filter(Boolean).join('\n\n'),
@@ -127,7 +127,8 @@ export async function buildExportHtmlArtifact(
       hostThemeClass: exportMode === 'theme' ? getHostThemeClass() : '',
       previewThemeCss: buildPreviewThemeCssArtifact(registry, rendered.themeSelection.themeName).css,
     });
-    return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
+    const html = rawHtml.replace(/<body\b([^>]*)>/u, '<body$1 data-md-chart-remote-images="' + allowRemoteResources + '">');
+  return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
   }
 
   const exportMarkdown = getExportMarkdown(source);
@@ -137,7 +138,7 @@ export async function buildExportHtmlArtifact(
 
   const hasMermaid = containsMermaid(body);
   const hasMath = containsMath(body);
-  const html = buildStandaloneHtml({
+  const rawHtml = buildStandaloneHtml({
     title: path.basename(document.fileName),
     body,
     previewCss: [previewCoreCss, previewDocumentCss, (hasMermaid || containsImages(body)) ? previewMermaidCss : ''].filter(Boolean).join('\n\n'),
@@ -153,6 +154,7 @@ export async function buildExportHtmlArtifact(
     documentThemeCss: theme.documentThemeCss,
     exportMode,
   });
+  const html = rawHtml.replace(/<body\b([^>]*)>/u, '<body$1 data-md-chart-remote-images="' + allowRemoteResources + '">');
   return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
 }
 

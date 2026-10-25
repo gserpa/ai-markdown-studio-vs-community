@@ -228,6 +228,20 @@ The service returns a validated response.
 
 > The same structure is used by AI Markdown Studio Pro to export `.pptx` decks, so presentations authored in Community export directly in Pro without changes.
 
+### Flowing default slide bodies
+
+Use `default` for ordinary mixed content. After the title, paragraphs, tables, images,
+and Mermaid diagrams keep their Markdown order in one body region, including multiple
+tables or diagrams with text between them. A table does not require a separate slide type.
+
+Choose columns, covers, dividers, or image-dominant layouts when you want a different
+structure or design. Existing layout names remain supported, and unknown preview layout
+names use the standard body.
+
+When exporting with Pro, **Set up PPTX Template** validates and installs the approved
+regions and manifest. A global default needs no template path in document front matter;
+an explicit document selection takes precedence.
+
 ## Presentation themes
 
 Bundled presentation themes: `black`, `galaxy`, and `modern-blue`. Set a deck's theme with the `theme` front-matter field. Community does not load custom presentation themes; Pro adds workspace and shared custom-theme folders.

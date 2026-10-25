@@ -10,7 +10,7 @@ export type VisualizationTheme = {
   fontFamily: string;
 };
 
-export type VisualizationContext = { theme: VisualizationTheme; signal: AbortSignal };
+export type VisualizationContext = { theme: VisualizationTheme; signal: AbortSignal; allowRemoteImages?: boolean };
 
 /** The coordinator owns DOM/lifecycle concerns; adapters own library instances. */
 export interface VisualizationAdapter {

@@ -77,12 +77,12 @@ const FRONT_MATTER_FIELDS: readonly Omit<MpsFrontMatterFieldSchema, 'suggestions
   {
     name: 'template',
     kind: 'path',
-    description: 'Optional PPTX template path used for template-backed export. Custom slide template names can resolve directly when the PPTX exposes matching template markers.',
+    description: 'Optional document PPTX template override. Omit it to use the configured workspace or global default. A document selection takes precedence and uses its own manifest association.',
   },
   {
     name: 'templateManifest',
     kind: 'path',
-    description: 'Optional sparse PPTX override manifest used for aliases, placeholder corrections, and explicit fallback policy. Base slide bindings can still be inferred from the PPTX template.',
+    description: 'Optional document manifest override for the selected PPTX. Managed setup discovers the associated manifest automatically. Manifests can define approved flow regions, fixed slots, aliases, disabled roles, and fallback policy.',
   },
 ] as const;
 

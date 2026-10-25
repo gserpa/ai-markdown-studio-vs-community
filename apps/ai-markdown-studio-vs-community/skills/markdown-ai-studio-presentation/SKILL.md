@@ -24,7 +24,7 @@ Create a complete Markdown file, not an outline. Do not assume AI Markdown Studi
 
 ## Charts and metrics
 
-When the user requests data visualizations, read [the visualization authoring reference](references/visualizations.md). Use native `vega-lite` line/bar fences and `metric` fences with supplied inline data. Prefer a `default` slide with one chart and a short takeaway. Validate these JSON blocks as well as the deck structure. Other viewers retain the JSON source; native DOCX/PPTX chart conversion is not provided.
+When the user requests data visualizations, read [the visualization authoring reference](references/visualizations.md). Use supported native `vega-lite` chart fences and `metric` fences with supplied inline data. Prefer a `default` slide with one chart and a short takeaway. Validate these JSON blocks as well as the deck structure. Other viewers retain the JSON source; native DOCX/PPTX chart conversion is not provided.
 
 ## Images
 
@@ -35,3 +35,12 @@ When the user requests data visualizations, read [the visualization authoring re
 ## Validation
 
 Use a front-matter-aware validation process rather than an ad-hoc separator split. Parse and remove the initial YAML front matter before splitting the remaining body on top-level `---`; otherwise the YAML opening fence is falsely counted as a slide and front matter appears missing. Validate front matter, exact slide count when specified (including every separator-delimited layout slide), separators, one H1 per slide, directive placement and support, image URL shape, and notes. Require notes on content slides only; `cover`, `divider`, `section-divider`, and `thanks` may omit them. Repair structural issues while preserving the requested content.
+
+## Mixed body content and template defaults
+
+Prefer `default` for ordinary slides containing paragraphs, tables, images, and Mermaid diagrams.
+Preserve their Markdown sequence, including text between multiple tables or media blocks.
+Use specialized layouts for intentional structural differences rather than each content combination.
+Do not add template or manifest paths merely to repeat a configured default: Pro uses workspace/global
+PPTX defaults automatically, while explicit document front matter takes precedence. Never invent a
+local filesystem path. Template onboarding and approved flow regions handle placement during export.

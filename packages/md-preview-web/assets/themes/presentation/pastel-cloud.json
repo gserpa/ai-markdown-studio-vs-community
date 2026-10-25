@@ -58,7 +58,7 @@
     "--presentation-table-bg": "rgba(255, 255, 255, 0.92)",
     "--presentation-table-border": "rgba(155, 130, 214, 0.18)",
     "--presentation-table-header-bg": "linear-gradient(180deg, #a890e0, #9b82d6)",
-    "--presentation-table-header-color": "#ffffff",
+    "--presentation-table-header-color": "#111827",
     "--presentation-table-cell-bg": "rgba(155, 130, 214, 0.04)",
     "--presentation-table-cell-color": "#2d2840",
     "--presentation-table-row-alt-bg": "rgba(224, 214, 255, 0.38)",

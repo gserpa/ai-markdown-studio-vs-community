@@ -244,13 +244,12 @@ Context after the image.
       .replace(/\n\n+/gu, ''), previewThemeRegistry, createDocument);
 
     const document = createDocument(preview.html);
-    const layout = document.querySelector('.presentation-default-media-layout');
-
-    expect(layout?.classList.contains('has-leading-content')).toBe(true);
-    expect(layout?.classList.contains('has-trailing-content')).toBe(true);
-    expect(layout?.querySelector('.presentation-default-media-leading')?.textContent).toContain('Context before the image.');
-    expect(layout?.querySelector('.presentation-default-media img')?.getAttribute('src')).toBe('https://example.com/landmark.png');
-    expect(layout?.querySelector('.presentation-default-media-trailing')?.textContent).toContain('Context after the image.');
+    const layout = document.querySelector('.presentation-standard-layout-flow .presentation-standard-content');
+    expect([...layout!.children].map(node => node.tagName)).toEqual(['P', 'DIV', 'P']);
+    expect(layout?.firstElementChild?.textContent).toContain('Context before the image.');
+    expect(layout?.querySelector('img')?.getAttribute('src')).toBe('https://example.com/landmark.png');
+    expect(layout?.querySelector('img')?.closest('.presentation-image-frame')).not.toBeNull();
+    expect(layout?.lastElementChild?.textContent).toContain('Context after the image.');
   });
 
   it('does not reserve an empty trailing text region on default media slides', () => {
@@ -271,10 +270,19 @@ Context before the image.
       .replace(/\n\n+/gu, ''), previewThemeRegistry, createDocument);
 
     const document = createDocument(preview.html);
-    const layout = document.querySelector('.presentation-default-media-layout');
+    const layout = document.querySelector('.presentation-standard-layout-flow .presentation-standard-content');
+    expect([...layout!.children].map(node => node.tagName)).toEqual(['P', 'DIV']);
+    expect(layout?.querySelector('footer')).toBeNull();
+  });
 
-    expect(layout?.classList.contains('has-leading-content')).toBe(true);
-    expect(layout?.classList.contains('has-trailing-content')).toBe(false);
+  it('preserves multiple tables and media in source order when an unknown layout uses default', () => {
+    const preview = renderPresentationPreview('---\ndocument: presentation\n---\n<!--slide: custom-layout-->\n# Mixed',
+      () => '<h1>Mixed</h1><p>Before</p><table><tr><td>A</td></tr></table><p>Between</p><img src="a.png"><div class="mermaid">graph LR; A-->B</div><table><tr><td>B</td></tr></table><p>After</p>',
+      previewThemeRegistry, createDocument);
+    const document = createDocument(preview.html);
+    const body = document.querySelector('.presentation-standard-layout-flow .presentation-standard-content');
+    expect([...body!.children].map(node => node.tagName)).toEqual(['P', 'TABLE', 'P', 'DIV', 'DIV', 'TABLE', 'P']);
+    expect(body?.querySelectorAll('.presentation-layout-media-shell')).toHaveLength(2);
   });
 
   it('distributes overflow two-column sections across both columns in order', () => {

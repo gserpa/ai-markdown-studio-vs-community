@@ -21,7 +21,7 @@ describe('visualization authoring guidance', () => {
       expect(examples).toHaveLength(2);
       for (const token of examples) expect(parseVisualizationBlock(token.info as VisualizationKind, token.content).valid).toBe(true);
       expect(prompt).toContain('do not invent or silently fill missing data');
-      expect(prompt).toContain('Remote chart data is disabled');
+      expect(prompt).toContain('Remote chart data stays disabled');
       expect(prompt).toContain('Do not promise native chart conversion in DOCX or PPTX');
     }
   });
@@ -41,6 +41,15 @@ describe('visualization authoring guidance', () => {
     const nested = bad.split('\n').map(line => '> ' + line).join('\n');
     expect(validateVisualizationFences(nested)[0]).toContain('metric block at body line 1');
     expect(validateVisualizationFences(bad.replace('```metric', '```METRIC'))).toHaveLength(1);
+  });
+
+  it('accepts every chart in the supported gallery through the AI validation boundary', () => {
+    const gallery = readFileSync(path.resolve(__dirname, '../../../examples/vega-lite-chart-gallery.md'), 'utf8');
+    expect(validateVisualizationFences(gallery)).toEqual([]);
+    const instructions = createVisualizationAuthoringInstructions();
+    for (const feature of ['area', 'point', 'arc', 'rect', 'boxplot', 'tick', 'geoshape', 'image', 'errorband', 'hconcat', 'facet', 'repeat', 'xOffset', 'aggregate: "count"']) {
+      expect(instructions).toContain(feature);
+    }
   });
 
   it('reports invalid blocks through both shared AI validators without discarding valid content', () => {

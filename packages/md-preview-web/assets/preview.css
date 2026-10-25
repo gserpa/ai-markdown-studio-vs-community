@@ -2504,6 +2504,45 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   background: var(--presentation-standard-content-bg, var(--presentation-panel-bg, #ffffff));
 }
 
+/* A default body is one ordered flow, including multiple tables and media. */
+.presentation-standard-layout-flow .presentation-standard-content img,
+.presentation-standard-layout-flow .presentation-standard-content .mermaid svg {
+  display: block;
+  max-width: 100%;
+  max-height: 360px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  margin: 0.65em 0;
+}
+
+.presentation-standard-layout-flow .presentation-standard-content > table {
+  margin-block: 0.65em;
+}
+
+.presentation-flow-media {
+  display: block;
+  margin-block: 0.65em;
+}
+
+.presentation-flow-media .presentation-layout-media-shell,
+.presentation-flow-media .presentation-layout-media-shell.is-diagram .mermaid,
+.presentation-flow-media .presentation-layout-media-shell.is-diagram .mermaid-rendered {
+  height: auto;
+}
+
+.presentation-flow-media .presentation-layout-media-shell.is-diagram {
+  max-height: 360px;
+  padding: 8px;
+  justify-items: start;
+}
+
+.presentation-flow-media .presentation-layout-media-shell.is-diagram .mermaid svg,
+.presentation-flow-media .presentation-layout-media-shell.is-diagram .mermaid-rendered svg {
+  max-height: 344px;
+  margin: 0;
+}
+
 .presentation-standard-content > :first-child,
 .presentation-image-right-copy > :first-child,
 .presentation-standard-content .presentation-two-column-header > :first-child,
@@ -2880,6 +2919,22 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 
 .presentation-image-frame .presentation-layout-media-shell.is-image img {
   border-radius: 10px;
+  object-fit: contain;
+}
+
+/* Flow images keep their intrinsic ratio inside the existing themed frame. */
+.presentation-flow-media.presentation-image-frame .presentation-layout-media-shell.is-image {
+  display: block;
+  width: auto;
+  height: auto;
+}
+
+.presentation-flow-media.presentation-image-frame .presentation-layout-media-shell.is-image img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 360px;
+  margin: 0;
   object-fit: contain;
 }
 

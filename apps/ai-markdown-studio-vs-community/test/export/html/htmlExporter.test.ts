@@ -440,7 +440,13 @@ describe('buildExportHtmlString', () => {
     const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
 
     expect(html).toContain('<html lang="en" data-md-host-scheme="auto" class="vscode-dark">');
-    expect(html).toContain('<body class="preview-mode-presentation vscode-dark" data-preview-mode="presentation" data-presentation-content-overflow="scaleToFit">');
+    const dom = new JSDOM(html);
+    try {
+      expect(dom.window.document.body.classList.contains('vscode-dark')).toBe(true);
+      expect(dom.window.document.body.dataset.previewMode).toBe('presentation');
+      expect(dom.window.document.body.dataset.presentationContentOverflow).toBe('scaleToFit');
+      expect(dom.window.document.body.dataset.mdChartRemoteImages).toBe('true');
+    } finally { dom.window.close(); }
   });
 
   it('pins auto-theme exports to the current VS Code dark mode when preview is dark', async () => {
@@ -568,6 +574,7 @@ describe('buildExportHtmlString', () => {
     const html = await buildExportHtmlString({ fsPath: 'C:/extension', scheme: 'file' } as never, document);
 
     expect(html).toContain('class="remote-resource-placeholder"');
+    expect(html).toContain('data-md-chart-remote-images="false"');
     expect(html).toContain('data-source-src="https://example.com/image.png"');
     expect(html).toContain('Extension settings restrict access to remote resources.');
   });
