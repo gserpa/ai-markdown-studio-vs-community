@@ -339,17 +339,9 @@
     ],
     "configuration": [
       {
-        "title": "AI Markdown Studio Community",
+        "title": "AI and Privacy",
+        "order": 4,
         "properties": {
-          "markdownAiStudio.previewPageWidth": {
-            "type": "string",
-            "default": "full",
-            "enum": [
-              "readable",
-              "full"
-            ],
-            "description": "Controls standard Markdown preview width."
-          },
           "markdownAiStudio.allowRemoteResources": {
             "type": "boolean",
             "default": true,
@@ -380,9 +372,18 @@
         }
       },
       {
-        "title": "Theme Selection",
-        "order": 2,
+        "title": "Preview and Appearance",
+        "order": 1,
         "properties": {
+          "markdownAiStudio.previewPageWidth": {
+            "type": "string",
+            "default": "full",
+            "enum": [
+              "readable",
+              "full"
+            ],
+            "description": "Controls standard Markdown preview width."
+          },
           "markdownAiStudio.documentPreviewTheme": {
             "type": "string",
             "default": "auto",
@@ -481,8 +482,8 @@
         }
       },
       {
-        "title": "Formatting",
-        "order": 3,
+        "title": "Editing and Formatting",
+        "order": 2,
         "properties": {
           "markdownAiStudio.formatTablesOnSave": {
             "type": "boolean",

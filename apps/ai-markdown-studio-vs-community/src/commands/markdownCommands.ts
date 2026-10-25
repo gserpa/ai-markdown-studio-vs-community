@@ -36,12 +36,24 @@ const QUICK_PICK_COMMAND_ORDER = [
   'markdownAiStudio.openNativeMarkdownEditor',
   'markdownAiStudio.toggleFrontMatter',
   'markdownAiStudio.formatTables',
+  'markdownAiStudio.embedLinkedImages',
   'markdownAiStudio.generateDocument',
   'markdownAiStudio.generatePresentation',
-  'markdownAiStudio.installPresentationSkill',
-  'markdownAiStudio.enableAiFeatures',
+  'markdownAiStudio.pasteAsMarkdown',
+  'markdownAiStudio.convertToMarkdown',
   'markdownAiStudio.exportHtml',
   'markdownAiStudio.exportDocxBasic',
+  'markdownAiStudio.exportDocx',
+  'markdownAiStudio.exportPdf',
+  'markdownAiStudio.exportWebsite',
+  'markdownAiStudio.exportPptx',
+  'markdownAiStudio.setupPptxTemplate',
+  'markdownAiStudio.managePptxTemplates',
+  'markdownAiStudio.validatePptxTemplate',
+  'markdownAiStudio.generateDocumentTheme',
+  'markdownAiStudio.generatePresentationTheme',
+  'markdownAiStudio.installPresentationSkill',
+  'markdownAiStudio.enableAiFeatures',
   'markdownAiStudio.openSettings',
 ] as const;
 
@@ -167,7 +179,7 @@ export async function showCommandListCommand(resource?: vscode.Uri): Promise<voi
       command: entry.command,
     })),
     {
-      placeHolder: 'Select a AI Markdown Studio command',
+      placeHolder: 'Select an AI Markdown Studio command',
     },
   );
   if (selected) await vscode.commands.executeCommand(selected.command, context.documentUri);
@@ -223,7 +235,7 @@ function collectAvailableCommandEntries(): Map<string, CommandListEntry> {
     entries.set(entry.command, {
       command: entry.command,
       title: entry.title,
-      order: entry.command === 'markdownAiStudio.embedLinkedImages' ? 4.3 : QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number]) >= 0
+      order: QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number]) >= 0
         ? QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number])
         : 100 + order,
       requiresAi: AI_DEPENDENT_COMMANDS.has(entry.command),
