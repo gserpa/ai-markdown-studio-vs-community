@@ -14,6 +14,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Hid the source disclosure for successfully rendered charts in preview and HTML export, retaining source fallbacks for errors and unavailable JavaScript.
+
+- Single-view and layered charts with omitted dimensions now use the native presentation content area, preserve their proportions during slide fitting, and share height when several charts occupy one region. Explicit dimensions still win; remove fixed heights from older decks to opt into automatic sizing.
+
 - Presentation directives now describe eight content types: `content`, `cover`, `two-column`, `illustrated-text`, `featured-visual`, `brief`, `divider`, and `thanks`. Preview themes select placement; editor completion, validation, and AI guidance use the same catalog.
 - Added `<!--column-break-->` for explicit two-column groups and optional theme layout mappings. Retired slide names render through temporary replacements and offer a reviewed source migration with a diff and explicit apply action.
 - Reduced HTML export size by selecting referenced font families, loading optional assets only when needed, caching asset reads/font encoding, and minifying generated CSS. Twenty ordered CSS source modules are shared by preview and export, without duplicate media/lightbox inclusion.

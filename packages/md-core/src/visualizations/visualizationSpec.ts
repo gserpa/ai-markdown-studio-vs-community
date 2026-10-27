@@ -291,7 +291,7 @@ export function chartTitle(spec: VegaLiteSpec): string {
 }
 
 /** Normalize common composition dimensions and geometry values without changing source JSON. */
-export function prepareVegaLiteSpec(spec: VegaLiteSpec, availableWidth?: number): VegaLiteSpec {
+export function prepareVegaLiteSpec(spec: VegaLiteSpec, availableWidth?: number, availableHeight?: number): VegaLiteSpec {
   const copy = JSON.parse(JSON.stringify(spec)) as VegaLiteSpec;
   function visit(node: VegaLiteSpec, inherited: Record<string, unknown>[] = [], parentEncoding: Record<string, unknown> = {}, layoutRoot = true): void {
     const rows = node.data?.values ?? inherited;
@@ -324,7 +324,7 @@ export function prepareVegaLiteSpec(spec: VegaLiteSpec, availableWidth?: number)
       for (const child of children) visit(child, rows);
     } else if (availableWidth !== undefined && layoutRoot) {
       node.width ??= node === copy ? 'container' : Math.max(80, Math.min(240, availableWidth / 2 - 50));
-      node.height ??= node === copy ? 280 : 180;
+      node.height ??= node === copy ? availableHeight ?? 280 : 180;
       node.autosize ??= { type: 'fit', contains: 'padding' };
       if (node !== copy && node.width === 'container') node.width = Math.max(80, Math.min(240, availableWidth / 2 - 50));
     }

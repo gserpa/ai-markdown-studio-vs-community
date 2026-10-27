@@ -157,6 +157,16 @@ describe('visualization specifications', () => {
     expect(parse('vega-lite', { ...chart(), mark: 'rule', encoding: { y: { field: 'debt', type: 'quantitative' } } }).valid).toBe(true);
   });
 
+  it('uses an available chart height without changing explicit dimensions or document defaults', () => {
+    const spec = { ...chart(), width: undefined, height: undefined };
+    expect(prepareVegaLiteSpec(spec, 960).height).toBe(280);
+    expect(prepareVegaLiteSpec(spec, 960, 480).height).toBe(480);
+    expect(prepareVegaLiteSpec({ ...spec, width: 500, height: 200 }, 960, 480)).toMatchObject({ width: 500, height: 200 });
+    expect(spec.height).toBeUndefined();
+    const layered = { ...spec, mark: undefined, layer: [{ mark: 'bar' }, { mark: 'point' }] } as VegaLiteSpec;
+    expect(prepareVegaLiteSpec(layered, 960, 480).height).toBe(480);
+  });
+
   it('supports inherited data and encoding in native layers without rewriting source', () => {
     const spec = { ...chart(), mark: undefined, layer: [{ mark: 'line' }, { mark: { type: 'point', filled: true } }] };
     expect(parse('vega-lite', spec).valid).toBe(true);

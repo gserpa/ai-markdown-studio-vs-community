@@ -83,7 +83,6 @@ available in a disclosure below the metric.
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "title": "Portuguese Public Debt",
   "width": "container",
-  "height": 280,
   "data": {
     "values": [
       {"year": "2022", "debt": 111.2},
@@ -106,12 +105,28 @@ available in a disclosure below the metric.
 
 The example data is illustrative. Replace it with verified data for publication.
 
-Charts default to the container width and a height of 280 pixels. Tooltips are
+Document charts default to the container width and a height of 280 pixels.
+On presentation slides, single-view and layered charts with omitted dimensions
+use an intrinsic box measured from the slide content area. The existing
+`scaleToFit` behavior scales the chart and accompanying text proportionally;
+multiple charts in one content region share its available height. Sizing follows
+the slide's logical dimensions rather than screen pixels, so fullscreen and
+window resizing preserve the composition. Composite grids retain their native
+cell sizing.
+
+To enable automatic slide sizing in an existing chart, remove its top-level
+`height` and numeric `width`. `"width": "container"` is also supported. An
+explicit numeric width or height remains authoritative; a generated
+`"height": 230` therefore needs to be removed when the intent is to fill the
+slide. The renderer does not rewrite the source JSON.
+
+Tooltips are
 enabled by default. To disable them, set `mark.tooltip` to false and omit
 `encoding.tooltip` or set it to null. Explicit tooltip field definitions take
 precedence over the mark setting, following Vega-Lite's behavior.
-Source is available below each chart. Invalid definitions or render
-failures keep the source open alongside an error, without stopping other charts.
+Successfully rendered charts hide the source toggle in previews and HTML exports.
+Invalid definitions, render failures, or disabled JavaScript keep the source
+visible as a fallback, without stopping other charts.
 
 Native chart syntax follows the installed Vega-Lite v6 schema. The browser and
 server use the same precompiled validator; source validation requires no dynamic

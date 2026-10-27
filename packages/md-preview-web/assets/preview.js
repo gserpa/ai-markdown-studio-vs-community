@@ -2333,14 +2333,45 @@ function findLargestPresentationContentScale(contentFit) {
   return fittingScale;
 }
 
+/** Measure chart boxes only in the native slide layout, before proportional fitting. */
+function sizePresentationCharts(contentFit) {
+  const canvases = [...contentFit.querySelectorAll('.md-visualization-canvas[data-md-chart-sizing="slide"]')];
+  const regionFor = canvas => canvas.closest('.presentation-standard-content, .presentation-accent-content');
+  const groupFor = canvas => canvas.closest('.presentation-column, .presentation-illustrated-copy') || regionFor(canvas);
+  const pixels = (style, property) => Number.parseFloat(style[property]) || 0;
+  for (const canvas of canvases) {
+    const region = regionFor(canvas);
+    const block = canvas.parentElement;
+    if (!(region instanceof HTMLElement) || !(block instanceof HTMLElement) || !region.clientHeight || !block.clientWidth) continue;
+    const style = getComputedStyle(block);
+    const regionStyle = getComputedStyle(region);
+    const count = canvases.filter(other => groupFor(other) === groupFor(canvas)).length;
+    const availableWidth = block.clientWidth - pixels(style, 'paddingLeft') - pixels(style, 'paddingRight');
+    const summary = block.querySelector(':scope > details > summary');
+    const disclosure = summary?.parentElement;
+    const disclosureHeight = disclosure?.getClientRects().length ? (summary?.offsetHeight || 0) + pixels(getComputedStyle(disclosure), 'marginTop') : 0;
+    const chrome = pixels(style, 'paddingTop') + pixels(style, 'paddingBottom') + pixels(style, 'borderTopWidth') + pixels(style, 'borderBottomWidth')
+      + pixels(style, 'marginTop') + pixels(style, 'marginBottom')
+      + disclosureHeight;
+    const availableHeight = (region.clientHeight - pixels(regionStyle, 'paddingTop') - pixels(regionStyle, 'paddingBottom')) / count - chrome;
+    if (availableWidth <= 0 || availableHeight <= 0) continue;
+    const width = Number(canvas.dataset.mdChartWidth) || Math.max(40, Math.floor(availableWidth));
+    const height = Number(canvas.dataset.mdChartHeight) || Math.max(40, Math.floor(availableHeight * width / availableWidth));
+    for (const [property, value] of [
+      ['--md-slide-chart-width', width + 'px'], ['--md-slide-chart-height', height + 'px'], ['--md-slide-chart-ratio', width + ' / ' + height],
+    ]) if (canvas.style.getPropertyValue(property) !== value) canvas.style.setProperty(property, value);
+  }
+}
+
 function fitPresentationContent(slide) {
   const contentFit = slide.querySelector('[data-presentation-content-fit]');
   if (!(contentFit instanceof HTMLElement)) {
     return;
   }
 
+  clearPresentationContentScale(contentFit);
+  sizePresentationCharts(contentFit);
   if (document.body.dataset.presentationContentOverflow !== 'scaleToFit') {
-    clearPresentationContentScale(contentFit);
     clearPresentationCodeScales(contentFit);
     updatePresentationCodeOverflow(contentFit);
     return;

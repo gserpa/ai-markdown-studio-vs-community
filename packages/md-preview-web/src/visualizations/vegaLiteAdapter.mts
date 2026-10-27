@@ -36,7 +36,22 @@ export const vegaLiteAdapter: VisualizationAdapter = {
     container.ownerDocument.body.append(tooltip);
     let view: View | undefined;
     let disposed = false;
-    let width = container.clientWidth;
+    // A slide chart has an intrinsic box. Whole-slide fitting may expand its parent;
+    // that expansion must not redraw the chart and undo proportional scaling.
+    const slideSized = !!container.closest('[data-presentation-content-fit]')
+      && !!container.closest('.presentation-standard-content, .presentation-accent-content')
+      && (spec.width === undefined || spec.width === 'container' || typeof spec.width === 'number')
+      && !spec.spec && !spec.concat && !spec.hconcat && !spec.vconcat;
+    if (slideSized) {
+      container.dataset.mdChartSizing = 'slide';
+      if (typeof spec.width === 'number') container.dataset.mdChartWidth = String(spec.width);
+      if (typeof spec.height === 'number') container.dataset.mdChartHeight = String(spec.height);
+    }
+    const dimensions = () => ({
+      width: slideSized ? Number(container.dataset.mdChartWidth) || parseFloat(container.style.getPropertyValue('--md-slide-chart-width')) || container.clientWidth || 640 : container.clientWidth,
+      height: slideSized ? Number(container.dataset.mdChartHeight) || parseFloat(container.style.getPropertyValue('--md-slide-chart-height')) || 280 : undefined,
+    });
+    let { width, height } = dimensions();
     let renderError: Error | undefined;
     const runtimeLogger = logger(Warn);
     // Vega reports some dataflow failures through its logger rather than rejecting.
@@ -59,8 +74,10 @@ export const vegaLiteAdapter: VisualizationAdapter = {
     }
     try {
       // Defaults make ordinary specifications responsive; explicit dimensions win.
+      const prepared = prepareVegaLiteSpec(spec, width, height);
+      if (slideSized && typeof spec.width !== 'number') prepared.width = width;
       const compiled = compile({
-        ...prepareVegaLiteSpec(spec, width),
+        ...prepared,
         config: {
           background: 'transparent', font: theme.fontFamily,
           mark: { color: theme.accent },
@@ -107,8 +124,14 @@ export const vegaLiteAdapter: VisualizationAdapter = {
       if (renderError) throw renderError;
       return {
         async resize(nextWidth) {
-          if (disposed || nextWidth <= 0 || nextWidth === width) return;
-          width = nextWidth;
+          const next = slideSized ? dimensions() : { width: nextWidth, height: undefined };
+          if (disposed || next.width <= 0 || (next.width === width && next.height === height)) return;
+          width = next.width;
+          height = next.height;
+          if (slideSized) {
+            if (typeof spec.width !== 'number') view!.width(width);
+            if (spec.height === undefined && height !== undefined) view!.height(height);
+          }
           hideTooltip();
           // Vega 6.4 also observes responsive containers, including hidden slides.
           await view!.resize().runAsync();
