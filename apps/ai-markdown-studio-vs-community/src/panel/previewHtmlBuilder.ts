@@ -10,7 +10,7 @@ import { loadPreviewThemeRegistryForDocument } from '../presentation/previewThem
 import { getResolvedPresentationPreviewThemeSetting } from '../presentation/presentationPreviewThemeSettings';
 import { loadDocumentThemeRegistryForDocument } from '../document/documentThemeSupport';
 import { resolveExtensionNodeModulesUri } from '../util/extensionSupportRoot';
-import { loadPreviewAssetManifest, matchingThemeAsset, previewAssetUri, type PreviewAssetDescriptor } from '../util/previewAssetManifest';
+import { loadPreviewAssetManifest, matchingThemeAsset, previewAssetUri, selectPreviewStylesheetAssets, type PreviewAssetDescriptor } from '../util/previewAssetManifest';
 import { isFrontMatterVisible } from './frontMatterDisplayState';
 
 type PreviewPageWidth = 'readable' | 'full';
@@ -45,7 +45,6 @@ export function buildPreviewPage(
 ): PreviewPage {
   const assetManifest = loadPreviewAssetManifest(extensionUri);
   const assetHref = (descriptor: PreviewAssetDescriptor): string => webview.asWebviewUri(previewAssetUri(extensionUri, descriptor)).toString();
-  const coreStylesheetUri = assetHref(assetManifest.assets.previewCore);
   const katexStylesheetUri = webview.asWebviewUri(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'katex.min.css'));
   const previewThemeRuntimeScriptUri = assetHref(assetManifest.assets.previewThemeRuntime);
   const scriptUri = assetHref(assetManifest.assets.previewCoreRuntime);
@@ -124,7 +123,8 @@ export function buildPreviewPage(
   if (isPresentation) {
     try {
       const previewThemeRegistry = loadPreviewThemeRegistryForDocument(extensionUri, document.uri);
-      const rendered = renderPresentationPreview(source, renderMarkdown, previewThemeRegistry, createJsdomDocument, presentationDefaultTheme);
+      const themeMode = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Light ? 'light' : 'dark';
+      const rendered = renderPresentationPreview(source, renderMarkdown, previewThemeRegistry, createJsdomDocument, presentationDefaultTheme, themeMode);
       previewBody = rendered.html;
       const artifact = buildPreviewThemeCssArtifact(previewThemeRegistry, rendered.themeSelection.themeName);
       const asset = matchingThemeAsset(assetManifest, artifact);
@@ -150,10 +150,9 @@ export function buildPreviewPage(
   const hasMath = /class="[^"]*\bkatex\b/u.test(previewBody);
   const hasCharts = previewBody.includes('data-md-visualization="vega-lite"');
   const visualizationsScriptUri = hasCharts ? assetHref(assetManifest.assets.previewVisualizationsRuntime) : '';
-  const modeStylesheetUri = assetHref(assetManifest.assets[previewMode === 'presentation' ? 'previewPresentation' : 'previewDocument']);
   const modeScriptUri = assetHref(assetManifest.assets[previewMode === 'presentation' ? 'previewPresentationRuntime' : 'previewDocumentRuntime']);
   const hasZoomMedia = hasMermaid || /<img\b/iu.test(previewBody);
-  const mermaidStylesheetUri = hasZoomMedia ? assetHref(assetManifest.assets.previewMermaid) : '';
+  const stylesheetUris = selectPreviewStylesheetAssets(assetManifest, previewMode, hasZoomMedia).map(assetHref);
   const imgSrcPolicy = allowRemoteResources
     ? `${webview.cspSource} https: data:`
     : `${webview.cspSource} data:`;
@@ -162,9 +161,9 @@ export function buildPreviewPage(
   // page. Adding the first chart/diagram, for example, requires its assets.
   const compatibilityKey = JSON.stringify([
     document.fileName, previewMode, assetManifest.assetSetHash, webview.cspSource,
-    coreStylesheetUri, modeStylesheetUri, modeScriptUri, scriptUri,
+    stylesheetUris, modeScriptUri, scriptUri,
     themeStylesheetUri, inlineThemeStylesheet, bodyClass, imgSrcPolicy,
-    hasMermaid, String(mermaidUri), mermaidStylesheetUri, hasMath, String(katexStylesheetUri), visualizationsScriptUri,
+    hasMermaid, String(mermaidUri), hasMath, String(katexStylesheetUri), visualizationsScriptUri,
     previewPageWidth, documentTableLayout, presentationContentOverflow, documentThemeName,
     documentMermaidThemeLight, documentMermaidThemeDark,
     documentMermaidTransparentBackgroundLight, documentMermaidTransparentBackgroundDark,
@@ -175,9 +174,7 @@ export function buildPreviewPage(
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${imgSrcPolicy}; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'nonce-${nonce}'; font-src ${webview.cspSource};" />
-  <link rel="stylesheet" href="${coreStylesheetUri}" />
-  <link rel="stylesheet" href="${modeStylesheetUri}" />
-  ${mermaidStylesheetUri ? `<link rel="stylesheet" href="${mermaidStylesheetUri}" />` : ''}
+  ${stylesheetUris.map(href => `<link rel="stylesheet" href="${href}" />`).join('\n  ')}
   ${hasMath ? `<link rel="stylesheet" href="${katexStylesheetUri}" />` : ''}
   ${themeStylesheetUri ? `<link rel="stylesheet" href="${themeStylesheetUri}" />` : ''}
   ${inlineThemeStylesheet ? `<style>${inlineThemeStylesheet}</style>` : ''}

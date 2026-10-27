@@ -24,6 +24,7 @@ import { getBundledDocumentThemeDirectory } from './document/documentThemeSuppor
 import { MarkdownPreviewCustomEditor } from './panel/MarkdownPreviewCustomEditor';
 import { MarkdownPreviewPanel } from './panel/MarkdownPreviewPanel';
 import { registerMpsEditorSupport } from './presentation/mpsEditorSupport';
+import { registerSlideTypeMigration } from './presentation/slideTypeMigration';
 import { getBundledPreviewThemeDirectory } from './presentation/previewThemeSupport';
 import {
   hasDisplayableFrontMatter,
@@ -75,6 +76,8 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
       },
     ),
     registerMpsEditorSupport(context.extensionUri),
+    registerSlideTypeMigration(() => MarkdownPreviewCustomEditor.getActiveDocumentUri()
+      ?? MarkdownPreviewPanel.getActivePreviewDocumentUri() ?? vscode.window.activeTextEditor?.document.uri),
     vscode.languages.registerDocumentFormattingEditProvider({ language: 'markdown' }, markdownTableFormattingProvider),
     vscode.workspace.onWillSaveTextDocument((event) => {
       if (event.document.languageId !== 'markdown') {
@@ -208,6 +211,10 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
       if (event.provider.id === 'github' || event.provider.id === 'github-enterprise') {
         void refreshCopilotConfiguredContext();
       }
+    }),
+    vscode.window.onDidChangeActiveColorTheme(async () => {
+      for (const preview of previews.values()) await preview.refresh();
+      await customEditor.refreshAll();
     }),
     vscode.window.onDidChangeActiveTextEditor(async (editor) => {
       if (!editor || editor.document.languageId !== 'markdown') {

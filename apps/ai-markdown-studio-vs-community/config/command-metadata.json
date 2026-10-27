@@ -9,6 +9,7 @@
   { "command": "markdownAiStudio.generateDocument", "title": "Generate Document (AI)", "category": "AI Markdown Studio", "quickPickTitle": "AI: Generate Document" },
   { "command": "markdownAiStudio.generatePresentation", "title": "Generate Presentation (AI)", "category": "AI Markdown Studio", "quickPickTitle": "AI: Generate Presentation" },
   { "command": "markdownAiStudio.installPresentationSkill", "title": "Install Presentation Agent Skill in Workspace", "category": "AI Markdown Studio", "quickPickTitle": "AI: Install Presentation Skill" },
+  { "command": "markdownAiStudio.reviewSlideTypeMigration", "title": "Review Slide Type Migration", "category": "AI Markdown Studio", "quickPickTitle": "Presentation: Review Slide Type Migration" },
   { "command": "markdownAiStudio.pasteAsMarkdown", "title": "Paste as New Markdown File", "category": "AI Markdown Studio" },
   { "command": "markdownAiStudio.enableAiFeatures", "title": "Enable AI Features...", "category": "AI Markdown Studio", "quickPickTitle": "AI: Enable Features..." },
   { "command": "markdownAiStudio.openSettings", "title": "Change Settings...", "category": "AI Markdown Studio", "quickPickTitle": "Change Settings..." },

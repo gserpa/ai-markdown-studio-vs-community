@@ -1,0 +1,340 @@
+.presentation-control {
+  appearance: none;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--vscode-button-border, var(--vscode-panel-border)) 80%, transparent);
+  border-radius: 999px;
+  display: inline-flex;
+  justify-content: center;
+  min-width: 9rem;
+  padding: 10px 18px;
+  color: var(--vscode-button-foreground);
+  background: var(--vscode-button-background);
+  cursor: pointer;
+}
+
+.presentation-control-icon {
+  min-width: 0;
+  width: 36px;
+  height: 36px;
+}
+
+.presentation-control:hover:not(:disabled) {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.presentation-control.is-active {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.presentation-control:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.presentation-icon {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.presentation-icon-chevron::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+}
+
+.presentation-icon-chevron-left::before {
+  transform: translate(-35%, -50%) rotate(-135deg);
+}
+
+.presentation-icon-chevron-right::before {
+  transform: translate(-65%, -50%) rotate(45deg);
+}
+
+.presentation-icon-notes::before,
+.presentation-icon-slides::before,
+.presentation-icon-info::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/* Speaker notes icon: horizontal lines representing text */
+.presentation-icon-notes::before {
+  background:
+    linear-gradient(currentColor, currentColor) 0 2px / 100% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 7px / 80% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 12px / 90% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 17px / 60% 2px no-repeat;
+}
+
+/* Slide list icon: stacked rectangles */
+.presentation-icon-slides::before {
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / 100% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 0 0 / 2px 100% no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / 100% 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 0 / 2px 100% no-repeat,
+    linear-gradient(currentColor, currentColor) 3px 6px / calc(100% - 6px) 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 3px 11px / calc(100% - 6px) 2px no-repeat;
+}
+
+/* Slide info icon: circle with vertical details lines */
+.presentation-icon-info::before {
+  background:
+    radial-gradient(circle at center, transparent 6px, currentColor 6px, currentColor 8px, transparent 8px),
+    linear-gradient(currentColor, currentColor) center 4px / 2px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) center 8px / 2px 6px no-repeat;
+}
+
+.presentation-icon-fullscreen::before,
+.presentation-icon-fullscreen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.presentation-icon-fullscreen::before {
+  background:
+    linear-gradient(currentColor, currentColor) left top / 6px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) left top / 2px 6px no-repeat,
+    linear-gradient(currentColor, currentColor) right top / 6px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) right top / 2px 6px no-repeat,
+    linear-gradient(currentColor, currentColor) left bottom / 6px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) left bottom / 2px 6px no-repeat,
+    linear-gradient(currentColor, currentColor) right bottom / 6px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) right bottom / 2px 6px no-repeat;
+}
+
+.presentation-control.is-active .presentation-icon-fullscreen::before {
+  background:
+    linear-gradient(currentColor, currentColor) 4px 4px / 5px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 4px 4px / 2px 5px no-repeat,
+    linear-gradient(currentColor, currentColor) calc(100% - 4px) 4px / 5px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) calc(100% - 4px) 4px / 2px 5px no-repeat,
+    linear-gradient(currentColor, currentColor) 4px calc(100% - 4px) / 5px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 4px calc(100% - 4px) / 2px 5px no-repeat,
+    linear-gradient(currentColor, currentColor) calc(100% - 4px) calc(100% - 4px) / 5px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) calc(100% - 4px) calc(100% - 4px) / 2px 5px no-repeat;
+}
+
+.presentation-status {
+  min-width: 70px;
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--vscode-button-border, var(--vscode-panel-border)) 80%, transparent);
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.presentation-bottom-bar {
+  border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 82%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--vscode-editor-background) 92%, var(--vscode-editor-foreground) 8%);
+  overflow: hidden;
+}
+
+.presentation-bottom-bar-tabs {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.presentation-bottom-bar:has(.presentation-bottom-panel:not([hidden])) .presentation-bottom-bar-tabs {
+  border-bottom: 1px solid color-mix(in srgb, var(--vscode-panel-border) 70%, transparent);
+}
+
+.presentation-tab {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.presentation-tab:hover {
+  color: var(--vscode-editor-foreground);
+  background: color-mix(in srgb, var(--vscode-editor-foreground) 6%, transparent);
+}
+
+.presentation-tab.is-active {
+  color: var(--vscode-editor-foreground);
+  border-bottom-color: var(--vscode-textLink-foreground);
+  font-weight: 600;
+}
+
+.presentation-bottom-panel {
+  padding: 12px 14px;
+  overflow-y: auto;
+  max-height: 180px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%) color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-bottom-panel[data-panel="slides"] {
+  padding: 10px 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-height: none;
+}
+
+.presentation-bottom-panel::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.presentation-bottom-panel::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-bottom-panel::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%);
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-bottom-panel::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 40%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 60%);
+}
+
+.presentation-bottom-panel[hidden] {
+  display: none;
+}
+
+.presentation-bottom-panel-notes.markdown-body {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.presentation-bottom-panel-info.markdown-body {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.presentation-info-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.presentation-info-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 120px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--vscode-panel-border) 72%, transparent);
+}
+
+.presentation-info-row:last-child {
+  border-bottom: 0;
+}
+
+.presentation-info-row dt,
+.presentation-info-row dd {
+  margin: 0;
+}
+
+.presentation-info-row dt {
+  color: var(--vscode-descriptionForeground);
+  text-transform: lowercase;
+}
+
+.presentation-info-row dd {
+  color: var(--vscode-editor-foreground);
+  word-break: break-word;
+}
+
+.presentation-filmstrip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 2px 2px 8px;
+}
+
+.presentation-thumb {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 150px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 82%, transparent);
+  background: color-mix(in srgb, var(--vscode-editor-background) 90%, var(--vscode-editor-foreground) 10%);
+  color: inherit;
+  cursor: pointer;
+}
+
+.presentation-thumb:hover {
+  border-color: var(--vscode-textLink-foreground);
+}
+
+.presentation-thumb.is-active {
+  outline: 2px solid color-mix(in srgb, var(--vscode-textLink-foreground) 78%, transparent);
+  outline-offset: 1px;
+}
+
+img.image-load-failed {
+  opacity: 0.45;
+}
+
+.presentation-thumb-index {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  color: var(--vscode-descriptionForeground);
+}
+
+.presentation-thumb-title {
+  display: -webkit-box;
+  overflow: hidden;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-weight: 600;
+}
+
+body.presentation-is-immersive .presentation-header,
+body.presentation-is-immersive .presentation-bottom-bar {
+  display: none;
+}
+
+body.presentation-is-immersive .presentation-preview {
+  grid-template-rows: minmax(0, 1fr);
+  padding: 0;
+}
+
+body.presentation-is-immersive .presentation-stage,
+body.presentation-is-immersive .presentation-slide,
+body.presentation-is-immersive .presentation-slide-shell,
+body.presentation-is-immersive .presentation-frame {
+  height: 100vh;
+  height: 100dvh;
+}
+
+body.presentation-is-immersive .presentation-frame {
+  max-width: 100vw;
+}
+
+body.presentation-is-immersive .presentation-surface {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+}

@@ -1,0 +1,321 @@
+.presentation-slide-body.markdown-body {
+  flex: 1;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--presentation-body-color, inherit);
+  font-size: 1.4rem;
+  line-height: 1.55;
+}
+body[data-presentation-content-overflow='scaleToFit'] .presentation-accent-content,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-accent-content,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-divider-split-subtitle,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-thanks-note {
+  overflow: hidden;
+}
+
+body.preview-mode-presentation .presentation-slide-body pre {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--presentation-body-color, #1f2937) 32%, var(--presentation-code-bg, #f8faff) 68%) var(--presentation-code-bg, #f8faff);
+}
+
+body.preview-mode-presentation .presentation-slide-body pre.presentation-code-trailing-padding-overflow {
+  overflow-x: hidden;
+}
+
+body.preview-mode-presentation .presentation-slide-body pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+body.preview-mode-presentation .presentation-slide-body pre::-webkit-scrollbar-track {
+  background: var(--presentation-code-bg, #f8faff);
+}
+
+body.preview-mode-presentation .presentation-slide-body pre::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--presentation-body-color, #1f2937) 32%, var(--presentation-code-bg, #f8faff) 68%);
+  border-radius: 999px;
+}
+
+.presentation-content-fit {
+  box-sizing: border-box;
+  width: var(--presentation-content-fit-width, 100%);
+  height: var(--presentation-content-fit-height, 100%);
+  min-width: 0;
+  min-height: 0;
+  transform: scale(var(--presentation-content-scale, 1));
+  transform-origin: top left;
+}
+
+.presentation-slide-body img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.presentation-slide-body h1 {
+  font-size: 2.35em;
+  margin-bottom: 0.45em;
+}
+
+.presentation-slide-body h2 {
+  font-size: 1.6em;
+}
+
+.presentation-slide-body h3 {
+  font-size: 1.2em;
+}
+
+.presentation-slide-body a {
+  color: var(--presentation-link-color, var(--vscode-textLink-foreground));
+}
+
+.presentation-slide-body blockquote {
+  color: var(--presentation-emphasis-color, var(--presentation-body-color, inherit));
+}
+
+.presentation-slide-body h2,
+.presentation-slide-body h3,
+.presentation-slide-body h4 {
+  color: var(--presentation-body-color, inherit);
+}
+
+.presentation-slide-body table {
+  font-size: 1rem;
+}
+
+.presentation-table-scroll {
+  max-width: 100%;
+  margin: 0 0 8px;
+  padding: 0;
+  --md-preview-table-control-color: var(--presentation-table-header-color, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)));
+  --md-preview-table-control-bg: color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 88%, transparent);
+  --md-preview-table-control-hover-bg: color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 76%, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 24%);
+  --md-preview-table-control-border: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 26%, transparent);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%) color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+  -webkit-overflow-scrolling: touch;
+}
+
+.presentation-table-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.presentation-table-scroll::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-table-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%);
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+}
+
+.presentation-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 40%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 60%);
+}
+
+.presentation-table-scroll table {
+  margin: 0;
+}
+
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll[data-table-layout='wrap'] {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll[data-table-layout='wrap'] table {
+  display: table;
+  height: auto;
+}
+
+/* Preserve whole-word minimum widths so prose wraps before compact columns shrink. */
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper[data-table-layout='wrap'] th,
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper[data-table-layout='wrap'] td {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+/* Exceptionally long tokens must not dictate the minimum width of a column. */
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper[data-table-layout='wrap'] :is(th, td)[data-table-long-token] {
+  overflow-wrap: anywhere;
+}
+
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll::before,
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll::after {
+  display: none !important;
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-control-icon {
+  color: var(--presentation-table-header-color, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)));
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-overlay-button {
+  align-items: center;
+  padding-top: 0;
+  box-sizing: border-box;
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-overlay-lane {
+  position: sticky;
+  height: var(--md-preview-table-header-height);
+  margin: 0 0 calc(-1 * var(--md-preview-table-header-height));
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-lane {
+  position: sticky;
+  top: var(--md-preview-table-header-height);
+  height: var(--md-preview-table-edge-height);
+  min-height: 42px;
+  margin: 0 0 calc(-1 * var(--md-preview-table-edge-height));
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button {
+  height: 100%;
+  min-height: 42px;
+  color: var(--presentation-table-header-color, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)));
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button::before {
+  display: block;
+  background: var(--presentation-table-header-bg, var(--presentation-panel-bg-soft, transparent));
+  opacity: 0.34;
+}
+
+body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-button:hover::before {
+  opacity: 0.44;
+}
+
+.presentation-slide-body pre {
+  font-size: calc(0.96em * var(--presentation-code-scale, 1));
+}
+
+.presentation-slide-body code {
+  color: var(--presentation-inline-code-color, inherit);
+  border: 1px solid var(--presentation-inline-code-border, transparent);
+  background: var(--presentation-inline-code-bg, color-mix(in srgb, var(--presentation-panel-bg, var(--vscode-editor-background)) 88%, var(--presentation-accent) 12%));
+}
+
+.presentation-slide-body pre {
+  border-color: var(--presentation-code-border, var(--presentation-panel-border, var(--vscode-panel-border)));
+  background: var(--presentation-code-bg, color-mix(in srgb, var(--presentation-panel-bg, var(--vscode-editor-background)) 92%, var(--presentation-accent) 8%));
+  color: var(--presentation-code-text-color, var(--presentation-body-color, inherit));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.presentation-slide-body pre:hover {
+  background: var(--presentation-code-hover-bg, var(--presentation-code-bg, color-mix(in srgb, var(--presentation-panel-bg, var(--vscode-editor-background)) 92%, var(--presentation-accent) 8%)));
+  border-color: var(--presentation-code-hover-border, var(--presentation-code-border, var(--presentation-panel-border, var(--vscode-panel-border))));
+  box-shadow: inset 3px 0 0 var(--presentation-code-hover-accent, var(--presentation-accent-soft, var(--presentation-accent)));
+}
+
+.presentation-slide-body pre code {
+  color: inherit;
+  border: 0;
+  background: transparent !important;
+}
+
+.presentation-slide-body pre .hljs,
+.presentation-slide-body pre code {
+  color: var(--presentation-code-text-color, var(--presentation-body-color, inherit));
+}
+
+.presentation-slide-body pre .hljs-comment,
+.presentation-slide-body pre .hljs-quote {
+  color: var(--presentation-code-comment-color, #5b6778);
+}
+
+.presentation-slide-body pre .hljs-keyword,
+.presentation-slide-body pre .hljs-selector-tag,
+.presentation-slide-body pre .hljs-subst {
+  color: var(--presentation-code-keyword-color, #b4235a);
+}
+
+.presentation-slide-body pre .hljs-number,
+.presentation-slide-body pre .hljs-literal,
+.presentation-slide-body pre .hljs-variable,
+.presentation-slide-body pre .hljs-template-variable,
+.presentation-slide-body pre .hljs-tag .hljs-attr {
+  color: var(--presentation-code-number-color, #0b56b5);
+}
+
+.presentation-slide-body pre .hljs-string,
+.presentation-slide-body pre .hljs-doctag {
+  color: var(--presentation-code-string-color, #11467f);
+}
+
+.presentation-slide-body pre .hljs-title,
+.presentation-slide-body pre .hljs-section,
+.presentation-slide-body pre .hljs-selector-id {
+  color: var(--presentation-code-title-color, #4338ca);
+}
+
+.presentation-slide-body pre .hljs-type,
+.presentation-slide-body pre .hljs-class .hljs-title {
+  color: var(--presentation-code-type-color, #9a3412);
+}
+
+.presentation-slide-body pre .hljs-attribute,
+.presentation-slide-body pre .hljs-name,
+.presentation-slide-body pre .hljs-regexp,
+.presentation-slide-body pre .hljs-link,
+.presentation-slide-body pre .hljs-meta,
+.presentation-slide-body pre .hljs-built_in,
+.presentation-slide-body pre .hljs-builtin-name {
+  color: var(--presentation-code-meta-color, #0f766e);
+}
+
+.presentation-slide-body table {
+  border-color: var(--presentation-table-border, var(--vscode-panel-border));
+  background: var(--presentation-table-bg, transparent);
+}
+
+.presentation-slide-body table th,
+.presentation-slide-body table td {
+  border-color: var(--presentation-table-border, var(--vscode-panel-border));
+}
+
+.presentation-slide-body table th {
+  color: var(--presentation-table-header-color, var(--presentation-body-color, inherit));
+  background: var(--presentation-table-header-bg, color-mix(in srgb, var(--presentation-panel-bg, var(--vscode-editor-background)) 82%, var(--presentation-accent) 18%));
+}
+
+.presentation-slide-body table td {
+  color: var(--presentation-table-cell-color, var(--presentation-body-color, inherit));
+  background: var(--presentation-table-cell-bg, transparent);
+}
+
+.presentation-slide-body table tbody tr:nth-child(even) td {
+  background: var(--presentation-table-row-alt-bg, transparent);
+}
+
+.presentation-slide-body table tr,
+.presentation-slide-body table tr:nth-child(2n) {
+  background: transparent;
+}
+
+.presentation-slide-body table tbody tr:hover {
+  background: var(--presentation-hover-bg, rgba(0, 0, 0, 0.04));
+}
+
+.presentation-slide-body blockquote {
+  font-style: italic;
+  background: var(--presentation-blockquote-bg, transparent);
+  border-left-color: var(--presentation-blockquote-border, var(--vscode-textBlockQuote-border));
+}
+
+.presentation-slide-body li + li {
+  margin-top: 0.35em;
+}

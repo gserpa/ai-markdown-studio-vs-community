@@ -1,0 +1,192 @@
+body.preview-mode-document.document-theme-mode-light .markdown-body pre.hljs,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre code.hljs {
+  background: var(--md-preview-code-bg) !important;
+  color: var(--md-preview-code-color) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-comment,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-quote,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-code,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-formula {
+  color: var(--md-preview-code-comment-color, #59636e) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-keyword,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-tag,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-subst,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-template-tag,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-variable.language_ {
+  color: var(--md-preview-code-keyword-color, #cf222e) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-number,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-literal,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-variable,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-template-variable,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-tag .hljs-attr,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-operator,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-attr {
+  color: var(--md-preview-code-number-color, #0550ae) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-string,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-doctag {
+  color: var(--md-preview-code-string-color, #0a3069) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title.class_,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title.class_.inherited__,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-title.function_,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-section,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-id {
+  color: var(--md-preview-code-title-color, #6639ba) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-type,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-class .hljs-title {
+  color: var(--md-preview-code-type-color, #953800) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-attribute,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-name,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-regexp,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-link,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-pseudo {
+  color: var(--md-preview-code-attribute-color, #116329) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-meta,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-built_in,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-builtin-name {
+  color: var(--md-preview-code-meta-color, #0969da) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-bullet,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-symbol,
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-selector-class {
+  color: var(--md-preview-code-symbol-color, #9a3d00) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-emphasis {
+  font-style: italic;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-strong {
+  font-weight: 700;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-addition {
+  color: var(--md-preview-code-addition-color, #116329) !important;
+  background-color: var(--md-preview-code-addition-bg, #dafbe1) !important;
+}
+
+body.preview-mode-document.document-theme-mode-light .markdown-body pre .hljs-deletion {
+  color: var(--md-preview-code-deletion-color, #cf222e) !important;
+  background-color: var(--md-preview-code-deletion-bg, #ffebe9) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre {
+  background: var(--md-preview-code-bg);
+  border-color: var(--md-preview-border-color);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body code {
+  background: var(--md-preview-code-bg);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre code {
+  background: transparent !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre:hover {
+  background: var(--md-hover-bg);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre.hljs,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre code.hljs {
+  background: var(--md-preview-code-bg) !important;
+  color: var(--md-preview-code-color) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-comment,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-quote,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-code,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-formula {
+  color: var(--md-preview-code-comment-color, #8b949e) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-keyword,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-tag,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-subst,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-template-tag,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-variable.language_ {
+  color: var(--md-preview-code-keyword-color, #ff7b72) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-number,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-literal,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-variable,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-template-variable,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-tag .hljs-attr,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-operator,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-attr {
+  color: var(--md-preview-code-number-color, #79c0ff) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-string,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-doctag {
+  color: var(--md-preview-code-string-color, #a5d6ff) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.class_,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.class_.inherited__,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-title.function_,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-section,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-id {
+  color: var(--md-preview-code-title-color, #d2a8ff) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-type,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-class .hljs-title {
+  color: var(--md-preview-code-type-color, #ffa657) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-attribute,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-name,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-regexp,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-link,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-pseudo {
+  color: var(--md-preview-code-attribute-color, #7ee787) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-meta,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-built_in,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-builtin-name {
+  color: var(--md-preview-code-meta-color, #79c0ff) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-bullet,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-symbol,
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-selector-class {
+  color: var(--md-preview-code-symbol-color, #ffa657) !important;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-emphasis {
+  font-style: italic;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-strong {
+  font-weight: 700;
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-addition {
+  color: var(--md-preview-code-addition-color, #aff5b4) !important;
+  background-color: var(--md-preview-code-addition-bg, #033a16);
+}
+
+body.preview-mode-document:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) .markdown-body pre .hljs-deletion {
+  color: var(--md-preview-code-deletion-color, #ffdcd7) !important;
+  background-color: var(--md-preview-code-deletion-bg, #67060c);
+}

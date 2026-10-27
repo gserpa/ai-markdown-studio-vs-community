@@ -25,7 +25,7 @@ describe('generated asset manifest', () => {
 
   it('derives the asset-set hash from logical descriptors, independent of documents or workspaces', () => {
     const expected = createHash('sha256')
-      .update(JSON.stringify({ assets: manifest.assets, themes: manifest.themes }))
+      .update(JSON.stringify({ assets: manifest.assets, themes: manifest.themes, stylesheets: manifest.stylesheets }))
       .digest('base64url')
       .slice(0, 18);
     expect(manifest.assetSetHash).toBe(expected);
@@ -38,17 +38,41 @@ describe('generated asset manifest', () => {
     for (const name of ['vega', 'vega-lite', 'vega-interpreter']) expect(notices).toContain(name + '@');
   });
 
-  it('keeps the shared Markdown primitives in the presentation stylesheet', () => {
-    const presentation = manifest.assets.previewPresentation as { path: string };
-    const stylesheet = fs
-      .readFileSync(path.join(assetsRoot, ...presentation.path.split('/')), 'utf8')
-      .replace(/\r\n/g, '\n');
+  it('keeps shared Markdown primitives before presentation overrides', () => {
+    const stylesheet = manifest.stylesheets.presentation
+      .filter((entry: { feature?: string }) => !entry.feature)
+      .map((entry: { asset: string }) => fs.readFileSync(path.join(assetsRoot, manifest.assets[entry.asset].path), 'utf8'))
+      .join('\n').replace(/\s+/gu, '');
 
-    expect(stylesheet).toContain(`table {
-  width: max-content;`);
-    expect(stylesheet).toContain(`th,
-td {
-  padding: 12px 16px;`);
-    expect(stylesheet).toContain('.presentation-slide-body table {');
+    expect(stylesheet).toContain('table{width:max-content;');
+    expect(stylesheet).toContain('th,td{padding:12px16px;');
+    expect(stylesheet).toContain('.presentation-slide-bodytable{');
+    expect(stylesheet.indexOf('table{width:max-content;')).toBeLessThan(stylesheet.indexOf('.presentation-slide-bodytable{'));
   });
+  it('builds the combined fallback stylesheet from the source modules in order', () => {
+    const stylesRoot = path.resolve(assetsRoot, '..', 'styles');
+    const plan = JSON.parse(fs.readFileSync(path.join(stylesRoot, 'modules.json'), 'utf8'));
+    const combined = plan.modules.map((module: { file: string }) => fs.readFileSync(path.join(stylesRoot, module.file), 'utf8')).join('\n');
+    expect(fs.readFileSync(path.join(assetsRoot, 'preview.css'), 'utf8')).toBe(combined);
+    expect(fs.readdirSync(stylesRoot).filter(name => name.endsWith('.css')).sort()).toEqual(plan.modules.map((module: { file: string }) => module.file).sort());
+    for (const mode of ['document', 'presentation']) {
+      expect(manifest.stylesheets[mode]).toEqual(plan.modules.filter((module: { modes: string[] }) => module.modes.includes(mode)).map((module: { asset: string; feature?: string }) => ({ asset: module.asset, ...(module.feature ? { feature: module.feature } : {}) })));
+    }
+  });
+
+  it.each(['document', 'presentation'])('includes each %s CSS module once and isolates mode-specific styles', mode => {
+    const modules = manifest.stylesheets[mode].map((entry: { asset: string }) => entry.asset);
+    expect(new Set(modules).size).toBe(modules.length);
+    expect(modules).toContain('previewTables');
+    expect(modules).toContain('previewSyntax');
+    if (mode === 'presentation') {
+      expect(modules).not.toContain('previewDocument');
+      expect(modules).not.toContain('previewDocumentSyntax');
+    } else {
+      expect(modules.some((name: string) => name.startsWith('previewPresentation'))).toBe(false);
+    }
+    const css = modules.map((name: string) => fs.readFileSync(path.join(assetsRoot, manifest.assets[name].path), 'utf8')).join('\n');
+    expect(css.match(/\.mermaid-lightbox\s*\{/gu)).toHaveLength(1);
+  });
+
 });

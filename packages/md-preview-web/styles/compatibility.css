@@ -1,0 +1,106 @@
+/* Browser compatibility fallbacks for standalone exports in browsers without full color-mix/light-dark support. */
+@supports not ((color: color-mix(in srgb, #000000 50%, #ffffff)) and (color: light-dark(#ffffff, #000000))) {
+  body:is(.document-theme-mode-light, .document-theme-mode-auto:not(.vscode-dark):not(.vscode-high-contrast)) {
+    --md-preview-blockquote-bg: rgba(9, 105, 218, 0.06);
+    --md-preview-blockquote-nested-bg: rgba(9, 105, 218, 0.10);
+    --md-preview-code-bg: rgba(36, 41, 47, 0.06);
+    --md-preview-table-border: rgba(208, 215, 222, 0.80);
+    --md-preview-table-bg: rgba(255, 255, 255, 0.98);
+    --md-preview-table-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    --md-preview-table-cell-border: rgba(208, 215, 222, 0.72);
+    --md-preview-table-header-bg: rgba(31, 41, 55, 0.08);
+    --md-preview-table-row-bg: #ffffff;
+    --md-preview-table-row-alt-bg: rgba(31, 41, 55, 0.04);
+    --md-preview-table-row-hover-bg: rgba(9, 105, 218, 0.12);
+    --md-preview-hover-bg: rgba(9, 105, 218, 0.16);
+    --md-preview-hover-bg-soft: rgba(9, 105, 218, 0.10);
+    --md-preview-hover-border: rgba(9, 105, 218, 0.35);
+    --md-preview-lightbox-border: rgba(208, 215, 222, 0.78);
+    --md-preview-lightbox-bg: rgba(248, 250, 252, 0.96);
+    --md-preview-lightbox-button-border: rgba(208, 215, 222, 0.82);
+    --md-preview-lightbox-button-bg: rgba(31, 41, 55, 0.14);
+    --md-preview-lightbox-button-hover-bg: rgba(9, 105, 218, 0.28);
+    --md-preview-lightbox-viewport-bg: rgba(31, 41, 55, 0.08);
+    --md-preview-lightbox-scrollbar-track: rgba(31, 41, 55, 0.08);
+    --md-preview-lightbox-scrollbar-thumb: rgba(31, 41, 55, 0.28);
+    --md-preview-lightbox-scrollbar-thumb-hover: rgba(31, 41, 55, 0.40);
+  }
+
+  body:is(.document-theme-mode-dark, .document-theme-mode-auto.vscode-dark, .document-theme-mode-auto.vscode-high-contrast) {
+    --md-preview-blockquote-bg: rgba(88, 166, 255, 0.10);
+    --md-preview-blockquote-nested-bg: rgba(88, 166, 255, 0.16);
+    --md-preview-code-bg: rgba(255, 255, 255, 0.08);
+    --md-preview-table-border: rgba(139, 148, 158, 0.52);
+    --md-preview-table-bg: rgba(13, 17, 23, 0.98);
+    --md-preview-table-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+    --md-preview-table-cell-border: rgba(139, 148, 158, 0.42);
+    --md-preview-table-header-bg: rgba(255, 255, 255, 0.10);
+    --md-preview-table-row-bg: #0d1117;
+    --md-preview-table-row-alt-bg: rgba(255, 255, 255, 0.04);
+    --md-preview-table-row-hover-bg: rgba(88, 166, 255, 0.16);
+    --md-preview-hover-bg: rgba(88, 166, 255, 0.18);
+    --md-preview-hover-bg-soft: rgba(88, 166, 255, 0.12);
+    --md-preview-hover-border: rgba(88, 166, 255, 0.35);
+    --md-preview-lightbox-border: rgba(139, 148, 158, 0.46);
+    --md-preview-lightbox-bg: rgba(22, 27, 34, 0.96);
+    --md-preview-lightbox-button-border: rgba(139, 148, 158, 0.46);
+    --md-preview-lightbox-button-bg: rgba(255, 255, 255, 0.12);
+    --md-preview-lightbox-button-hover-bg: rgba(88, 166, 255, 0.24);
+    --md-preview-lightbox-viewport-bg: rgba(255, 255, 255, 0.08);
+    --md-preview-lightbox-scrollbar-track: rgba(255, 255, 255, 0.08);
+    --md-preview-lightbox-scrollbar-thumb: rgba(255, 255, 255, 0.24);
+    --md-preview-lightbox-scrollbar-thumb-hover: rgba(255, 255, 255, 0.36);
+  }
+
+  body.preview-mode-presentation {
+    --md-hover-bg: rgba(79, 70, 216, 0.16);
+    --md-hover-bg-soft: rgba(79, 70, 216, 0.10);
+    --md-hover-border: rgba(79, 70, 216, 0.26);
+  }
+
+  body.preview-mode-presentation.vscode-dark,
+  body.preview-mode-presentation.vscode-high-contrast {
+    --md-hover-bg: rgba(147, 197, 253, 0.18);
+    --md-hover-bg-soft: rgba(147, 197, 253, 0.12);
+    --md-hover-border: rgba(147, 197, 253, 0.28);
+  }
+
+  body.preview-mode-presentation .presentation-surface {
+    background: var(--presentation-surface-bg, linear-gradient(180deg, #eef2ff, #dde6ff));
+    box-shadow: var(--presentation-surface-shadow, 0 28px 80px rgba(44, 52, 105, 0.28));
+  }
+
+  body.preview-mode-presentation.vscode-dark .presentation-surface,
+  body.preview-mode-presentation.vscode-high-contrast .presentation-surface {
+    background: var(--presentation-surface-bg, linear-gradient(180deg, #20242c, #11151c));
+    box-shadow: var(--presentation-surface-shadow, 0 28px 80px rgba(0, 0, 0, 0.55));
+  }
+
+  body.preview-mode-presentation .presentation-slide-body.markdown-body code {
+    background: var(--presentation-inline-code-bg, rgba(79, 70, 216, 0.12));
+    border-color: var(--presentation-inline-code-border, rgba(79, 70, 216, 0.16));
+  }
+
+  body.preview-mode-presentation .presentation-slide-body.markdown-body pre,
+  body.preview-mode-presentation .presentation-slide-body.markdown-body pre code,
+  body.preview-mode-presentation .presentation-slide-body.markdown-body pre.hljs {
+    background: var(--presentation-code-bg, rgba(79, 70, 216, 0.08));
+    border-color: var(--presentation-code-border, rgba(79, 70, 216, 0.16));
+  }
+
+  body.preview-mode-presentation .presentation-slide-body.markdown-body th {
+    background: var(--presentation-table-header-bg, rgba(79, 70, 216, 0.12));
+  }
+
+  body.preview-mode-presentation .presentation-layout-media-shell,
+  body.preview-mode-presentation .presentation-image-frame {
+    background: var(--presentation-media-frame-bg, rgba(255, 255, 255, 0.90));
+  }
+
+  body.preview-mode-presentation.vscode-dark .presentation-layout-media-shell,
+  body.preview-mode-presentation.vscode-dark .presentation-image-frame,
+  body.preview-mode-presentation.vscode-high-contrast .presentation-layout-media-shell,
+  body.preview-mode-presentation.vscode-high-contrast .presentation-image-frame {
+    background: var(--presentation-media-frame-bg, rgba(21, 28, 38, 0.92));
+  }
+}

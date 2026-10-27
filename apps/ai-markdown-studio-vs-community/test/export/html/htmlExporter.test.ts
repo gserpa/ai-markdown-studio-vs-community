@@ -27,6 +27,7 @@ vi.mock('node:fs/promises', async () => {
     return 'window.mermaid = {};';
   }),
   writeFile: vi.fn(),
+  stat: vi.fn(async () => ({ size: 1, mtimeMs: 1, ctimeMs: 1 })),
   };
 });
 
@@ -580,6 +581,21 @@ describe('buildExportHtmlString', () => {
   });
 });
 
+describe('conditional HTML export assets', () => {
+  it.each(['document', 'presentation'] as const)('reads only the selected mode and skips optional assets for a plain %s', async mode => {
+    vi.mocked(readFile).mockClear();
+    const source = mode === 'presentation' ? '---\ndocument: presentation\n---\n# Deck' : '# Plain document';
+    const document = { fileName: 'plain.md', uri: { fsPath: 'C:/docs/plain.md', scheme: 'file' }, getText: () => source } as never;
+    // Distinct roots exercise cold caches for each mode.
+    await buildExportHtmlArtifact({ fsPath: 'C:/conditional-' + mode, scheme: 'file' } as never, document, { assetMode: 'inline' });
+    const reads = vi.mocked(readFile).mock.calls.map(([file]) => String(file));
+    expect(reads.some(file => file.includes('preview-' + mode + '.'))).toBe(true);
+    const other = mode === 'document' ? 'presentation' : 'document';
+    expect(reads.some(file => file.includes('preview-' + other + '.') || file.includes('preview-' + other + '-runtime.'))).toBe(false);
+    expect(reads.some(file => /katex|mermaid|preview-visualizations-(?:runtime|notices)|\.woff2/u.test(file))).toBe(false);
+  });
+});
+
 describe('visualization HTML export', () => {
   const json = JSON.stringify({ title: 'Chart <title>', mark: 'bar', data: { values: [{ x: 'A', y: 1 }] }, encoding: { x: { field: 'x', type: 'nominal' }, y: { field: 'y', type: 'quantitative' } } });
   const chart = '```vega-lite\n' + json + '\n```';
@@ -603,7 +619,7 @@ describe('visualization HTML export', () => {
   it.each(['# Plain document', metric, '```vega-lite\n{"data":{"url":"https://example.invalid/data"}}\n```'])('omits chart libraries and notices when no valid chart needs them', async source => {
     const artifact = await buildExportHtmlArtifact(extensionUri, document(source), { assetMode: 'external' });
     expect(artifact.assets.some(asset => /visualizations/u.test(asset.path))).toBe(false);
-    expect(vi.mocked(readFile).mock.calls.some(([file]) => String(file).includes('preview-visualizations-'))).toBe(false);
+    expect(vi.mocked(readFile).mock.calls.some(([file]) => /preview-visualizations-(?:runtime|notices)\./u.test(String(file)))).toBe(false);
     expect(artifact.html).not.toContain('data-ams-visualization-notices');
   });
 

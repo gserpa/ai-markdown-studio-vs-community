@@ -98,17 +98,18 @@ describe('showCommandListCommand', () => {
       'Embed Linked Images in File',
       'AI: Generate Document',
       'AI: Generate Presentation',
-      'AI: Install Presentation Skill',
       'Export: DOCX',
       'Export: PDF',
       'PPTX Tools: Validate Template',
       'PPTX Tools: Generate Template Manifest',
       'Export: HTML',
+      'AI: Install Presentation Skill',
       'Change Settings...',
     ]);
     expect(capturedLabels).not.toContain('AI: Enable Features...');
     expect(capturedLabels).not.toContain('Edit Markdown');
     expect(capturedLabels).not.toContain('Export: PPTX');
+    expect(capturedLabels).not.toContain('Presentation: Review Slide Type Migration');
   });
 
   it('switches to edit mode and only shows PPTX export for presentations', async () => {
@@ -130,6 +131,7 @@ describe('showCommandListCommand', () => {
 
     expect(capturedLabels[0]).toBe('Edit Markdown');
     expect(capturedLabels).toContain('Export: PPTX');
+    expect(capturedLabels).toContain('Presentation: Review Slide Type Migration');
     expect(capturedLabels).not.toContain('Export: DOCX (Basic)');
     expect(capturedLabels).not.toContain('Open Preview');
   });

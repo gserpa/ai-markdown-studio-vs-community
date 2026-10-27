@@ -27,6 +27,7 @@ export {
   getMpsCompletions,
   getMpsHover,
   getMpsQuickFixes,
+  getSlideTypeMigrations,
 } from './presentation/mpsLanguageService';
 export type {
   MpsValidationSeverity,
@@ -49,6 +50,8 @@ export type {
 
 // Slide layout utilities
 export { distributeItemsAcrossSlots } from './presentation/sectionDistribution';
+export { PRESENTATION_SLIDE_TYPES, LEGACY_SLIDE_TYPE_REPLACEMENTS, normalizePresentationSlideType, splitPresentationColumns } from './presentation/slideTypes';
+export type { PresentationSlideType, SlideTypeMigration } from './presentation/slideTypes';
 
 // Table formatting
 export { formatMarkdownTables } from './format/markdownTableFormatter';

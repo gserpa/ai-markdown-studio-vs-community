@@ -1,0 +1,65 @@
+/* =========================================================
+   Presentation Preview: Responsive Layout
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .presentation-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .presentation-header-heading {
+    align-items: baseline;
+    flex-direction: row;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .presentation-header-title {
+    font-size: clamp(0.95rem, 4vw, 1.2rem);
+    line-height: 1.1;
+  }
+
+  .presentation-header-author {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+  }
+
+  .presentation-header-controls {
+    justify-content: flex-end;
+    align-self: start;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .presentation-status {
+    padding: 4px 8px;
+    font-size: 0.74rem;
+    border: 1px solid color-mix(in srgb, var(--vscode-button-border, var(--vscode-panel-border)) 80%, transparent);
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+  }
+
+  .preview-mode-presentation .presentation-preview {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .presentation-header {
+    margin-left: 0;
+    margin-right: 0;
+    gap: 8px;
+  }
+
+  .presentation-header-author {
+    display: none;
+  }
+
+  .presentation-header-controls {
+    gap: 6px;
+  }
+}

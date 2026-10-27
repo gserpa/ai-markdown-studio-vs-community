@@ -1,3 +1,5 @@
+import { PRESENTATION_SLIDE_TYPES } from './slideTypes';
+
 export type MpsFieldKind = 'string' | 'enum' | 'path';
 
 export type MpsFrontMatterFieldSchema = {
@@ -22,19 +24,7 @@ export type MpsDocumentSchema = {
   frontMatterSnippet: string;
 };
 
-const BUILT_IN_TEMPLATE_NAMES = [
-  'default',
-  'cover',
-  'divider',
-  'section-divider',
-  'divider-b',
-  'divider-c',
-  'two-columns',
-  'image-right',
-  'image-center',
-  'table',
-  'thanks',
-] as const;
+const BUILT_IN_TEMPLATE_NAMES = PRESENTATION_SLIDE_TYPES;
 
 const FRONT_MATTER_FIELDS: readonly Omit<MpsFrontMatterFieldSchema, 'suggestions'>[] = [
   {
@@ -89,7 +79,11 @@ const FRONT_MATTER_FIELDS: readonly Omit<MpsFrontMatterFieldSchema, 'suggestions
 const DIRECTIVES: readonly MpsDirectiveSchema[] = [
   {
     name: 'slide',
-    description: 'Assigns a slide template to the current slide. Must appear exactly once as the first non-whitespace content after the slide separator and before any slide body content. Built-in layouts resolve automatically, and custom names can resolve through PPTX template markers or manifest aliases.',
+    description: 'Describes the slide content. The preview theme and PPTX template choose its placement. Must appear once before the slide title. Legacy layout names remain supported.',
+  },
+  {
+    name: 'column-break',
+    description: 'Separates the two ordered bodies of a two-column slide. Column headings are optional.',
   },
   {
     name: 'notes',

@@ -1,4 +1,5 @@
 import { createMpsDocumentSchema, type MpsDirectiveSchema, type MpsDocumentSchema, type MpsFrontMatterFieldSchema } from './mpsSchema';
+import { LEGACY_SLIDE_TYPE_REPLACEMENTS, normalizePresentationSlideType, type SlideTypeMigration } from './slideTypes';
 
 export type MpsValidationSeverity = 'error' | 'warning' | 'information';
 
@@ -12,6 +13,8 @@ export type MpsIssueCode =
   | 'unknown-theme'
   | 'misplaced-slide-directive'
   | 'missing-slide-template'
+  | 'legacy-slide-types'
+  | 'invalid-column-break'
   | 'unknown-slide-template';
 
 export type MpsValidationIssue = {
@@ -166,6 +169,17 @@ export function validateMpsSource(source: string, schema: MpsDocumentSchema = cr
 
   issues.push(...validateSlideDirectives(context.lines, context.frontMatter, schema));
   return issues;
+}
+
+/** Migration and editor warnings use the same directive scan and source ranges. */
+export function getSlideTypeMigrations(source: string): SlideTypeMigration[] {
+  return validateMpsSource(source).flatMap((issue) => {
+    const legacyType = issue.data?.legacyType;
+    const replacements = typeof legacyType === 'string' ? LEGACY_SLIDE_TYPE_REPLACEMENTS[legacyType] : undefined;
+    return issue.code === 'legacy-slide-types' && typeof legacyType === 'string' && replacements
+      ? [{ start: issue.start, end: issue.end, slide: Number(issue.data?.slide), legacyType, replacements }]
+      : [];
+  });
 }
 
 export function getMpsCompletions(source: string, offset: number, schema: MpsDocumentSchema = createMpsDocumentSchema()): MpsCompletionEntry[] {
@@ -340,6 +354,9 @@ function validateSlideDirectives(lines: SourceLine[], frontMatter: FrontMatterBl
   let inFence: { marker: string; length: number } | undefined;
   let slideHasContent = false;
   let slideDirectiveSeen = false;
+  let slideType = 'content';
+  let columnBreaks = 0;
+  let slideNumber = 1;
 
   for (const line of lines.slice(startLineIndex)) {
     const trimmed = line.text.trim();
@@ -359,8 +376,11 @@ function validateSlideDirectives(lines: SourceLine[], frontMatter: FrontMatterBl
     }
 
     if (trimmed === '---') {
+      if (slideHasContent || slideDirectiveSeen) slideNumber += 1;
       slideHasContent = false;
       slideDirectiveSeen = false;
+      slideType = 'content';
+      columnBreaks = 0;
       continue;
     }
 
@@ -370,6 +390,7 @@ function validateSlideDirectives(lines: SourceLine[], frontMatter: FrontMatterBl
       const templateOffset = directiveMatch.index ?? 0;
       const valueStart = line.start + templateOffset + directiveMatch[0].indexOf(directiveMatch[1]);
       const valueEnd = valueStart + directiveMatch[1].length;
+      slideType = normalizePresentationSlideType(templateName);
 
       if (slideDirectiveSeen || slideHasContent) {
         issues.push(createIssue(
@@ -389,17 +410,29 @@ function validateSlideDirectives(lines: SourceLine[], frontMatter: FrontMatterBl
           'Slide directives require a template name.',
           'missing-slide-template',
         ));
+      } else if (LEGACY_SLIDE_TYPE_REPLACEMENTS[templateName.toLowerCase()]) {
+        issues.push(createIssue(valueStart, valueEnd, 'warning',
+          `Retired slide type ${templateName}. Preview temporarily uses ${slideType}. Review migration to update the Markdown.`,
+          'legacy-slide-types', { legacyType: templateName.toLowerCase(), slide: slideNumber }));
       } else if (!schema.builtInTemplateNames.includes(templateName.toLowerCase())) {
         issues.push(createIssue(
           valueStart,
           valueEnd,
-          'warning',
-          `Template ${templateName} is not a built-in layout. This is valid only when your export flow maps it through a PPTX template manifest.`,
+          'error',
+          `Unknown slide type ${templateName}. Use ${schema.builtInTemplateNames.join(', ')}.`,
           'unknown-slide-template',
         ));
       }
 
       slideDirectiveSeen = true;
+      continue;
+    }
+
+    if (/^<!--\s*column-break\s*-->$/iu.test(trimmed)) {
+      columnBreaks += 1;
+      if (slideType !== 'two-column' || columnBreaks > 1) {
+        issues.push(createIssue(line.start, line.end, 'error', 'Use exactly one column-break marker inside a two-column slide.', 'invalid-column-break'));
+      }
       continue;
     }
 
@@ -495,8 +528,8 @@ function getDirectiveCompletions(line: SourceLine, prefix: string, schema: MpsDo
       completions.push({
         label: templateName,
         kind: 'value',
-        detail: 'Built-in slide template',
-        documentation: 'Assigns a built-in layout to the current slide.',
+        detail: 'Slide content type',
+        documentation: 'Describes content; the preview theme and PPTX template choose its layout.',
         insertText: `${templateName}${insertSuffix}`,
         replaceStart,
         replaceEnd,
@@ -517,10 +550,18 @@ function getDirectiveCompletions(line: SourceLine, prefix: string, schema: MpsDo
     {
       label: '<!--slide: ...-->',
       kind: 'directive',
-      detail: 'Insert a slide layout; default supports ordered text, tables, images, and diagrams.',
-      documentation: 'Must appear exactly once as the first non-whitespace content after the slide separator and before the slide title. Built-in layouts resolve automatically, and custom names can resolve through PPTX template markers or manifest aliases/overrides.',
-      insertText: '<!--slide: ${1|default,cover,divider,section-divider,two-columns,image-right,image-center|}-->',
+      detail: 'Insert a slide content type; content supports ordered text, tables, images, and diagrams.',
+      documentation: 'Must appear once before the slide title. Use a canonical content type; the preview theme and PPTX template decide placement.',
+      insertText: `<!--slide: \${1|${schema.builtInTemplateNames.join(',')}|}-->`,
       isSnippet: true,
+      replaceStart,
+      replaceEnd,
+    },
+    {
+      label: '<!--column-break-->',
+      kind: 'directive',
+      detail: 'Separate two column bodies without requiring headings.',
+      insertText: '<!--column-break-->',
       replaceStart,
       replaceEnd,
     },
@@ -590,7 +631,7 @@ function getDirectiveHover(context: MpsDocumentContext, offset: number, schema: 
   const lines = [`**${reference.schema.name}**`, '', reference.schema.description];
   if (reference.schema.name === 'slide') {
     lines.push('', `Built-in templates: ${schema.builtInTemplateNames.join(', ')}`);
-    lines.push('Custom template names can resolve through PPTX `template: ...` markers or sparse manifest aliases/overrides.');
+    lines.push('The preview theme and PPTX template map these content types to visual designs. Retired names produce migration warnings; unknown names are errors.');
   }
 
   return {
@@ -610,7 +651,9 @@ function findDirectiveReference(line: SourceLine, offset: number, schema: MpsDoc
       ? /<!--\s*(speaker\s+notes)\s*:/iu
       : directive.name === 'notes'
         ? /<!--\s*(notes)\s*:/iu
-        : /<!--\s*(slide)\s*:/iu;
+        : directive.name === 'column-break'
+          ? /<!--\s*(column-break)\s*-->/iu
+          : /<!--\s*(slide)\s*:/iu;
     const match = line.text.match(directivePattern);
     if (!match) {
       continue;

@@ -98,6 +98,14 @@ export function registerMpsEditorSupport(extensionUri: vscode.Uri): vscode.Dispo
             continue;
           }
 
+          if (matchingIssue.code === 'legacy-slide-types') {
+            const action = new vscode.CodeAction('Review slide type migration', vscode.CodeActionKind.QuickFix);
+            action.diagnostics = [diagnostic];
+            action.command = { command: 'markdownAiStudio.reviewSlideTypeMigration', title: action.title, arguments: [document.uri] };
+            actions.push(action);
+            continue;
+          }
+
           for (const fix of getMpsQuickFixes(source, matchingIssue, schema)) {
             const key = `${fix.title}:${fix.start}:${fix.end}:${fix.newText}`;
             if (seen.has(key)) {

@@ -12,6 +12,19 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Replaced the chart property allowlist with a precompiled validator from the installed Vega-Lite schema, covering all 17 primitive/composite marks and all six composition operators. Added a 26-example gallery, inherited data/encoding support, map fitting, resource-aware image marks, and schema-drift checks.
 - Updated shared AI guidance and portable references to describe the supported chart grammar.
 
+### Changed
+
+- Presentation directives now describe eight content types: `content`, `cover`, `two-column`, `illustrated-text`, `featured-visual`, `brief`, `divider`, and `thanks`. Preview themes select placement; editor completion, validation, and AI guidance use the same catalog.
+- Added `<!--column-break-->` for explicit two-column groups and optional theme layout mappings. Retired slide names render through temporary replacements and offer a reviewed source migration with a diff and explicit apply action.
+- Reduced HTML export size by selecting referenced font families, loading optional assets only when needed, caching asset reads/font encoding, and minifying generated CSS. Twenty ordered CSS source modules are shared by preview and export, without duplicate media/lightbox inclusion.
+- Preview asset manifests now use schema 2 with ordered stylesheet-module lists; a generated combined stylesheet remains available for existing hosts.
+
+### Migration
+
+- Existing presentation layouts may move when retired directives are translated to current content types. Run **Review Slide Type Migration**, choose ambiguous replacements, review the diff, apply, save, and inspect the preview and exported output. Opening a deck never rewrites its Markdown automatically.
+- Custom preview hosts must rebuild code and assets together and follow the schema-2 stylesheet lists. CSS contributors now edit `packages/md-preview-web/styles/`, then rebuild/sync assets.
+- See the [migration guide](docs/user/migration-guide.md) for the full replacement table, review steps, theme guidance, and developer rebuild instructions.
+
 ### Fixed
 
 - Preserved intrinsic proportions and frames for presentation preview images, and corrected light/dark table colors and contrast across built-in presentation themes.

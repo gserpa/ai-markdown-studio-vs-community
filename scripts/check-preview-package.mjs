@@ -31,9 +31,14 @@ await new Promise((resolve, reject) => {
 });
 
 const manifest = JSON.parse(files.get(generated + 'asset-manifest.json')?.toString('utf8') ?? 'null');
-assert.equal(manifest?.schemaVersion, 1, 'Missing or invalid packaged preview manifest.');
+assert.equal(manifest?.schemaVersion, 2, 'Missing or invalid packaged preview manifest.');
 for (const name of ['previewCore', 'previewCoreRuntime', 'previewDocument', 'previewDocumentRuntime', 'previewPresentation', 'previewPresentationRuntime', 'previewThemeRuntime', 'previewVisualizationsRuntime', 'previewVisualizationsNotices']) {
   assert(manifest.assets[name], `Missing preview asset declaration: ${name}`);
+}
+for (const mode of ['document', 'presentation']) {
+  const modules = manifest.stylesheets[mode];
+  assert(modules?.length && new Set(modules.map(entry => entry.asset)).size === modules.length, 'Invalid packaged stylesheet plan: ' + mode);
+  for (const entry of modules) assert(manifest.assets[entry.asset]?.mediaType.startsWith('text/css'), 'Missing packaged CSS module: ' + entry.asset);
 }
 const descriptors = [...Object.values(manifest.assets), ...Object.values(manifest.themes.document), ...Object.values(manifest.themes.presentation)];
 for (const asset of descriptors) {
@@ -43,7 +48,7 @@ for (const asset of descriptors) {
   assert.equal(bytes.length, asset.bytes, `Incorrect packaged asset length: ${asset.path}`);
   assert.equal(createHash('sha256').update(bytes).digest('base64url').slice(0, 18), asset.contentHash, `Incorrect packaged asset hash: ${asset.path}`);
 }
-const hash = createHash('sha256').update(JSON.stringify({ assets: manifest.assets, themes: manifest.themes })).digest('base64url').slice(0, 18);
+const hash = createHash('sha256').update(JSON.stringify({ assets: manifest.assets, themes: manifest.themes, stylesheets: manifest.stylesheets })).digest('base64url').slice(0, 18);
 assert.equal(hash, manifest.assetSetHash, 'Incorrect packaged preview asset-set hash.');
 const notices = files.get('extension/assets/preview/' + manifest.assets.previewVisualizationsNotices.path).toString('utf8');
 for (const text of ['Markdown AI Studio Community', 'MIT License', 'vega@', 'vega-lite@', 'vega-interpreter@']) assert(notices.includes(text), `Missing chart notice: ${text}`);

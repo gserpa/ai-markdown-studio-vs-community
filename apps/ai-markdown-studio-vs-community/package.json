@@ -100,6 +100,11 @@
         "category": "AI Markdown Studio"
       },
       {
+        "command": "markdownAiStudio.reviewSlideTypeMigration",
+        "title": "Review Slide Type Migration",
+        "category": "AI Markdown Studio"
+      },
+      {
         "command": "markdownAiStudio.pasteAsMarkdown",
         "title": "Paste as New Markdown File",
         "category": "AI Markdown Studio"

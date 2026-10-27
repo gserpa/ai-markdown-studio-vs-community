@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'nod
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
-import { build } from 'esbuild';
+import { build, transformSync } from 'esbuild';
 
 import {
   buildDocumentThemeCssArtifact,
@@ -19,13 +19,29 @@ const outputRoot = path.join(assetsRoot, 'generated');
 rmSync(outputRoot, { recursive: true, force: true });
 mkdirSync(outputRoot, { recursive: true });
 
-const previewCss = readFileSync(path.join(assetsRoot, 'preview.css'), 'utf8');
-const cssChunks = splitPreviewCss(previewCss);
+const stylesRoot = path.join(packageRoot, 'styles');
+const stylePlan = JSON.parse(readFileSync(path.join(stylesRoot, 'modules.json'), 'utf8'));
+assert.equal(stylePlan.schemaVersion, 1, 'Invalid stylesheet source plan.');
 const assets = {};
-
-for (const [logicalName, source] of Object.entries(cssChunks)) {
-  assets[logicalName] = writeTextAsset(`${logicalName.replace(/[A-Z]/g, (character) => `-${character.toLowerCase()}`)}.css`, source, 'text/css; charset=utf-8');
+const stylesheets = { document: [], presentation: [] };
+const sources = [];
+const names = new Set();
+const sourceFiles = new Set();
+for (const module of stylePlan.modules) {
+  assert(!names.has(module.asset), 'Duplicate stylesheet module: ' + module.asset);
+  assert(!sourceFiles.has(module.file), 'Duplicate stylesheet source: ' + module.file);
+  assert(/^[a-z][a-z0-9-]*\.css$/u.test(module.file), 'Unsafe stylesheet source: ' + module.file);
+  assert(module.modes.length && module.modes.every(mode => mode === 'document' || mode === 'presentation'), 'Invalid stylesheet modes.');
+  assert(module.feature === undefined || module.feature === 'media', 'Invalid stylesheet feature.');
+  names.add(module.asset);
+  sourceFiles.add(module.file);
+  const source = readFileSync(path.join(stylesRoot, module.file), 'utf8');
+  sources.push(source);
+  assets[module.asset] = writeTextAsset(module.asset.replace(/[A-Z]/g, character => '-' + character.toLowerCase()) + '.css', rewriteGeneratedFontUrls(source), 'text/css; charset=utf-8');
+  for (const mode of module.modes) stylesheets[mode].push({ asset: module.asset, ...(module.feature ? { feature: module.feature } : {}) });
 }
+// Preserve a combined stylesheet for hosts which have not adopted the module manifest.
+writeFileSync(path.join(assetsRoot, 'preview.css'), sources.join('\n'), 'utf8');
 
 assets.previewCoreRuntime = writeTextAsset(
   'preview-core-runtime.js',
@@ -90,10 +106,11 @@ for (const name of ['auto', ...[...presentationRegistry.themes.keys()].sort()]) 
 }
 
 const manifest = {
-  schemaVersion: 1,
-  assetSetHash: contentHash(JSON.stringify({ assets, themes })),
+  schemaVersion: 2,
+  assetSetHash: contentHash(JSON.stringify({ assets, themes, stylesheets })),
   assets,
   themes,
+  stylesheets,
 };
 writeFileSync(path.join(outputRoot, 'asset-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
@@ -108,6 +125,10 @@ function writeThemeAsset(artifact) {
 }
 
 function writeTextAsset(suggestedPath, source, mediaType) {
+  if (mediaType.startsWith('text/css')) {
+    // Whitespace-only minification preserves cascade order, fallbacks, and custom properties.
+    source = transformSync(source, { loader: 'css', minifyWhitespace: true, minifySyntax: false, minifyIdentifiers: false, charset: 'utf8', legalComments: 'inline' }).code;
+  }
   const hash = contentHash(source);
   const extension = path.extname(suggestedPath);
   const stem = suggestedPath.slice(0, -extension.length).replace(/\.[a-z0-9_-]{8,}$/iu, '');
@@ -122,49 +143,6 @@ function contentHash(source) {
   return createHash('sha256').update(source).digest('base64url').slice(0, 18);
 }
 
-function splitPreviewCss(source) {
-  const documentStart = requiredIndex(source, 'Document Preview: Base Layout + Content Primitives');
-  const documentMarkerStart = source.lastIndexOf('/*', documentStart);
-  const mermaidStart = requiredIndex(source, 'Document Preview: Mermaid + Lightbox');
-  const mermaidMarkerStart = source.lastIndexOf('/*', mermaidStart);
-  const wideTableStart = requiredIndex(source, '/* Wide table controls for document preview. */');
-  const lightboxStart = requiredIndex(source, '.mermaid-lightbox {');
-  const utilitiesStart = requiredIndex(source, 'Document Preview: Tables + Utilities');
-  const utilitiesMarkerStart = source.lastIndexOf('/*', utilitiesStart);
-  const presentationStart = requiredIndex(source, 'Presentation Preview');
-  const presentationMarkerStart = source.lastIndexOf('/*', presentationStart);
-  const compatibilityStart = requiredIndex(source, '/* Browser compatibility fallbacks for standalone exports');
-
-  return {
-    previewCore: rewriteGeneratedFontUrls([
-      source.slice(0, documentMarkerStart),
-    ].join('\n')),
-    previewDocument: [
-      source.slice(documentMarkerStart, mermaidMarkerStart),
-      source.slice(wideTableStart, lightboxStart),
-      source.slice(utilitiesMarkerStart, presentationMarkerStart),
-      source.slice(compatibilityStart),
-    ].join('\n'),
-    previewMermaid: [
-      source.slice(mermaidMarkerStart, wideTableStart),
-      source.slice(lightboxStart, utilitiesMarkerStart),
-    ].join('\n'),
-    // Preserve the original single-stylesheet cascade: presentation overrides
-    // depend on the generic Markdown, table, and typography primitives that
-    // appear before them in preview.css.
-    previewPresentation: [
-      source.slice(documentMarkerStart, compatibilityStart),
-      source.slice(compatibilityStart),
-    ].join('\n'),
-  };
-}
-
 function rewriteGeneratedFontUrls(source) {
   return source.replaceAll("url('./fonts/", "url('../fonts/");
-}
-
-function requiredIndex(source, marker) {
-  const index = source.indexOf(marker);
-  if (index < 0) throw new Error(`preview.css is missing required split marker: ${marker}`);
-  return index;
 }

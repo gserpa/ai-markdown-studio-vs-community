@@ -1,4 +1,5 @@
 import { parse as parseYaml } from 'yaml';
+import { normalizePresentationSlideType } from './slideTypes';
 
 export type PresentationMetadata = Record<string, unknown>;
 
@@ -20,7 +21,7 @@ type CoverSlideMetadata = {
 
 export type MarkdownDocumentKind = 'text' | 'presentation';
 
-const DEFAULT_TEMPLATE = 'default';
+const DEFAULT_TEMPLATE = 'content';
 const SLIDE_DIRECTIVE_PATTERN = /^<!--\s*slide\s*:\s*([^>]+?)\s*-->\s*/u;
 const ANY_SLIDE_DIRECTIVE_PATTERN = /<!--\s*slide\s*:\s*[^>]+?\s*-->/gu;
 const HTML_COMMENT_START = '<!--';
@@ -190,7 +191,8 @@ function parseSlideChunk(chunk: string): MarkdownPresentationSlide {
   let remaining = trimmedChunk;
   const initialDirectiveMatch = remaining.match(SLIDE_DIRECTIVE_PATTERN);
   if (initialDirectiveMatch) {
-    template = initialDirectiveMatch[1].trim() || DEFAULT_TEMPLATE;
+    const authoredType = initialDirectiveMatch[1].trim();
+    template = normalizePresentationSlideType(authoredType);
     remaining = remaining.slice(initialDirectiveMatch[0].length);
   }
 
@@ -289,6 +291,9 @@ function extractSpeakerNotes(source: string): { body: string; notes: string[] } 
 
     const rawContent = source.slice(commentStart + HTML_COMMENT_START.length, commentEnd - HTML_COMMENT_END.length);
     const content = trimOuterBlankLines(rawContent);
+    if (/^\s*column-break\s*$/iu.test(rawContent)) {
+      bodyParts.push('<!--column-break-->');
+    }
     if (content) {
       const match = content.match(SPEAKER_NOTES_PATTERN);
       if (match) {

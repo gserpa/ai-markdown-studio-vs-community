@@ -30,32 +30,24 @@ type CommandListContext = {
   aiAccessState: AiAccessState;
 };
 
-const QUICK_PICK_COMMAND_ORDER = [
-  'markdownAiStudio.openPreview',
-  'markdownAiStudio.editAsText',
-  'markdownAiStudio.openNativeMarkdownEditor',
-  'markdownAiStudio.toggleFrontMatter',
-  'markdownAiStudio.formatTables',
-  'markdownAiStudio.embedLinkedImages',
-  'markdownAiStudio.generateDocument',
-  'markdownAiStudio.generatePresentation',
-  'markdownAiStudio.pasteAsMarkdown',
-  'markdownAiStudio.convertToMarkdown',
-  'markdownAiStudio.exportHtml',
-  'markdownAiStudio.exportDocxBasic',
-  'markdownAiStudio.exportDocx',
-  'markdownAiStudio.exportPdf',
-  'markdownAiStudio.exportWebsite',
-  'markdownAiStudio.exportPptx',
-  'markdownAiStudio.setupPptxTemplate',
-  'markdownAiStudio.managePptxTemplates',
-  'markdownAiStudio.validatePptxTemplate',
-  'markdownAiStudio.generateDocumentTheme',
-  'markdownAiStudio.generatePresentationTheme',
-  'markdownAiStudio.installPresentationSkill',
-  'markdownAiStudio.enableAiFeatures',
-  'markdownAiStudio.openSettings',
-] as const;
+// Feature contributions provide their own order; Community owns only its built-in entries.
+const QUICK_PICK_COMMAND_ORDER: Readonly<Record<string, number>> = {
+  'markdownAiStudio.openPreview': 0,
+  'markdownAiStudio.editAsText': 1,
+  'markdownAiStudio.openNativeMarkdownEditor': 2,
+  'markdownAiStudio.toggleFrontMatter': 3,
+  'markdownAiStudio.formatTables': 4,
+  'markdownAiStudio.embedLinkedImages': 5,
+  'markdownAiStudio.generateDocument': 6,
+  'markdownAiStudio.generatePresentation': 7,
+  'markdownAiStudio.reviewSlideTypeMigration': 8,
+  'markdownAiStudio.pasteAsMarkdown': 9,
+  'markdownAiStudio.exportHtml': 11,
+  'markdownAiStudio.exportDocxBasic': 12,
+  'markdownAiStudio.installPresentationSkill': 22,
+  'markdownAiStudio.enableAiFeatures': 23,
+  'markdownAiStudio.openSettings': 24,
+};
 
 const AI_DEPENDENT_COMMANDS = new Set<string>([
   'markdownAiStudio.enableAiFeatures',
@@ -235,9 +227,7 @@ function collectAvailableCommandEntries(): Map<string, CommandListEntry> {
     entries.set(entry.command, {
       command: entry.command,
       title: entry.title,
-      order: QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number]) >= 0
-        ? QUICK_PICK_COMMAND_ORDER.indexOf(entry.command as typeof QUICK_PICK_COMMAND_ORDER[number])
-        : 100 + order,
+      order: QUICK_PICK_COMMAND_ORDER[entry.command] ?? 100 + order,
       requiresAi: AI_DEPENDENT_COMMANDS.has(entry.command),
     });
   }
@@ -291,6 +281,8 @@ function shouldShowCommand(entry: CommandListEntry, context: CommandListContext)
   if (entry.presentationOnly) {
     return context.isPresentation;
   }
+
+  if (command === 'markdownAiStudio.reviewSlideTypeMigration') return context.isPresentation;
 
   if (command === 'markdownAiStudio.exportDocxBasic') {
     return !context.isPresentation;

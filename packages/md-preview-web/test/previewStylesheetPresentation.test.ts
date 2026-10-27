@@ -147,77 +147,17 @@ body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.pr
 }`);
   });
 
-  it('keeps image-center regions in separate tracks when text overflows', () => {
-    expect(previewStylesheet).toContain(`.presentation-standard-content {
-  min-width: 0;
-  min-height: 0;
-  overflow: auto;`);
-    expect(previewStylesheet).toContain(`.presentation-slide-body.markdown-body {
-  flex: 1;
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  border-radius: inherit;
-  overflow: hidden;`);
-    expect(previewStylesheet).toContain(`.presentation-layout-media-shell.is-diagram {
-  box-sizing: border-box;
-  display: grid;
-  place-items: center;`);
-    expect(previewStylesheet).toContain(`.mermaid-lightbox[data-presentation-theme-active='true'] {
-  --md-preview-lightbox-bg: var(--presentation-panel-bg, #ffffff);`);
-    expect(previewStylesheet).toContain(`.presentation-image-center-layout {
-  display: grid;
-  grid-template-rows: minmax(min-content, 1fr) minmax(0, 56%) minmax(min-content, 1fr);`);
-    expect(previewStylesheet).toContain(`.presentation-image-center-body,
-.presentation-image-center-footer {
-  display: flex;`);
-    expect(previewStylesheet).toContain(`.presentation-image-center-media {
-  display: flex;
-  min-height: 0;
-  overflow: hidden;`);
-    expect(previewStylesheet).toContain(`.presentation-image-center-media .presentation-image-frame {
-  width: fit-content;
-  height: 100%;
-  max-width: min(100%, 1040px);`);
-    expect(previewStylesheet).toContain(`.presentation-image-center-media img {
-  display: block;
-  width: auto;
-  height: 100%;`);
-  });
-
   it('constrains image-right media to its grid cell', () => {
-    expect(previewStylesheet).toContain(`.presentation-image-right-media {
+    expect(previewStylesheet).toContain(`.presentation-illustrated-media {
   display: flex;
   min-height: 0;
   overflow: hidden;`);
-    expect(previewStylesheet).toContain(`.presentation-image-right-media img {
+    expect(previewStylesheet).toContain(`.presentation-illustrated-media img {
   display: block;
   width: auto;
   height: 100%;`);
-    expect(previewStylesheet).toContain(`.presentation-image-right-media .presentation-image-frame {
+    expect(previewStylesheet).toContain(`.presentation-illustrated-media .presentation-image-frame {
   height: 100%;
-}`);
-  });
-
-  it('reserves text space around default-layout media', () => {
-    expect(previewStylesheet).toContain(`.presentation-default-media-layout {
-  display: grid;
-  gap: 14px;`);
-    expect(previewStylesheet).toContain(`.presentation-default-media-layout.has-leading-content.has-trailing-content {
-  grid-template-rows: max-content minmax(calc(4 * 1lh), 1fr) max-content;`);
-    expect(previewStylesheet).toContain(`.presentation-default-media-layout.has-leading-content:not(.has-trailing-content) {
-  grid-template-rows: max-content minmax(calc(4 * 1lh), 1fr);`);
-    expect(previewStylesheet).toContain(`.presentation-default-media {
-  display: flex;
-  min-height: 0;
-  overflow: hidden;
-  align-items: flex-start;`);
-    expect(previewStylesheet).toContain(`.presentation-default-media img {
-  display: block;
-  width: auto;
-  height: 100%;`);
-    expect(previewStylesheet).toContain(`.presentation-default-media-layout.has-leading-content .presentation-default-media {
-  grid-row: 2;
 }`);
   });
 
@@ -247,8 +187,6 @@ body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.pr
 
   it('uses border-box sizing for padded divider layouts before measuring slide overflow', () => {
     expect(previewStylesheet).toContain(`.presentation-divider-layout {
-  box-sizing: border-box;`);
-    expect(previewStylesheet).toContain(`.presentation-divider-b-layout {
   box-sizing: border-box;`);
   });
 });

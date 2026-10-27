@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { guessMimeType } from '../util/imageMime';
 import { buildPreviewPage, getPreviewTitle } from './previewHtmlBuilder';
 import { PreviewDocumentUpdater } from './PreviewDocumentUpdater';
+import { showSlideTypeMigrationNotice } from '../presentation/slideTypeMigration';
 import { resolveDocumentResource } from '../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri, resolveRealPackageUri } from '../util/extensionSupportRoot';
 import {
@@ -56,6 +57,7 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
       webviewPanel.dispose();
       return;
     }
+    showSlideTypeMigrationNotice(textDocument);
 
     webviewPanel.webview.options = {
       enableScripts: true,

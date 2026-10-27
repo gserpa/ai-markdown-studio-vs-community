@@ -10,7 +10,7 @@ Create a complete Markdown file, not an outline. Do not assume AI Markdown Studi
 ## Workflow
 
 1. Resolve the output path before writing. If the user supplied one, use it. If not and the workspace is clear, choose a sensible workspace-relative filename and report it in the final response. Ask only when the location is consequential or an existing file would be overwritten. Never overwrite an existing file without confirmation.
-2. Plan the slide count, narrative arc, layouts, notes, and image needs before drafting. Use a slide ledger: every separator-delimited unit counts as one slide, including `cover`, `divider`, `section-divider`, and `thanks`. Match an explicit slide count exactly.
+2. Plan the slide count, narrative arc, layouts, notes, and image needs before drafting. Use a slide ledger: every separator-delimited unit counts as one slide, including `cover`, `divider`, and `thanks`. Match an explicit slide count exactly.
 3. Write the complete deck, then validate its structure with the available tools or a front-matter-aware manual check. Do not count slides by splitting the entire file on `---`.
 4. Repair every structural issue and run the complete structural check again. Never correct count by deleting only a separator, directive, or title; add or remove a complete separator-delimited slide unit. When a local preview or export command is available, use it as a second check; otherwise report structural validation only and do not claim visual rendering QA.
 
@@ -18,9 +18,9 @@ Create a complete Markdown file, not an outline. Do not assume AI Markdown Studi
 
 - Start with YAML front matter containing `filename`, `document: presentation`, `title`, `theme`, and `ratio` (`16:9` or `4:3`). Keep `filename` consistent with the output basename.
 - Separate slides with top-level `---` after the front matter. Give every slide exactly one `# H1` title.
-- Use at most one `<!--slide: name-->` directive per slide, immediately after its separator and before its title. Supported directives: `cover`, `default`, `two-columns`, `image-right`, `image-center`, `side-banner`, `side-picture`, `default-side`, `table`, `table-legend`, `divider`, `section-divider`, `divider-b`, `divider-c`, and `thanks`.
-- Use `## H2` headings for the sections of a `two-columns` slide. Use `default` for large-width media in the natural, left-aligned Markdown sequence. Use `image-center` for image-centric or stronger messages that benefit from centered text and media, with short text above and below. Use `image-right` only for narrower media that can share the slide with substantive text in the left column.
-- Add concise `<!--notes: ...-->` speaker notes to content slides. Cover, divider, section-divider, and thanks slides may omit notes. Keep visible slide content concise and vary layouts deliberately.
+- Use at most one `<!--slide: name-->` directive per slide, immediately after its separator and before its title. Supported directives: `content`, `cover`, `two-column`, `illustrated-text`, `featured-visual`, `brief`, `divider`, and `thanks`.
+- Use `<!--column-break-->` between the two bodies of `two-column`; headings are optional. Use `content` for mixed material and tables, `illustrated-text` for explanation with a supporting visual, `featured-visual` for a dominant visual with a short description, and `brief` for a compact orientation such as an agenda or next steps. Theme and PPTX template choose placement.
+- Add concise `<!--notes: ...-->` speaker notes to content slides. Cover, divider, and thanks slides may omit notes. Keep visible slide content concise and vary layouts deliberately.
 
 ## Charts and metrics
 
@@ -34,7 +34,7 @@ When the user requests data visualizations, read [the visualization authoring re
 
 ## Validation
 
-Use a front-matter-aware validation process rather than an ad-hoc separator split. Parse and remove the initial YAML front matter before splitting the remaining body on top-level `---`; otherwise the YAML opening fence is falsely counted as a slide and front matter appears missing. Validate front matter, exact slide count when specified (including every separator-delimited layout slide), separators, one H1 per slide, directive placement and support, image URL shape, and notes. Require notes on content slides only; `cover`, `divider`, `section-divider`, and `thanks` may omit them. Repair structural issues while preserving the requested content.
+Use a front-matter-aware validation process rather than an ad-hoc separator split. Parse and remove the initial YAML front matter before splitting the remaining body on top-level `---`; otherwise the YAML opening fence is falsely counted as a slide and front matter appears missing. Validate front matter, exact slide count when specified (including every separator-delimited layout slide), separators, one H1 per slide, directive placement and support, image URL shape, and notes. Require notes on content slides only; `cover`, `divider`, and `thanks` may omit them. Repair structural issues while preserving the requested content.
 
 ## Mixed body content and template defaults
 

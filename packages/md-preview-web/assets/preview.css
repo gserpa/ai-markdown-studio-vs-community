@@ -2151,15 +2151,9 @@ body.preview-mode-presentation {
   font-size: 1.4rem;
   line-height: 1.55;
 }
-
-/* Fit layout regions first. The standard content panel and code blocks keep
-   their own automatic overflow when fitting reaches its minimum scale. */
-body[data-presentation-content-overflow='scaleToFit'] .presentation-side-banner-content,
-body[data-presentation-content-overflow='scaleToFit'] .presentation-side-picture-content,
-body[data-presentation-content-overflow='scaleToFit'] .presentation-default-side-content,
-body[data-presentation-content-overflow='scaleToFit'] .presentation-table-legend-copy,
-body[data-presentation-content-overflow='scaleToFit'] .presentation-table-legend-table,
-body[data-presentation-content-overflow='scaleToFit'] .presentation-divider-c-subtitle,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-accent-content,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-accent-content,
+body[data-presentation-content-overflow='scaleToFit'] .presentation-divider-split-subtitle,
 body[data-presentation-content-overflow='scaleToFit'] .presentation-thanks-note {
   overflow: hidden;
 }
@@ -2544,51 +2538,30 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 }
 
 .presentation-standard-content > :first-child,
-.presentation-image-right-copy > :first-child,
+.presentation-illustrated-copy > :first-child,
 .presentation-standard-content .presentation-two-column-header > :first-child,
-.presentation-default-side-content > :first-child,
-.presentation-side-banner-content > :first-child,
-.presentation-side-picture-content > :first-child,
-.presentation-table-legend-copy > :first-child,
-.presentation-table-legend-table > :first-child {
+.presentation-accent-content > :first-child {
   margin-top: 0;
 }
 
 .presentation-standard-content > :last-child,
-.presentation-image-right-copy > :last-child,
-.presentation-default-side-content > :last-child,
-.presentation-side-banner-content > :last-child,
-.presentation-side-picture-content > :last-child,
-.presentation-table-legend-copy > :last-child,
-.presentation-table-legend-table > :last-child {
+.presentation-illustrated-copy > :last-child,
+.presentation-accent-content > :last-child {
   margin-bottom: 0;
 }
 
-.presentation-standard-layout-image-right .presentation-standard-content,
-.presentation-standard-layout-two-columns .presentation-standard-content,
-.presentation-standard-layout-image-center .presentation-standard-content,
-.presentation-standard-layout-default-media .presentation-standard-content {
+.presentation-standard-layout-illustrated .presentation-standard-content,
+.presentation-standard-layout-columns .presentation-standard-content{
   padding-top: 24px;
 }
 
-.presentation-standard-layout-table .presentation-standard-content {
-  padding: 16px 20px 20px;
-}
-
-.presentation-standard-layout-table .presentation-standard-content table {
-  width: 100%;
-  margin: 0;
-}
-
-.presentation-template-cover .presentation-slide-body,
-.presentation-template-side-banner .presentation-slide-body,
-.presentation-template-side-picture .presentation-slide-body,
-.presentation-template-default-side .presentation-slide-body,
-.presentation-template-table-legend .presentation-slide-body,
-.presentation-template-divider .presentation-slide-body,
-.presentation-template-divider-b .presentation-slide-body,
-.presentation-template-divider-c .presentation-slide-body,
-.presentation-template-thanks .presentation-slide-body {
+.presentation-layout-cover .presentation-slide-body,
+.presentation-layout-accent-side-image .presentation-slide-body,
+:is(.presentation-layout-accent-side, .presentation-layout-accent-side-right) .presentation-slide-body,
+.presentation-layout-solid-divider .presentation-slide-body,
+.presentation-layout-photo-divider .presentation-slide-body,
+.presentation-layout-split-divider .presentation-slide-body,
+.presentation-layout-thanks .presentation-slide-body {
   padding: 0;
   background: transparent;
   overflow: hidden;
@@ -2602,6 +2575,64 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   height: 100%;
 }
 
+.presentation-two-column-grid.is-weighted {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+}
+
+.presentation-illustrated-grid.is-media-left {
+  grid-template-columns: minmax(240px, 0.85fr) minmax(0, 1.15fr);
+}
+
+.presentation-illustrated-grid.is-media-left .presentation-illustrated-media {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.presentation-illustrated-grid.is-media-left .presentation-illustrated-copy {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.presentation-featured-layout {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  gap: 20px;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.presentation-featured-layout.has-copy {
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.presentation-featured-layout.is-dominant.has-copy {
+  grid-template-rows: minmax(0, 3fr) minmax(0, 1fr);
+}
+
+.presentation-featured-media,
+.presentation-featured-copy {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.presentation-featured-media,
+.presentation-featured-media .presentation-image-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.presentation-featured-media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.presentation-featured-copy > :first-child { margin-top: 0; }
+.presentation-featured-copy > :last-child { margin-bottom: 0; }
+
 .presentation-column {
   min-width: 0;
 }
@@ -2610,7 +2641,7 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   margin-top: 0;
 }
 
-.presentation-image-right-grid {
+.presentation-illustrated-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
   gap: 28px;
@@ -2618,16 +2649,20 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   height: 100%;
 }
 
-.presentation-image-right-grid.is-text-only {
+.presentation-illustrated-grid.is-text-only {
   grid-template-columns: 1fr;
 }
 
-.presentation-image-right-copy,
-.presentation-image-right-media {
+.presentation-illustrated-grid.is-media-left.is-text-only .presentation-illustrated-copy {
+  grid-column: 1;
+}
+
+.presentation-illustrated-copy,
+.presentation-illustrated-media {
   min-width: 0;
 }
 
-.presentation-image-right-media {
+.presentation-illustrated-media {
   display: flex;
   min-height: 0;
   overflow: hidden;
@@ -2649,7 +2684,7 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   background: var(--presentation-media-frame-bg, color-mix(in srgb, var(--vscode-editor-background) 86%, var(--vscode-editor-foreground) 14%));
 }
 
-.presentation-image-right-media img {
+.presentation-illustrated-media img {
   display: block;
   width: auto;
   height: 100%;
@@ -2658,170 +2693,13 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   object-fit: contain;
 }
 
-.presentation-image-right-media .presentation-image-frame {
+.presentation-illustrated-media .presentation-image-frame {
   height: 100%;
-}
-
-.presentation-default-media-layout {
-  display: grid;
-  gap: 14px;
-  height: 100%;
-}
-
-.presentation-default-media-layout.has-leading-content.has-trailing-content {
-  grid-template-rows: max-content minmax(calc(4 * 1lh), 1fr) max-content;
-}
-
-.presentation-default-media-layout.has-leading-content:not(.has-trailing-content) {
-  grid-template-rows: max-content minmax(calc(4 * 1lh), 1fr);
-}
-
-.presentation-default-media-layout:not(.has-leading-content).has-trailing-content {
-  grid-template-rows: minmax(calc(4 * 1lh), 1fr) max-content;
-}
-
-.presentation-default-media-layout:not(.has-leading-content):not(.has-trailing-content) {
-  grid-template-rows: minmax(calc(4 * 1lh), 1fr);
-}
-
-.presentation-default-media-leading,
-.presentation-default-media-trailing {
-  min-width: 0;
-}
-
-.presentation-default-media-leading {
-  grid-row: 1;
-}
-
-.presentation-default-media {
-  grid-row: 1;
-}
-
-.presentation-default-media-layout.has-leading-content .presentation-default-media {
-  grid-row: 2;
-}
-
-.presentation-default-media-trailing {
-  grid-row: 2;
-}
-
-.presentation-default-media-layout.has-leading-content .presentation-default-media-trailing {
-  grid-row: 3;
-}
-
-.presentation-default-media-leading:empty,
-.presentation-default-media-trailing:empty {
-  display: none;
-}
-
-.presentation-default-media-leading > :first-child,
-.presentation-default-media-trailing > :first-child {
-  margin-top: 0;
-}
-
-.presentation-default-media-leading > :last-child,
-.presentation-default-media-trailing > :last-child {
-  margin-bottom: 0;
-}
-
-.presentation-default-media {
-  display: flex;
-  min-height: 0;
-  overflow: hidden;
-  align-items: flex-start;
-  justify-content: flex-start;
-}
-
-.presentation-default-media .presentation-image-frame {
-  height: 100%;
-}
-
-.presentation-default-media img {
-  display: block;
-  width: auto;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.presentation-image-center-layout {
-  display: grid;
-  grid-template-rows: minmax(min-content, 1fr) minmax(0, 56%) minmax(min-content, 1fr);
-  gap: 14px;
-  height: 100%;
-}
-
-.presentation-image-center-layout.is-text-only {
-  display: block;
-}
-
-.presentation-image-center-body,
-.presentation-image-center-footer {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  text-align: center;
-}
-
-.presentation-image-center-body {
-  grid-row: 1;
-  justify-content: flex-end;
-}
-
-.presentation-image-center-media {
-  grid-row: 2;
-}
-
-.presentation-image-center-footer {
-  grid-row: 3;
-  justify-content: flex-start;
-}
-
-.presentation-image-center-body:empty,
-.presentation-image-center-footer:empty {
-  display: none;
-}
-
-.presentation-image-center-body > :first-child,
-.presentation-image-center-footer > :first-child {
-  margin-top: 0;
-}
-
-.presentation-image-center-body > :last-child,
-.presentation-image-center-footer > :last-child {
-  margin-bottom: 0;
-}
-
-.presentation-image-center-media {
-  display: flex;
-  min-height: 0;
-  overflow: hidden;
-  align-items: center;
-  justify-content: center;
-}
-
-.presentation-image-center-media .presentation-image-frame {
-  width: fit-content;
-  height: 100%;
-  max-width: min(100%, 1040px);
-  max-height: 100%;
-}
-
-.presentation-image-center-media img {
-  display: block;
-  width: auto;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
 }
 
 .presentation-cover-layout,
-.presentation-side-banner-layout,
-.presentation-side-picture-layout,
-.presentation-default-side-layout,
-.presentation-table-legend-layout,
+.presentation-accent-layout,
+.presentation-accent-layout,
 .presentation-divider-layout {
   height: 100%;
 }
@@ -2873,27 +2751,16 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   color: inherit;
 }
 
-.presentation-cover-subtitle > :first-child,
-.presentation-side-banner-content > :first-child,
-.presentation-side-picture-content > :first-child,
-.presentation-default-side-content > :first-child,
-.presentation-table-legend-copy > :first-child,
-.presentation-table-legend-table > :first-child {
+.presentation-cover-subtitle > :first-child {
   margin-top: 0;
 }
 
-.presentation-cover-subtitle > :last-child,
-.presentation-side-banner-content > :last-child,
-.presentation-side-picture-content > :last-child,
-.presentation-default-side-content > :last-child,
-.presentation-table-legend-copy > :last-child,
-.presentation-table-legend-table > :last-child {
+.presentation-cover-subtitle > :last-child {
   margin-bottom: 0;
 }
 
 .presentation-cover-media,
-.presentation-side-banner-media,
-.presentation-side-picture-media,
+.presentation-accent-media,
 .presentation-divider-background {
   position: relative;
   display: flex;
@@ -2978,105 +2845,48 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.42), transparent 32%),
     var(--presentation-media-bg, linear-gradient(160deg, color-mix(in srgb, var(--presentation-accent) 24%, white 76%), color-mix(in srgb, var(--presentation-accent) 86%, black 14%)));
 }
-
-.presentation-side-banner-layout,
-.presentation-side-picture-layout,
-.presentation-default-side-layout {
+.presentation-accent-layout {
   display: grid;
-  height: 100%;
+  grid-template-columns: minmax(240px, 0.78fr) minmax(0, 1.55fr);
   background: var(--presentation-panel-bg, color-mix(in srgb, var(--vscode-editor-background) 96%, white 4%));
 }
 
-.presentation-side-banner-layout,
-.presentation-side-picture-layout {
-  grid-template-columns: 0.74fr 1.16fr;
-}
-
-.presentation-side-banner-sidebar,
-.presentation-side-picture-sidebar,
-.presentation-default-side-sidebar {
+.presentation-accent-sidebar {
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 52px 40px 44px;
+  text-align: center;
   background: var(--presentation-standard-header-bg, linear-gradient(180deg, var(--presentation-accent), color-mix(in srgb, var(--presentation-accent) 80%, black 20%)));
   color: var(--presentation-contrast);
 }
 
-.presentation-side-banner-title,
-.presentation-side-picture-title,
-.presentation-default-side-title {
+.presentation-accent-title {
   font-size: clamp(2.4rem, 4.1vw, 3.9rem);
   color: inherit;
 }
 
-.presentation-side-banner-main,
-.presentation-side-picture-main {
+.presentation-accent-main {
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
 }
 
-.presentation-side-banner-main {
-  grid-template-rows: 0.42fr 0.58fr;
-}
+.presentation-accent-main.has-media { grid-template-rows: repeat(2, minmax(0, 1fr)); }
 
-.presentation-side-picture-main {
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-}
-
-.presentation-side-banner-content,
-.presentation-side-picture-content,
-.presentation-default-side-content {
+.presentation-accent-content {
   min-width: 0;
   padding: 36px 40px 34px;
   overflow: auto;
   background: var(--presentation-panel-bg, color-mix(in srgb, var(--vscode-editor-background) 98%, white 2%));
 }
 
-.presentation-default-side-layout {
+.presentation-accent-layout.is-title-right {
   grid-template-columns: minmax(0, 1.55fr) minmax(240px, 0.78fr);
 }
-
-.presentation-default-side-sidebar {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.presentation-table-legend-layout {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  background: var(--presentation-panel-bg, color-mix(in srgb, var(--vscode-editor-background) 98%, white 2%));
-}
-
-.presentation-table-legend-header {
-  padding: 34px 48px 28px;
-  background: var(--presentation-standard-header-bg, linear-gradient(180deg, var(--presentation-accent), color-mix(in srgb, var(--presentation-accent) 82%, black 18%)));
-  color: var(--presentation-contrast);
-}
-
-.presentation-table-legend-title {
-  font-size: clamp(2.45rem, 4.2vw, 4rem);
-  color: inherit;
-}
-
-.presentation-table-legend-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.68fr);
-  gap: 28px;
-  min-height: 0;
-  padding: 30px 34px 34px;
-}
-
-.presentation-table-legend-copy,
-.presentation-table-legend-table {
-  min-width: 0;
-  overflow: auto;
-}
-
-.presentation-table-legend-table table {
-  margin: 0;
-}
+.presentation-accent-layout.is-title-right .presentation-accent-sidebar { grid-area: 1 / 2; }
+.presentation-accent-layout.is-title-right .presentation-accent-main { grid-area: 1 / 1; }
 
 .presentation-divider-layout {
   box-sizing: border-box;
@@ -3106,7 +2916,8 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   text-align: right;
 }
 
-.presentation-divider-title {
+.presentation-divider-title,
+.presentation-divider-split-title {
   font-size: clamp(2.6rem, 4.4vw, 4.2rem);
   color: inherit;
 }
@@ -3116,63 +2927,27 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   color: color-mix(in srgb, var(--presentation-contrast) 90%, transparent);
 }
 
-/* ── Divider-B: full-bleed background image, title overlaid on right ── */
-
-.presentation-divider-b-layout {
-  box-sizing: border-box;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-  padding: 56px 76px;
+.presentation-divider-layout.is-photo {
   background: var(--presentation-standard-header-bg, var(--presentation-accent));
-  color: var(--presentation-contrast);
 }
 
-.presentation-divider-b-background {
-  position: absolute;
-  inset: 0;
-}
-
-.presentation-divider-b-overlay {
-  position: absolute;
-  inset: 0;
+.presentation-divider-layout.is-photo .presentation-divider-overlay {
   background: var(--presentation-divider-overlay-bg, linear-gradient(90deg, rgba(8, 14, 28, 0.12), rgba(8, 14, 28, 0.52)));
 }
 
-.presentation-divider-b-content {
-  position: relative;
-  z-index: 1;
-  width: min(44%, 470px);
-  text-align: right;
-}
-
-.presentation-divider-b-title {
-  font-size: clamp(2.6rem, 4.4vw, 4.2rem);
-  color: inherit;
-}
-
-.presentation-divider-b-subtitle {
-  margin-top: 22px;
-  color: color-mix(in srgb, var(--presentation-contrast) 90%, transparent);
-}
-
-/* ── Divider-C: left image panel, right accent panel with title + body ── */
-
-.presentation-divider-c-layout {
+.presentation-divider-split-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   height: 100%;
 }
 
-.presentation-divider-c-media {
+.presentation-divider-split-media {
   position: relative;
   overflow: hidden;
   background: var(--presentation-media-bg);
 }
 
-.presentation-divider-c-panel {
+.presentation-divider-split-panel {
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -3181,23 +2956,18 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   color: var(--presentation-contrast);
 }
 
-.presentation-divider-c-title {
-  font-size: clamp(2.6rem, 4.4vw, 4.2rem);
-  color: inherit;
-}
-
-.presentation-divider-c-subtitle {
+.presentation-divider-split-subtitle {
   padding: 18px 20px;
   border: 1px solid rgba(255, 255, 255, 0.26);
   overflow: auto;
   color: color-mix(in srgb, var(--presentation-contrast) 86%, transparent);
 }
 
-.presentation-divider-c-subtitle > :first-child {
+.presentation-divider-split-subtitle > :first-child {
   margin-top: 0;
 }
 
-.presentation-divider-c-subtitle > :last-child {
+.presentation-divider-split-subtitle > :last-child {
   margin-bottom: 0;
 }
 
@@ -3673,6 +3443,7 @@ body.presentation-is-immersive .presentation-surface {
     gap: 6px;
   }
 }
+
 /* Browser compatibility fallbacks for standalone exports in browsers without full color-mix/light-dark support. */
 @supports not ((color: color-mix(in srgb, #000000 50%, #ffffff)) and (color: light-dark(#ffffff, #000000))) {
   body:is(.document-theme-mode-light, .document-theme-mode-auto:not(.vscode-dark):not(.vscode-high-contrast)) {

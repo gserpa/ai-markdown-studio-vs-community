@@ -43,7 +43,7 @@ theme: sunset
     expect(issues.some((issue) => issue.message.includes('only once and as the first non-whitespace content after the slide separator'))).toBe(true);
   });
 
-  it('warns for custom slide templates that are not built in', () => {
+  it('errors for unknown slide content types', () => {
     const issues = validateMpsSource(`---
 document: presentation
 ---
@@ -52,7 +52,7 @@ document: presentation
 # Agenda
 `, schema);
 
-    expect(issues.some((issue) => issue.message.includes('not a built-in layout'))).toBe(true);
+    expect(issues.some((issue) => issue.code === 'unknown-slide-template' && issue.severity === 'error')).toBe(true);
   });
 
   it('marks missing document kind with a structured quick-fix code', () => {
@@ -109,10 +109,11 @@ theme:
 document: presentation
 ---
 
-<!--slide: im`;
+<!--slide: ill`;
     const completions = getMpsCompletions(source, source.length, schema);
 
-    expect(completions.some((completion) => completion.label === 'image-right')).toBe(true);
+    expect(completions.some((completion) => completion.label === 'illustrated-text')).toBe(true);
+    expect(completions.some((completion) => completion.label === 'image-right')).toBe(false);
   });
 
   it('offers a full presentation header snippet at the top of an empty file', () => {
@@ -145,8 +146,8 @@ ratio: 16:9
     const slideHover = getMpsHover(source, source.indexOf('slide') + 1, schema);
     expect(ratioHover?.markdown).toContain('Target slide aspect ratio');
     expect(ratioHover?.markdown).toContain('16:9');
-    expect(slideHover?.markdown).toContain('Assigns a slide template');
-    expect(slideHover?.markdown).toContain('manifest aliases/overrides');
+    expect(slideHover?.markdown).toContain('Describes the slide content');
+    expect(slideHover?.markdown).toContain('unknown names are errors');
   });
 });
 

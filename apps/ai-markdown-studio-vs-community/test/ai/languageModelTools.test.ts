@@ -120,7 +120,7 @@ describe('Community MPS language model tools', () => {
 
     expect(result).toContain('Target length: 7 slides');
     expect(result).toContain('place exactly one <!--slide: name--> comment immediately after the top-level --- separator and before the title');
-    expect(result).toContain('Choose each slide layout deliberately');
+    expect(result).toContain('Choose each slide content type by its purpose and structure');
     expect(result).toContain('Remote image embeds are allowed in this workspace');
     expect(result).toContain('speaker note');
   });

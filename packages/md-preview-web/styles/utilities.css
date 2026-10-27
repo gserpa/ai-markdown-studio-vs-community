@@ -1,0 +1,74 @@
+hr {
+  border: 0;
+  border-top: 1px solid var(--md-preview-border-color);
+  margin: 2rem 0;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 11px;
+  line-height: 10px;
+  color: var(--md-preview-body-color);
+  vertical-align: middle;
+  background: color-mix(in srgb, var(--md-preview-code-bg) 88%, var(--md-preview-body-color) 12%);
+  border: 1px solid var(--md-preview-border-color);
+  border-radius: 6px;
+  box-shadow: inset 0 -1px 0 var(--md-preview-border-color);
+}
+
+input[type='checkbox'] {
+  margin: 0 0.5em 0.2em 0;
+  vertical-align: middle;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.contains-task-list {
+  padding-left: 0;
+}
+
+.task-list-item {
+  list-style: none;
+}
+
+.task-list-item label {
+  cursor: default;
+  pointer-events: none;
+}
+
+.footnotes {
+  margin-top: 32px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+}
+
+sup.footnote-ref,
+.footnote-ref {
+  vertical-align: super;
+  font-size: 0.75em;
+  line-height: 0;
+}
+
+.footnote-ref a,
+a.footnote-backref {
+  text-decoration: none;
+}
+
+.footnote-ref a:hover,
+a.footnote-backref:hover {
+  text-decoration: underline;
+}
+
+.footnotes hr,
+hr.footnotes-sep {
+  margin-bottom: 16px;
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}

@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { guessMimeType } from '../util/imageMime';
 import { buildPreviewPage, getPreviewTitle } from './previewHtmlBuilder';
 import { PreviewDocumentUpdater } from './PreviewDocumentUpdater';
+import { showSlideTypeMigrationNotice } from '../presentation/slideTypeMigration';
 import { resolveDocumentResource } from '../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri, resolveRealPackageUri } from '../util/extensionSupportRoot';
 import {
@@ -18,6 +19,7 @@ export class MarkdownPreviewPanel {
   private readonly updater: PreviewDocumentUpdater;
   private disposed = false;
   private document: vscode.TextDocument;
+  private migrationNoticeShown = false;
 
   public constructor(
     private readonly extensionUri: vscode.Uri,
@@ -105,6 +107,10 @@ export class MarkdownPreviewPanel {
 
   public async refresh(document?: vscode.TextDocument, debounce = false): Promise<void> {
     this.document = document ?? this.document;
+    if (!this.migrationNoticeShown) {
+      this.migrationNoticeShown = true;
+      showSlideTypeMigrationNotice(this.document);
+    }
     this.panel.title = this.getTitle(this.document);
     this.updater.refresh(() => this.getPage(this.panel.webview, this.document), debounce);
     if (this.panel.active) {

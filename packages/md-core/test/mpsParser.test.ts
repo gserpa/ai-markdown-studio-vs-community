@@ -65,10 +65,10 @@ Intro body
     expect(presentation.meta.title).toBe('Deck Title');
     expect(presentation.meta.author).toBe('Ada');
     expect(presentation.slides).toHaveLength(2);
-    expect(presentation.slides[0].template).toBe('default');
+    expect(presentation.slides[0].template).toBe('content');
     expect(presentation.slides[0].body).toContain('# Opening');
     expect(presentation.slides[0].notes).toContain('Speaker note');
-    expect(presentation.slides[1].template).toBe('two-columns');
+    expect(presentation.slides[1].template).toBe('two-column');
   });
 
   it('treats the first slide as body content when it starts immediately after front matter', () => {
@@ -278,6 +278,6 @@ Intro body
 
     expect(presentation.meta.title).toBe('Deck Title From Heading');
     expect(presentation.slides).toHaveLength(2);
-    expect(presentation.slides[0].template).toBe('default');
+    expect(presentation.slides[0].template).toBe('content');
   });
 });

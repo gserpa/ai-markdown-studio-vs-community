@@ -1,0 +1,97 @@
+/* =========================================================
+   Document Preview: Interactive States
+   ========================================================= */
+
+:root {
+  --md-hover-accent: var(--md-preview-hover-accent, var(--md-preview-link-color, var(--vscode-focusBorder)));
+  --md-hover-bg: var(--md-preview-hover-bg, color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 84%, var(--md-preview-link-color) 16%));
+  --md-hover-bg-soft: var(--md-preview-hover-bg-soft, color-mix(in srgb, var(--vscode-editor-background, light-dark(#ffffff, #0d1117)) 90%, var(--md-preview-link-color) 10%));
+  --md-hover-border: var(--md-preview-hover-border, color-mix(in srgb, var(--md-preview-link-color) 35%, transparent));
+}
+
+.markdown-body table tbody tr,
+.markdown-body table tbody td,
+.markdown-body pre,
+.markdown-body blockquote,
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease;
+}
+
+.markdown-body table tbody tr:hover > td {
+  background: var(--md-hover-bg-soft);
+}
+
+.markdown-body table tbody tr:hover > td:first-child {
+  box-shadow: inset 3px 0 0 var(--md-hover-accent);
+}
+
+.markdown-body table tbody tr:hover > td:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.markdown-body table tbody tr:hover > td:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.markdown-body pre {
+  position: relative;
+  border: 1px solid transparent;
+}
+
+.markdown-body pre:hover {
+  background: var(--md-hover-bg);
+  border-color: var(--md-hover-border);
+  box-shadow: inset 3px 0 0 var(--md-hover-accent);
+}
+
+.markdown-body pre code {
+  background: transparent !important;
+}
+
+.markdown-body blockquote {
+  position: relative;
+  border-left-width: 4px;
+}
+
+.markdown-body blockquote:hover {
+  background: var(--md-hover-bg-soft);
+  border-left-color: var(--md-hover-accent);
+}
+
+.markdown-body h1:hover,
+.markdown-body h2:hover,
+.markdown-body h3:hover,
+.markdown-body h4:hover,
+.markdown-body h5:hover,
+.markdown-body h6:hover {
+  box-shadow:
+    var(--md-preview-heading-shadow),
+    inset 4px 0 0 var(--md-hover-accent),
+    0 0 0 1px var(--md-hover-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .markdown-body table tbody tr,
+  .markdown-body table tbody td,
+  .markdown-body pre,
+  .markdown-body blockquote,
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    transition: none;
+  }
+}

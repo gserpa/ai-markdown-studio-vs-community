@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { indentCss, stableCssHash, type ThemeCssArtifact } from '../themeCssArtifact';
+import { DEFAULT_PRESENTATION_LAYOUTS, normalizePresentationLayouts, type PresentationLayoutMap } from './presentationLayouts';
 
 export type PreviewThemeMode = 'dark' | 'light';
 
@@ -13,6 +14,7 @@ export type PreviewThemeDefinition = {
   mermaidTheme?: string;
   mermaidTransparentBackground?: boolean;
   tokens: Record<string, string>;
+  layouts?: PresentationLayoutMap;
 };
 
 export type ResolvedPreviewTheme = {
@@ -23,6 +25,7 @@ export type ResolvedPreviewTheme = {
   mermaidTheme: string;
   mermaidTransparentBackground: boolean;
   tokens: Record<string, string>;
+  layouts?: PresentationLayoutMap;
 };
 
 export type PreviewThemeRegistry = {
@@ -40,6 +43,7 @@ export type PreviewThemeSelection = {
   darkMermaidTheme: string;
   lightMermaidTransparentBackground: boolean;
   darkMermaidTransparentBackground: boolean;
+  layouts?: PresentationLayoutMap;
 };
 
 const FALLBACK_DARK_THEME_NAME = 'galaxy';
@@ -54,6 +58,7 @@ type RawPreviewThemeDefinition = {
   mermaidTheme?: unknown;
   mermaidTransparentBackground?: unknown;
   tokens?: unknown;
+  layouts?: unknown;
 };
 
 const PRESENTATION_THEME_DIRECTORY_NAME = 'presentation';
@@ -220,6 +225,7 @@ function buildPreviewThemeRegistry(definitions: PreviewThemeDefinition[]): Previ
         : [...(baseTheme?.defaultForModes ?? [])],
       mermaidTheme: definition.mermaidTheme ?? baseTheme?.mermaidTheme ?? 'default',
       mermaidTransparentBackground: definition.mermaidTransparentBackground ?? baseTheme?.mermaidTransparentBackground ?? false,
+      layouts: { ...DEFAULT_PRESENTATION_LAYOUTS, ...baseTheme?.layouts, ...definition.layouts },
       tokens: {
         ...(baseTheme?.tokens ?? {}),
         ...definition.tokens,
@@ -346,10 +352,10 @@ function buildAutoPreviewThemeStylesheet(registry: PreviewThemeRegistry): string
   return sections.join('\n\n');
 }
 
-export function resolvePreviewThemeSelection(themeName: string, registry: PreviewThemeRegistry): PreviewThemeSelection {
+export function resolvePreviewThemeSelection(themeName: string, registry: PreviewThemeRegistry, mode: PreviewThemeMode = 'light'): PreviewThemeSelection {
   const normalized = normalizeThemeName(themeName);
   if (!normalized || normalized === 'auto') {
-    return createAutoThemeSelection(registry);
+    return createAutoThemeSelection(registry, mode);
   }
 
   const canonicalThemeName = registry.themes.has(normalized)
@@ -360,7 +366,7 @@ export function resolvePreviewThemeSelection(themeName: string, registry: Previe
     : undefined;
 
   if (!theme) {
-    return createAutoThemeSelection(registry);
+    return createAutoThemeSelection(registry, mode);
   }
 
   return {
@@ -370,10 +376,11 @@ export function resolvePreviewThemeSelection(themeName: string, registry: Previe
     darkMermaidTheme: theme.mermaidTheme,
     lightMermaidTransparentBackground: theme.mermaidTransparentBackground,
     darkMermaidTransparentBackground: theme.mermaidTransparentBackground,
+    layouts: theme.layouts,
   };
 }
 
-function createAutoThemeSelection(registry: PreviewThemeRegistry): PreviewThemeSelection {
+function createAutoThemeSelection(registry: PreviewThemeRegistry, mode: PreviewThemeMode): PreviewThemeSelection {
   const darkTheme = registry.themes.get(registry.defaultDarkThemeName);
   const lightTheme = registry.themes.get(registry.defaultLightThemeName);
 
@@ -384,6 +391,7 @@ function createAutoThemeSelection(registry: PreviewThemeRegistry): PreviewThemeS
     darkMermaidTheme: darkTheme?.mermaidTheme ?? 'dark',
     lightMermaidTransparentBackground: lightTheme?.mermaidTransparentBackground ?? false,
     darkMermaidTransparentBackground: darkTheme?.mermaidTransparentBackground ?? false,
+    layouts: (mode === 'dark' ? darkTheme : lightTheme)?.layouts ?? DEFAULT_PRESENTATION_LAYOUTS,
   };
 }
 
@@ -483,6 +491,8 @@ function normalizePreviewThemeDefinition(rawDefinition: RawPreviewThemeDefinitio
 
   const normalizedTokens = normalizeThemeTokens(rawDefinition.tokens, name);
   warnings.push(...normalizedTokens.warnings);
+  const normalizedLayouts = normalizePresentationLayouts(rawDefinition.layouts, name);
+  warnings.push(...normalizedLayouts.warnings);
 
   return {
     definition: {
@@ -500,6 +510,7 @@ function normalizePreviewThemeDefinition(rawDefinition: RawPreviewThemeDefinitio
         ? rawDefinition.mermaidTransparentBackground
         : undefined,
       tokens: normalizedTokens.tokens,
+      layouts: normalizedLayouts.layouts,
     },
     warnings,
   };

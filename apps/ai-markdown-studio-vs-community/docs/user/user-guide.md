@@ -173,7 +173,7 @@ Presentation preview features:
 - **Fullscreen** — immersive mode via the on-screen control or the `F` key; press `Esc` to exit.
 - **Fixed-canvas scaling** — fullscreen preserves the exact slide composition from the smaller panel.
 - **Speaker notes** — shown below the active slide when present.
-- **Template-aware layouts** — `cover`, `default`, `two-columns`, `image-right`, `image-center`, `side-banner`, `side-picture`, `default-side`, `table`, `table-legend`, `divider`, `section-divider`, `divider-b`, `divider-c`, and `thanks`.
+- **Purpose-based slide types** — `content`, `cover`, `two-column`, `illustrated-text`, `featured-visual`, `brief`, `divider`, and `thanks`. Preview themes choose placement; PPTX templates use their own bindings.
 
 ### Authoring a presentation
 
@@ -194,7 +194,7 @@ Opening slide.
 
 ---
 
-<!--slide: two-columns-->
+<!--slide: two-column-->
 ## Highlights
 
 - Revenue up
@@ -204,14 +204,14 @@ Opening slide.
 
 ---
 
-<!--slide: image-right-->
+<!--slide: illustrated-text-->
 ## Roadmap
 
 ![Roadmap](./images/roadmap.png)
 
 ---
 
-<!--slide: image-center-->
+<!--slide: featured-visual-->
 # System Flow
 
 The request enters through the gateway.
@@ -343,3 +343,9 @@ Pro will be distributed as its own standalone extension, built from a tested Com
 **Mermaid diagram shows an error.** The diagram source has a syntax error; the preview shows Mermaid's parse message. Fix the diagram definition and the preview updates.
 
 **PDF/PowerPoint export, advanced file conversion, theme creation, or document/theme Copilot tools are missing.** Those are Pro features. MPS prompt, validation, and save tools are included in Community; install AI Markdown Studio Pro for the additional workflows.
+
+### Migrating retired slide types
+
+Opening a presentation preview with retired names shows one warning with **Review migration**. Preview renders immediately using temporary current-type replacements. Dismissing the warning leaves the Markdown unchanged. The review command offers choices for ambiguous slides, opens a diff, and applies edits only when you choose **Apply migration**. Retired names have editor warnings; unknown names have errors.
+
+See the [migration guide](migration-guide.md) for why types changed, the replacement table, step-by-step review, and developer asset migration.

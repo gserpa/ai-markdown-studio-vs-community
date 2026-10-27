@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import type { HtmlArtifact, HtmlArtifactOptions, HtmlAsset } from '@mfo/community-api';
 import {
@@ -22,12 +22,15 @@ import { getResolvedPresentationPreviewThemeSetting } from '../../presentation/p
 import { imageDataUri } from '../../images/imageDataUri';
 import { resolveDocumentResource } from '../../util/documentResourceResolver';
 import { resolveExtensionAssetUri, resolveExtensionNodeModulesUri } from '../../util/extensionSupportRoot';
-import { loadPreviewAssetManifest, previewAssetUri, type PreviewAssetDescriptor } from '../../util/previewAssetManifest';
+import { loadPreviewAssetManifest, matchingThemeAsset, previewAssetUri, selectPreviewStylesheetAssets, type PreviewAssetDescriptor } from '../../util/previewAssetManifest';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import type { ThemeCssArtifact } from '@mfo/preview-web';
+import { HtmlExportAssetCache, selectReferencedPreviewFonts } from './htmlExportAssets';
 
 export type ExportMode = 'theme' | 'paper' | 'paper-borderless';
 type VisualizationExportAssets = { runtime: string; notices: string };
+const exportAssets = new HtmlExportAssetCache();
 
 export async function buildExportHtmlString(
   extensionUri: vscode.Uri,
@@ -47,7 +50,7 @@ export async function buildExportHtmlArtifact(
 ): Promise<HtmlArtifact> {
   const exportMode = options.exportMode ?? 'theme';
   const manifest = loadPreviewAssetManifest(extensionUri);
-  const readPreviewAsset = (descriptor: PreviewAssetDescriptor): Promise<string> => readFile(previewAssetUri(extensionUri, descriptor).fsPath, 'utf8');
+  const readPreviewAsset = (descriptor: PreviewAssetDescriptor): Promise<string> => exportAssets.readText(previewAssetUri(extensionUri, descriptor).fsPath, descriptor.contentHash);
   const visualizationAssets = async (body: string): Promise<VisualizationExportAssets | undefined> => {
     if (!body.includes('data-md-visualization="vega-lite"')) return undefined;
     const [runtime, notices] = await Promise.all([
@@ -56,19 +59,27 @@ export async function buildExportHtmlArtifact(
     ]);
     return { runtime, notices };
   };
-  const [rawPreviewCoreCss, previewDocumentCss, previewPresentationCss, previewMermaidCss, katexCss, mermaidScript, previewThemeRuntimeScript, previewCoreRuntimeScript, previewPresentationRuntimeScript, previewDocumentRuntimeScript] = await Promise.all([
-    readPreviewAsset(manifest.assets.previewCore),
-    readPreviewAsset(manifest.assets.previewDocument),
-    readPreviewAsset(manifest.assets.previewPresentation),
-    readPreviewAsset(manifest.assets.previewMermaid),
-    readFile(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'katex.min.css').fsPath, 'utf8'),
-    readFile(resolveExtensionNodeModulesUri(extensionUri, 'mermaid', 'dist', 'mermaid.min.js').fsPath, 'utf8'),
-    readPreviewAsset(manifest.assets.previewThemeRuntime),
-    readPreviewAsset(manifest.assets.previewCoreRuntime),
-    readPreviewAsset(manifest.assets.previewPresentationRuntime),
-    readPreviewAsset(manifest.assets.previewDocumentRuntime),
-  ]);
-  const previewCoreCss = await inlinePreviewFontUrls(rawPreviewCoreCss, extensionUri);
+  const loadAssets = async (body: string, mode: 'document' | 'presentation', theme?: ThemeCssArtifact) => {
+    const hasMermaid = containsMermaid(body);
+    const themeAsset = theme && matchingThemeAsset(manifest, theme);
+    const [styles, katexCss, mermaidScript, previewThemeRuntimeScript, previewCoreRuntimeScript, modeRuntimeScript, themeCss, visualizations] = await Promise.all([
+      Promise.all(selectPreviewStylesheetAssets(manifest, mode, hasMermaid || containsImages(body)).map(readPreviewAsset)),
+      containsMath(body) ? exportAssets.readText(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'katex.min.css').fsPath) : '',
+      hasMermaid ? exportAssets.readText(resolveExtensionNodeModulesUri(extensionUri, 'mermaid', 'dist', 'mermaid.min.js').fsPath) : '',
+      readPreviewAsset(manifest.assets.previewThemeRuntime),
+      readPreviewAsset(manifest.assets.previewCoreRuntime),
+      readPreviewAsset(manifest.assets[mode === 'presentation' ? 'previewPresentationRuntime' : 'previewDocumentRuntime']),
+      themeAsset ? readPreviewAsset(themeAsset) : theme?.css ?? '',
+      visualizationAssets(body),
+    ]);
+    const selectedCss = selectReferencedPreviewFonts(styles.join('\n\n'), themeCss, body);
+    const previewCss = await inlinePreviewFontUrls(selectedCss, extensionUri);
+    return {
+      previewCss,
+      katexCss: rewriteKatexCssUrls(katexCss), mermaidScript,
+      previewThemeRuntimeScript, previewCoreRuntimeScript, modeRuntimeScript, themeCss, visualizations,
+    };
+  };
 
   const source = document.getText();
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
@@ -111,24 +122,18 @@ export async function buildExportHtmlArtifact(
     );
 
     const presentationBody = await embedLocalHtmlImages(rendered.html, document);
-    const hasMermaid = containsMermaid(presentationBody);
-    const hasMath = containsMath(rendered.html);
+    const assets = await loadAssets(presentationBody, 'presentation', buildPreviewThemeCssArtifact(registry, rendered.themeSelection.themeName));
     const rawHtml = buildPresentationStandaloneHtml({
       title: path.basename(document.fileName),
       body: presentationBody,
-      previewCss: [previewCoreCss, previewPresentationCss, (hasMermaid || containsImages(presentationBody)) ? previewMermaidCss : ''].filter(Boolean).join('\n\n'),
-      katexCss: hasMath ? rewriteKatexCssUrls(katexCss) : '',
-      mermaidScript: hasMermaid ? mermaidScript : '',
-      previewThemeRuntimeScript,
-      previewCoreRuntimeScript,
-      previewPresentationRuntimeScript,
-      visualizations: await visualizationAssets(presentationBody),
+      ...assets,
+      previewPresentationRuntimeScript: assets.modeRuntimeScript,
       exportMode,
       hostThemeClass: exportMode === 'theme' ? getHostThemeClass() : '',
-      previewThemeCss: buildPreviewThemeCssArtifact(registry, rendered.themeSelection.themeName).css,
+      previewThemeCss: assets.themeCss,
     });
     const html = rawHtml.replace(/<body\b([^>]*)>/u, '<body$1 data-md-chart-remote-images="' + allowRemoteResources + '">');
-  return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
+    return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
   }
 
   const exportMarkdown = getExportMarkdown(source);
@@ -136,22 +141,16 @@ export async function buildExportHtmlArtifact(
   const theme = resolveExportDocumentTheme(extensionUri, document, source, exportMode);
   const documentTableLayout = getDocumentTableLayout(document);
 
-  const hasMermaid = containsMermaid(body);
-  const hasMath = containsMath(body);
+  const assets = await loadAssets(body, 'document', theme.documentThemeArtifact);
   const rawHtml = buildStandaloneHtml({
     title: path.basename(document.fileName),
     body,
-    previewCss: [previewCoreCss, previewDocumentCss, (hasMermaid || containsImages(body)) ? previewMermaidCss : ''].filter(Boolean).join('\n\n'),
-    katexCss: hasMath ? rewriteKatexCssUrls(katexCss) : '',
-    mermaidScript: hasMermaid ? mermaidScript : '',
-    previewThemeRuntimeScript,
-    previewCoreRuntimeScript,
-    previewDocumentRuntimeScript,
-    visualizations: await visualizationAssets(body),
+    ...assets,
+    previewDocumentRuntimeScript: assets.modeRuntimeScript,
     htmlClass: theme.hostThemeClass,
     bodyClass: theme.bodyClass,
     bodyAttributes: `${theme.bodyAttributes} data-preview-page-width="${documentTableLayout === 'wide' ? 'full' : 'readable'}" data-document-table-layout="${documentTableLayout}"`,
-    documentThemeCss: theme.documentThemeCss,
+    documentThemeCss: assets.themeCss,
     exportMode,
   });
   const html = rawHtml.replace(/<body\b([^>]*)>/u, '<body$1 data-md-chart-remote-images="' + allowRemoteResources + '">');
@@ -277,13 +276,11 @@ function rewriteKatexCssUrls(css: string): string {
 
 async function inlinePreviewFontUrls(css: string, extensionUri: vscode.Uri): Promise<string> {
   const names = [...new Set([...css.matchAll(/url\(['"]?\.\.\/fonts\/([^'"\)]+)['"]?\)/gu)].map((match) => match[1]))];
+  const fonts = await Promise.all(names.map(async (name) => [
+    name, await exportAssets.fontDataUri(resolveExtensionAssetUri(extensionUri, 'preview', 'fonts', name).fsPath),
+  ] as const));
   let output = css;
-  await Promise.all(names.map(async (name) => {
-    const bytes = await readFile(resolveExtensionAssetUri(extensionUri, 'preview', 'fonts', name).fsPath);
-    const mediaType = name.toLowerCase().endsWith('.woff2') ? 'font/woff2' : 'application/octet-stream';
-    const dataUri = `data:${mediaType};base64,${bytes.toString('base64')}`;
-    output = output.replaceAll(`../fonts/${name}`, dataUri);
-  }));
+  for (const [name, dataUri] of fonts) output = output.replaceAll(`../fonts/${name}`, dataUri);
   return output;
 }
 
@@ -574,7 +571,7 @@ function resolveExportDocumentTheme(
   hostThemeClass: string;
   bodyClass: string;
   bodyAttributes: string;
-  documentThemeCss: string;
+  documentThemeArtifact?: ThemeCssArtifact;
 } {
   const usePrinterFriendlyTheme = exportMode !== 'theme';
   const hostThemeClass = usePrinterFriendlyTheme ? '' : getHostThemeClass();
@@ -602,7 +599,7 @@ function resolveExportDocumentTheme(
         documentMermaidTransparentBackgroundLight: selection.lightMermaidTransparentBackground ? 'true' : 'false',
         documentMermaidTransparentBackgroundDark: selection.darkMermaidTransparentBackground ? 'true' : 'false',
       }),
-      documentThemeCss: buildDocumentThemeCssArtifact(documentThemeRegistry, selection.themeName).css,
+      documentThemeArtifact: buildDocumentThemeCssArtifact(documentThemeRegistry, selection.themeName),
     };
   } catch (error) {
     console.warn('[markdown-ai-studio] Failed to resolve export document theme. Falling back to auto theme.', error);
@@ -619,7 +616,6 @@ function resolveExportDocumentTheme(
         documentMermaidTransparentBackgroundLight: 'false',
         documentMermaidTransparentBackgroundDark: 'false',
       }),
-      documentThemeCss: '',
     };
   }
 }

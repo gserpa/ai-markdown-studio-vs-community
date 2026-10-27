@@ -1,0 +1,173 @@
+.mermaid-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--md-preview-lightbox-shell-gap);
+  box-sizing: border-box;
+}
+
+.mermaid-lightbox[hidden] {
+  display: none;
+}
+
+.mermaid-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--md-preview-lightbox-backdrop-bg);
+  backdrop-filter: blur(6px);
+}
+
+.mermaid-lightbox-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  width: min(100%, 2200px);
+  height: min(100%, 1400px);
+  max-width: calc(100vw - (var(--md-preview-lightbox-shell-gap) * 2));
+  max-height: calc(100dvh - (var(--md-preview-lightbox-shell-gap) * 2));
+  padding: 18px;
+  box-sizing: border-box;
+  border: 1px solid var(--md-preview-lightbox-border);
+  border-radius: var(--md-preview-lightbox-shell-radius);
+  background: var(--md-preview-lightbox-bg);
+  box-shadow: var(--md-preview-lightbox-shadow);
+  outline: none;
+}
+
+.link-hover-tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1200;
+  max-width: min(38rem, calc(100vw - 24px));
+  padding: 0.45rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--md-preview-border-color, #d0d7de) 88%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--vscode-editorHoverWidget-background, #f6f8fa) 94%, white);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+  color: var(--vscode-editor-foreground, #24292f);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.link-hover-tooltip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mermaid-lightbox-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mermaid-lightbox-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mermaid-lightbox-button {
+  appearance: none;
+  border: 1px solid var(--md-preview-lightbox-button-border);
+  border-radius: 999px;
+  min-width: 44px;
+  padding: 0.45rem 0.9rem;
+  color: var(--md-preview-lightbox-button-color);
+  background: var(--md-preview-lightbox-button-bg);
+  cursor: pointer;
+}
+
+.mermaid-lightbox-button:hover {
+  background: var(--md-preview-lightbox-button-hover-bg);
+}
+
+.mermaid-lightbox-zoom {
+  min-width: 4.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-preview-lightbox-zoom-color);
+}
+
+.mermaid-lightbox-viewport {
+  min-height: 0;
+  overflow: auto;
+  border-radius: 16px;
+  background: var(--md-preview-lightbox-viewport-bg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-preview-lightbox-scrollbar-thumb) var(--md-preview-lightbox-scrollbar-track);
+  user-select: none;
+  cursor: zoom-in;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.mermaid-lightbox-viewport::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.mermaid-lightbox-viewport::-webkit-scrollbar-track {
+  background: var(--md-preview-lightbox-scrollbar-track);
+  border-radius: 999px;
+}
+
+.mermaid-lightbox-viewport::-webkit-scrollbar-thumb {
+  background: var(--md-preview-lightbox-scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--md-preview-lightbox-scrollbar-track);
+}
+
+.mermaid-lightbox-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--md-preview-lightbox-scrollbar-thumb-hover);
+}
+
+.mermaid-lightbox-viewport[data-pan-active='true'] {
+  cursor: grabbing;
+}
+
+.mermaid-lightbox-stage-wrap {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-width: 100%;
+  min-height: 100%;
+  padding: 24px;
+}
+
+.mermaid-lightbox-stage {
+  flex: 0 0 auto;
+}
+
+.mermaid-lightbox-diagram {
+  display: block;
+}
+
+.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--md-preview-border-color);
+  border-radius: 6px;
+  background: var(--md-preview-table-row-bg, var(--md-preview-code-bg));
+}
+
+.vscode-dark .mermaid,
+.vscode-high-contrast .mermaid {
+  filter: none;
+}

@@ -1,0 +1,49 @@
+/* Presentation controls and native scrollbars follow the selected slide
+   palette, even when VS Code itself uses a different color scheme. */
+body.preview-mode-presentation .presentation-standard-content {
+  scrollbar-color: color-mix(in srgb, var(--presentation-body-color, #1f2937) 32%, var(--presentation-panel-bg, #ffffff) 68%) var(--presentation-panel-bg, #ffffff);
+}
+
+body.preview-mode-presentation .presentation-standard-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body.preview-mode-presentation .presentation-standard-content::-webkit-scrollbar-track {
+  background: var(--presentation-panel-bg, #ffffff);
+}
+
+body.preview-mode-presentation .presentation-standard-content::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--presentation-body-color, #1f2937) 32%, var(--presentation-panel-bg, #ffffff) 68%);
+  border: 2px solid var(--presentation-panel-bg, #ffffff);
+  border-radius: 999px;
+}
+
+body.preview-mode-presentation .presentation-standard-content::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--presentation-body-color, #1f2937) 46%, var(--presentation-panel-bg, #ffffff) 54%);
+}
+
+body.preview-mode-presentation .presentation-slide-body .table-scroll-wrapper.presentation-table-scroll .table-overlay-button {
+  display: flex;
+}
+
+body.preview-mode-presentation .mermaid-zoom-trigger {
+  --md-preview-lightbox-button-border: var(--presentation-panel-border, rgba(79, 70, 216, 0.24));
+  --md-preview-lightbox-button-color: var(--presentation-body-color, #1f2937);
+  --md-preview-lightbox-button-bg: var(--presentation-panel-bg, #ffffff);
+  --md-preview-lightbox-button-hover-bg: color-mix(in srgb, var(--presentation-panel-bg, #ffffff) 72%, var(--presentation-accent, #4f46d8) 28%);
+}
+
+.mermaid-lightbox[data-presentation-theme-active='true'] {
+  --md-preview-lightbox-bg: var(--presentation-panel-bg, #ffffff);
+  --md-preview-lightbox-border: var(--presentation-panel-border, rgba(79, 70, 216, 0.24));
+  --md-preview-lightbox-button-border: var(--presentation-panel-border, rgba(79, 70, 216, 0.24));
+  --md-preview-lightbox-button-color: var(--presentation-body-color, #1f2937);
+  --md-preview-lightbox-button-bg: var(--presentation-panel-bg-soft, #f8faff);
+  --md-preview-lightbox-button-hover-bg: color-mix(in srgb, var(--presentation-panel-bg-soft, #f8faff) 72%, var(--presentation-accent, #4f46d8) 28%);
+  --md-preview-lightbox-zoom-color: var(--presentation-muted-color, #475569);
+  --md-preview-lightbox-viewport-bg: var(--presentation-body-bg, #f8faff);
+  --md-preview-lightbox-scrollbar-track: var(--presentation-panel-bg-soft, #f8faff);
+  --md-preview-lightbox-scrollbar-thumb: color-mix(in srgb, var(--presentation-body-color, #1f2937) 30%, var(--presentation-panel-bg-soft, #f8faff) 70%);
+  --md-preview-lightbox-scrollbar-thumb-hover: color-mix(in srgb, var(--presentation-body-color, #1f2937) 44%, var(--presentation-panel-bg-soft, #f8faff) 56%);
+}

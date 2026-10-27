@@ -4,6 +4,11 @@
   "defaultForModes": ["light"],
   "mermaidTheme": "default",
   "mermaidTransparentBackground": false,
+  "layouts": {
+    "illustrated-text": "media-right",
+    "featured-visual": "large-media",
+    "brief": "accent-side"
+  },
   "tokens": {
     "--presentation-accent": "#4f46d8",
     "--presentation-accent-soft": "#c7d2fe",

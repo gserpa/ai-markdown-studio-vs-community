@@ -1,0 +1,82 @@
+/* =========================================================
+   Document Preview: Tables + Utilities
+   ========================================================= */
+
+table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  border: 1px solid var(--md-preview-table-border);
+  border-radius: 12px;
+  background: var(--md-preview-table-bg);
+  box-shadow: var(--md-preview-table-shadow);
+}
+
+th,
+td {
+  padding: 12px 16px;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 1px solid var(--md-preview-table-cell-border);
+}
+
+thead th,
+table > tbody > tr:first-child > th {
+  font-weight: 600;
+  text-align: left;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--md-preview-table-header-color);
+  background: var(--md-preview-table-header-bg);
+  border-top: 0;
+}
+
+tbody td,
+tbody th,
+table > tbody > tr > td,
+table > tbody > tr > th {
+  color: var(--md-preview-table-cell-color);
+  background: var(--md-preview-table-row-bg);
+}
+
+tbody tr {
+  transition: background-color 120ms ease-in-out;
+}
+
+tbody tr:nth-child(2n) > :is(td, th) {
+  background: var(--md-preview-table-row-alt-bg);
+}
+
+tbody tr:hover > :is(td, th) {
+  background: var(--md-preview-table-row-hover-bg);
+}
+
+tbody tr:last-child > :is(td, th) {
+  border-bottom: 0;
+}
+
+thead th:first-child,
+table > tbody > tr:first-child > th:first-child {
+  border-top-left-radius: 12px;
+}
+
+thead th:last-child,
+table > tbody > tr:first-child > th:last-child {
+  border-top-right-radius: 12px;
+}
+
+td strong {
+  color: var(--md-preview-table-strong-color);
+}
+
+.presentation-slide-body td strong {
+  color: inherit;
+}
+
+.vscode-dark table,
+.vscode-high-contrast table {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}

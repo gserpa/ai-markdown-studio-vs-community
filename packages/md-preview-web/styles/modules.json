@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "asset": "previewCore",
+      "file": "core.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewContent",
+      "file": "content.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewContentElements",
+      "file": "content-elements.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewVisualizationsCss",
+      "file": "visualizations.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewMermaid",
+      "file": "media.css",
+      "modes": [
+        "document",
+        "presentation"
+      ],
+      "feature": "media"
+    },
+    {
+      "asset": "previewDocument",
+      "file": "document.css",
+      "modes": [
+        "document"
+      ]
+    },
+    {
+      "asset": "previewTableControls",
+      "file": "table-controls.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewLightbox",
+      "file": "lightbox.css",
+      "modes": [
+        "document",
+        "presentation"
+      ],
+      "feature": "media"
+    },
+    {
+      "asset": "previewTables",
+      "file": "tables.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewUtilities",
+      "file": "utilities.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewSyntax",
+      "file": "syntax.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewDocumentSyntax",
+      "file": "document-syntax.css",
+      "modes": [
+        "document"
+      ]
+    },
+    {
+      "asset": "previewInteractions",
+      "file": "interactions.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewPresentation",
+      "file": "presentation.css",
+      "modes": [
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewPresentationContent",
+      "file": "presentation-content.css",
+      "modes": [
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewPresentationLayouts",
+      "file": "presentation-layouts.css",
+      "modes": [
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewPresentationControls",
+      "file": "presentation-controls.css",
+      "modes": [
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewPresentationResponsive",
+      "file": "presentation-responsive.css",
+      "modes": [
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewCompatibility",
+      "file": "compatibility.css",
+      "modes": [
+        "document",
+        "presentation"
+      ]
+    },
+    {
+      "asset": "previewPresentationPalette",
+      "file": "presentation-palette.css",
+      "modes": [
+        "presentation"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,207 @@
+/* =========================================================
+   Presentation Preview
+   ========================================================= */
+
+body.preview-mode-presentation {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--vscode-textLink-foreground) 12%, transparent), transparent 36%),
+    linear-gradient(180deg, color-mix(in srgb, var(--vscode-editor-background) 90%, black 10%), var(--vscode-editor-background));
+}
+
+.preview-mode-presentation .presentation-preview {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
+  margin: 0 auto;
+  padding: 20px 24px;
+  --md-hover-accent: var(--presentation-hover-accent, var(--presentation-accent, var(--vscode-focusBorder)));
+  --md-hover-bg: var(--presentation-hover-bg, color-mix(in srgb, var(--presentation-panel-bg-soft, var(--vscode-editorHoverWidget-background)) 74%, var(--presentation-accent) 26%));
+  --md-hover-bg-soft: var(--presentation-hover-bg-soft, color-mix(in srgb, var(--presentation-panel-bg-soft, var(--vscode-editorHoverWidget-background)) 82%, var(--presentation-accent) 18%));
+  --md-hover-border: var(--presentation-hover-border, color-mix(in srgb, var(--presentation-accent) 26%, transparent));
+}
+
+.presentation-preview {
+  --presentation-accent: #4f46d8;
+  --presentation-accent-soft: #c7d2fe;
+  --presentation-body-bg: rgba(255, 255, 255, 0.42);
+  --presentation-body-border: rgba(79, 70, 216, 0.1);
+  --presentation-body-color: #1f2937;
+  --presentation-contrast: #ffffff;
+  --presentation-divider-overlay-bg: linear-gradient(90deg, rgba(16, 24, 40, 0.18), rgba(16, 24, 40, 0.58));
+  --presentation-emphasis-color: #475569;
+  --presentation-link-color: #3730a3;
+  --presentation-media-bg: linear-gradient(160deg, #c7d2fe, #635bff);
+  --presentation-media-frame-bg: rgba(255, 255, 255, 0.9);
+  --presentation-muted-color: #475569;
+  --presentation-panel-bg: #ffffff;
+  --presentation-panel-bg-soft: #f8faff;
+  --presentation-panel-border: rgba(79, 70, 216, 0.14);
+  --presentation-pill-bg: rgba(255, 255, 255, 0.7);
+  --presentation-pill-border: rgba(79, 70, 216, 0.16);
+  --presentation-pill-color: #312e81;
+  --presentation-standard-content-bg: #ffffff;
+  --presentation-standard-header-bg: linear-gradient(180deg, #5046d8, #4237c6);
+  --presentation-surface-bg: linear-gradient(180deg, #eef2ff, #dde6ff);
+  --presentation-surface-border: rgba(79, 70, 216, 0.16);
+  --presentation-surface-shadow: 0 28px 80px rgba(44, 52, 105, 0.28);
+  --presentation-title-color: #f8fafc;
+}
+
+.presentation-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  margin-left: 36px;
+  margin-right: 36px;
+}
+
+.presentation-header-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.presentation-header-title {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--vscode-editor-foreground);
+}
+
+.presentation-header-author {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground);
+}
+
+.presentation-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.presentation-status {
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--vscode-button-border, var(--vscode-panel-border)) 80%, transparent);
+  border-radius: 999px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  font-size: 0.8rem;
+}
+
+.presentation-stage {
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.presentation-slide {
+  display: none;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.presentation-slide.is-active {
+  display: block;
+}
+
+.presentation-slide-shell {
+  display: grid;
+  grid-template-rows: 1fr;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.presentation-frame {
+  position: relative;
+  flex: 0 0 auto;
+  display: block;
+  height: auto;
+  max-width: 100%;
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+  overflow: hidden;
+}
+
+.presentation-stage {
+  touch-action: none;
+}
+
+.presentation-slide-shell,
+.presentation-frame {
+  touch-action: manipulation;
+}
+
+.presentation-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 18px;
+  line-height: 1.55;
+  transform-origin: top left;
+}
+
+.is-slide-zoomed .presentation-slide,
+.is-slide-zoomed .presentation-slide-shell,
+.is-slide-zoomed .presentation-frame {
+  overflow: visible;
+}
+
+.is-slide-zoomed .presentation-canvas {
+  will-change: transform;
+}
+
+.presentation-ratio-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.presentation-ratio-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.presentation-surface {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-radius: 28px;
+  border: 0;
+  background: var(--presentation-surface-bg, linear-gradient(180deg, color-mix(in srgb, var(--vscode-editor-background) 96%, white 4%), color-mix(in srgb, var(--vscode-editor-background) 88%, black 12%)));
+  box-shadow: var(--presentation-surface-shadow, 0 28px 80px color-mix(in srgb, var(--vscode-editor-background) 48%, black 52%));
+  overflow: hidden;
+}

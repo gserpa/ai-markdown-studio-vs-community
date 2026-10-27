@@ -11,6 +11,7 @@ export const commandEntries = [
   { command: "markdownAiStudio.generateDocument", title: "AI: Generate Document" },
   { command: "markdownAiStudio.generatePresentation", title: "AI: Generate Presentation" },
   { command: "markdownAiStudio.installPresentationSkill", title: "AI: Install Presentation Skill" },
+  { command: "markdownAiStudio.reviewSlideTypeMigration", title: "Presentation: Review Slide Type Migration" },
   { command: "markdownAiStudio.enableAiFeatures", title: "AI: Enable Features..." },
   { command: "markdownAiStudio.openSettings", title: "Change Settings..." },
   { command: "markdownAiStudio.toggleFrontMatter", title: "Toggle Frontmatter" },

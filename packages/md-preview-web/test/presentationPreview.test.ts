@@ -188,13 +188,13 @@ Intro text.
 
     expect(preview.html).toContain('presentation-two-column-grid');
     expect(preview.html).toContain('presentation-column-heading');
-    expect(preview.html).toContain('presentation-image-right-grid');
+    expect(preview.html).toContain('presentation-illustrated-grid');
     expect(preview.html).toContain('presentation-image-frame');
     expect(preview.html).toContain('presentation-standard-header');
     expect(preview.html).toContain('https://example.com/test.png');
   });
 
-  it('renders image-center slides with copy above and below the centered media', () => {
+  it('renders a featured visual with its description in one flow', () => {
     const preview = renderPresentationPreview(`---
 document: presentation
 ---
@@ -214,14 +214,14 @@ The service returns a validated response.
       .replace(/\n\n+/gu, ''), previewThemeRegistry, createDocument);
 
     const document = createDocument(preview.html);
-    const layout = document.querySelector('.presentation-image-center-layout');
+    const layout = document.querySelector('.presentation-featured-layout');
 
     expect(layout).not.toBeNull();
-    expect(layout?.querySelector('.presentation-image-center-body')).not.toBeNull();
-    expect(layout?.querySelector('.presentation-image-center-body')?.textContent).toContain('The request enters through the gateway.');
-    expect(layout?.querySelector('.presentation-image-center-media img')?.getAttribute('src')).toBe('https://example.com/system-flow.png');
-    expect(layout?.querySelector('.presentation-image-center-footer')).not.toBeNull();
-    expect(layout?.querySelector('.presentation-image-center-footer')?.textContent).toContain('The service returns a validated response.');
+    expect(layout?.querySelector('.presentation-featured-copy')).not.toBeNull();
+    expect(layout?.querySelector('.presentation-featured-copy')?.textContent).toContain('The request enters through the gateway.');
+    expect(layout?.querySelector('.presentation-featured-media img')?.getAttribute('src')).toBe('https://example.com/system-flow.png');
+    expect(layout?.querySelector('.presentation-featured-copy')).not.toBeNull();
+    expect(layout?.querySelector('.presentation-featured-copy')?.textContent).toContain('The service returns a validated response.');
   });
 
   it('bounds default-layout media between the surrounding Markdown content', () => {
@@ -436,90 +436,9 @@ Intro text.
     const imageRightSlide = slides[0];
     const defaultSlide = slides[1];
 
-    expect(imageRightSlide?.querySelector('.presentation-image-right-media .mermaid')?.textContent).toContain('graph TD; A-->B;');
-    expect(imageRightSlide?.querySelector('.presentation-image-right-copy .mermaid')).toBeNull();
+    expect(imageRightSlide?.querySelector('.presentation-illustrated-media .mermaid')?.textContent).toContain('graph TD; A-->B;');
+    expect(imageRightSlide?.querySelector('.presentation-illustrated-copy .mermaid')).toBeNull();
     expect(defaultSlide?.querySelector('.presentation-standard-content .mermaid')?.textContent).toContain('graph TD; C-->D;');
   });
 
-  it('renders preview-only layout structures for cover, side variants, table legend, and divider', () => {
-    const preview = renderPresentationPreview(`---
-document: presentation
----
-
-<!--slide: cover-->
-# Cover
-
-Deck subtitle
-
-![Cover image](https://example.com/cover.png)
-
----
-
-<!--slide: side-banner-->
-# Side Banner
-
-![Banner image](https://example.com/banner.png)
-
-Banner text
-
----
-
-<!--slide: side-picture-->
-# Side Picture
-
-![Picture image](https://example.com/picture.png)
-
-Picture text
-
----
-
-<!--slide: default-side-->
-# Default Side
-
-Default side text
-
----
-
-<!--slide: table-legend-->
-# Table Legend
-
-Legend copy
-
-| Name | Value |
-| --- | --- |
-| Alpha | 1 |
-
----
-
-<!--slide: divider-->
-# Divider
-
-Divider subtitle
-
-![Divider image](https://example.com/divider.png)
-`, (markdown) => markdown
-      .replace(/^# (.+)$/gmu, '<h1>$1</h1>')
-      .replace(/^\| (.+) \|$/gmu, (_match, content) => `<tr>${content.split(' | ').map((cell: string) => `<td>${cell}</td>`).join('')}</tr>`)
-      .replace(/(<tr>.*<\/tr>)\n(<tr>.*<\/tr>)/gsu, '<table>$1$2</table>')
-      .replace(/!\[(.*?)\]\((.*?)\)/gu, '<img alt="$1" src="$2" />')
-      .replace(/^(Deck subtitle|Banner text|Picture text|Default side text|Legend copy|Divider subtitle)$/gmu, '<p>$1</p>')
-      .replace(/<table><tr><td>---<\/td><td>---<\/td><\/tr>/gu, '<table>')
-      .replace(/\n\n+/gu, ''), previewThemeRegistry, createDocument);
-
-    const dom = new JSDOM(preview.html);
-    const document = dom.window.document;
-
-    expect(document.querySelector('.presentation-cover-layout')).not.toBeNull();
-    expect(document.querySelector('.presentation-cover-media img')?.getAttribute('src')).toBe('https://example.com/cover.png');
-    expect(document.querySelector('.presentation-side-banner-layout')).not.toBeNull();
-    expect(document.querySelector('.presentation-side-banner-media img')?.getAttribute('src')).toBe('https://example.com/banner.png');
-    expect(document.querySelector('.presentation-side-picture-layout')).not.toBeNull();
-    expect(document.querySelector('.presentation-side-picture-media img')?.getAttribute('src')).toBe('https://example.com/picture.png');
-    expect(document.querySelector('.presentation-default-side-layout')).not.toBeNull();
-    expect(document.querySelector('.presentation-default-side-sidebar .presentation-default-side-title')?.textContent).toContain('Default Side');
-    expect(document.querySelector('.presentation-table-legend-layout')).not.toBeNull();
-    expect(document.querySelector('.presentation-table-legend-table table')).not.toBeNull();
-    expect(document.querySelector('.presentation-divider-layout.has-background-media')).not.toBeNull();
-    expect(document.querySelector('.presentation-divider-background img')?.getAttribute('src')).toBe('https://example.com/divider.png');
-  });
 });

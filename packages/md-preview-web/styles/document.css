@@ -1,0 +1,78 @@
+body.preview-mode-document {
+  height: 100vh;
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+body.preview-mode-document .document-preview-shell {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body.preview-mode-document .document-preview-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body.preview-mode-document .markdown-body {
+  overflow-x: hidden;
+}
+
+.frontmatter-shell {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 0;
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  font-size: var(--vscode-font-size, 13px);
+  line-height: normal;
+}
+
+body.preview-mode-document .frontmatter-shell {
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.preview-mode-document[data-preview-page-width='full'] .frontmatter-shell {
+  max-width: none;
+}
+
+.frontmatter-grid {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr);
+  border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, transparent));
+}
+
+.frontmatter-grid-key,
+.frontmatter-grid-value {
+  min-width: 0;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-widget-border, transparent));
+}
+
+.frontmatter-grid-key {
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  font-weight: 600;
+}
+
+.frontmatter-grid-value {
+  overflow-wrap: anywhere;
+  color: var(--vscode-editor-foreground, var(--vscode-foreground));
+  background: var(--vscode-editor-background);
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
+.frontmatter-grid > :nth-last-child(-n + 2) {
+  border-bottom: 0;
+}

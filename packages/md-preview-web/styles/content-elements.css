@@ -1,0 +1,75 @@
+/* =========================================================
+   Document Preview: Code, Links, and Blockquotes
+   ========================================================= */
+
+code,
+pre {
+  font-family: var(--md-preview-code-font);
+  font-size: 85%;
+}
+
+pre {
+  padding: 16px;
+  overflow-x: auto;
+  line-height: 1.45;
+  border: 1px solid var(--md-preview-border-color);
+  border-radius: 6px;
+  background: var(--md-preview-code-bg);
+  color: var(--md-preview-code-color);
+}
+
+code {
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  background: var(--md-preview-code-bg);
+  color: var(--md-preview-code-color);
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+blockquote {
+  margin-left: 0;
+  padding: 0 1em;
+  border-left: 4px solid var(--md-preview-blockquote-border);
+  color: var(--md-preview-blockquote-color);
+  background: var(--md-preview-blockquote-bg);
+  border-radius: 0 10px 10px 0;
+}
+
+.markdown-body blockquote > :first-child {
+  margin-top: 0;
+}
+
+.markdown-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body blockquote blockquote {
+  margin-top: 12px;
+  background: var(--md-preview-blockquote-nested-bg);
+}
+
+a {
+  color: var(--md-preview-link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--md-preview-link-hover-color);
+  text-decoration: underline;
+}
+
+a[data-href] {
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: 6px;
+}

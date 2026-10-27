@@ -124,7 +124,10 @@ const createDocument: CreateDocument = (html: string): Document => {
 };
 
 (window as any).renderPresentationToHtml = function (rawMarkdown: string): { html: string; themeArtifact: ThemeCssArtifact } {
-  const preview = renderPresentationPreview(rawMarkdown, renderMarkdown, previewThemeRegistry, createDocument);
+  const hostScheme = document.documentElement.dataset.mdHostScheme;
+  const hostDark = hostScheme === 'dark' || document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+    || (hostScheme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const preview = renderPresentationPreview(rawMarkdown, renderMarkdown, previewThemeRegistry, createDocument, 'auto', hostDark ? 'dark' : 'light');
   return {
     html: preview.html,
     themeArtifact: buildPreviewThemeCssArtifact(previewThemeRegistry, preview.themeSelection.themeName),
