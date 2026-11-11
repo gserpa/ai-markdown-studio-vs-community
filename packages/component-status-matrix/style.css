@@ -1,0 +1,31 @@
+.markdown-body .md-status-matrix { width: 100%; border-collapse: collapse; overflow-wrap: anywhere; }
+.markdown-body .md-status-matrix th,
+.markdown-body .md-status-matrix td { padding: 0.5em 0.65em; border: 1px solid var(--md-preview-border-color); text-align: left; }
+.markdown-body .md-status-matrix thead th { font-weight: 700; }
+.markdown-body .md-status-matrix .md-matrix-detail { display: block; font-size: 0.82em; font-weight: normal; opacity: 0.8; }
+.markdown-body .md-status-matrix .md-matrix-cell { --md-matrix-color: var(--presentation-accent, #3269b1); }
+.markdown-body .md-status-matrix .md-matrix-neutral, .markdown-body .md-matrix-legend .md-matrix-neutral { --md-matrix-color: var(--md-matrix-neutral-color, var(--presentation-component-unknown, #738095)); }
+.markdown-body .md-status-matrix .md-matrix-info, .markdown-body .md-matrix-legend .md-matrix-info { --md-matrix-color: var(--md-matrix-info-color, var(--presentation-component-primary, #1686c8)); }
+.markdown-body .md-status-matrix .md-matrix-success, .markdown-body .md-matrix-legend .md-matrix-success { --md-matrix-color: var(--md-matrix-success-color, var(--presentation-component-success, #178452)); }
+.markdown-body .md-status-matrix .md-matrix-warning, .markdown-body .md-matrix-legend .md-matrix-warning { --md-matrix-color: var(--md-matrix-warning-color, var(--presentation-component-warning, #c27a0b)); }
+.markdown-body .md-status-matrix .md-matrix-danger, .markdown-body .md-matrix-legend .md-matrix-danger { --md-matrix-color: var(--md-matrix-danger-color, var(--presentation-component-danger, #c94141)); }
+.markdown-body .md-status-matrix .md-matrix-neutral .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-info .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-success .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-warning .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-danger .md-matrix-status { border-left: 0.25em solid var(--md-matrix-color); padding-left: 0.4em; }
+.markdown-body .md-status-matrix .md-matrix-progress { display: block; width: 100%; height: 0.45em; margin-top: 0.3em; background: color-mix(in srgb, var(--md-matrix-color) 20%, transparent); border-radius: 1em; overflow: hidden; }
+.markdown-body .md-status-matrix .md-matrix-progress-fill { display: block; height: 100%; background: var(--md-matrix-color); }
+.markdown-body .md-status-matrix .md-matrix-progress-text { font-size: 0.8em; }
+.markdown-body .md-matrix-legend span { border-left: 0.25em solid var(--md-matrix-color); padding-left: 0.35em; }
+
+/* Matrix row headers use body colors; generic table header rules target every th. */
+.presentation-slide-body table.md-status-matrix tbody th {
+  color: var(--presentation-table-cell-color, var(--presentation-body-color, inherit));
+  background: var(--presentation-table-cell-bg, transparent);
+}
+.presentation-slide-body table.md-status-matrix tbody tr:nth-child(even) th {
+  background: var(--presentation-table-row-alt-bg, transparent);
+}
+
+.presentation-theme-midnight-delivery .md-status-matrix th,
+.presentation-theme-midnight-delivery .md-status-matrix td { border-color: var(--presentation-panel-border); }
+.presentation-theme-midnight-delivery .md-status-matrix thead th { color: var(--presentation-accent); background: var(--presentation-panel-bg); }
+
+.markdown-body .md-status-matrix .md-matrix-indicator { border-left: 0.25em solid var(--md-matrix-color); padding-left: 0.4em; }

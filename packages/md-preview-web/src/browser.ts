@@ -20,10 +20,12 @@ import blackTheme from '../assets/themes/presentation/black.json';
 import galaxyTheme from '../assets/themes/presentation/galaxy.json';
 // @ts-expect-error — JSON theme files are resolved by the esbuild bundler at build time.
 import modernBlueTheme from '../assets/themes/presentation/modern-blue.json';
+// @ts-expect-error - JSON theme files are resolved by the esbuild bundler at build time.
+import midnightDeliveryTheme from '../assets/themes/presentation/midnight-delivery.json';
 
 const md = createMarkdownRenderer();
 
-const previewThemeRegistry = loadPreviewThemeRegistryFromData([blackTheme, galaxyTheme, modernBlueTheme]);
+const previewThemeRegistry = loadPreviewThemeRegistryFromData([blackTheme, galaxyTheme, modernBlueTheme, midnightDeliveryTheme]);
 
 const additionalTags = [
   'math',

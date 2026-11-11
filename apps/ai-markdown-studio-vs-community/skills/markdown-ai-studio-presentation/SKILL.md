@@ -44,3 +44,19 @@ Use specialized layouts for intentional structural differences rather than each 
 Do not add template or manifest paths merely to repeat a configured default: Pro uses workspace/global
 PPTX defaults automatically, while explicit document front matter takes precedence. Never invent a
 local filesystem path. Template onboarding and approved flow regions handle placement during export.
+
+## Optional heading roles
+
+Keep ordinary slides simple: existing headings and body paragraphs need no extra markers. Only when the brief requests a distinct context label or slide subtitle, use `<!-- slide-label -->` or `<!-- slide-subtitle -->` before one top-level text paragraph, at most once per role. Do not infer a subtitle from an ordinary opening paragraph. The layout decides visibility and placement; a missing slot omits the optional field. Markers in code examples are literal. Current PPTX adapters do not place these optional roles.
+
+## Optional content areas
+
+Ordinary slides need no area markers. When a content slide needs two to four independent areas, place `<!-- region-break -->` between non-empty areas, at most three times. Do not mix it with `<!--column-break-->`. PowerPoint currently exports area content in normal flow and warns that the arrangement is not retained.
+
+## Status matrices
+
+Use a `component` fence with `type: status-matrix`, `version: 1`, and either structured `data.columns` / `data.rows` or `data.markdown-table`. For grouped structured columns, map each group to a list of leaf names. Use `progress: "1/2"` or `progress: "50%"` only when supplied. Optional status labels map to `neutral`, `info`, `success`, `warning`, or `danger`. A table literal uses a group header such as `Definition {2}`, a leaf header, then a Markdown separator; `Active :: 1/2` combines status and supplied progress. Keep the table small enough to fit. PowerPoint simplifies grouped headers and shows progress as text.
+
+## Record lists and fact cards
+
+Use `record-list` for supplied records, choosing `data.records` or `data.groups`; include optional ID, detail, ordinal, metadata, tags, status or scale only when provided. Use `fact-cards` for a supplied collection of text, numeric or explicit ratio values. Both use `~~~component`, `type`, `version: 1` and `data`. Do not infer totals, progress, ratings, dates or status. Both render as text in PowerPoint with simplified styling.

@@ -1,3 +1,4 @@
+import { bundledComponents } from '@mfo/bundled-components';
 import { createVisualizationAuthoringInstructions } from './visualizationAuthoring';
 
 export type GenerationPromptRequest = {
@@ -52,7 +53,7 @@ export function createPresentationPrompt(request: GenerationPromptRequest): stri
     `Use theme: ${theme}.`,
     `Use ratio: ${ratio}.`,
     'Use top-level --- separators between slides.',
-    'Every slide must start with one # H1 slide title. If you use a slide directive, place exactly one <!--slide: name--> comment immediately after the top-level --- separator and before the title; never place it after the title or later in the slide body.',
+    'Every slide must have one # H1 slide title. If you use a slide directive, place exactly one <!--slide: name--> comment immediately after the top-level --- separator and before the title; never place it after the title or later in the slide body.',
     'Allowed slide content types: content, cover, two-column, illustrated-text, featured-visual, brief, divider, thanks.',
     'For two-column slides, separate the two bodies with <!--column-break-->. Headings are optional.',
     'Every content slide must include a concise <!--notes: ...--> speaker note with delivery guidance. Cover and thanks slides may use shorter notes.',
@@ -81,8 +82,12 @@ export function createPresentationPrompt(request: GenerationPromptRequest): stri
     '- content slides have a title and a flowing body; a dedicated table or image slot is unnecessary for mixed content.',
     '- illustrated-text and featured-visual use the first image or Mermaid diagram as primary media; the output design chooses its placement.',
     '- two-column slides split at one <!--column-break--> marker. Legacy H2-based column grouping remains supported, but prefer the explicit marker.',
+    '- Ordinary slides need no area markers. If a content slide explicitly needs two to four areas, use standalone <!-- region-break --> markers between non-empty areas. Do not mix them with column-break. PowerPoint currently exports their content in normal flow and warns that the arrangement is not retained.',
+    ...bundledComponents.flatMap(component => component.authoringInstructions ?? []),
     '- Legacy layout names remain readable for existing decks; generate only the eight canonical content types.',
     '- speaker notes are HTML comments like <!--notes: Talk track here.--> and are not visible on the slide.',
+    '- Ordinary headings and body paragraphs need no extra markers. Do not add optional structure unless the brief needs it.',
+    '- When a distinct context label or slide subtitle is requested, use <!-- slide-label --> or <!-- slide-subtitle --> before one top-level text paragraph, at most once per role per slide. The layout decides placement; layouts without a slot omit the field. Do not label an ordinary opening paragraph as a subtitle. PPTX does not yet place these new optional roles.',
     '',
     'Valid example:',
     '---',

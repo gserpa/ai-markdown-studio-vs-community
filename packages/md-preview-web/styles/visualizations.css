@@ -120,3 +120,6 @@
     overflow: visible !important;
   }
 }
+
+.markdown-body .md-component-error { border: 1px solid var(--md-preview-border-color); padding: 0.75em; overflow-wrap: anywhere; }
+.markdown-body .md-component-error pre { white-space: pre-wrap; }

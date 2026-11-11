@@ -1,12 +1,14 @@
-import { parseMarkdownPresentation, resolveMarkdownPresentation, distributeItemsAcrossSlots, splitPresentationColumns, type PresentationSlideType } from '@mfo/core';
+import { parseMarkdownPresentation, resolveMarkdownPresentation, distributeItemsAcrossSlots, splitPresentationColumns, type PresentationSlideType, type MarkdownPresentationSlide } from '@mfo/core';
 import { resolvePreviewThemeSelection, type PreviewThemeRegistry, type PreviewThemeSelection, type PreviewThemeMode } from './previewThemeRegistry';
-import { DEFAULT_PRESENTATION_LAYOUTS, type PresentationLayoutName } from './presentationLayouts';
+import { DEFAULT_PRESENTATION_LAYOUTS, effectivePresentationLayout, type PresentationLayoutName } from './presentationLayouts';
+import { placePresentationHeadingRoles } from './presentationHeadingRoles';
 
 export type PresentationPreview = {
   deckTitle: string;
   slideCount: number;
   html: string;
   themeSelection: PreviewThemeSelection;
+  warnings: string[];
 };
 
 type SlideLayoutContext = {
@@ -39,7 +41,7 @@ export function renderPresentationPreview(
   const presentationRatio = asString(presentation.meta.ratio) || '16:9';
   const ratioClass = getRatioClass(presentationRatio);
   const canvasSize = getPresentationCanvasSize(presentationRatio);
-  const slides = presentation.slides.length > 0
+  const slides: MarkdownPresentationSlide[] = presentation.slides.length > 0
     ? presentation.slides
     : [{ template: 'content', body: '# Empty presentation\n\nAdd slide content to preview this deck.', notes: undefined }];
 
@@ -47,11 +49,13 @@ export function renderPresentationPreview(
     const bodyHtml = renderMarkdown(slide.body);
     const templateName = slide.template.trim() || 'content';
     const layoutContext = createSlideLayoutContext(bodyHtml, createDocument);
+    const regionBodies = slide.regions?.map(region => createSlideLayoutContext(renderMarkdown(region), createDocument).body);
     const columns = templateName === 'two-column' ? splitPresentationColumns(slide.body) : undefined;
     if (columns) layoutContext.columns = columns.map((body) => createSlideLayoutContext(renderMarkdown(body), createDocument).body) as [HTMLElement, HTMLElement];
     const title = extractHeading(layoutContext.body) || `Slide ${index + 1}`;
     const normalizedType = templateName.toLowerCase() as PresentationSlideType;
-    const layoutName = themeSelection.layouts?.[normalizedType] ?? DEFAULT_PRESENTATION_LAYOUTS[normalizedType] ?? 'header-body';
+    const layout = effectivePresentationLayout(themeSelection.layouts?.[normalizedType] ?? DEFAULT_PRESENTATION_LAYOUTS[normalizedType] ?? 'header-body');
+    const layoutName = layout.variant;
 
     return {
       index,
@@ -59,11 +63,16 @@ export function renderPresentationPreview(
       templateName,
       layoutName,
       templateClass: `presentation-template-${toClassToken(templateName)} presentation-layout-${layoutName}`,
-      bodyLayoutHtml: themeLayoutBuilders[layoutName](layoutContext),
+      regionWarning: regionBodies && layoutName !== 'header-body'
+        ? 'This layout does not support multiple content areas. The content is shown in its normal flow.' : undefined,
+      bodyLayoutHtml: placePresentationHeadingRoles(
+        regionBodies && layoutName === 'header-body' ? createRegionLayout(regionBodies, layout.regions) : themeLayoutBuilders[layoutName](layoutContext),
+        slide.heading, layout.slots, renderMarkdown, createDocument),
       notesHtml: slide.notes ? renderMarkdown(slide.notes) : '',
     };
   });
 
+  const warnings = slides.flatMap((slide, index) => [...(slide.warnings ?? []), ...(renderedSlides[index].regionWarning ? [renderedSlides[index].regionWarning!] : [])].map(message => `Slide ${index + 1}: ${message}`));
   const slidesHtml = renderedSlides.map((slide) => `
       <section class="presentation-slide ${slide.templateClass}${slide.index === 0 ? ' is-active' : ''}" data-slide-index="${slide.index}" data-slide-template="${escapeHtml(slide.templateName)}" data-slide-layout="${escapeHtml(slide.layoutName)}" data-slide-title="${escapeHtml(slide.title)}" aria-hidden="${slide.index === 0 ? 'false' : 'true'}">
         <div class="presentation-slide-shell">
@@ -116,6 +125,7 @@ export function renderPresentationPreview(
           </button>
         </div>
       </header>
+      ${warnings.length ? `<div class="presentation-diagnostics" role="status">${warnings.map(warning => `<p>${escapeHtml(warning)}</p>`).join('')}</div>` : ''}
       <div class="presentation-stage">
         ${slidesHtml}
       </div>
@@ -154,6 +164,7 @@ export function renderPresentationPreview(
     slideCount: slides.length,
     html,
     themeSelection,
+    warnings,
   };
 }
 
@@ -186,6 +197,15 @@ const themeLayoutBuilders: Record<PresentationLayoutName, SlideLayoutBuilder> = 
   'split-divider': createSplitDividerLayout,
   thanks: createThanksLayout,
 };
+
+function createRegionLayout(regions: HTMLElement[], arrangement: 'balanced' | 'primary-wide' = 'balanced'): string {
+  const title = extractPrimaryHeading(regions[0]);
+  regions.forEach(wrapFlowMedia);
+  const content = '<div class="presentation-region-grid presentation-regions-' + regions.length + ' presentation-regions-' + arrangement + '">'
+    + regions.map((region, index) => '<section class="presentation-region" tabindex="0" aria-label="Content area ' + (index + 1) + '">' + region.innerHTML.trim() + '</section>').join('')
+    + '</div>';
+  return wrapStandardLayout(title, content, ' presentation-standard-layout-regions');
+}
 
 function createStandardLayout(context: SlideLayoutContext): string {
   const title = extractPrimaryHeading(context.body);

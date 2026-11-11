@@ -3,6 +3,7 @@ import katex from 'katex';
 import MarkdownIt from 'markdown-it';
 import sanitizeHtml from 'sanitize-html';
 import { renderVisualizationBlock } from '../visualizations/visualizationHtml';
+import { renderComponent } from '../components/components';
 
 const markdownItAnchor = require('markdown-it-anchor');
 const markdownItEmoji = require('markdown-it-emoji');
@@ -103,6 +104,8 @@ export function createMarkdownRenderer(options: MarkdownRendererOptions = {}): M
   md.renderer.rules.fence = (tokens, idx, renderOptions, env, self) => {
     const token = tokens[idx];
     const info = token.info.trim().split(/\s+/u)[0]?.toLowerCase();
+
+    if (info === 'component') return renderComponent(token.content);
 
     if (info === 'mermaid') {
       return `<div class="mermaid">${md.utils.escapeHtml(token.content)}</div>`;
@@ -213,6 +216,8 @@ export function sanitizeRenderedHtml(html: string): string {
     'source',
     'track',
     'table',
+    'colgroup',
+    'col',
     'thead',
     'tbody',
     'tfoot',
@@ -248,14 +253,17 @@ export function sanitizeRenderedHtml(html: string): string {
   return sanitizeHtml(html, {
     allowedTags: [...allowedTags],
     allowedAttributes: {
-      '*': ['class', 'id', 'style', 'title', 'aria-hidden', 'data-*', 'align'],
+      '*': ['class', 'id', 'style', 'title', 'aria-hidden', 'aria-label', 'data-*', 'align'],
       a: ['href', 'name', 'target', 'rel', 'data-href'],
       img: ['src', 'alt', 'title', 'width', 'height'],
       video: ['src', 'controls', 'autoplay', 'loop', 'muted', 'playsinline', 'poster', 'preload', 'width', 'height'],
       source: ['src', 'type', 'media'],
       track: ['src', 'kind', 'srclang', 'label', 'default'],
       input: ['type', 'checked', 'disabled'],
-      th: ['colspan', 'rowspan', 'align'],
+      th: ['colspan', 'rowspan', 'align', 'scope'],
+      colgroup: ['span'],
+      col: ['span'],
+      span: ['class', 'role', 'aria-label', 'aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'style'],
       td: ['colspan', 'rowspan', 'align'],
       ol: ['start'],
       annotation: ['encoding'],

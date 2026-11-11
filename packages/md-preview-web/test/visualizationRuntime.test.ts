@@ -118,6 +118,25 @@ describe('visualization coordinator', () => {
     expect(mount.mock.calls.at(-1)![2].theme.palette[0]).toBe(expected);
   });
 
+  it('uses component palette colors for presentation charts when a theme supplies them', async () => {
+    const { document, runtime, mount } = setup();
+    const wrapper = document.createElement('div');
+    wrapper.className = 'presentation-preview';
+    document.body.append(wrapper);
+    const block = document.querySelector<HTMLElement>('.md-visualization-chart')!;
+    wrapper.append(block);
+    block.style.setProperty('--presentation-accent', '#2BC4F3');
+    block.style.setProperty('--presentation-panel-bg', '#131C56');
+    block.style.setProperty('--presentation-component-secondary', '#A78BFA');
+    block.style.setProperty('--presentation-component-success', '#34D399');
+    block.style.setProperty('--presentation-component-warning', '#F6AD3C');
+    block.style.setProperty('--presentation-component-danger', '#F0566B');
+    await runtime.refresh();
+    expect(mount.mock.calls.at(-1)![2].theme.palette).toEqual([
+      '#2BC4F3', '#A78BFA', '#34D399', '#F6AD3C', '#F0566B',
+    ]);
+  });
+
   it('disposes a delayed result after a newer specification has finished', async () => {
     let finish!: (handle: VisualizationHandle) => void;
     const stale = { resize: vi.fn(), dispose: vi.fn() };

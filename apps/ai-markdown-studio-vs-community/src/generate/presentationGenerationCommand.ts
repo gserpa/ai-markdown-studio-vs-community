@@ -7,7 +7,7 @@ import { normalizeGeneratedPresentationImages } from './generatedPresentationIma
 import { shouldGenerateWithLanguageModel } from './generationMode';
 import { offerPresentationSkillInstallation } from '../skills/presentationSkillInstaller';
 
-const THEMES = ['auto', 'default', 'galaxy', 'modern-blue', 'black'] as const;
+const THEMES = ['auto', 'default', 'galaxy', 'modern-blue', 'black', 'midnight-delivery'] as const;
 const RATIOS = ['16:9', '4:3'] as const;
 type PresentationGenerationRequest = {
   brief: string;

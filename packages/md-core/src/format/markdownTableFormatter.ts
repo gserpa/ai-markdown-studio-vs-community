@@ -1,3 +1,5 @@
+import { formatComponentTables } from '../components/components';
+
 type TableBlock = {
   start: number;
   end: number;
@@ -5,11 +7,12 @@ type TableBlock = {
 };
 
 export function formatMarkdownTables(text: string): string {
-  const lines = text.split(/\r?\n/u);
+  const input = formatComponentTables(text);
+  const lines = input.split(/\r?\n/u);
   const blocks = collectTableBlocks(lines);
 
   if (blocks.length === 0) {
-    return text;
+    return input;
   }
 
   const replacements = new Map<number, string[]>();
@@ -30,7 +33,7 @@ export function formatMarkdownTables(text: string): string {
     result.push(lines[index]);
   }
 
-  return result.join('\n');
+  return result.join(input.includes('\r\n') ? '\r\n' : '\n');
 }
 
 function collectTableBlocks(lines: string[]): TableBlock[] {

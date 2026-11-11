@@ -5,14 +5,17 @@
   "description": "Host-neutral AI prompt building and content validation for AI Markdown Studio.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p ./tsconfig.json && node build-authoring-assets.mjs",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "test": "vitest run"
   },
   "dependencies": {
-    "@mfo/core": "*"
+    "@mfo/core": "*",
+    "@mfo/bundled-components": "*"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

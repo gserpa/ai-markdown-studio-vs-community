@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { createRequire } from 'node:module';
+import { bundledComponents } from '@mfo/bundled-components';
 import { describe, expect, it } from 'vitest';
 
 describe('generated asset manifest', () => {
@@ -52,11 +54,15 @@ describe('generated asset manifest', () => {
   it('builds the combined fallback stylesheet from the source modules in order', () => {
     const stylesRoot = path.resolve(assetsRoot, '..', 'styles');
     const plan = JSON.parse(fs.readFileSync(path.join(stylesRoot, 'modules.json'), 'utf8'));
-    const combined = plan.modules.map((module: { file: string }) => fs.readFileSync(path.join(stylesRoot, module.file), 'utf8')).join('\n');
+    const resolvePackage = createRequire(import.meta.url);
+    const componentStyles = bundledComponents.flatMap(component => component.stylesheet ? [fs.readFileSync(resolvePackage.resolve(component.stylesheet), 'utf8')] : []);
+    const combined = [...plan.modules.map((module: { file: string }) => fs.readFileSync(path.join(stylesRoot, module.file), 'utf8')), ...componentStyles].join('\n');
     expect(fs.readFileSync(path.join(assetsRoot, 'preview.css'), 'utf8')).toBe(combined);
     expect(fs.readdirSync(stylesRoot).filter(name => name.endsWith('.css')).sort()).toEqual(plan.modules.map((module: { file: string }) => module.file).sort());
     for (const mode of ['document', 'presentation']) {
-      expect(manifest.stylesheets[mode]).toEqual(plan.modules.filter((module: { modes: string[] }) => module.modes.includes(mode)).map((module: { asset: string; feature?: string }) => ({ asset: module.asset, ...(module.feature ? { feature: module.feature } : {}) })));
+      const expected = plan.modules.filter((module: { modes: string[] }) => module.modes.includes(mode)).map((module: { asset: string; feature?: string }) => ({ asset: module.asset, ...(module.feature ? { feature: module.feature } : {}) }));
+      expected.push(...bundledComponents.flatMap((component, index) => component.stylesheet ? [{ asset: 'previewComponent' + index }] : []));
+      expect(manifest.stylesheets[mode]).toEqual(expected);
     }
   });
 

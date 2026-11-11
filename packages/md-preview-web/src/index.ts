@@ -8,8 +8,8 @@ export type {
 // Presentation preview rendering
 export { renderPresentationPreview } from './presentation/presentationPreview';
 export type { PresentationPreview, CreateDocument } from './presentation/presentationPreview';
-export { DEFAULT_PRESENTATION_LAYOUTS, PRESENTATION_LAYOUT_CHOICES } from './presentation/presentationLayouts';
-export type { PresentationLayoutMap, PresentationLayoutName } from './presentation/presentationLayouts';
+export { DEFAULT_PRESENTATION_LAYOUTS, PRESENTATION_LAYOUT_CHOICES, normalizePresentationLayouts } from './presentation/presentationLayouts';
+export type { PresentationLayoutMap, PresentationLayoutName, PresentationLayoutOverride, PresentationHeadingSlots } from './presentation/presentationLayouts';
 
 // Presentation theme registry
 export {

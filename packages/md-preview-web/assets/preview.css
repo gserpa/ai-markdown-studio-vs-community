@@ -571,6 +571,9 @@ img {
   }
 }
 
+.markdown-body .md-component-error { border: 1px solid var(--md-preview-border-color); padding: 0.75em; overflow-wrap: anywhere; }
+.markdown-body .md-component-error pre { white-space: pre-wrap; }
+
 /* =========================================================
    Document Preview: Mermaid + Lightbox
    ========================================================= */
@@ -3045,6 +3048,69 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   margin-top: 0;
 }
 
+/* Optional roles occupy space only when selected by the active layout. */
+.presentation-heading-role > p {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+.presentation-slide-label {
+  color: var(--presentation-label-color, inherit);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.4;
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+}
+.presentation-slide-subtitle {
+  color: var(--presentation-subtitle-color, inherit);
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.4;
+  margin-top: 0.6rem;
+}
+.presentation-standard-layout.has-role-footer {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.presentation-standard-layout.has-role-footer.has-role-header {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.presentation-standard-footer {
+  padding: 12px 28px;
+  background: var(--presentation-standard-content-bg, var(--presentation-panel-bg, #ffffff));
+  color: var(--presentation-body-color, inherit);
+}
+.presentation-standard-footer .presentation-slide-label {
+  margin: 0;
+}
+.presentation-diagnostics {
+  padding: 8px 16px;
+  color: var(--vscode-editorWarning-foreground, #895800);
+}
+.presentation-diagnostics > p {
+  margin: 0;
+}
+
+/* Explicit content areas use the existing theme's surface and typography. */
+.presentation-region-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 20px;
+  min-height: 100%;
+}
+.presentation-region {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.presentation-region > :first-child { margin-top: 0; }
+.presentation-region > :last-child { margin-bottom: 0; }
+
+.presentation-region-grid.presentation-regions-primary-wide { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+
 .presentation-control {
   appearance: none;
   align-items: center;
@@ -3608,3 +3674,171 @@ body.preview-mode-presentation .mermaid-zoom-trigger {
   --md-preview-lightbox-scrollbar-thumb: color-mix(in srgb, var(--presentation-body-color, #1f2937) 30%, var(--presentation-panel-bg-soft, #f8faff) 70%);
   --md-preview-lightbox-scrollbar-thumb-hover: color-mix(in srgb, var(--presentation-body-color, #1f2937) 44%, var(--presentation-panel-bg-soft, #f8faff) 56%);
 }
+
+/* Theme typography remains optional, preserving existing theme defaults. */
+.presentation-canvas {
+  font-family: var(--presentation-body-font, inherit);
+}
+
+.presentation-canvas :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--presentation-heading-font, var(--md-preview-heading-font));
+}
+
+.presentation-canvas :is(code, pre) {
+  font-family: var(--presentation-code-font, var(--md-preview-code-font));
+}
+
+/* Midnight Delivery uses the flat navy report canvas on every slide type. */
+.presentation-theme-midnight-delivery .presentation-surface {
+  border-radius: 0;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-header {
+  padding: 32px 48px 16px;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-content {
+  padding: 8px 48px 40px;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-title,
+.presentation-theme-midnight-delivery .presentation-cover-title {
+  font-weight: 700;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-title {
+  font-size: 2.125rem;
+  line-height: 1.1;
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-title {
+  font-size: 4rem;
+}
+
+.presentation-theme-midnight-delivery .presentation-slide-body.markdown-body {
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+.presentation-theme-midnight-delivery .presentation-slide-body h2 {
+  color: var(--presentation-accent);
+  border-bottom-color: var(--presentation-panel-border);
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-copy,
+.presentation-theme-midnight-delivery .presentation-divider-layout {
+  background: var(--presentation-surface-bg);
+  color: var(--presentation-title-color);
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 22px;
+  padding: 64px 74px 54px;
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-copy-foot {
+  align-self: auto;
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-subtitle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--presentation-muted-color);
+  backdrop-filter: none;
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-media.is-empty,
+.presentation-theme-midnight-delivery .presentation-cover-media.is-empty .presentation-layout-media-fill {
+  background: var(--presentation-surface-bg);
+}
+
+.presentation-theme-midnight-delivery .md-visualization {
+  background: var(--presentation-panel-bg);
+  border-color: var(--presentation-panel-border);
+  border-top: 5px solid var(--presentation-component-primary);
+}
+
+.presentation-theme-midnight-delivery .md-metric-subtitle,
+.presentation-theme-midnight-delivery .md-metric-trend {
+  color: var(--presentation-muted-color);
+}
+
+.presentation-theme-midnight-delivery :focus-visible {
+  outline: 3px solid var(--presentation-component-focus);
+  outline-offset: 3px;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-footer {
+  padding-inline: 48px;
+}
+
+.markdown-body .md-status-matrix { width: 100%; border-collapse: collapse; overflow-wrap: anywhere; }
+.markdown-body .md-status-matrix th,
+.markdown-body .md-status-matrix td { padding: 0.5em 0.65em; border: 1px solid var(--md-preview-border-color); text-align: left; }
+.markdown-body .md-status-matrix thead th { font-weight: 700; }
+.markdown-body .md-status-matrix .md-matrix-detail { display: block; font-size: 0.82em; font-weight: normal; opacity: 0.8; }
+.markdown-body .md-status-matrix .md-matrix-cell { --md-matrix-color: var(--presentation-accent, #3269b1); }
+.markdown-body .md-status-matrix .md-matrix-neutral, .markdown-body .md-matrix-legend .md-matrix-neutral { --md-matrix-color: var(--md-matrix-neutral-color, var(--presentation-component-unknown, #738095)); }
+.markdown-body .md-status-matrix .md-matrix-info, .markdown-body .md-matrix-legend .md-matrix-info { --md-matrix-color: var(--md-matrix-info-color, var(--presentation-component-primary, #1686c8)); }
+.markdown-body .md-status-matrix .md-matrix-success, .markdown-body .md-matrix-legend .md-matrix-success { --md-matrix-color: var(--md-matrix-success-color, var(--presentation-component-success, #178452)); }
+.markdown-body .md-status-matrix .md-matrix-warning, .markdown-body .md-matrix-legend .md-matrix-warning { --md-matrix-color: var(--md-matrix-warning-color, var(--presentation-component-warning, #c27a0b)); }
+.markdown-body .md-status-matrix .md-matrix-danger, .markdown-body .md-matrix-legend .md-matrix-danger { --md-matrix-color: var(--md-matrix-danger-color, var(--presentation-component-danger, #c94141)); }
+.markdown-body .md-status-matrix .md-matrix-neutral .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-info .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-success .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-warning .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-danger .md-matrix-status { border-left: 0.25em solid var(--md-matrix-color); padding-left: 0.4em; }
+.markdown-body .md-status-matrix .md-matrix-progress { display: block; width: 100%; height: 0.45em; margin-top: 0.3em; background: color-mix(in srgb, var(--md-matrix-color) 20%, transparent); border-radius: 1em; overflow: hidden; }
+.markdown-body .md-status-matrix .md-matrix-progress-fill { display: block; height: 100%; background: var(--md-matrix-color); }
+.markdown-body .md-status-matrix .md-matrix-progress-text { font-size: 0.8em; }
+.markdown-body .md-matrix-legend span { border-left: 0.25em solid var(--md-matrix-color); padding-left: 0.35em; }
+
+/* Matrix row headers use body colors; generic table header rules target every th. */
+.presentation-slide-body table.md-status-matrix tbody th {
+  color: var(--presentation-table-cell-color, var(--presentation-body-color, inherit));
+  background: var(--presentation-table-cell-bg, transparent);
+}
+.presentation-slide-body table.md-status-matrix tbody tr:nth-child(even) th {
+  background: var(--presentation-table-row-alt-bg, transparent);
+}
+
+.presentation-theme-midnight-delivery .md-status-matrix th,
+.presentation-theme-midnight-delivery .md-status-matrix td { border-color: var(--presentation-panel-border); }
+.presentation-theme-midnight-delivery .md-status-matrix thead th { color: var(--presentation-accent); background: var(--presentation-panel-bg); }
+
+.markdown-body .md-status-matrix .md-matrix-indicator { border-left: 0.25em solid var(--md-matrix-color); padding-left: 0.4em; }
+
+.markdown-body .md-record-list { margin: 1em 0; color: inherit; }
+.markdown-body .md-record-list .md-record-heading { font-weight: 700; margin: 0 0 .5em; }
+.markdown-body .md-record-list .md-record-group-label { font-weight: 700; color: var(--presentation-accent, var(--md-preview-link-color, inherit)); margin: .6em 0 .35em; }
+.markdown-body .md-record-list .md-record-items { list-style: none; margin: 0; padding: 0; }
+.markdown-body .md-record-list .md-record-item { box-sizing: border-box; margin: .4em 0; padding: .65em .8em; border: 1px solid var(--presentation-panel-border, var(--md-preview-border-color)); border-radius: 6px; background: var(--presentation-panel-bg, transparent); overflow-wrap: anywhere; break-inside: avoid; }
+.markdown-body .md-record-list .md-record-item p { margin: 0; }
+.markdown-body .md-record-list .md-record-item p + p { margin-top: .25em; }
+.markdown-body .md-record-list .md-record-detail, .markdown-body .md-record-list .md-record-metadata, .markdown-body .md-record-list .md-record-tags { font-size: .88em; }
+.markdown-body .md-record-list .md-record-metadata, .markdown-body .md-record-list .md-record-tags { color: var(--presentation-muted-color, var(--md-preview-muted-color, inherit)); }
+.markdown-body .md-record-list-compact .md-record-item { padding: .35em .55em; margin: .2em 0; }
+.markdown-body .md-record-list-rows .md-record-item { border-radius: 0; border-width: 0 0 1px; background: transparent; }
+.markdown-body .md-record-status { border-left: .25em solid var(--md-record-accent, #738095); padding-left: .4em; font-size: .85em; }
+.markdown-body .md-record-status-neutral { --md-record-accent: var(--md-record-neutral-color, var(--presentation-component-unknown, #738095)); }
+.markdown-body .md-record-status-info { --md-record-accent: var(--md-record-info-color, var(--presentation-component-primary, #1686c8)); }
+.markdown-body .md-record-status-success { --md-record-accent: var(--md-record-success-color, var(--presentation-component-success, #178452)); }
+.markdown-body .md-record-status-warning { --md-record-accent: var(--md-record-warning-color, var(--presentation-component-warning, #c27a0b)); }
+.markdown-body .md-record-status-danger { --md-record-accent: var(--md-record-danger-color, var(--presentation-component-danger, #c94141)); }
+.markdown-body .md-record-scale { font-size: .85em; }
+
+.markdown-body .md-fact-cards { margin: 1em 0; color: inherit; }
+.markdown-body .md-fact-heading { font-weight: 700; margin: 0 0 .5em; }
+.markdown-body .md-fact-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: .7em; list-style: none; margin: 0; padding: 0; }
+.markdown-body .md-fact-card { box-sizing: border-box; min-width: 0; padding: .8em; border: 1px solid var(--presentation-panel-border, var(--md-preview-border-color)); border-top: .25em solid var(--md-fact-accent, var(--presentation-accent, #3269b1)); border-radius: 6px; background: var(--presentation-panel-bg, transparent); overflow-wrap: anywhere; break-inside: avoid; }
+.markdown-body .md-fact-card p { margin: 0; }
+.markdown-body .md-fact-card p + p { margin-top: .4em; }
+.markdown-body .md-fact-label { font-weight: 600; font-size: .88em; }
+.markdown-body .md-fact-value strong { font-size: 1.7em; line-height: 1.15; }
+.markdown-body .md-fact-value-long strong { font-size: 1.1em; }
+.markdown-body .md-fact-detail { color: var(--presentation-muted-color, var(--md-preview-muted-color, inherit)); font-size: .85em; }
+.markdown-body .md-fact-neutral { --md-fact-accent: var(--md-fact-neutral-color, var(--presentation-component-unknown, #738095)); }
+.markdown-body .md-fact-info { --md-fact-accent: var(--md-fact-info-color, var(--presentation-component-primary, #1686c8)); }
+.markdown-body .md-fact-success { --md-fact-accent: var(--md-fact-success-color, var(--presentation-component-success, #178452)); }
+.markdown-body .md-fact-warning { --md-fact-accent: var(--md-fact-warning-color, var(--presentation-component-warning, #c27a0b)); }
+.markdown-body .md-fact-danger { --md-fact-accent: var(--md-fact-danger-color, var(--presentation-component-danger, #c94141)); }

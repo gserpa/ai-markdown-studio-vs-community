@@ -3,6 +3,8 @@ import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'nod
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { bundledComponents } from '@mfo/bundled-components';
 import { build, transformSync } from 'esbuild';
 
 import {
@@ -20,6 +22,7 @@ rmSync(outputRoot, { recursive: true, force: true });
 mkdirSync(outputRoot, { recursive: true });
 
 const stylesRoot = path.join(packageRoot, 'styles');
+const resolvePackage = createRequire(import.meta.url);
 const stylePlan = JSON.parse(readFileSync(path.join(stylesRoot, 'modules.json'), 'utf8'));
 assert.equal(stylePlan.schemaVersion, 1, 'Invalid stylesheet source plan.');
 const assets = {};
@@ -39,6 +42,16 @@ for (const module of stylePlan.modules) {
   sources.push(source);
   assets[module.asset] = writeTextAsset(module.asset.replace(/[A-Z]/g, character => '-' + character.toLowerCase()) + '.css', rewriteGeneratedFontUrls(source), 'text/css; charset=utf-8');
   for (const mode of module.modes) stylesheets[mode].push({ asset: module.asset, ...(module.feature ? { feature: module.feature } : {}) });
+}
+// Component styles ship with their component and are included through the bundled catalog.
+for (const [index, component] of bundledComponents.entries()) {
+  if (!component.stylesheet) continue;
+  assert(/^@mfo\/component-[a-z0-9-]+\/style\.css$/u.test(component.stylesheet), 'Invalid component stylesheet.');
+  const asset = 'previewComponent' + index;
+  const source = readFileSync(resolvePackage.resolve(component.stylesheet), 'utf8');
+  sources.push(source);
+  assets[asset] = writeTextAsset('preview-component-' + index + '.css', rewriteGeneratedFontUrls(source), 'text/css; charset=utf-8');
+  for (const mode of ['document', 'presentation']) stylesheets[mode].push({ asset });
 }
 // Preserve a combined stylesheet for hosts which have not adopted the module manifest.
 writeFileSync(path.join(assetsRoot, 'preview.css'), sources.join('\n'), 'utf8');

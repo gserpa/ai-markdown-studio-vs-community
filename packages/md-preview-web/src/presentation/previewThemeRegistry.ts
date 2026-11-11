@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { indentCss, stableCssHash, type ThemeCssArtifact } from '../themeCssArtifact';
-import { DEFAULT_PRESENTATION_LAYOUTS, normalizePresentationLayouts, type PresentationLayoutMap } from './presentationLayouts';
+import { DEFAULT_PRESENTATION_LAYOUTS, normalizePresentationLayouts, resolvePresentationLayouts, type PresentationLayoutMap } from './presentationLayouts';
 
 export type PreviewThemeMode = 'dark' | 'light';
 
@@ -73,6 +73,29 @@ const PREVIEW_THEME_TOKEN_GROUPS = {
     '--presentation-emphasis-color',
     '--presentation-link-color',
     '--presentation-title-color',
+    '--presentation-label-color',
+    '--presentation-subtitle-color',
+  ],
+  typography: [
+    '--presentation-body-font',
+    '--presentation-heading-font',
+    '--presentation-code-font',
+  ],
+  componentColors: [
+    '--presentation-component-primary',
+    '--presentation-component-secondary',
+    '--presentation-component-success',
+    '--presentation-component-warning',
+    '--presentation-component-danger',
+    '--presentation-component-unknown',
+    '--presentation-component-proposal-ring',
+    '--presentation-component-inactive-outline',
+    '--presentation-component-phase-primary-fill',
+    '--presentation-component-phase-secondary-fill',
+    '--presentation-component-heatmap-low-fill',
+    '--presentation-component-heatmap-medium-fill',
+    '--presentation-component-heatmap-high-fill',
+    '--presentation-component-focus',
   ],
   surfaces: [
     '--presentation-body-bg',
@@ -192,6 +215,7 @@ export function loadPreviewThemeRegistryFromData(rawDefinitions: RawPreviewTheme
 }
 
 function buildPreviewThemeRegistry(definitions: PreviewThemeDefinition[]): PreviewThemeRegistry {
+  const warnings: string[] = [];
   const rawDefinitions = new Map<string, PreviewThemeDefinition>();
 
   for (const definition of definitions) {
@@ -216,6 +240,8 @@ function buildPreviewThemeRegistry(definitions: PreviewThemeDefinition[]): Previ
     const baseTheme = definition.extends ? resolveTheme(definition.extends) : undefined;
     visited.delete(themeName);
 
+    const resolvedLayouts = resolvePresentationLayouts(baseTheme?.layouts, definition.layouts, definition.name);
+    warnings.push(...resolvedLayouts.warnings);
     const resolvedTheme: ResolvedPreviewTheme = {
       name: definition.name,
       label: definition.label ?? humanizeThemeName(definition.name),
@@ -225,7 +251,7 @@ function buildPreviewThemeRegistry(definitions: PreviewThemeDefinition[]): Previ
         : [...(baseTheme?.defaultForModes ?? [])],
       mermaidTheme: definition.mermaidTheme ?? baseTheme?.mermaidTheme ?? 'default',
       mermaidTransparentBackground: definition.mermaidTransparentBackground ?? baseTheme?.mermaidTransparentBackground ?? false,
-      layouts: { ...DEFAULT_PRESENTATION_LAYOUTS, ...baseTheme?.layouts, ...definition.layouts },
+      layouts: resolvedLayouts.layouts,
       tokens: {
         ...(baseTheme?.tokens ?? {}),
         ...definition.tokens,
@@ -254,7 +280,7 @@ function buildPreviewThemeRegistry(definitions: PreviewThemeDefinition[]): Previ
     aliases,
     defaultDarkThemeName: selectDefaultThemeName(definitions, resolvedThemes, 'dark', FALLBACK_DARK_THEME_NAME),
     defaultLightThemeName: selectDefaultThemeName(definitions, resolvedThemes, 'light', FALLBACK_LIGHT_THEME_NAME),
-    warnings: [],
+    warnings,
   };
 }
 
@@ -541,11 +567,24 @@ function normalizeThemeTokens(value: unknown, themeName: string): {
       continue;
     }
 
+    // These new contract groups have narrower value types than legacy color tokens.
+    // Font stacks contain local family names only; component colors are opaque RGB.
+    const isComponentColor = (PREVIEW_THEME_TOKEN_GROUPS.componentColors as readonly string[]).includes(tokenName);
+    const isFont = (PREVIEW_THEME_TOKEN_GROUPS.typography as readonly string[]).includes(tokenName);
     if (typeof tokenValue !== 'string' || tokenValue.trim().length === 0) {
+      if (isComponentColor || isFont) {
+        warnings.push(`Presentation theme "${themeName}" has an invalid value for token "${tokenName}". It will be ignored.`);
+      }
       continue;
     }
 
-    tokens[tokenName] = tokenValue.trim();
+    const normalizedValue = tokenValue.trim();
+    if ((isComponentColor && !/^#[a-f0-9]{6}$/iu.test(normalizedValue))
+      || (isFont && (normalizedValue.length > 256 || !/^[\w\s,'"-]+$/u.test(normalizedValue)))) {
+      warnings.push(`Presentation theme "${themeName}" has an invalid value for token "${tokenName}". It will be ignored.`);
+      continue;
+    }
+    tokens[tokenName] = normalizedValue;
   }
 
   return {

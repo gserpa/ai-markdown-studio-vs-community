@@ -1,8 +1,9 @@
+import * as path from 'node:path';
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { createMarkdownRenderer } from '@mfo/core';
 import { renderPresentationPreview } from '../src/presentation/presentationPreview';
-import { loadPreviewThemeRegistryFromData } from '../src/presentation/previewThemeRegistry';
+import { loadPreviewThemeRegistry, loadPreviewThemeRegistryFromData } from '../src/presentation/previewThemeRegistry';
 
 const markdown = createMarkdownRenderer();
 const createDocument = (html: string) => new JSDOM(html).window.document;
@@ -18,6 +19,18 @@ describe('semantic presentation layouts', () => {
     expect(render('left').querySelector('.presentation-illustrated-grid.is-media-left')).not.toBeNull();
     expect(render('right').querySelector('.presentation-illustrated-grid.is-media-left')).toBeNull();
     expect(render('left').querySelector('[data-slide-layout]')?.getAttribute('data-slide-template')).toBe('illustrated-text');
+  });
+
+  it.each(['galaxy', 'black', 'modern-blue', 'auto'])('keeps legacy and semantic image layouts on the right in the built-in %s theme', theme => {
+    const bundled = loadPreviewThemeRegistry(path.resolve(__dirname, '..', 'assets', 'themes'));
+    for (const type of ['image-right', 'illustrated-text']) {
+      const html = renderPresentationPreview(source(type, 'Explanation.\n\n![Photo](https://example.com/photo.png)', theme),
+        text => markdown.render(text), bundled, createDocument, 'auto', 'dark').html;
+      const slide = createDocument(html).querySelector('[data-slide-layout]');
+      expect(slide?.getAttribute('data-slide-layout')).toBe('media-right');
+      expect(slide?.querySelector('.presentation-illustrated-grid.is-media-left')).toBeNull();
+      expect(slide?.querySelector('.presentation-illustrated-grid img')).not.toBeNull();
+    }
   });
 
   it('renders optional-heading columns using the explicit boundary', () => {

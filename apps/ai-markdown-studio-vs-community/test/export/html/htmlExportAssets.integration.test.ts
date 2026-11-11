@@ -28,9 +28,13 @@ import { loadPreviewAssetManifest, selectPreviewStylesheetAssets } from '../../.
 const root = path.resolve(__dirname, '../../../../..');
 const extension = { fsPath: root, scheme: 'file' } as never;
 const fixtures = [
+  { name: 'midnight-headings', expectedFonts: 6, source: '---\ndocument: presentation\ntheme: midnight-delivery\n---\n<!-- slide-label -->\nProgress\n\n# Title\n\n<!-- slide-subtitle -->\nPeriod one\n\nBody paragraph.' },
+
   { name: 'system-document', expectedFonts: 0, source: '---\ntheme: light\n---\n# Document\n\nA short paragraph.' },
+  { name: 'midnight-document', expectedFonts: 6, source: '---\ntheme: midnight-delivery\n---\n# Document\n\nA paragraph with `code`.' },
   { name: 'inter-document', expectedFonts: 6, source: '---\ntheme: autumn-ember\n---\n# Document\n\nA paragraph with `code`.' },
   { name: 'fraunces-document', expectedFonts: 6, source: '---\ntheme: dark-aurora-noir\n---\n# Document\n\nA paragraph with `code`.' },
+  { name: 'midnight-presentation', expectedFonts: 6, source: '---\ndocument: presentation\ntheme: midnight-delivery\n---\n# Delivery\n\nStatus report.' },
   { name: 'presentation', expectedFonts: 0, source: '---\ndocument: presentation\ntheme: modern-blue\n---\n# Deck\n\nOpening slide.\n\n---\n\n# Second slide\n\nMore content.' },
   { name: 'media-presentation', expectedFonts: 0, source: '---\ndocument: presentation\ntheme: modern-blue\n---\n# Media\n\n![Pixel](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3ioAAAAASUVORK5CYII=)' },
   { name: 'math-document', expectedFonts: 0, source: '---\ntheme: light\n---\n# Math\n\n$x^2 + y^2 = z^2$' },
@@ -56,6 +60,16 @@ describe('HTML export with real built assets', () => {
     const externalCss = Buffer.from(external.assets.find(asset => asset.mediaType.startsWith('text/css'))!.bytes).toString('utf8');
     expect(inlineCss.replace(/\s+/gu, '')).toBe(externalCss.replace(/\s+/gu, ''));
     expect(inline.html).toContain('<h1');
+    if (name === 'midnight-headings') {
+      const dom = new JSDOM(inline.html);
+      try {
+        expect(dom.window.document.querySelector('.presentation-slide-label')?.textContent).toContain('Progress');
+        expect(dom.window.document.querySelector('.presentation-slide-subtitle')?.textContent).toContain('Period one');
+        expect(dom.window.document.querySelector('.presentation-standard-content')?.textContent?.trim()).toBe('Body paragraph.');
+        expect(external.html).toContain('presentation-slide-label');
+      } finally { dom.window.close(); }
+    }
+
     const mode = source.includes('document: presentation') ? 'presentation' : 'document';
     const modules = selectPreviewStylesheetAssets(loadPreviewAssetManifest(extension), mode, name === 'media-presentation');
     const preview = buildPreviewHtml(extension, {
@@ -79,6 +93,16 @@ describe('HTML export with real built assets', () => {
     }
     expect(inlineCss.match(/\.mermaid-lightbox\s*\{/gu) ?? []).toHaveLength(name === 'media-presentation' ? 1 : 0);
     if (mode === 'presentation') expect(inlineCss).not.toContain('.document-preview-shell');
+    if (name === 'midnight-document') {
+      expect(inline.html).toContain('document-theme-midnight-delivery');
+      expect(inlineCss).toContain('--md-preview-content-bg: #0A1240;');
+      expect(inlineCss.includes('font-family:"Inter"')).toBe(true);
+    }
+    if (name === 'midnight-presentation') {
+      expect(inline.html).toContain('presentation-theme-midnight-delivery');
+      expect(inlineCss).toContain('--presentation-surface-bg: #0A1240;');
+      expect(inlineCss.includes('font-family:"Inter"')).toBe(true);
+    }
     expect([...inlineCss.matchAll(/data:font\/woff2;base64,/gu)]).toHaveLength(expectedFonts);
     if (name === 'inter-document') expect(inlineCss).not.toContain('font-family:Fraunces');
     if (name === 'fraunces-document') expect(inlineCss).not.toContain('font-family:Inter');

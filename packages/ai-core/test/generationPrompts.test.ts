@@ -39,6 +39,9 @@ describe('generation prompt builders', () => {
     expect(prompt).toContain('Use featured-visual when a primary image');
     expect(prompt).toContain('Use brief for a quick orientation');
     expect(prompt).toContain('<!--column-break-->');
+    expect(prompt).toContain('Ordinary headings and body paragraphs need no extra markers');
+    expect(prompt).toContain('<!-- slide-label -->');
+    expect(prompt).toContain('PPTX does not yet place these new optional roles');
     expect(prompt).not.toContain('<!--slide: image-right-->');
     expect(prompt).toContain('Every content slide must include a concise <!--notes: ...-->');
     expect(prompt).toContain('use Google Images or a similar image search');

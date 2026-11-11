@@ -147,7 +147,7 @@ Bundled document themes:
 
 - `auto` (follows VS Code light/dark) — the default
 - `light`, `light-modern-blue`
-- `dark`, `dark-aurora-noir`, `dark-modern-aurora`, `night-sky`
+- `dark`, `dark-aurora-noir`, `dark-modern-aurora`, `night-sky`, `midnight-delivery`
 
 Set the default for all documents with the **`markdownAiStudio.documentPreviewTheme`** setting, or override per file with a `theme` field in front matter:
 
@@ -156,6 +156,8 @@ Set the default for all documents with the **`markdownAiStudio.documentPreviewTh
 theme: light-modern-blue
 ---
 ```
+
+Midnight Delivery uses the same navy and cyan palette as its presentation counterpart. See the [document example](../examples/midnight-delivery-document.md).
 
 ### Custom document themes
 
@@ -244,7 +246,7 @@ an explicit document selection takes precedence.
 
 ## Presentation themes
 
-Bundled presentation themes: `black`, `galaxy`, and `modern-blue`. Set a deck's theme with the `theme` front-matter field. Community does not load custom presentation themes; Pro adds workspace and shared custom-theme folders.
+Bundled presentation themes include `black`, `galaxy`, `modern-blue`, and `midnight-delivery`. Set a deck's theme with the `theme` front-matter field. Midnight Delivery uses a navy report canvas, bright accents, and bundled Inter typography; see the [example deck](../examples/midnight-delivery.md). Community does not load custom presentation themes; Pro adds workspace and shared custom-theme folders.
 
 ## Front matter
 
@@ -349,3 +351,150 @@ Pro will be distributed as its own standalone extension, built from a tested Com
 Opening a presentation preview with retired names shows one warning with **Review migration**. Preview renders immediately using temporary current-type replacements. Dismissing the warning leaves the Markdown unchanged. The review command offers choices for ambiguous slides, opens a diff, and applies edits only when you choose **Apply migration**. Retired names have editor warnings; unknown names have errors.
 
 See the [migration guide](migration-guide.md) for why types changed, the replacement table, step-by-step review, and developer asset migration.
+
+
+## Optional slide heading details
+
+Keep using ordinary headings and paragraphs for normal slides. For a separate label or subtitle, put `<!-- slide-label -->` or `<!-- slide-subtitle -->` on its own top-level line before one text paragraph. Each role is optional and can appear once per slide. Markers used in code examples are literal.
+
+Midnight Delivery displays the label above the title and the subtitle below it. Other layouts display these fields only where they provide a placement; otherwise they omit them without moving them into the body. Existing cover metadata and unmarked slides keep their behavior. Duplicate or invalid role markers warn and retain their text. These new roles are supported by preview and HTML, with PDF using the HTML path; the current PowerPoint adapters do not place them.
+
+
+## Optional content areas
+
+Most slides need no area markers. When a content slide needs several independent areas, place `<!-- region-break -->` on its own top-level line between them:
+
+~~~~markdown
+<!--slide: content-->
+# Summary
+
+## Progress
+
+Current work.
+
+<!-- region-break -->
+
+## Next steps
+
+Upcoming work.
+~~~~
+
+Use one to three boundaries for two to four non-empty areas. The title belongs before the first area's content. Areas appear in source order, normally in a two-column grid; a theme can make the first column wider. Markers inside code examples are literal; markers inside quotations do not create areas. Do not combine these boundaries with `<!--column-break-->`; existing two-column slides keep using that marker unchanged.
+
+If a layout does not support content areas, the preview keeps the content in normal flow and shows a warning. An invalid or empty area definition also keeps the content and reports the issue. Areas can scroll in an interactive preview. PDF export reports an error if an area would be clipped, so the slide can be split. PowerPoint currently exports the area contents in normal flow and reports that the arrangement was not retained.
+
+## Dashboard composition example
+
+The [illustrative delivery dashboard](../examples/dashboard-composition.md) combines ordinary Markdown, a status matrix, a metric, a chart, a Mermaid process and existing slide areas. Its data is fictional. It demonstrates the current layouts and the output differences described below.
+
+## Status matrices
+
+A status matrix compares named rows and columns. Use a `component` fence and choose either the structured form or a Markdown-like table. Both describe the same matrix; do not combine them in one component.
+
+The structured form is convenient when adding row details or status and progress together:
+
+````markdown
+```component
+type: status-matrix
+version: 1
+data:
+  columns:
+    Definition: [Scope, Sign-off]
+    Build: [Development]
+  statuses:
+    Complete: success
+    Active: info
+    Pending: neutral
+  rows:
+    - label: Alpha
+      detail: Team A
+      cells:
+        Scope: Complete
+        Sign-off: { status: Active, progress: "1/2" }
+        Development: Pending
+options:
+  showLegend: true
+```
+````
+
+For a compact table-shaped form, use a YAML literal. The first header names groups; `{2}` says that Definition covers two leaf columns. The second header names the columns, followed by the separator and data rows:
+
+````markdown
+```component
+type: status-matrix
+version: 1
+data:
+  markdown-table: |
+    | Item  | Definition {2} | Build       |
+    |       | Scope    | Sign-off      | Development |
+    | ---   | ---      | ---           | ---         |
+    | Alpha | Complete | Active :: 1/2 | Pending     |
+    | Beta  | Pending  | 50%           | Complete    |
+  statuses: { Complete: success, Active: info, Pending: neutral }
+options:
+  showLegend: true
+```
+````
+
+A table cell containing `1/2` or `50%` specifies progress; `Active :: 1/2` supplies both a status and progress. In structured data, put progress explicitly in a `progress` field: a plain text status such as `"50%"` remains text. Both forms retain the supplied value and show a half-filled bar. Values must be between 0% and 100%; no completion is inferred from a status.
+
+For an ungrouped table, use one header row followed by the separator. All leaf-header, separator and data rows must have the same number of cells. Escape a pipe as `\|` and literal terminal braces as `\{2\}` inside a table cell. The table formatter aligns valid literal tables in unindented, top-level component fences and leaves invalid definitions and other fenced blocks unchanged.
+
+In the structured form, a row may also include `indicator: { label: "At risk", style: warning }` and a trailing `note: "Next review"`. Both fields are optional; the note column appears only if a row supplies one. Indicators use the same five approved styles as status labels.
+
+Column names must be unique, and structured cell keys must match them exactly. If `statuses` is supplied, every status used must be listed and mapped to `neutral`, `info`, `success`, `warning` or `danger`. Without that mapping, status text remains unstyled. Missing cells display an unknown marker (—). Quote values YAML might otherwise interpret as numbers or booleans. Limits are 1–64 columns, 1–100 rows and 1,000 data cells, subject to the shared component size and item limits; text values may contain at most 160 characters and a component may contain at most 32,768 characters. These are safety limits, not a promise that a large matrix will fit on a slide. Aliases, anchors, custom tags, duplicate keys and multiple YAML documents are not supported.
+
+The matrix renders without JavaScript and can appear in normal content or a content area. Invalid definitions show an error and escaped source while neighboring content stays visible. The presentation editor reports errors and offers a matrix snippet.
+
+Preview, HTML and PDF show grouped headers and progress bars. PDF export reports when a slide matrix is too large to fit. Generated PowerPoint combines group and column names in each column heading and shows progress as text; it warns that the visual appearance has been simplified. A basic flowing PowerPoint template has been tested. Template layouts vary, so export warns you to check the component content and fit.
+
+
+## Record lists
+
+Use `record-list` for an ordered set of items such as decisions, issues, summaries or capability entries. Each record needs a title. Add an ID, detail, ordinal, metadata, tags, status or scale only when you have that information.
+
+````markdown
+```component
+type: record-list
+version: 1
+data:
+  heading: Decisions
+  records:
+    - id: D-01
+      title: Select a review route
+      detail: Confirm the approach for the next checkpoint.
+      metadata: { Owner: Team North, Due: "20 October" }
+      status: { label: Open, style: info }
+options:
+  variant: compact
+```
+````
+
+For grouped records, supply `data.groups` as a list of `{ label, records }` mappings instead of `data.records`. The optional `variant` is `list`, `compact` or `rows`; the data stays the same. Status styles are `neutral`, `info`, `success`, `warning` and `danger`. A supplied scale has `value`, `max` and an optional `label`, for example `{ value: 2, max: 4, label: Stage }`. The component displays the supplied scale; it does not infer a rating or completion percentage.
+
+A list supports up to 30 records in total, 12 groups, and eight metadata fields or tags per record. Long or dense lists may need to be split across slides. The [record-list example](../examples/record-list.md) in the Community guide shows decisions and a separate capability review.
+
+## Fact cards
+
+Use `fact-cards` when a group of related facts needs to appear together. Values can be numbers, quoted text or an explicit ratio. Paths and dates are displayed as text.
+
+````markdown
+```component
+type: fact-cards
+version: 1
+data:
+  cards:
+    - label: Teams reviewed
+      value: { numerator: 6, denominator: 8 }
+      accent: info
+    - label: Next report
+      value: "20 November"
+      icon: calendar
+    - label: Shared folder
+      value: "F:/reports/current"
+```
+````
+
+Each card needs a label and value. Optional fields are `id`, `unit`, `secondValue`, `detail`, `accent` and `icon`. Accents use the same five styles as record statuses; icons are `calendar`, `check`, `folder` and `info`. A ratio is displayed as supplied, without inferring a percentage. A collection supports one to eight cards. Long text wraps, and crowded collections should be split across slides. The Community [fact-card example](../examples/fact-cards.md) shows another use outside reporting.
+
+Both components render without JavaScript. Their PowerPoint output keeps the supplied text and warns that the visual styling is simplified. A basic flowing template has been tested; check the result with your own template. PDF export reports content that does not fit rather than silently clipping a component.

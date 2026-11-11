@@ -1,0 +1,119 @@
+{
+  "name": "midnight-delivery",
+  "label": "Midnight Delivery",
+  "mermaidTheme": "dark",
+  "mermaidTransparentBackground": true,
+  "layouts": {
+    "content": {
+      "variant": "header-body",
+      "slots": {
+        "label": "above-title",
+        "subtitle": "below-title"
+      }
+    },
+    "brief": {
+      "variant": "header-body",
+      "slots": {
+        "label": "above-title",
+        "subtitle": "below-title"
+      }
+    },
+    "two-column": {
+      "variant": "balanced-columns",
+      "slots": {
+        "label": "above-title",
+        "subtitle": "below-title"
+      }
+    },
+    "illustrated-text": {
+      "variant": "media-right",
+      "slots": {
+        "label": "above-title",
+        "subtitle": "below-title"
+      }
+    },
+    "featured-visual": {
+      "variant": "large-media",
+      "slots": {
+        "label": "above-title",
+        "subtitle": "below-title"
+      }
+    }
+  },
+  "tokens": {
+    "--presentation-accent": "#2BC4F3",
+    "--presentation-accent-soft": "#A78BFA",
+    "--presentation-contrast": "#FFFFFF",
+    "--presentation-body-color": "#DEE3F5",
+    "--presentation-muted-color": "#AAB3D6",
+    "--presentation-emphasis-color": "#DEE3F5",
+    "--presentation-link-color": "#2BC4F3",
+    "--presentation-title-color": "#FFFFFF",
+    "--presentation-body-bg": "#131C56",
+    "--presentation-body-border": "#26357A",
+    "--presentation-panel-bg": "#131C56",
+    "--presentation-panel-bg-soft": "#0A1240",
+    "--presentation-panel-border": "#26357A",
+    "--presentation-pill-bg": "#131C56",
+    "--presentation-pill-border": "#2BC4F3",
+    "--presentation-pill-color": "#FFFFFF",
+    "--presentation-standard-content-bg": "#0A1240",
+    "--presentation-standard-header-bg": "#0A1240",
+    "--presentation-surface-bg": "#0A1240",
+    "--presentation-surface-border": "#26357A",
+    "--presentation-surface-shadow": "0 28px 80px rgba(0, 0, 0, 0.45)",
+    "--presentation-media-bg": "#131C56",
+    "--presentation-media-frame-bg": "#131C56",
+    "--presentation-cover-caption-bg": "#131C56",
+    "--presentation-cover-caption-border": "#26357A",
+    "--presentation-divider-overlay-bg": "linear-gradient(90deg, rgba(10, 18, 64, 0.25), rgba(10, 18, 64, 0.85))",
+    "--presentation-inline-code-bg": "#131C56",
+    "--presentation-inline-code-border": "#26357A",
+    "--presentation-inline-code-color": "#FFFFFF",
+    "--presentation-code-bg": "#131C56",
+    "--presentation-code-border": "#26357A",
+    "--presentation-code-text-color": "#DEE3F5",
+    "--presentation-code-hover-accent": "#2BC4F3",
+    "--presentation-code-hover-bg": "#192560",
+    "--presentation-code-hover-border": "#2BC4F3",
+    "--presentation-code-comment-color": "#AAB3D6",
+    "--presentation-code-keyword-color": "#F58FA2",
+    "--presentation-code-number-color": "#F6AD3C",
+    "--presentation-code-string-color": "#34D399",
+    "--presentation-code-title-color": "#A78BFA",
+    "--presentation-code-type-color": "#F6AD3C",
+    "--presentation-code-meta-color": "#2BC4F3",
+    "--presentation-hover-accent": "#2BC4F3",
+    "--presentation-hover-bg": "#202B68",
+    "--presentation-hover-bg-soft": "#192358",
+    "--presentation-hover-border": "#2BC4F3",
+    "--presentation-table-bg": "#131C56",
+    "--presentation-table-border": "#26357A",
+    "--presentation-table-header-bg": "#202B68",
+    "--presentation-table-header-color": "#FFFFFF",
+    "--presentation-table-cell-bg": "#131C56",
+    "--presentation-table-cell-color": "#DEE3F5",
+    "--presentation-table-row-alt-bg": "#192358",
+    "--presentation-blockquote-bg": "#131C56",
+    "--presentation-blockquote-border": "#2BC4F3",
+    "--presentation-body-font": "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif",
+    "--presentation-heading-font": "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif",
+    "--presentation-code-font": "'JetBrains Mono', ui-monospace, Consolas, monospace",
+    "--presentation-component-primary": "#2BC4F3",
+    "--presentation-component-secondary": "#A78BFA",
+    "--presentation-component-success": "#34D399",
+    "--presentation-component-warning": "#F6AD3C",
+    "--presentation-component-danger": "#F0566B",
+    "--presentation-component-unknown": "#AAB3D6",
+    "--presentation-component-proposal-ring": "#FFFFFF",
+    "--presentation-component-inactive-outline": "#7784B6",
+    "--presentation-component-phase-primary-fill": "#1B568D",
+    "--presentation-component-phase-secondary-fill": "#46438F",
+    "--presentation-component-heatmap-low-fill": "#194064",
+    "--presentation-component-heatmap-medium-fill": "#403951",
+    "--presentation-component-heatmap-high-fill": "#3F275A",
+    "--presentation-component-focus": "#2BC4F3",
+    "--presentation-label-color": "#2BC4F3",
+    "--presentation-subtitle-color": "#AAB3D6"
+  }
+}

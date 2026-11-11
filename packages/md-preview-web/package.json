@@ -22,7 +22,8 @@
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@mfo/core": "*",
     "dompurify": "^3.4.11",
-    "jsdom": "^26.0.0"
+    "jsdom": "^26.0.0",
+    "@mfo/bundled-components": "*"
   },
   "devDependencies": {
     "@types/jsdom": "^21.1.7",

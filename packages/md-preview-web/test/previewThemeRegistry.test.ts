@@ -16,7 +16,7 @@ describe('previewThemeRegistry', () => {
   const registry = loadPreviewThemeRegistry(path.resolve(__dirname, '..', 'assets', 'themes'));
 
   it('loads theme files from the preview theme folder', () => {
-    expect([...registry.themes.keys()]).toEqual(expect.arrayContaining(['black', 'galaxy', 'modern-blue']));
+    expect([...registry.themes.keys()]).toEqual(expect.arrayContaining(['black', 'galaxy', 'modern-blue', 'midnight-delivery']));
     expect(registry.defaultDarkThemeName).toBe('galaxy');
     expect(registry.defaultLightThemeName).toBe('modern-blue');
   });
@@ -106,6 +106,42 @@ describe('previewThemeRegistry', () => {
     expect(contract.hover).toContain('--presentation-hover-border');
     expect(contract.tables).toContain('--presentation-table-header-bg');
     expect(contract.blockquotes).toContain('--presentation-blockquote-border');
+  });
+
+  it('loads Midnight Delivery as an explicit dark theme without changing auto defaults', () => {
+    const theme = registry.themes.get('midnight-delivery')!;
+    const selected = resolvePreviewThemeSelection('midnight-delivery', registry);
+    const css = buildPreviewThemeCssArtifact(registry, selected.themeName).css;
+    expect(registry.warnings.filter(warning => warning.includes('midnight-delivery'))).toEqual([]);
+    expect(theme.tokens['--presentation-surface-bg']).toBe('#0A1240');
+    expect(theme.tokens['--presentation-component-warning']).toBe('#F6AD3C');
+    expect(theme.tokens['--presentation-heading-font']).toContain('Inter');
+    expect(theme.layouts?.brief).toEqual({ variant: 'header-body', slots: { label: 'above-title', subtitle: 'below-title' } });
+    expect(selected.lightMermaidTheme).toBe('dark');
+    expect(selected.darkMermaidTheme).toBe('dark');
+    expect(css).toContain('presentation-theme-midnight-delivery');
+    expect(css).toContain('color-scheme: dark;');
+    expect(css).toContain('--presentation-component-danger: #F0566B;');
+    expect(registry.defaultDarkThemeName).toBe('galaxy');
+    expect(registry.defaultLightThemeName).toBe('modern-blue');
+  });
+
+  it('rejects invalid component colors and unsafe font stacks', () => {
+    const validated = loadPreviewThemeRegistryFromData([{
+      name: 'custom',
+      tokens: {
+        '--presentation-component-success': 'url(https://example.invalid/color)',
+        '--presentation-component-warning': '#12',
+        '--presentation-heading-font': "Inter; background: red",
+        '--presentation-body-font': 'Inter, Arial, sans-serif',
+      },
+    }]);
+    const tokens = validated.themes.get('custom')!.tokens;
+    expect(tokens['--presentation-body-font']).toBe('Inter, Arial, sans-serif');
+    expect(tokens['--presentation-heading-font']).toBeUndefined();
+    expect(tokens['--presentation-component-success']).toBeUndefined();
+    expect(tokens['--presentation-component-warning']).toBeUndefined();
+    expect(validated.warnings).toHaveLength(3);
   });
 
   it('filters unsupported presentation tokens and returns warnings', () => {

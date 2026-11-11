@@ -77,6 +77,9 @@ const FRONT_MATTER_FIELDS: readonly Omit<MpsFrontMatterFieldSchema, 'suggestions
 ] as const;
 
 const DIRECTIVES: readonly MpsDirectiveSchema[] = [
+  { name: 'region-break', description: 'Optionally separates ordered content areas on a content slide. Use no more than three boundaries.' },
+  { name: 'slide-label', description: 'Optional context label. Follow this standalone top-level marker with one text paragraph. The selected layout decides whether and where it is shown.' },
+  { name: 'slide-subtitle', description: 'Optional slide subtitle, separate from the deck subtitle. Follow this standalone top-level marker with one text paragraph. Ordinary paragraphs remain body content.' },
   {
     name: 'slide',
     description: 'Describes the slide content. The preview theme and PPTX template choose its placement. Must appear once before the slide title. Legacy layout names remain supported.',

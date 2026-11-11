@@ -5,7 +5,7 @@
   "mermaidTheme": "dark",
   "mermaidTransparentBackground": true,
   "layouts": {
-    "illustrated-text": "media-left",
+    "illustrated-text": "media-right",
     "featured-visual": "large-media",
     "brief": "accent-side-right"
   },

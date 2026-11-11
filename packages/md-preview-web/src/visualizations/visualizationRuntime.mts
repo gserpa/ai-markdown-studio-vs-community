@@ -175,7 +175,12 @@ function readTheme(block: HTMLElement): VisualizationTheme {
     border: style.borderTopColor || '#d0d7de',
     background,
     accent,
-    palette: [accent, ...(dark ? ['#ffb454', '#c5a3ff', '#56d4ae', '#ff92b7'] : ['#ad5c00', '#7951b0', '#007b63', '#b83265'])],
+    palette: [accent, ...(presentation && token('--presentation-component-secondary', '')
+      ? [token('--presentation-component-secondary', '#7951b0'),
+        token('--presentation-component-success', '#007b63'),
+        token('--presentation-component-warning', '#ad5c00'),
+        token('--presentation-component-danger', '#b83265')]
+      : (dark ? ['#ffb454', '#c5a3ff', '#56d4ae', '#ff92b7'] : ['#ad5c00', '#7951b0', '#007b63', '#b83265']))],
     fontFamily: style.fontFamily || 'system-ui, sans-serif',
   };
 }

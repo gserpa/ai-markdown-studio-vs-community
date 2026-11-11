@@ -10,7 +10,7 @@
     "sync:preview-assets": "node scripts/sync-preview-assets.mjs",
     "clean": "node -e \"require('node:fs').rmSync('apps/ai-markdown-studio-vs-community/out', { recursive: true, force: true })\"",
     "bundle:extension": "node scripts/bundle-extension.mjs",
-    "compile": "npm run clean && npm run build --workspace=packages/md-core && npm run build --workspace=packages/ai-core && npm run build --workspace=packages/md-preview-web && npm run sync:preview-assets && tsc -p ./apps/ai-markdown-studio-vs-community/tsconfig.json --noEmit && npm run bundle:extension",
+    "compile": "npm run clean && node scripts/build-bundled-components.mjs && npm run build --workspace=packages/md-core && npm run build --workspace=packages/ai-core && npm run build --workspace=packages/md-preview-web && npm run sync:preview-assets && tsc -p ./apps/ai-markdown-studio-vs-community/tsconfig.json --noEmit && npm run bundle:extension",
     "pretest": "npm run compile",
     "test": "vitest run",
     "package": "npm run compile && node scripts/package-vsix.mjs",
@@ -18,7 +18,9 @@
     "check:vsix": "node scripts/check-vsix.mjs",
     "verify": "npm run check:boundary && npm test && npm run package"
   },
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "dependencies": {
     "@mfo/ai-core": "*",
     "@mfo/community-api": "*",
@@ -43,5 +45,8 @@
     "linkify-it": "5.0.2",
     "postcss": "8.5.25"
   },
-  "repository": { "type": "git", "url": "https://github.com/gserpa/ai-markdown-studio-vs-community" }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gserpa/ai-markdown-studio-vs-community"
+  }
 }

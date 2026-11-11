@@ -47,3 +47,16 @@ body.preview-mode-presentation .mermaid-zoom-trigger {
   --md-preview-lightbox-scrollbar-thumb: color-mix(in srgb, var(--presentation-body-color, #1f2937) 30%, var(--presentation-panel-bg-soft, #f8faff) 70%);
   --md-preview-lightbox-scrollbar-thumb-hover: color-mix(in srgb, var(--presentation-body-color, #1f2937) 44%, var(--presentation-panel-bg-soft, #f8faff) 56%);
 }
+
+/* Theme typography remains optional, preserving existing theme defaults. */
+.presentation-canvas {
+  font-family: var(--presentation-body-font, inherit);
+}
+
+.presentation-canvas :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--presentation-heading-font, var(--md-preview-heading-font));
+}
+
+.presentation-canvas :is(code, pre) {
+  font-family: var(--presentation-code-font, var(--md-preview-code-font));
+}

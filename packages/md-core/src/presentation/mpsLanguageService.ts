@@ -1,3 +1,5 @@
+import { getComponentCompletions, parseComponent } from '../components/components';
+import { extractPresentationHeadingRoles, splitPresentationRegions, readPresentationSource } from './presentationSource';
 import { createMpsDocumentSchema, type MpsDirectiveSchema, type MpsDocumentSchema, type MpsFrontMatterFieldSchema } from './mpsSchema';
 import { LEGACY_SLIDE_TYPE_REPLACEMENTS, normalizePresentationSlideType, type SlideTypeMigration } from './slideTypes';
 
@@ -14,6 +16,9 @@ export type MpsIssueCode =
   | 'misplaced-slide-directive'
   | 'missing-slide-template'
   | 'legacy-slide-types'
+  | 'invalid-component'
+  | 'invalid-region-break'
+  | 'invalid-heading-marker'
   | 'invalid-column-break'
   | 'unknown-slide-template';
 
@@ -168,6 +173,19 @@ export function validateMpsSource(source: string, schema: MpsDocumentSchema = cr
   }
 
   issues.push(...validateSlideDirectives(context.lines, context.frontMatter, schema));
+  if (context.isPresentation) {
+    issues.push(...validateHeadingRoles(source, context.lines, context.frontMatter));
+    const { tokens } = readPresentationSource(source);
+    for (const token of tokens) {
+      if (token.type !== 'fence' || !token.map || token.info.trim().split(/\s+/u)[0]?.toLowerCase() !== 'component') continue;
+      const result = parseComponent(token.content);
+      if (result.valid) continue;
+      const prefix = token.content.slice(0, result.offset).split(/\r?\n/u);
+      const line = context.lines[token.map[0] + prefix.length];
+      const start = line ? Math.min(line.end, line.start + prefix[prefix.length - 1].length) : (context.lines[token.map[0]]?.start ?? 0);
+      issues.push(createIssue(start, Math.min(source.length, start + 1), 'error', result.error, 'invalid-component'));
+    }
+  }
   return issues;
 }
 
@@ -212,6 +230,13 @@ export function getMpsCompletions(source: string, offset: number, schema: MpsDoc
 
   if (context.isPresentation) {
     completions.push(...getDirectiveCompletions(line, prefix, schema));
+    const inFence = readPresentationSource(source).tokens.some(token => token.type === 'fence' && token.map && line.index >= token.map[0] && line.index < token.map[1]);
+    if (!withinFrontMatter && !inFence && /^\s*$/u.test(prefix)) {
+      for (const item of getComponentCompletions()) completions.push({
+        ...item, kind: 'snippet', replaceStart: line.start, replaceEnd: line.end,
+      });
+    }
+
   }
 
   return dedupeCompletions(completions);
@@ -444,6 +469,49 @@ function validateSlideDirectives(lines: SourceLine[], frontMatter: FrontMatterBl
   return issues;
 }
 
+function validateHeadingRoles(source: string, lines: SourceLine[], frontMatter: FrontMatterBlock): MpsValidationIssue[] {
+  const issues: MpsValidationIssue[] = [];
+  let first = frontMatter.closed ? frontMatter.endLine + 1 : 0;
+  let fence: { marker: string; length: number } | undefined;
+  const check = (end: number) => {
+    if (first >= end || !lines[first]) return;
+    const offset = lines[first].start;
+    // Mask the leading slide directive without moving any diagnostic source positions.
+    const chunk = source.slice(offset, lines[end]?.start ?? source.length)
+      .replace(/^(\s*<!--\s*slide\s*:[^\n]*?-->)/u, value => value.replace(/[^\r\n]/gu, ' '));
+    for (const issue of extractPresentationHeadingRoles(chunk).issues) {
+      issues.push(createIssue(offset + issue.start, offset + issue.end, 'warning', issue.message, 'invalid-heading-marker'));
+    }
+    const result = splitPresentationRegions(chunk);
+    for (const issue of result.issues) {
+      issues.push(createIssue(offset + issue.start, offset + issue.end, 'warning', issue.message, 'invalid-region-break'));
+    }
+    if (result.regions.length > 1) {
+      const directive = source.slice(offset, lines[end]?.start ?? source.length).match(/^\s*<!--\s*slide\s*:\s*([^>]+?)\s*-->/iu);
+      const type = directive ? normalizePresentationSlideType(directive[1]) : 'content';
+      const mixed = readPresentationSource(chunk).comments.some(comment => /^\s*column-break\s*$/iu.test(comment.content));
+      if (type !== 'content' || mixed) {
+        const afterFirst = chunk.indexOf(result.regions[0]) + result.regions[0].length;
+        const markerMatch = /<!--\s*region-break\s*-->/iu.exec(chunk.slice(afterFirst));
+        const marker = afterFirst + (markerMatch?.index ?? 0);
+        issues.push(createIssue(offset + marker, offset + marker + (markerMatch?.[0].length ?? 1), 'warning',
+          mixed ? 'Do not combine region-break and column-break on one slide.' : 'Region boundaries are supported only on content slides.',
+          'invalid-region-break'));
+      }
+    }
+  };
+  for (let index = first; index < lines.length; index += 1) {
+    const trimmed = lines[index].text.trim();
+    const match = trimmed.match(/^(`{3,}|~{3,})/u);
+    if (fence) {
+      if (match && match[1][0] === fence.marker && match[1].length >= fence.length) fence = undefined;
+    } else if (match) fence = { marker: match[1][0], length: match[1].length };
+    else if (trimmed === '---') { check(index); first = index + 1; }
+  }
+  check(lines.length);
+  return issues;
+}
+
 function getFrontMatterCompletions(line: SourceLine, prefix: string, schema: MpsDocumentSchema): MpsCompletionEntry[] {
   const completions: MpsCompletionEntry[] = [];
   const trimmedPrefix = prefix.trimStart();
@@ -557,6 +625,25 @@ function getDirectiveCompletions(line: SourceLine, prefix: string, schema: MpsDo
       replaceStart,
       replaceEnd,
     },
+    ...(['label', 'subtitle'] as const).map(role => ({
+      label: '<!-- slide-' + role + ' -->',
+      kind: 'directive' as const,
+      detail: 'Optional slide ' + role + '; ordinary slides need no marker.',
+      documentation: 'Use at most once per slide, before a top-level text paragraph. A layout without a placement omits it from rendering.',
+      insertText: '<!-- slide-' + role + ' -->\n' + (role === 'label' ? '${1:Context label}' : '${1:Slide subtitle}'),
+      isSnippet: true,
+      replaceStart,
+      replaceEnd,
+    })),
+    {
+      label: '<!-- region-break -->',
+      kind: 'directive',
+      detail: 'Optionally separate ordered content areas on a content slide.',
+      documentation: 'Use one to three standalone markers between non-empty areas. Existing two-column slides keep using column-break.',
+      insertText: '<!-- region-break -->',
+      replaceStart,
+      replaceEnd,
+    },
     {
       label: '<!--column-break-->',
       kind: 'directive',
@@ -651,6 +738,10 @@ function findDirectiveReference(line: SourceLine, offset: number, schema: MpsDoc
       ? /<!--\s*(speaker\s+notes)\s*:/iu
       : directive.name === 'notes'
         ? /<!--\s*(notes)\s*:/iu
+        : directive.name === 'region-break'
+          ? /<!--\s*(region-break)\s*-->/iu
+        : directive.name === 'slide-label' || directive.name === 'slide-subtitle'
+          ? new RegExp('<!--\\s*(' + directive.name + ')\\s*-->', 'iu')
         : directive.name === 'column-break'
           ? /<!--\s*(column-break)\s*-->/iu
           : /<!--\s*(slide)\s*:/iu;

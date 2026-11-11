@@ -574,3 +574,66 @@
 .presentation-two-column-header > :first-child {
   margin-top: 0;
 }
+
+/* Optional roles occupy space only when selected by the active layout. */
+.presentation-heading-role > p {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+}
+.presentation-slide-label {
+  color: var(--presentation-label-color, inherit);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.4;
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+}
+.presentation-slide-subtitle {
+  color: var(--presentation-subtitle-color, inherit);
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.4;
+  margin-top: 0.6rem;
+}
+.presentation-standard-layout.has-role-footer {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.presentation-standard-layout.has-role-footer.has-role-header {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.presentation-standard-footer {
+  padding: 12px 28px;
+  background: var(--presentation-standard-content-bg, var(--presentation-panel-bg, #ffffff));
+  color: var(--presentation-body-color, inherit);
+}
+.presentation-standard-footer .presentation-slide-label {
+  margin: 0;
+}
+.presentation-diagnostics {
+  padding: 8px 16px;
+  color: var(--vscode-editorWarning-foreground, #895800);
+}
+.presentation-diagnostics > p {
+  margin: 0;
+}
+
+/* Explicit content areas use the existing theme's surface and typography. */
+.presentation-region-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 20px;
+  min-height: 100%;
+}
+.presentation-region {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.presentation-region > :first-child { margin-top: 0; }
+.presentation-region > :last-child { margin-bottom: 0; }
+
+.presentation-region-grid.presentation-regions-primary-wide { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }

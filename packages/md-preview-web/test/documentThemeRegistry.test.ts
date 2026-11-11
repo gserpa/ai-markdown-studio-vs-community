@@ -54,6 +54,23 @@ describe('documentThemeRegistry', () => {
     expect(autoSelection.darkMermaidTransparentBackground).toBe(true);
   });
 
+  it('selects Midnight Delivery as a dark document theme without changing automatic defaults', () => {
+    const selection = resolveDocumentThemeSelection('midnight-delivery', registry);
+    const theme = registry.themes.get('midnight-delivery')!;
+    const artifact = buildDocumentThemeCssArtifact(registry, 'midnight-delivery');
+    expect(registry.warnings.filter(warning => warning.includes('midnight-delivery'))).toEqual([]);
+    expect(selection.themeMode).toBe('dark');
+    expect(selection.lightMermaidTheme).toBe('dark');
+    expect(selection.darkMermaidTheme).toBe('dark');
+    expect(theme.tokens['--md-preview-content-bg']).toBe('#0A1240');
+    expect(theme.tokens['--md-preview-table-row-bg']).toBe('#131C56');
+    expect(theme.tokens['--md-preview-heading-font']).toContain('Inter');
+    expect(artifact.css).toContain('document-theme-midnight-delivery');
+    expect(artifact.css).toContain('--md-preview-content-bg: #0A1240;');
+    expect(registry.defaultLightThemeName).toBe('light-modern-blue-underline');
+    expect(registry.defaultDarkThemeName).toBe('dark-aurora-noir');
+  });
+
   it('builds explicit and auto document theme selectors', () => {
     const stylesheet = buildDocumentThemeStylesheet(registry);
 

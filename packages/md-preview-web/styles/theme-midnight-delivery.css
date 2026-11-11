@@ -1,0 +1,87 @@
+/* Midnight Delivery uses the flat navy report canvas on every slide type. */
+.presentation-theme-midnight-delivery .presentation-surface {
+  border-radius: 0;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-header {
+  padding: 32px 48px 16px;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-content {
+  padding: 8px 48px 40px;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-title,
+.presentation-theme-midnight-delivery .presentation-cover-title {
+  font-weight: 700;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-title {
+  font-size: 2.125rem;
+  line-height: 1.1;
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-title {
+  font-size: 4rem;
+}
+
+.presentation-theme-midnight-delivery .presentation-slide-body.markdown-body {
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+.presentation-theme-midnight-delivery .presentation-slide-body h2 {
+  color: var(--presentation-accent);
+  border-bottom-color: var(--presentation-panel-border);
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-copy,
+.presentation-theme-midnight-delivery .presentation-divider-layout {
+  background: var(--presentation-surface-bg);
+  color: var(--presentation-title-color);
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 22px;
+  padding: 64px 74px 54px;
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-copy-foot {
+  align-self: auto;
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-subtitle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--presentation-muted-color);
+  backdrop-filter: none;
+}
+
+.presentation-theme-midnight-delivery .presentation-cover-media.is-empty,
+.presentation-theme-midnight-delivery .presentation-cover-media.is-empty .presentation-layout-media-fill {
+  background: var(--presentation-surface-bg);
+}
+
+.presentation-theme-midnight-delivery .md-visualization {
+  background: var(--presentation-panel-bg);
+  border-color: var(--presentation-panel-border);
+  border-top: 5px solid var(--presentation-component-primary);
+}
+
+.presentation-theme-midnight-delivery .md-metric-subtitle,
+.presentation-theme-midnight-delivery .md-metric-trend {
+  color: var(--presentation-muted-color);
+}
+
+.presentation-theme-midnight-delivery :focus-visible {
+  outline: 3px solid var(--presentation-component-focus);
+  outline-offset: 3px;
+}
+
+.presentation-theme-midnight-delivery .presentation-standard-footer {
+  padding-inline: 48px;
+}

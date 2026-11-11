@@ -204,3 +204,56 @@ Document: presentation
     }));
   });
 });
+
+describe('optional heading role authoring', () => {
+  it('offers optional markers without adding them to the default front matter snippet', () => {
+    const source = '---\ndocument: presentation\n---\n\n<!--';
+    const completions = getMpsCompletions(source, source.length, schema);
+    expect(completions.map(item => item.label)).toContain('<!-- slide-label -->');
+    expect(completions.map(item => item.label)).toContain('<!-- slide-subtitle -->');
+    expect(schema.frontMatterSnippet).not.toContain('slide-label');
+  });
+
+  it('provides marker hover and duplicate diagnostics at source positions', () => {
+    const source = '---\ndocument: presentation\n---\n<!--slide: content-->\n<!-- slide-label -->\nFirst\n\n<!-- slide-label -->\nSecond';
+    const issues = validateMpsSource(source, schema).filter(issue => issue.code === 'invalid-heading-marker');
+    expect(issues).toHaveLength(2);
+    expect(source.slice(issues[1].start, issues[1].end)).toBe('<!-- slide-label -->');
+    const hover = getMpsHover(source, source.indexOf('slide-label') + 2, schema);
+    expect(hover?.markdown).toContain('Optional context label');
+  });
+
+  it('allows one label per slide and ignores code examples during validation', () => {
+    const source = '---\ndocument: presentation\n---\n<!--slide: content-->\n<!-- slide-label -->\nOne\n\n# Title\n\n~~~md\n<!-- slide-label -->\n~~~\n\n---\n<!-- slide-label -->\nTwo\n\n# Title two';
+    expect(validateMpsSource(source, schema).filter(issue => issue.code === 'invalid-heading-marker')).toEqual([]);
+  });
+
+  it('reports an unclosed optional marker without validating ordinary documents as slide sources', () => {
+    const source = '---\ndocument: presentation\n---\n# Title\n\n<!-- slide-label\nText';
+    expect(validateMpsSource(source, schema).some(issue => issue.code === 'invalid-heading-marker')).toBe(true);
+    expect(validateMpsSource('# Notes\n\n<!-- slide-label\nText', schema).some(issue => issue.code === 'invalid-heading-marker')).toBe(false);
+  });
+});
+
+describe('heading diagnostics on Windows source', () => {
+  it('keeps duplicate marker ranges correct with CRLF and resets them between slides', () => {
+    const source = ['---','document: presentation','---','<!--slide: content-->','<!-- slide-label -->','First','','<!-- slide-label -->','Second','','---','<!-- slide-label -->','Third'].join('\r\n');
+    const issues = validateMpsSource(source, schema).filter(issue => issue.code === 'invalid-heading-marker');
+    expect(issues).toHaveLength(2);
+    for (const issue of issues) expect(source.slice(issue.start, issue.end)).toBe('<!-- slide-label -->');
+  });
+});
+
+describe('content area guidance', () => {
+  it('offers an optional region marker without changing the ordinary snippet', () => {
+    const source = '---\ndocument: presentation\n---\n\n<!--';
+    expect(getMpsCompletions(source, source.length, schema).map(item => item.label)).toContain('<!-- region-break -->');
+    expect(schema.frontMatterSnippet).not.toContain('region-break');
+  });
+  it('locates invalid region markers and ignores examples in code', () => {
+    const source = '---\ndocument: presentation\n---\n<!--slide: two-column-->\n# Title\n\n~~~md\n<!-- region-break -->\n~~~\n\nFirst\n\n<!-- region-break -->\nSecond';
+    const issues = validateMpsSource(source, schema).filter(issue => issue.code === 'invalid-region-break');
+    expect(issues).toHaveLength(1);
+    expect(source.slice(issues[0].start, issues[0].end)).toBe('<!-- region-break -->');
+  });
+});

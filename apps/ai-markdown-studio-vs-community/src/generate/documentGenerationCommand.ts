@@ -5,7 +5,7 @@ import { generateTextWithLanguageModel } from '../ai/languageModel';
 import { shouldGenerateWithLanguageModel } from './generationMode';
 
 const LENGTHS = ['Short', 'Standard', 'Detailed'] as const;
-const THEMES = ['auto', 'light-modern-blue', 'dark-modern-aurora', 'night-sky'] as const;
+const THEMES = ['auto', 'light-modern-blue', 'dark-modern-aurora', 'night-sky', 'midnight-delivery'] as const;
 type DocumentGenerationRequest = {
   brief: string;
   audience: string;

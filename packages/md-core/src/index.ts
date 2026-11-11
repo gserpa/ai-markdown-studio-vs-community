@@ -1,6 +1,9 @@
 // Markdown rendering
 export { createMarkdownRenderer, sanitizeRenderedHtml } from './render/markdownRenderer';
 
+// Shared component validation for output adapters.
+export { parseComponent, prepareComponentsForPptx, getComponentPptxWarnings } from './components/components';
+
 // Declarative visualization validation, shared with browser renderers and AI tools.
 export { parseVisualizationBlock, VISUALIZATION_LIMITS } from './visualizations/visualizationSpec';
 export type { VisualizationKind, VisualizationBlock, VisualizationParseResult, VegaLiteSpec, VegaLiteFieldDefinition, MetricSpec } from './visualizations/visualizationSpec';
@@ -20,6 +23,9 @@ export type {
   MarkdownPresentation,
   MarkdownDocumentKind,
 } from './presentation/mpsParser';
+
+export { extractPresentationHeadingRoles, splitPresentationRegions } from './presentation/presentationSource';
+export type { PresentationHeadingRoles, PresentationHeadingIssue, PresentationRegionIssue } from './presentation/presentationSource';
 
 // MPS language service
 export {

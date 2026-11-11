@@ -1,0 +1,23 @@
+{
+  "name": "@mfo/bundled-components",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
+  "dependencies": {
+    "@mfo/component-status-matrix": "*",
+    "yaml": "^2.8.3",
+    "@mfo/component-record-list": "*",
+    "@mfo/component-fact-cards": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

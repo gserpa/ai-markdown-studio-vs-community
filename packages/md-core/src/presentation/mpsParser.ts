@@ -1,5 +1,6 @@
 import { parse as parseYaml } from 'yaml';
 import { normalizePresentationSlideType } from './slideTypes';
+import { extractPresentationHeadingRoles, readPresentationSource, splitPresentationRegions, type PresentationHeadingRoles } from './presentationSource';
 
 export type PresentationMetadata = Record<string, unknown>;
 
@@ -7,6 +8,9 @@ export type MarkdownPresentationSlide = {
   template: string;
   body: string;
   notes?: string;
+  heading?: PresentationHeadingRoles;
+  regions?: string[];
+  warnings?: string[];
 };
 
 export type MarkdownPresentation = {
@@ -25,7 +29,6 @@ const DEFAULT_TEMPLATE = 'content';
 const SLIDE_DIRECTIVE_PATTERN = /^<!--\s*slide\s*:\s*([^>]+?)\s*-->\s*/u;
 const ANY_SLIDE_DIRECTIVE_PATTERN = /<!--\s*slide\s*:\s*[^>]+?\s*-->/gu;
 const HTML_COMMENT_START = '<!--';
-const HTML_COMMENT_END = '-->';
 
 export function parseMarkdownPresentation(source: string): MarkdownPresentation {
   const normalized = stripBom(source);
@@ -201,7 +204,17 @@ function parseSlideChunk(chunk: string): MarkdownPresentationSlide {
     throw new Error('Slide directives must appear only once and as the first non-whitespace content after the slide separator, before the slide title.');
   }
 
-  const extractedComments = extractSpeakerNotes(remaining);
+  const roles = extractPresentationHeadingRoles(remaining);
+  const regionResult = splitPresentationRegions(roles.body);
+  const hasRegions = regionResult.regions.length > 1;
+  const regionIssues = [...regionResult.issues];
+  if (hasRegions && template !== 'content') {
+    regionIssues.push({ start: 0, end: 0, message: 'Region boundaries are supported only on content slides. The content remains in its normal flow.' });
+  }
+  if (hasRegions && readPresentationSource(roles.body).comments.some(comment => /^\s*column-break\s*$/iu.test(comment.content))) {
+    regionIssues.push({ start: 0, end: 0, message: 'Do not combine region-break and column-break on the same slide. The content remains in its normal flow.' });
+  }
+  const extractedComments = extractSpeakerNotes(regionResult.safeSource ?? roles.body);
   const collectedNotes = extractedComments.notes
     .filter((value): value is string => Boolean(value && value.trim()))
     .join('\n\n');
@@ -210,6 +223,9 @@ function parseSlideChunk(chunk: string): MarkdownPresentationSlide {
     template,
     body: trimOuterBlankLines(extractedComments.body),
     notes: collectedNotes || undefined,
+    ...(roles.heading ? { heading: roles.heading } : {}),
+    ...(hasRegions && !regionIssues.length ? { regions: regionResult.regions.map(region => extractSpeakerNotes(region).body.trim()) } : {}),
+    ...((roles.issues.length || regionIssues.length) ? { warnings: [...roles.issues, ...regionIssues].map(issue => issue.message) } : {}),
   };
 }
 
@@ -270,111 +286,27 @@ function trimOuterBlankLines(value: string): string {
 
 const SPEAKER_NOTES_PATTERN = /^\s*(notes|speaker\s+notes)\s*:\s*([\s\S]*)$/iu;
 function extractSpeakerNotes(source: string): { body: string; notes: string[] } {
+  if (!source.includes(HTML_COMMENT_START)) return { body: source, notes: [] };
   const notes: string[] = [];
   const bodyParts: string[] = [];
   let cursor = 0;
-
-  while (cursor < source.length) {
-    const commentStart = source.indexOf(HTML_COMMENT_START, cursor);
-    if (commentStart < 0) {
-      bodyParts.push(source.slice(cursor));
-      break;
-    }
-
-    bodyParts.push(source.slice(cursor, commentStart));
-
-    const commentEnd = findHtmlCommentEnd(source, commentStart + HTML_COMMENT_START.length);
-    if (commentEnd < 0) {
-      bodyParts.push(source.slice(commentStart));
-      break;
-    }
-
-    const rawContent = source.slice(commentStart + HTML_COMMENT_START.length, commentEnd - HTML_COMMENT_END.length);
-    const content = trimOuterBlankLines(rawContent);
-    if (/^\s*column-break\s*$/iu.test(rawContent)) {
-      bodyParts.push('<!--column-break-->');
-    }
-    if (content) {
-      const match = content.match(SPEAKER_NOTES_PATTERN);
-      if (match) {
-        notes.push(match[2].trim());
-      }
-    }
-
-    cursor = commentEnd;
+  for (const comment of readPresentationSource(source).comments) {
+    bodyParts.push(source.slice(cursor, comment.start));
+    const content = trimOuterBlankLines(comment.content);
+    if (/^\s*column-break\s*$/iu.test(content)) bodyParts.push('<!--column-break-->');
+    const match = content.match(SPEAKER_NOTES_PATTERN);
+    if (match?.[2].trim()) notes.push(match[2].trim());
+    cursor = comment.end;
   }
-
-  return {
-    body: bodyParts.join(''),
-    notes,
-  };
+  bodyParts.push(source.slice(cursor));
+  return { body: bodyParts.join(''), notes };
 }
 
 function findSlideDirectivesOutsideFences(source: string): RegExpMatchArray[] {
-  const matches: RegExpMatchArray[] = [];
-  let inFence: { marker: string; length: number } | undefined;
-
-  for (const line of source.split(/\r?\n/u)) {
-    const trimmed = line.trim();
-    const fenceMatch = trimmed.match(/^(`{3,}|~{3,})/u);
-
-    if (inFence) {
-      if (fenceMatch && fenceMatch[1][0] === inFence.marker && fenceMatch[1].length >= inFence.length) {
-        inFence = undefined;
-      }
-      continue;
-    }
-
-    if (fenceMatch) {
-      inFence = { marker: fenceMatch[1][0], length: fenceMatch[1].length };
-      continue;
-    }
-
-    for (const match of line.matchAll(ANY_SLIDE_DIRECTIVE_PATTERN)) {
-      matches.push(match);
-    }
-  }
-
-  return matches;
-}
-
-function findHtmlCommentEnd(source: string, fromIndex: number): number {
-  let index = fromIndex;
-  let inlineCodeFenceLength = 0;
-
-  while (index < source.length - 2) {
-    const current = source[index];
-
-    if (current === '`') {
-      const runLength = countRepeatedCharacters(source, index, '`');
-      if (inlineCodeFenceLength === 0) {
-        inlineCodeFenceLength = runLength;
-      } else if (runLength === inlineCodeFenceLength) {
-        inlineCodeFenceLength = 0;
-      }
-
-      index += runLength;
-      continue;
-    }
-
-    if (inlineCodeFenceLength === 0 && source[index] === '-' && source[index + 1] === '-' && source[index + 2] === '>') {
-      return index + HTML_COMMENT_END.length;
-    }
-
-    index += 1;
-  }
-
-  return -1;
-}
-
-function countRepeatedCharacters(source: string, fromIndex: number, character: string): number {
-  let index = fromIndex;
-
-  while (index < source.length && source[index] === character) {
-    index += 1;
-  }
-
-  return index - fromIndex;
+  if (!/<!--\s*slide\s*:/u.test(source)) return [];
+  return readPresentationSource(source).comments
+    .filter(comment => /^\s*slide\s*:/u.test(comment.content))
+    .flatMap(comment => [...source.slice(comment.start, comment.end).matchAll(ANY_SLIDE_DIRECTIVE_PATTERN)]);
 }
 
 function isDirectiveComment(content: string): boolean {
