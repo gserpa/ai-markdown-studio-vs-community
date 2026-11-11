@@ -296,6 +296,7 @@ function initializeDocumentUpdates(bridge) {
             }
           }
           main.replaceChildren(...nextMain.childNodes);
+          if (nextShell.dataset.reviewState !== undefined) shell.dataset.reviewState = nextShell.dataset.reviewState;
           shell.querySelector(':scope > .frontmatter-shell')?.remove();
           const frontMatter = nextShell.querySelector(':scope > .frontmatter-shell');
           if (frontMatter) shell.prepend(frontMatter);
@@ -2636,8 +2637,8 @@ function initializePresentationPreview(bridge) {
   };
 
   const setActiveSlide = (nextIndex) => {
-    currentIndex = clampIndex(nextIndex, slides.length);
     clearPendingStageTap();
+    currentIndex = clampIndex(nextIndex, slides.length);
 
     for (const slide of slides) {
       const canvas = slide.querySelector('.presentation-canvas');
@@ -2661,6 +2662,7 @@ function initializePresentationPreview(bridge) {
 
     updateBottomPanel('immediate');
     persistState();
+    document.dispatchEvent(new Event('md-slide-changed'));
   };
 
   const clearPendingStageTap = () => {
@@ -2674,10 +2676,6 @@ function initializePresentationPreview(bridge) {
     return Boolean(target.closest('a, button, input, textarea, select, label, summary, [contenteditable], [data-review-ui], [data-mermaid-action], .mermaid-rendered, .presentation-thumb'));
   };
 
-  const navigateFromStageTap = (event) => {
-    if (event.button !== 0 || suppressStageClick || hasStageSelection()
-      || !(event.target instanceof Element) || isInteractiveTapTarget(event.target)) {
-      clearPendingStageTap();
   const hasStageSelection = () => {
     const selection = window.getSelection();
     return Boolean(selection && !selection.isCollapsed
@@ -2719,6 +2717,10 @@ function initializePresentationPreview(bridge) {
     clearPendingStageTap();
   });
 
+  const navigateFromStageTap = (event) => {
+    if (event.button !== 0 || suppressStageClick || hasStageSelection()
+      || !(event.target instanceof Element) || isInteractiveTapTarget(event.target)) {
+      clearPendingStageTap();
       return;
     }
 
@@ -2738,9 +2740,9 @@ function initializePresentationPreview(bridge) {
 
     const runSingleTapNavigation = () => {
       pendingStageTapId = null;
+      if (stagePointer || hasStageSelection() || slides[currentIndex] !== activeSlide) return;
       const relativeX = (event.clientX - rect.left) / rect.width;
       if (relativeX <= 0.35) {
-      if (stagePointer || hasStageSelection() || slides[currentIndex] !== activeSlide) return;
         setActiveSlide(currentIndex - 1);
         return;
       }
@@ -2806,10 +2808,10 @@ function initializePresentationPreview(bridge) {
   stage?.addEventListener('click', navigateFromStageTap);
 
   window.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
-      event.preventDefault();
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey
       || (event.target instanceof Element && isInteractiveTapTarget(event.target))) return;
+    if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+      event.preventDefault();
       setActiveSlide(currentIndex - 1);
       return;
     }

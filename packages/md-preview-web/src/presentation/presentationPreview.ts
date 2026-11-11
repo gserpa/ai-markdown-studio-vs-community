@@ -28,13 +28,14 @@ export type CreateDocument = (html: string) => Document;
 
 export function renderPresentationPreview(
   source: string,
-  renderMarkdown: (markdown: string) => string,
+  renderMarkdown: (markdown: string, sourceLines?: readonly (number | undefined)[]) => string,
   themeRegistry: PreviewThemeRegistry,
   createDocument: CreateDocument,
   defaultThemeName = 'auto',
   themeMode: PreviewThemeMode = 'light',
+  options?: { includeSourceRanges?: boolean },
 ): PresentationPreview {
-  const presentation = resolveMarkdownPresentation(parseMarkdownPresentation(source));
+  const presentation = resolveMarkdownPresentation(parseMarkdownPresentation(source, options));
   const deckTitle = asString(presentation.meta.title) || 'Presentation';
   const deckAuthor = asString(presentation.meta.author);
   const themeSelection = resolvePreviewThemeSelection(asString(presentation.meta.theme) || defaultThemeName, themeRegistry, themeMode);
@@ -46,12 +47,26 @@ export function renderPresentationPreview(
     : [{ template: 'content', body: '# Empty presentation\n\nAdd slide content to preview this deck.', notes: undefined }];
 
   const renderedSlides = slides.map((slide, index) => {
-    const bodyHtml = renderMarkdown(slide.body);
+    const sourceLines = slide.sourceRange?.markdown.split('\n');
+    const bodyMapping = sourceLines && mapSourceLines(slide.body, sourceLines, 0).lines.map(line =>
+      line === undefined ? undefined : slide.sourceRange!.startLine + line);
+    const bodyHtml = renderMarkdown(slide.body, bodyMapping);
     const templateName = slide.template.trim() || 'content';
     const layoutContext = createSlideLayoutContext(bodyHtml, createDocument);
-    const regionBodies = slide.regions?.map(region => createSlideLayoutContext(renderMarkdown(region), createDocument).body);
+    const renderParts = (parts: string[]) => {
+      if (!bodyMapping) return parts.map(part => createSlideLayoutContext(renderMarkdown(part), createDocument).body);
+      const bodyLines = slide.body.split('\n');
+      let cursor = 0;
+      return parts.map(part => {
+        const mapping = mapSourceLines(part, bodyLines, cursor);
+        cursor = mapping.next;
+        return createSlideLayoutContext(renderMarkdown(part, mapping.lines.map(line =>
+          line === undefined ? undefined : bodyMapping?.[line])), createDocument).body;
+      });
+    };
+    const regionBodies = slide.regions && renderParts(slide.regions);
     const columns = templateName === 'two-column' ? splitPresentationColumns(slide.body) : undefined;
-    if (columns) layoutContext.columns = columns.map((body) => createSlideLayoutContext(renderMarkdown(body), createDocument).body) as [HTMLElement, HTMLElement];
+    if (columns) layoutContext.columns = renderParts(columns) as [HTMLElement, HTMLElement];
     const title = extractHeading(layoutContext.body) || `Slide ${index + 1}`;
     const normalizedType = templateName.toLowerCase() as PresentationSlideType;
     const layout = effectivePresentationLayout(themeSelection.layouts?.[normalizedType] ?? DEFAULT_PRESENTATION_LAYOUTS[normalizedType] ?? 'header-body');
@@ -67,7 +82,13 @@ export function renderPresentationPreview(
         ? 'This layout does not support multiple content areas. The content is shown in its normal flow.' : undefined,
       bodyLayoutHtml: placePresentationHeadingRoles(
         regionBodies && layoutName === 'header-body' ? createRegionLayout(regionBodies, layout.regions) : themeLayoutBuilders[layoutName](layoutContext),
-        slide.heading, layout.slots, renderMarkdown, createDocument),
+        slide.heading, layout.slots, (text, role) => {
+          const marker = sourceLines?.findIndex(line => new RegExp('^\\s*<!--\\s*slide-' + role + '\\s*-->\\s*$', 'iu').test(line)) ?? -1;
+          const lines = marker >= 0 && sourceLines
+            ? mapSourceLines(text, sourceLines, marker + 1).lines.map(line => line === undefined ? undefined : slide.sourceRange!.startLine + line)
+            : undefined;
+          return renderMarkdown(text, lines);
+        }, createDocument),
       notesHtml: slide.notes ? renderMarkdown(slide.notes) : '',
     };
   });
@@ -175,6 +196,17 @@ function createSlideLayoutContext(bodyHtml: string, createDocument: CreateDocume
   };
 }
 
+function mapSourceLines(fragment: string, source: readonly string[], from: number) {
+  let next = from;
+  const lines = fragment.split('\n').map(line => {
+    const index = source.findIndex((candidate, position) => position >= next && candidate.trim() === line.trim());
+    if (index === -1) return undefined;
+    next = index + 1;
+    return index;
+  });
+  return { lines, next };
+}
+
 function extractHeading(body: ParentNode): string {
   const heading = body.querySelector('h1, h2, h3');
   return heading?.textContent?.replace(/\s+/gu, ' ').trim() ?? '';
@@ -236,7 +268,7 @@ function createCoverLayout(context: SlideLayoutContext): string {
     <div class="presentation-cover-layout">
       <section class="presentation-cover-copy">
         <div class="presentation-cover-copy-main">
-          ${title ? `<h1 class="presentation-layout-title presentation-cover-title">${escapeHtml(title)}</h1>` : ''}
+          ${title ? `${renderLayoutHeading(title, 'presentation-layout-title presentation-cover-title')}` : ''}
         </div>
         <div class="presentation-cover-copy-foot">
           ${contentHtml ? `<div class="presentation-cover-subtitle">${contentHtml}</div>` : ''}
@@ -267,7 +299,7 @@ function createTwoColumnLayout(context: SlideLayoutContext, weighted = false): s
 
   const columnsHtml = distributeItemsAcrossSlots(sections, 2).map((columnSections) => {
     const contentHtml = columnSections.map((section) => {
-      const heading = section.heading ? `<h2 class="presentation-column-heading">${escapeHtml(section.heading)}</h2>` : '';
+      const heading = section.heading ? renderLayoutHeading(section.heading, 'presentation-column-heading', 'h2') : '';
       return `${heading}${section.contentHtml}`;
     }).join('');
 
@@ -308,7 +340,7 @@ function createAccentLayout(context: SlideLayoutContext, mediaPanel = false, tit
   return `
     <div class="presentation-accent-layout${titleRight ? ' is-title-right' : ''}">
       <aside class="presentation-accent-sidebar">
-        ${title ? `<h1 class="presentation-layout-title presentation-accent-title">${escapeHtml(title)}</h1>` : ''}
+        ${title ? `${renderLayoutHeading(title, 'presentation-layout-title presentation-accent-title')}` : ''}
       </aside>
       <section class="presentation-accent-main${mediaPanel ? ' has-media' : ''}">
         ${mediaPanel ? `<div class="presentation-accent-media${media ? '' : ' is-empty'}">${renderMediaSlotContent(media)}</div>` : ''}
@@ -327,7 +359,7 @@ function createDividerLayout(context: SlideLayoutContext, photo = false): string
       ${media ? `<div class="presentation-divider-background">${renderMediaSlotContent(media)}</div>` : ''}
       <div class="presentation-divider-overlay"></div>
       <div class="presentation-divider-content">
-        ${title ? `<h1 class="presentation-layout-title presentation-divider-title">${escapeHtml(title)}</h1>` : ''}
+        ${title ? `${renderLayoutHeading(title, 'presentation-layout-title presentation-divider-title')}` : ''}
         ${contentHtml ? `<div class="presentation-divider-subtitle">${contentHtml}</div>` : ''}
       </div>
     </div>`;
@@ -342,7 +374,7 @@ function createSplitDividerLayout(context: SlideLayoutContext): string {
     <div class="presentation-divider-split-layout">
       <aside class="presentation-divider-split-media${media ? '' : ' is-empty'}">${renderMediaSlotContent(media)}</aside>
       <section class="presentation-divider-split-panel">
-        ${title ? `<h1 class="presentation-layout-title presentation-divider-split-title">${escapeHtml(title)}</h1>` : ''}
+        ${title ? `${renderLayoutHeading(title, 'presentation-layout-title presentation-divider-split-title')}` : ''}
         ${contentHtml ? `<div class="presentation-divider-split-subtitle">${contentHtml}</div>` : ''}
       </section>
     </div>`;
@@ -360,14 +392,14 @@ function createThanksLayout(context: SlideLayoutContext): string {
         <div class="presentation-thanks-note${contentHtml ? '' : ' is-empty'}">${contentHtml}</div>
       </div>
       <div class="presentation-thanks-bottom">
-        ${title ? `<h1 class="presentation-layout-title presentation-thanks-title">${escapeHtml(title)}</h1>` : ''}
+        ${title ? `${renderLayoutHeading(title, 'presentation-layout-title presentation-thanks-title')}` : ''}
       </div>
     </div>`;
 }
 
-function splitSections(body: HTMLElement): Array<{ heading?: string; contentHtml: string }> {
-  const sections: Array<{ heading?: string; contentHtml: string }> = [];
-  let currentHeading = '';
+function splitSections(body: HTMLElement): Array<{ heading?: LayoutHeading; contentHtml: string }> {
+  const sections: Array<{ heading?: LayoutHeading; contentHtml: string }> = [];
+  let currentHeading: LayoutHeading | undefined;
   let currentContent: string[] = [];
   let seenSectionHeading = false;
 
@@ -378,7 +410,7 @@ function splitSections(body: HTMLElement): Array<{ heading?: string; contentHtml
         sections.push({ heading: currentHeading || undefined, contentHtml: currentContent.join('') });
       }
 
-      currentHeading = child.textContent?.replace(/\s+/gu, ' ').trim() ?? '';
+      currentHeading = layoutHeading(child);
       currentContent = [];
       continue;
     }
@@ -411,22 +443,31 @@ function extractLeadingContent(body: HTMLElement): string {
   return parts.join('');
 }
 
-function wrapStandardLayout(title: string, contentHtml: string, extraClasses = ''): string {
+function wrapStandardLayout(title: LayoutHeading | undefined, contentHtml: string, extraClasses = ''): string {
   const hasContent = contentHtml.trim().length > 0;
   return `
     <div class="presentation-standard-layout${extraClasses}">
-      ${title ? `<header class="presentation-standard-header"><h1 class="presentation-layout-title presentation-standard-title">${escapeHtml(title)}</h1></header>` : ''}
+      ${title ? `<header class="presentation-standard-header">${renderLayoutHeading(title, 'presentation-layout-title presentation-standard-title')}</header>` : ''}
       <section class="presentation-standard-content${hasContent ? '' : ' is-empty'}">${contentHtml}</section>
     </div>`;
 }
 
-function extractPrimaryHeading(body: HTMLElement): string {
-  const first = body.firstElementChild;
-  if (!first || (first.tagName !== 'H1' && first.tagName !== 'H2')) {
-    return '';
-  }
+type LayoutHeading = { text: string; source: string | null };
 
-  const title = first.textContent?.replace(/\s+/gu, ' ').trim() ?? '';
+function layoutHeading(element: Element): LayoutHeading | undefined {
+  const text = element.textContent?.replace(/\s+/gu, ' ').trim();
+  return text ? { text, source: element.getAttribute('data-review-block') } : undefined;
+}
+
+function renderLayoutHeading(heading: LayoutHeading, classes: string, tag = 'h1'): string {
+  const source = heading.source ? ' data-review-block="' + escapeHtml(heading.source) + '"' : '';
+  return '<' + tag + ' class="' + classes + '"' + source + '>' + escapeHtml(heading.text) + '</' + tag + '>';
+}
+
+function extractPrimaryHeading(body: HTMLElement): LayoutHeading | undefined {
+  const first = body.firstElementChild;
+  if (!first || (first.tagName !== 'H1' && first.tagName !== 'H2')) return undefined;
+  const title = layoutHeading(first);
   first.remove();
   return title;
 }

@@ -1,4 +1,5 @@
 import { parse as parseYaml } from 'yaml';
+import { stripReviewComments } from '../review/reviewComments';
 import { normalizePresentationSlideType } from './slideTypes';
 import { extractPresentationHeadingRoles, readPresentationSource, splitPresentationRegions, type PresentationHeadingRoles } from './presentationSource';
 
@@ -11,6 +12,7 @@ export type MarkdownPresentationSlide = {
   heading?: PresentationHeadingRoles;
   regions?: string[];
   warnings?: string[];
+  sourceRange?: { startLine: number; markdown: string };
 };
 
 export type MarkdownPresentation = {
@@ -30,13 +32,17 @@ const SLIDE_DIRECTIVE_PATTERN = /^<!--\s*slide\s*:\s*([^>]+?)\s*-->\s*/u;
 const ANY_SLIDE_DIRECTIVE_PATTERN = /<!--\s*slide\s*:\s*[^>]+?\s*-->/gu;
 const HTML_COMMENT_START = '<!--';
 
-export function parseMarkdownPresentation(source: string): MarkdownPresentation {
-  const normalized = stripBom(source);
+export function parseMarkdownPresentation(source: string, options?: { includeSourceRanges?: boolean }): MarkdownPresentation {
+  const normalized = stripBom(stripReviewComments(source));
   const { meta, body } = extractFrontMatter(normalized);
+  const firstLine = normalized.split(/\r?\n/u).length - body.split(/\r?\n/u).length + 1;
   const { chunks, startedWithSeparator } = splitSlides(body);
   const slides = chunks
-    .filter((chunk, index) => index > 0 || startedWithSeparator || chunk.trim().length > 0)
-    .map(parseSlideChunk);
+    .filter((chunk, index) => index > 0 || startedWithSeparator || chunk.markdown.trim().length > 0)
+    .map(chunk => ({
+      ...parseSlideChunk(chunk.markdown),
+      ...(options?.includeSourceRanges ? { sourceRange: { startLine: firstLine + chunk.offset, markdown: chunk.markdown } } : {}),
+    }));
 
   return {
     meta,
@@ -229,14 +235,15 @@ function parseSlideChunk(chunk: string): MarkdownPresentationSlide {
   };
 }
 
-function splitSlides(source: string): { chunks: string[]; startedWithSeparator: boolean } {
+function splitSlides(source: string): { chunks: { markdown: string; offset: number }[]; startedWithSeparator: boolean } {
   const lines = source.split(/\r?\n/u);
-  const chunks: string[] = [];
+  const chunks: { markdown: string; offset: number }[] = [];
+  let offset = 0;
   const current: string[] = [];
   let startedWithSeparator = false;
   let fence: { marker: string; length: number } | undefined;
 
-  for (const line of lines) {
+  for (const [index, line] of lines.entries()) {
     const trimmed = line.trim();
     const fenceMatch = trimmed.match(/^(`{3,}|~{3,})/u);
 
@@ -259,7 +266,8 @@ function splitSlides(source: string): { chunks: string[]; startedWithSeparator: 
         startedWithSeparator = true;
       }
 
-      chunks.push(current.join('\n'));
+      chunks.push({ markdown: current.join('\n'), offset });
+      offset = index + 1;
       current.length = 0;
       continue;
     }
@@ -267,7 +275,7 @@ function splitSlides(source: string): { chunks: string[]; startedWithSeparator: 
     current.push(line);
   }
 
-  chunks.push(current.join('\n'));
+  chunks.push({ markdown: current.join('\n'), offset });
 
   if (startedWithSeparator && chunks.length > 0) {
     chunks.shift();

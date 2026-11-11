@@ -44,6 +44,8 @@ const QUICK_PICK_COMMAND_ORDER: Readonly<Record<string, number>> = {
   'markdownAiStudio.pasteAsMarkdown': 9,
   'markdownAiStudio.exportHtml': 11,
   'markdownAiStudio.exportDocxBasic': 12,
+  'markdownAiStudio.reviewComments': 21,
+  'markdownAiStudio.copyReviewPrompt': 21.1,
   'markdownAiStudio.installPresentationSkill': 22,
   'markdownAiStudio.enableAiFeatures': 23,
   'markdownAiStudio.openSettings': 24,

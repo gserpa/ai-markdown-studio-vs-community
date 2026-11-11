@@ -32,7 +32,7 @@ await new Promise((resolve, reject) => {
 
 const manifest = JSON.parse(files.get(generated + 'asset-manifest.json')?.toString('utf8') ?? 'null');
 assert.equal(manifest?.schemaVersion, 2, 'Missing or invalid packaged preview manifest.');
-for (const name of ['previewCore', 'previewCoreRuntime', 'previewDocument', 'previewDocumentRuntime', 'previewPresentation', 'previewPresentationRuntime', 'previewThemeRuntime', 'previewVisualizationsRuntime', 'previewVisualizationsNotices']) {
+for (const name of ['previewCore', 'previewCoreRuntime', 'previewDocument', 'previewDocumentRuntime', 'previewPresentation', 'previewPresentationRuntime', 'previewReviewRuntime', 'previewReviewStyle', 'previewThemeRuntime', 'previewVisualizationsRuntime', 'previewVisualizationsNotices']) {
   assert(manifest.assets[name], `Missing preview asset declaration: ${name}`);
 }
 for (const mode of ['document', 'presentation']) {

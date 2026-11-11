@@ -24,6 +24,7 @@ import { getBundledDocumentThemeDirectory } from './document/documentThemeSuppor
 import { MarkdownPreviewCustomEditor } from './panel/MarkdownPreviewCustomEditor';
 import { MarkdownPreviewPanel } from './panel/MarkdownPreviewPanel';
 import { registerMpsEditorSupport } from './presentation/mpsEditorSupport';
+import { registerReviewWorkflow } from './review/reviewWorkflow';
 import { registerSlideTypeMigration } from './presentation/slideTypeMigration';
 import { getBundledPreviewThemeDirectory } from './presentation/previewThemeSupport';
 import {
@@ -76,6 +77,8 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
       },
     ),
     registerMpsEditorSupport(context.extensionUri),
+    registerReviewWorkflow(() => MarkdownPreviewCustomEditor.getActiveDocumentUri()
+      ?? MarkdownPreviewPanel.getActivePreviewDocumentUri() ?? vscode.window.activeTextEditor?.document.uri),
     registerSlideTypeMigration(() => MarkdownPreviewCustomEditor.getActiveDocumentUri()
       ?? MarkdownPreviewPanel.getActivePreviewDocumentUri() ?? vscode.window.activeTextEditor?.document.uri),
     vscode.languages.registerDocumentFormattingEditProvider({ language: 'markdown' }, markdownTableFormattingProvider),

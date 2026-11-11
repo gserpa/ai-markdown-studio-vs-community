@@ -1,0 +1,149 @@
+
+[data-review-ui] {
+  font: 13px/1.4 var(--vscode-font-family, sans-serif);
+  color: var(--vscode-editorWidget-foreground, #222);
+}
+
+.md-review-toolbar {
+  position: fixed;
+  inset: 8px 10px auto auto;
+  z-index: 50;
+  display: flex;
+  gap: 4px;
+}
+
+.md-review-slide-toolbar {
+  position: static;
+}
+
+.md-review-button {
+  cursor: pointer;
+  border: 1px solid var(--vscode-widget-border, #8885);
+  border-radius: 4px;
+  padding: 3px 7px;
+  font: inherit;
+  color: inherit;
+  background: var(--vscode-editorWidget-background, #f8f8f8);
+}
+
+.md-review-button:hover,
+.md-review-button:focus-visible {
+  background: var(--vscode-toolbar-hoverBackground, #8883);
+  outline: 1px solid var(--vscode-focusBorder, #007acc);
+}
+
+.md-review-overlays {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.md-review-list,
+.md-review-popover,
+.md-review-status {
+  position: fixed;
+  pointer-events: auto;
+  max-inline-size: calc(100vw - 16px);
+  padding: 10px;
+  border: 1px solid var(--vscode-widget-border, #8885);
+  border-radius: 6px;
+  background: var(--vscode-editorWidget-background, #f8f8f8);
+  box-shadow: 0 3px 14px var(--vscode-widget-shadow, #0003);
+}
+
+.md-review-list {
+  inset: 48px 8px auto auto;
+  width: min(360px, calc(100vw - 16px));
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+}
+
+.md-review-popover {
+  width: max-content;
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+}
+
+.md-review-status {
+  inset: auto 8px 8px auto;
+}
+
+.md-review-status:empty {
+  display: none;
+}
+
+.md-review-card,
+.md-review-composer {
+  width: min(315px, calc(100vw - 42px));
+  overflow-wrap: anywhere;
+}
+
+.md-review-list .md-review-card {
+  border-top: 1px solid var(--vscode-widget-border, #8885);
+  padding-block: 8px;
+}
+
+.md-review-card blockquote {
+  margin: 6px 0;
+  border-inline-start: 2px solid var(--vscode-focusBorder, #007acc);
+  padding-inline-start: 8px;
+  max-block-size: 9em;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.md-review-card p {
+  margin: 6px 0;
+  white-space: pre-wrap;
+}
+
+.md-review-composer textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 5px;
+  border: 1px solid var(--vscode-input-border, #8885);
+  font: inherit;
+  color: var(--vscode-input-foreground, inherit);
+  background: var(--vscode-input-background, transparent);
+}
+
+.md-review-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-block-start: 6px;
+}
+
+.md-review-marker {
+  position: fixed;
+  pointer-events: auto;
+  border-radius: 5px;
+  color: var(--vscode-textLink-foreground, #007acc);
+  padding: 0 5px;
+  line-height: 15px;
+}
+
+.md-review-marker::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 3px;
+  width: 4px;
+  height: 4px;
+  background: inherit;
+  border: solid var(--vscode-widget-border, #8885);
+  border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+}
+
+.md-review-marker.is-revised {
+  color: var(--vscode-descriptionForeground, #666);
+}
+
+::highlight(markdown-review) {
+  background-color: var(--vscode-editor-findMatchHighlightBackground, #f2c94c5c);
+}

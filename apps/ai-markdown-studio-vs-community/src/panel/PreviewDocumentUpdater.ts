@@ -48,6 +48,11 @@ export class PreviewDocumentUpdater {
     return true;
   }
 
+  public getReviewPage(sessionId: string, version: number) {
+    if (this.loaded?.sessionId !== sessionId) return undefined;
+    return [this.loaded, this.pending?.page, this.desired].find(page => page?.review?.version === version)?.review;
+  }
+
   public dispose(): void {
     this.disposed = true;
     clearTimeout(this.editTimer);

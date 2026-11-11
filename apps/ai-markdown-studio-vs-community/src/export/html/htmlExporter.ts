@@ -7,6 +7,7 @@ import {
   isMarkdownPresentationSource,
   sanitizeRenderedHtml,
   stripMarkdownFrontMatter,
+  stripReviewComments,
 } from '@mfo/core';
 import { JSDOM } from 'jsdom';
 import {
@@ -81,7 +82,7 @@ export async function buildExportHtmlArtifact(
     };
   };
 
-  const source = document.getText();
+  const source = stripReviewComments(document.getText());
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const renderer = createMarkdownRenderer({
     resolveImageSrc: (rawPath) => {

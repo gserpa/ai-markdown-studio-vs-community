@@ -103,6 +103,8 @@ describe('showCommandListCommand', () => {
       'PPTX Tools: Validate Template',
       'PPTX Tools: Generate Template Manifest',
       'Export: HTML',
+      'Review Comments with AI',
+      'Copy Review Prompt',
       'AI: Install Presentation Skill',
       'Change Settings...',
     ]);

@@ -95,6 +95,28 @@
         "category": "AI Markdown Studio"
       },
       {
+        "command": "markdownAiStudio.reviewComments",
+        "title": "Review Comments with AI",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.copyReviewPrompt",
+        "title": "Copy Review Prompt",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.applyReviewRevision",
+        "title": "Apply Revision",
+        "category": "AI Markdown Studio",
+        "icon": "$(check)"
+      },
+      {
+        "command": "markdownAiStudio.discardReviewRevision",
+        "title": "Discard Revision",
+        "category": "AI Markdown Studio",
+        "icon": "$(close)"
+      },
+      {
         "command": "markdownAiStudio.installPresentationSkill",
         "title": "Install Presentation Agent Skill in Workspace",
         "category": "AI Markdown Studio"
@@ -269,6 +291,14 @@
     "menus": {
       "commandPalette": [
         {
+          "command": "markdownAiStudio.applyReviewRevision",
+          "when": "markdownAiStudio.reviewDraftActive"
+        },
+        {
+          "command": "markdownAiStudio.discardReviewRevision",
+          "when": "markdownAiStudio.reviewDraftActive"
+        },
+        {
           "command": "markdownAiStudio.enableAiFeatures",
           "when": "markdownAiStudio.copilotConfigured && !markdownAiStudio.aiAccessEnabled"
         },
@@ -298,6 +328,16 @@
         }
       ],
       "editor/title": [
+        {
+          "command": "markdownAiStudio.applyReviewRevision",
+          "when": "textCompareEditorActive && markdownAiStudio.reviewDraftActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "markdownAiStudio.discardReviewRevision",
+          "when": "textCompareEditorActive && markdownAiStudio.reviewDraftActive",
+          "group": "navigation@2"
+        },
         {
           "command": "markdownAiStudio.openPreview",
           "when": "resourceExtname == .md && activeCustomEditorId != 'markdownAiStudio.markdownPreview'",

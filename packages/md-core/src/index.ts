@@ -1,3 +1,6 @@
+export { readReviewComments, writeReviewComments, stripReviewComments, locateReviewPart, lineOffsets } from './review/reviewComments';
+export type { ReviewComment, ReviewSelection, ReviewAnchorPart } from './review/reviewComments';
+
 // Markdown rendering
 export { createMarkdownRenderer, sanitizeRenderedHtml } from './render/markdownRenderer';
 

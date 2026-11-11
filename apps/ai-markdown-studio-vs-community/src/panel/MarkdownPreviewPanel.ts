@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { guessMimeType } from '../util/imageMime';
 import { buildPreviewPage, getPreviewTitle } from './previewHtmlBuilder';
+import { attachReviewPreview } from '../review/reviewWorkflow';
 import { PreviewDocumentUpdater } from './PreviewDocumentUpdater';
 import { showSlideTypeMigrationNotice } from '../presentation/slideTypeMigration';
 import { resolveDocumentResource } from '../util/documentResourceResolver';
@@ -45,6 +46,7 @@ export class MarkdownPreviewPanel {
     );
 
     this.updater = new PreviewDocumentUpdater(this.panel.webview);
+    attachReviewPreview(this.panel, this.updater, () => this.document);
     this.panel.onDidDispose(() => {
       this.disposed = true;
       this.updater.dispose();

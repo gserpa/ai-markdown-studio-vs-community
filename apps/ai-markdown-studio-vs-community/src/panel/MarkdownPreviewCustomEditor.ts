@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { guessMimeType } from '../util/imageMime';
 import { buildPreviewPage, getPreviewTitle } from './previewHtmlBuilder';
+import { attachReviewPreview } from '../review/reviewWorkflow';
 import { PreviewDocumentUpdater } from './PreviewDocumentUpdater';
 import { showSlideTypeMigrationNotice } from '../presentation/slideTypeMigration';
 import { resolveDocumentResource } from '../util/documentResourceResolver';
@@ -74,6 +75,7 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
     this.panels.set(key, openPanels);
     const updater = new PreviewDocumentUpdater(webviewPanel.webview);
     this.updaters.set(webviewPanel, updater);
+    attachReviewPreview(webviewPanel, updater, () => textDocument);
 
     webviewPanel.onDidChangeViewState((event) => {
       if (event.webviewPanel.active) {

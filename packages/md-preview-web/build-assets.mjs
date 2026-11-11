@@ -61,6 +61,16 @@ assets.previewCoreRuntime = writeTextAsset(
   readFileSync(path.join(assetsRoot, 'preview.js'), 'utf8'),
   'text/javascript; charset=utf-8',
 );
+assets.previewReviewRuntime = writeTextAsset(
+  'preview-review-runtime.js',
+  readFileSync(path.join(assetsRoot, 'preview-review.js'), 'utf8'),
+  'text/javascript; charset=utf-8',
+);
+assets.previewReviewStyle = writeTextAsset(
+  'preview-review.css',
+  readFileSync(path.join(assetsRoot, 'preview-review.css'), 'utf8'),
+  'text/css; charset=utf-8',
+);
 assets.previewDocumentRuntime = writeTextAsset(
   'preview-document-runtime.js',
   "window.__mfoPreviewModeRuntime?.startDocument();\n",

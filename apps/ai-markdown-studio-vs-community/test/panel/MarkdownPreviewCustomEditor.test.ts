@@ -51,6 +51,8 @@ vi.mock('vscode', () => {
   };
 });
 
+vi.mock('../../src/review/reviewWorkflow', () => ({ attachReviewPreview: vi.fn() }));
+
 vi.mock('../../src/panel/previewHtmlBuilder', () => ({
   buildPreviewPage: vi.fn(() => ({ html: '<html><body>preview</body></html>', body: 'preview', mode: 'document', compatibilityKey: 'document', sessionId: 'session' })),
   getPreviewTitle: vi.fn(() => 'Preview: example.md'),

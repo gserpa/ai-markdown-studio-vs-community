@@ -7,7 +7,7 @@ export function placePresentationHeadingRoles(
   html: string,
   heading: PresentationHeadingRoles | undefined,
   slots: PresentationHeadingSlots,
-  renderMarkdown: (source: string) => string,
+  renderMarkdown: (source: string, role: 'label' | 'subtitle') => string,
   createDocument: CreateDocument,
 ): string {
   const labelPlacement = heading?.label && slots.label && slots.label !== 'none' ? slots.label : undefined;
@@ -17,10 +17,10 @@ export function placePresentationHeadingRoles(
   const layout = doc.querySelector<HTMLElement>('.presentation-standard-layout');
   if (!layout) return html;
   let header = layout.querySelector<HTMLElement>(':scope > .presentation-standard-header');
-  const role = (className: string, text: string) => {
+  const role = (className: string, text: string, kind: 'label' | 'subtitle') => {
     const element = doc.createElement('div');
     element.className = 'presentation-heading-role ' + className;
-    element.innerHTML = sanitizeRenderedHtml(renderMarkdown(text));
+    element.innerHTML = sanitizeRenderedHtml(renderMarkdown(text, kind));
     return element;
   };
   if (labelPlacement === 'above-title' || subtitle) {
@@ -29,13 +29,13 @@ export function placePresentationHeadingRoles(
       header.className = 'presentation-standard-header';
       layout.prepend(header);
     }
-    if (labelPlacement === 'above-title') header.prepend(role('presentation-slide-label', heading!.label!));
-    if (subtitle) header.append(role('presentation-slide-subtitle', subtitle));
+    if (labelPlacement === 'above-title') header.prepend(role('presentation-slide-label', heading!.label!, 'label'));
+    if (subtitle) header.append(role('presentation-slide-subtitle', subtitle, 'subtitle'));
   }
   if (labelPlacement === 'footer') {
     const footer = doc.createElement('footer');
     footer.className = 'presentation-standard-footer';
-    footer.append(role('presentation-slide-label', heading!.label!));
+    footer.append(role('presentation-slide-label', heading!.label!, 'label'));
     layout.append(footer);
     layout.classList.add('has-role-footer');
     if (header) layout.classList.add('has-role-header');

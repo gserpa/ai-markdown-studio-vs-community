@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { JSDOM } from 'jsdom';
-import { createMarkdownRenderer, sanitizeRenderedHtml, stripMarkdownFrontMatter } from '@mfo/core';
+import { createMarkdownRenderer, readReviewComments, stripMarkdownFrontMatter } from '@mfo/core';
 import { isMarkdownPresentationSource, extractMarkdownFrontMatterMeta } from '@mfo/core';
 import { renderPresentationPreview } from '@mfo/preview-web';
 import { buildPreviewThemeCssArtifact, buildDocumentThemeCssArtifact, resolveDocumentThemeSelection } from '@mfo/preview-web';
@@ -11,6 +11,7 @@ import { getResolvedPresentationPreviewThemeSetting } from '../presentation/pres
 import { loadDocumentThemeRegistryForDocument } from '../document/documentThemeSupport';
 import { resolveExtensionNodeModulesUri } from '../util/extensionSupportRoot';
 import { loadPreviewAssetManifest, matchingThemeAsset, previewAssetUri, selectPreviewStylesheetAssets, type PreviewAssetDescriptor } from '../util/previewAssetManifest';
+import { buildReviewPreview, renderReviewMarkdown, type ReviewPreview } from '../review/reviewPreview';
 import { isFrontMatterVisible } from './frontMatterDisplayState';
 
 type PreviewPageWidth = 'readable' | 'full';
@@ -35,6 +36,7 @@ export type PreviewPage = {
   mode: 'document' | 'presentation';
   compatibilityKey: string;
   sessionId: string;
+  review?: ReviewPreview;
 };
 
 export function buildPreviewPage(
@@ -50,7 +52,9 @@ export function buildPreviewPage(
   const scriptUri = assetHref(assetManifest.assets.previewCoreRuntime);
   const mermaidUri = webview.asWebviewUri(resolveExtensionNodeModulesUri(extensionUri, 'mermaid', 'dist', 'mermaid.esm.min.mjs'));
   const nonce = getNonce();
-  const source = document.getText();
+  const rawSource = document.getText();
+  const source = readReviewComments(rawSource).markdown;
+  const reviewEnabled = document.uri.scheme === 'file' && document.languageId === 'markdown';
   const isPresentation = isMarkdownPresentationSource(source);
   const previewPageWidth = getPreviewPageWidth(document);
   const documentTableLayout = getDocumentTableLayout(document);
@@ -84,7 +88,13 @@ export function buildPreviewPage(
       };
     },
   });
-  const renderMarkdown = (markdown: string): string => sanitizeRenderedHtml(renderer.render(markdown));
+  const renderMarkdown = (markdown: string, lines?: readonly (number | undefined)[]) =>
+    renderReviewMarkdown(renderer, markdown, reviewEnabled ? lines : undefined, nonce);
+  const renderDocumentMarkdown = (markdown: string) => {
+    const lines = markdown.split(/\r?\n/u);
+    const offset = source.split(/\r?\n/u).length - lines.length;
+    return renderMarkdown(markdown, lines.map((_line, index) => offset + index + 1));
+  };
   let previewMode: 'presentation' | 'document' = isPresentation ? 'presentation' : 'document';
   let inlineThemeStylesheet = '';
   let themeStylesheetUri = '';
@@ -95,7 +105,7 @@ export function buildPreviewPage(
   let documentMermaidTransparentBackgroundLight = false;
   let documentMermaidTransparentBackgroundDark = false;
   let documentThemeName = 'auto';
-  let previewBody = buildDocumentPreviewBody(source, renderMarkdown, showFrontMatter);
+  let previewBody = buildDocumentPreviewBody(source, renderDocumentMarkdown, showFrontMatter);
 
   if (!isPresentation) {
     try {
@@ -124,7 +134,7 @@ export function buildPreviewPage(
     try {
       const previewThemeRegistry = loadPreviewThemeRegistryForDocument(extensionUri, document.uri);
       const themeMode = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Light ? 'light' : 'dark';
-      const rendered = renderPresentationPreview(source, renderMarkdown, previewThemeRegistry, createJsdomDocument, presentationDefaultTheme, themeMode);
+      const rendered = renderPresentationPreview(source, renderMarkdown, previewThemeRegistry, createJsdomDocument, presentationDefaultTheme, themeMode, { includeSourceRanges: reviewEnabled });
       previewBody = rendered.html;
       const artifact = buildPreviewThemeCssArtifact(previewThemeRegistry, rendered.themeSelection.themeName);
       const asset = matchingThemeAsset(assetManifest, artifact);
@@ -134,13 +144,16 @@ export function buildPreviewPage(
       previewMode = 'document';
       previewBody = buildDocumentPreviewBody(
         source,
-        renderMarkdown,
+        renderDocumentMarkdown,
         showFrontMatter,
         '<p><strong>Presentation preview failed to render.</strong> Showing the source as a document preview instead.</p>',
       );
       console.warn('Failed to build presentation preview.', error);
     }
   }
+
+  const reviewPage = reviewEnabled ? buildReviewPreview(previewBody, rawSource, document.version, nonce) : undefined;
+  if (reviewPage) previewBody = reviewPage.body;
 
   const bodyClass = previewMode === 'presentation'
     ? 'preview-mode-presentation'
@@ -153,6 +166,8 @@ export function buildPreviewPage(
   const modeScriptUri = assetHref(assetManifest.assets[previewMode === 'presentation' ? 'previewPresentationRuntime' : 'previewDocumentRuntime']);
   const hasZoomMedia = hasMermaid || /<img\b/iu.test(previewBody);
   const stylesheetUris = selectPreviewStylesheetAssets(assetManifest, previewMode, hasZoomMedia).map(assetHref);
+  const reviewScript = reviewEnabled && assetManifest.assets.previewReviewRuntime ? assetHref(assetManifest.assets.previewReviewRuntime) : '';
+  if (reviewScript) stylesheetUris.push(assetHref(assetManifest.assets.previewReviewStyle));
   const imgSrcPolicy = allowRemoteResources
     ? `${webview.cspSource} https: data:`
     : `${webview.cspSource} data:`;
@@ -209,6 +224,7 @@ export function buildPreviewPage(
         previewSessionId: '${nonce}',
         previewReady: function () { vscode.postMessage({ command: 'previewReady', sessionId: '${nonce}' }); },
         documentUpdateResult: function (revision, applied) { vscode.postMessage({ command: 'documentUpdateResult', sessionId: '${nonce}', revision: revision, applied: applied }); },
+        review: function (message) { vscode.postMessage({ ...message, command: 'previewReview', sessionId: '${nonce}' }); },
         openLink: function (href) { vscode.postMessage({ command: 'openLink', href: href }); },
         resolveImage: function (requestId, src) { vscode.postMessage({ command: 'resolveImage', requestId: requestId, src: src }); },
         setState: function (state) { vscode.setState(state); },
@@ -220,9 +236,10 @@ export function buildPreviewPage(
   <script nonce="${nonce}" src="${scriptUri}"></script>
   <script nonce="${nonce}" src="${modeScriptUri}"></script>
   ${visualizationsScriptUri ? `<script nonce="${nonce}" src="${visualizationsScriptUri}"></script>` : ''}
+  ${reviewScript ? `<script nonce="${nonce}" src="${reviewScript}"></script>` : ''}
 </body>
 </html>`;
-  return { html, body: previewBody, mode: previewMode, compatibilityKey, sessionId: nonce };
+  return { html, body: previewBody, mode: previewMode, compatibilityKey, sessionId: nonce, review: reviewPage?.review };
 }
 
 function getPreviewPageWidth(document: vscode.TextDocument): PreviewPageWidth {
