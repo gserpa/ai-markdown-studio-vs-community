@@ -2637,6 +2637,7 @@ function initializePresentationPreview(bridge) {
 
   const setActiveSlide = (nextIndex) => {
     currentIndex = clampIndex(nextIndex, slides.length);
+    clearPendingStageTap();
 
     for (const slide of slides) {
       const canvas = slide.querySelector('.presentation-canvas');
@@ -2670,11 +2671,54 @@ function initializePresentationPreview(bridge) {
   };
 
   const isInteractiveTapTarget = (target) => {
-    return Boolean(target.closest('a, button, input, textarea, select, label, summary, [data-mermaid-action], .mermaid-rendered, .presentation-thumb'));
+    return Boolean(target.closest('a, button, input, textarea, select, label, summary, [contenteditable], [data-review-ui], [data-mermaid-action], .mermaid-rendered, .presentation-thumb'));
   };
 
   const navigateFromStageTap = (event) => {
-    if (!(event.target instanceof Element) || isInteractiveTapTarget(event.target)) {
+    if (event.button !== 0 || suppressStageClick || hasStageSelection()
+      || !(event.target instanceof Element) || isInteractiveTapTarget(event.target)) {
+      clearPendingStageTap();
+  const hasStageSelection = () => {
+    const selection = window.getSelection();
+    return Boolean(selection && !selection.isCollapsed
+      && (stage?.contains(selection.anchorNode) || stage?.contains(selection.focusNode)));
+  };
+
+  let stagePointer;
+  let suppressStageClick = false;
+
+  stage?.addEventListener('pointerdown', (event) => {
+    if (!event.isPrimary || event.button !== 0) return;
+    suppressStageClick = hasStageSelection() || !(event.target instanceof Element)
+      || isInteractiveTapTarget(event.target);
+    stagePointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  });
+
+  const checkStagePointerMovement = (event) => {
+    if (stagePointer?.id !== event.pointerId) return;
+    if (Math.hypot(event.clientX - stagePointer.x, event.clientY - stagePointer.y) <= 5) return;
+    suppressStageClick = true;
+    clearPendingStageTap();
+  };
+
+  window.addEventListener('pointermove', checkStagePointerMovement, { passive: true });
+  window.addEventListener('pointerup', (event) => {
+    if (stagePointer?.id !== event.pointerId) return;
+    checkStagePointerMovement(event);
+    stagePointer = undefined;
+  }, { passive: true });
+  window.addEventListener('pointercancel', (event) => {
+    if (stagePointer?.id !== event.pointerId) return;
+    stagePointer = undefined;
+    suppressStageClick = true;
+    clearPendingStageTap();
+  });
+  document.addEventListener('selectionchange', () => {
+    if (!hasStageSelection()) return;
+    if (stagePointer) suppressStageClick = true;
+    clearPendingStageTap();
+  });
+
       return;
     }
 
@@ -2696,6 +2740,7 @@ function initializePresentationPreview(bridge) {
       pendingStageTapId = null;
       const relativeX = (event.clientX - rect.left) / rect.width;
       if (relativeX <= 0.35) {
+      if (stagePointer || hasStageSelection() || slides[currentIndex] !== activeSlide) return;
         setActiveSlide(currentIndex - 1);
         return;
       }
@@ -2763,6 +2808,8 @@ function initializePresentationPreview(bridge) {
   window.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
       event.preventDefault();
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey
+      || (event.target instanceof Element && isInteractiveTapTarget(event.target))) return;
       setActiveSlide(currentIndex - 1);
       return;
     }
