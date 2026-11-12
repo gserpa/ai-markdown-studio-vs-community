@@ -119,6 +119,7 @@
         const ranges = commentRanges(state.comments.find(comment => comment.id === selectedComment));
         if (ranges.length) position(popover, ranges[0]);
         else if (!editing) popover.hidden = true;
+        updateCommentHighlight();
       } else if (selection) position(popover, selection.range);
     });
   }
@@ -225,6 +226,7 @@
     selection = undefined;
     selectedComment = undefined;
     popover.hidden = true;
+    updateCommentHighlight();
   }
 
   function position(element, range) {
@@ -262,8 +264,17 @@
     });
   }
 
+  function updateCommentHighlight() {
+    if (!window.Highlight || !window.CSS?.highlights) return;
+    const comment = state?.comments.find(item => item.id === selectedComment);
+    if (!commentsVisible || popover.hidden || !comment) {
+      CSS.highlights.delete('markdown-review');
+      return;
+    }
+    CSS.highlights.set('markdown-review', new Highlight(...commentRanges(comment)));
+  }
+
   function renderMarkers() {
-    const highlights = [];
     const buttons = [];
     if (!commentsVisible) {
       markers.replaceChildren();
@@ -275,7 +286,6 @@
       const ranges = commentRanges(comment);
       const rect = ranges[0]?.getClientRects()[0];
       if (!rect || rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) continue;
-      highlights.push(...ranges);
       const marker = button('', () => openComment(comment), 'Open review comment: ' + comment.body);
       marker.addEventListener('pointerenter', () => { cancelHide(); if (!editing) openComment(comment, false); });
       marker.addEventListener('pointerleave', () => { if (!editing) scheduleHide(); });
@@ -293,7 +303,7 @@
       buttons.push(marker);
     }
     markers.replaceChildren(...buttons);
-    if (window.Highlight && window.CSS?.highlights) CSS.highlights.set('markdown-review', new Highlight(...highlights));
+    updateCommentHighlight();
   }
 
   function openComment(comment, focus = true) {
@@ -312,6 +322,7 @@
     popover.replaceChildren(content, button('Close', closePopover));
     popover.hidden = false;
     position(popover, ranges[0]);
+    updateCommentHighlight();
     if (focus) popover.querySelector('button')?.focus({ preventScroll: true });
   }
 
