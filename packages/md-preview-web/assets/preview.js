@@ -2673,7 +2673,7 @@ function initializePresentationPreview(bridge) {
   };
 
   const isInteractiveTapTarget = (target) => {
-    return Boolean(target.closest('a, button, input, textarea, select, label, summary, [contenteditable], [data-review-ui], [data-mermaid-action], .mermaid-rendered, .presentation-thumb'));
+    return Boolean(target.closest('a, button, input, textarea, select, label, summary, [contenteditable], [data-review-ui], [data-mermaid-action], .presentation-thumb'));
   };
 
   const hasStageSelection = () => {

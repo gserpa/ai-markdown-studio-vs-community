@@ -143,9 +143,9 @@ $$
 
 Select rendered text in a Markdown document or an MPS slide, then choose **Add Review Comment**. In a presentation, a simple click still changes slides. Dragging to select text keeps the current slide visible.
 
-Comments travel inside the Markdown file. Use **Review Comments** to find the selected text, reattach a detached comment, mark a comment revised, or resolve it. Resolving removes the comment. Clear **Include in AI review** to handle an open comment manually.
+Comments travel inside the Markdown file. Choose **View Review Comments** from the preview command menu to open the Explorer sidebar and find the selected text, reattach a detached comment, mark a comment revised, or resolve it. Resolving removes the comment. Clear **Include in AI review** to handle an open comment manually.
 
-**Review Comments with AI** offers Copilot or prompt copy. Copilot opens an editable diff. Use **Apply Revision** to apply the draft and choose which comments to mark revised. **Copy Review Prompt** copies the current Markdown and selected comments for another assistant, including when integrated AI is disabled.
+**AI: Revise from Comments** offers Copilot or prompt copy. The preview title bar also provides a direct Copilot review button. Copilot opens an editable diff. Use **Apply Revision** to apply the draft and choose which comments to mark revised. **Copy Review Prompt** copies the current Markdown and selected comments for another assistant, including when integrated AI is disabled.
 
 ## Document themes
 

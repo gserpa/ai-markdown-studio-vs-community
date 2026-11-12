@@ -96,8 +96,19 @@
       },
       {
         "command": "markdownAiStudio.reviewComments",
-        "title": "Review Comments with AI",
+        "title": "Revise from Comments",
         "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.viewReviewComments",
+        "title": "View Review Comments",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.runReviewComments",
+        "title": "Revise from Comments",
+        "category": "AI Markdown Studio",
+        "icon": "$(sparkle)"
       },
       {
         "command": "markdownAiStudio.copyReviewPrompt",
@@ -288,6 +299,14 @@
         "path": "./skills/markdown-ai-studio-presentation-copilot/SKILL.md"
       }
     ],
+    "views": {
+      "explorer": [
+        {
+          "id": "markdownAiStudio.reviewCommentsView",
+          "name": "Review Comments"
+        }
+      ]
+    },
     "menus": {
       "commandPalette": [
         {
@@ -328,6 +347,11 @@
         }
       ],
       "editor/title": [
+        {
+          "command": "markdownAiStudio.runReviewComments",
+          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' && markdownAiStudio.reviewPending && markdownAiStudio.aiAccessEnabled && markdownAiStudio.copilotConfigured",
+          "group": "navigation@2.5"
+        },
         {
           "command": "markdownAiStudio.applyReviewRevision",
           "when": "textCompareEditorActive && markdownAiStudio.reviewDraftActive",

@@ -23,7 +23,7 @@
   const overlays = make('div', 'md-review-overlays');
   toolbar.dataset.reviewUi = overlays.dataset.reviewUi = '';
   const presentationToolbar = root.querySelector('.presentation-header-controls');
-  (presentationToolbar ?? document.body).append(toolbar);
+  // Review navigation is provided by the VS Code title bar and sidebar.
   if (presentationToolbar) toolbar.classList.add('md-review-slide-toolbar');
   document.body.append(overlays);
 
@@ -55,7 +55,7 @@
   }, 'Review Comments');
   listButton.setAttribute('aria-expanded', 'false');
   const runButton = button('✦', () => send('run'), 'Run AI Review');
-  toolbar.append(listButton, runButton);
+
 
   function send(action, details = {}) {
     if (pending || !state) return;
@@ -324,7 +324,10 @@
   }
 
   window.addEventListener('message', ({ data }) => {
-    if (data?.command === 'reviewAvailability') {
+    if (data?.command === 'revealReviewComment') {
+      const comment = state.comments.find(item => item.id === data.id);
+      if (comment) openComment(comment);
+    } else if (data?.command === 'reviewAvailability') {
       enabled = data.enabled === true;
       refresh();
     } else if (data?.command === 'reviewResult' && pending?.requestId === data.requestId) {

@@ -12,6 +12,9 @@ const copyCommand = 'markdownAiStudio.copyReviewPrompt';
 const applyCommand = 'markdownAiStudio.applyReviewRevision';
 const discardCommand = 'markdownAiStudio.discardReviewRevision';
 const baseScheme = 'markdown-ai-studio-review-base';
+const reviewPanels = new Map<string, Set<vscode.WebviewPanel>>();
+let activeReviewUri: vscode.Uri | undefined;
+let refreshReviewView: (() => Promise<void>) | undefined;
 
 type ReviewRequest = {
   command?: string;
@@ -47,6 +50,10 @@ type Draft = {
 export function attachReviewPreview(
   panel: vscode.WebviewPanel, updater: PreviewDocumentUpdater, getDocument: () => vscode.TextDocument,
 ): void {
+  const key = getDocument().uri.toString();
+  const panels = reviewPanels.get(key) ?? new Set<vscode.WebviewPanel>();
+  panels.add(panel);
+  reviewPanels.set(key, panels);
   let ready = false;
   let generation = 0;
   const postAvailability = async () => {
@@ -93,8 +100,24 @@ export function attachReviewPreview(
       }
     }),
   ];
+  panel.onDidChangeViewState(event => {
+    if (event.webviewPanel.active) {
+      activeReviewUri = getDocument().uri;
+      void refreshReviewView?.();
+    }
+  });
+  if (panel.active) {
+    activeReviewUri = getDocument().uri;
+    void refreshReviewView?.();
+  }
   panel.onDidDispose(() => {
     ready = false;
+    panels.delete(panel);
+    if (!panels.size) {
+      reviewPanels.delete(key);
+      if (activeReviewUri?.toString() === key) activeReviewUri = undefined;
+    }
+    void refreshReviewView?.();
     for (const disposable of disposables) disposable.dispose();
   });
 }
@@ -227,7 +250,65 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
     }
   };
 
+  const changed = new vscode.EventEmitter<void>();
+  const locations = new WeakMap<ReviewComment, string>();
+  const provider: vscode.TreeDataProvider<ReviewComment> = {
+    onDidChangeTreeData: changed.event,
+    getTreeItem(comment) {
+      const item = new vscode.TreeItem(comment.body, vscode.TreeItemCollapsibleState.None);
+      item.description = (locations.get(comment) ?? 'Detached') + ' · ' + (comment.state === 'revised' ? 'Revised' : 'Open') + (comment.includeInAi ? ' · AI' : '');
+      item.tooltip = comment.original.quote;
+      item.command = { command: 'markdownAiStudio.revealReviewComment', title: 'Show Comment', arguments: [comment.id] };
+      return item;
+    },
+    async getChildren() {
+      const uri = activeReviewUri ?? resolveUri();
+      if (!uri || uri.scheme !== 'file') return [];
+      const document = await vscode.workspace.openTextDocument(uri);
+      const stored = readReviewComments(document.getText());
+      for (const comment of stored.comments) {
+        const matches = (comment.anchor ?? comment.original).parts.map(part => locateReviewPart(stored.markdown, part));
+        if (matches.every(match => match !== undefined)) {
+          const first = Math.min(...matches.map(match => match.startLine));
+          const last = Math.max(...matches.map(match => match.endLine));
+          locations.set(comment, first === last ? 'Line ' + first : 'Lines ' + first + '–' + last);
+        }
+      }
+      return stored.comments;
+    },
+  };
+  const refresh = async () => {
+    changed.fire();
+    const uri = activeReviewUri ?? resolveUri();
+    let eligible = false;
+    if (uri?.scheme === 'file') {
+      const document = await vscode.workspace.openTextDocument(uri);
+      const stored = readReviewComments(document.getText());
+      eligible = eligibleComments(stored.markdown, stored.comments).length > 0;
+    }
+    await vscode.commands.executeCommand('setContext', 'markdownAiStudio.reviewPending', eligible);
+  };
+  refreshReviewView = refresh;
+  void refresh();
   return vscode.Disposable.from(
+    changed,
+    vscode.window.registerTreeDataProvider('markdownAiStudio.reviewCommentsView', provider),
+    vscode.commands.registerCommand('markdownAiStudio.viewReviewComments', async () => {
+      await refresh();
+      await vscode.commands.executeCommand('markdownAiStudio.reviewCommentsView.focus');
+    }),
+    vscode.commands.registerCommand('markdownAiStudio.revealReviewComment', async (id: string) => {
+      const uri = activeReviewUri ?? resolveUri();
+      if (!uri) return;
+      for (const panel of reviewPanels.get(uri.toString()) ?? []) {
+        panel.reveal(panel.viewColumn, true);
+        await panel.webview.postMessage({ command: 'revealReviewComment', id });
+      }
+    }),
+    vscode.commands.registerCommand('markdownAiStudio.runReviewComments', (uri?: vscode.Uri) => report(() => review(uri, 'integrated'))),
+    vscode.workspace.onDidChangeTextDocument(() => { void refresh(); }),
+    vscode.window.onDidChangeActiveTextEditor(() => { void refresh(); }),
+    vscode.window.onDidChangeActiveColorTheme(() => { void refresh(); }),
     vscode.workspace.registerTextDocumentContentProvider(baseScheme, {
       provideTextDocumentContent: uri => originals.get(uri.toString()) ?? '',
     }),

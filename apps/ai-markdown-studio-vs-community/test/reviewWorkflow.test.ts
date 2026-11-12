@@ -17,9 +17,11 @@ const mock = vi.hoisted(() => ({
 vi.mock('vscode', () => ({
   workspace: {
     openTextDocument: vi.fn(async () => mock.document),
+    onDidChangeTextDocument: mock.disposable,
     registerTextDocumentContentProvider: mock.disposable,
   },
   commands: {
+    executeCommand: vi.fn(),
     registerCommand: (id: string, action: (...args: any[]) => Promise<void>) => {
       mock.commands.set(id, action);
       return mock.disposable();
@@ -28,6 +30,9 @@ vi.mock('vscode', () => ({
   env: { clipboard: { writeText: mock.clipboard } },
   window: {
     showQuickPick: mock.choose,
+    registerTreeDataProvider: mock.disposable,
+    onDidChangeActiveTextEditor: mock.disposable,
+    onDidChangeActiveColorTheme: mock.disposable,
     showInformationMessage: mock.showInfo,
     showErrorMessage: mock.showError,
     tabGroups: {
@@ -36,6 +41,7 @@ vi.mock('vscode', () => ({
       onDidChangeTabGroups: mock.disposable,
     },
   },
+  EventEmitter: class { event() {} fire() {} dispose() {} },
   CancellationError: class extends Error {},
   Disposable: { from: mock.disposable },
 }));
