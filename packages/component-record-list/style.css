@@ -98,3 +98,71 @@
   height: 100%;
   background: var(--presentation-component-primary, var(--md-preview-link-color, #1686c8));
 }
+
+/* Dashboard lists read as one panel per group, with an ID and a status on each row. */
+.presentation-theme-midnight-delivery .markdown-body .md-record-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18em), 1fr));
+}
+.presentation-theme-midnight-delivery .md-record-heading { grid-column: 1 / -1; }
+.presentation-theme-midnight-delivery .md-record-group,
+.presentation-theme-midnight-delivery .markdown-body .md-record-list-standalone {
+  --record-group-accent: var(--presentation-component-warning, #f6ad3c);
+  min-width: 0;
+  padding: 1em 1.15em;
+  border: 1px solid var(--record-line);
+  border-block-start: .23em solid var(--record-group-accent);
+  border-radius: .65em;
+  background: var(--record-panel);
+}
+.presentation-theme-midnight-delivery .md-record-group:nth-of-type(even) {
+  --record-group-accent: var(--presentation-component-danger, #f0566b);
+}
+.presentation-theme-midnight-delivery .markdown-body .md-record-list :is(.md-record-group-label, .md-record-list-standalone > .md-record-heading) {
+  margin: 0 0 .35em;
+  padding: 0;
+  border: 0;
+  color: var(--record-group-accent);
+  font-size: .8em;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.presentation-theme-midnight-delivery .markdown-body .md-record-list .md-record-items { gap: 0; }
+.presentation-theme-midnight-delivery .markdown-body .md-record-list .md-record-item {
+  gap: .32em;
+  padding: .8em 0;
+  border: 0;
+  border-block-end: 1px solid var(--record-line);
+  border-radius: 0;
+  background: transparent;
+}
+.presentation-theme-midnight-delivery .markdown-body .md-record-list-compact .md-record-item { padding-block: .55em; }
+.presentation-theme-midnight-delivery .md-record-item .md-record-title { color: var(--presentation-heading-color, #fff); }
+.presentation-theme-midnight-delivery .md-record-item .md-record-metadata { grid-row: 2; }
+.presentation-theme-midnight-delivery .md-record-id {
+  display: inline-block;
+  min-inline-size: 2.8em;
+  box-sizing: border-box;
+  margin-inline-end: .4em;
+  padding: .24em .58em;
+  border-radius: 1em;
+  background: var(--record-group-accent);
+  color: #0a1240;
+  text-align: center;
+  font-size: .74em;
+}
+.presentation-theme-midnight-delivery .md-record-status {
+  border-color: transparent;
+  border-radius: 1em;
+  padding: .24em .8em;
+  background: var(--md-record-accent, #aab3d6);
+  color: #0a1240;
+  font-size: .73em;
+  font-weight: 700;
+}
+
+.presentation-theme-midnight-delivery .markdown-body .md-record-list-standalone { gap: 0; }
+.presentation-theme-midnight-delivery .md-record-list-standalone > .md-record-group {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}

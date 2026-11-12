@@ -13,3 +13,31 @@
 .markdown-body .md-fact-success { --md-fact-accent: var(--md-fact-success-color, var(--presentation-component-success, #178452)); }
 .markdown-body .md-fact-warning { --md-fact-accent: var(--md-fact-warning-color, var(--presentation-component-warning, #c27a0b)); }
 .markdown-body .md-fact-danger { --md-fact-accent: var(--md-fact-danger-color, var(--presentation-component-danger, #c94141)); }
+
+.presentation-theme-midnight-delivery .markdown-body .md-fact-card {
+  padding: 1em;
+  border-radius: .55em;
+}
+.presentation-theme-midnight-delivery .markdown-body .md-fact-label {
+  display: flex;
+  align-items: center;
+  gap: .65em;
+  color: var(--md-fact-accent, var(--presentation-accent, #2bc4f3));
+  font-size: .8em;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.presentation-theme-midnight-delivery .md-fact-items:has(.md-fact-icon) .md-fact-label { min-block-size: max(2.5em, 2lh); }
+.presentation-theme-midnight-delivery .md-fact-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.5em;
+  block-size: 2.5em;
+  border-radius: 50%;
+  background: var(--md-fact-accent, var(--presentation-accent, #2bc4f3));
+  color: #0a1240;
+  letter-spacing: 0;
+}
+.presentation-theme-midnight-delivery .md-fact-value strong { color: var(--presentation-heading-color, #fff); }
