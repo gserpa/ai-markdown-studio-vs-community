@@ -20,9 +20,9 @@ Charts and metrics work offline without a chart service or CDN.
 
 JavaScript enables chart rendering, tooltips, and responsive sizing. If scripts
 are disabled or the chart asset cannot load, the chart title and original JSON
-remain visible. Metrics remain readable HTML cards. Invalid definitions and
-chart rendering errors keep their source fallback without preventing other
-content from rendering.
+remain visible. Metrics remain readable HTML cards. Invalid chart definitions
+and chart rendering errors keep their source fallback. Invalid metric blocks
+display a validation message.
 
 Printed HTML uses the rendered SVG charts and hides tooltips and source
 disclosures for successfully rendered blocks. Source remains visible for charts
@@ -73,8 +73,7 @@ can be favorable or unfavorable depending on the metric.
 
 Titles are limited to 200 characters, units to 120, subtitles to 300, and trend
 periods to 200. Strings are displayed as text, including strings containing HTML.
-Cards inherit the active document or presentation theme. Their source is
-available in a disclosure below the metric.
+Cards inherit the active document or presentation theme. Edit the metric definition in the Markdown source.
 
 ## Vega-Lite charts
 

@@ -28,7 +28,7 @@ describe.each(['server', 'browser'] as const)('%s visualization rendering', mode
     return dom;
   }
 
-  it('renders semantic metric cards with the complete original source', () => {
+  it('renders semantic metric cards without a source disclosure', () => {
     const dom = render(fence('metric', metric));
     try {
       const card = dom.window.document.querySelector('.md-metric')!;
@@ -40,8 +40,7 @@ describe.each(['server', 'browser'] as const)('%s visualization rendering', mode
       expect(card.querySelector('.md-metric-subtitle')?.textContent).toBe('2025');
       expect(card.querySelector('.md-metric-trend')?.textContent).toContain('Down: -22 percentage points since 2022');
       expect(card.querySelector('.md-metric-trend [aria-hidden="true"]')?.textContent).toBe('↓');
-      expect(card.querySelector('details')?.open).toBe(false);
-      expect(JSON.parse(card.querySelector('code')!.textContent!)).toEqual(metric);
+      expect(card.querySelector('details, code')).toBeNull();
     } finally { dom.window.close(); }
   });
 
@@ -88,8 +87,17 @@ describe.each(['server', 'browser'] as const)('%s visualization rendering', mode
     } finally { dom.window.close(); }
   });
 
-  it('caps oversized invalid source previews without changing the Markdown source', () => {
-    const source = '```metric\n' + 'x'.repeat(140_000) + '\n```';
+  it('shows metric errors without a source disclosure', () => {
+    const dom = render(fence('metric', { title: 'Invalid', value: 'not a number' }));
+    try {
+      const error = dom.window.document.querySelector('.md-visualization-error')!;
+      expect(error.querySelector('.md-visualization-error-message')?.textContent).toContain('value');
+      expect(error.querySelector('details, code')).toBeNull();
+    } finally { dom.window.close(); }
+  });
+
+  it('caps oversized invalid chart source previews without changing the Markdown source', () => {
+    const source = '```vega-lite\n' + 'x'.repeat(600_000) + '\n```';
     const dom = render(source);
     try {
       expect(dom.window.document.querySelector('.md-visualization-error')?.textContent).toContain('UTF-8 bytes');
