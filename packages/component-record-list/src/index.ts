@@ -78,10 +78,10 @@ function escape(value: string): string { return value.replace(/&/gu,'&amp;').rep
 function render(model: RecordList): string {
   const groups = model.groups.map(group => `<div class="md-record-group" data-record-group>${group.label ? `<p class="md-record-group-label" data-record-group-label>${escape(group.label)}</p>` : ''}<ul class="md-record-items">${group.records.map(item => {
     const prefix = [item.ordinal === undefined ? '' : String(item.ordinal) + '.', item.id ?? '', item.title].filter(Boolean).map(escape).join(' ');
-    const metadata = item.metadata?.map(([key,value]) => `${escape(key)}: ${escape(value)}`).join(' · ');
-    const tags = item.tags?.map(escape).join(' · ');
+    const metadata = item.metadata?.map(([key,value]) => `<span class="md-record-field"><strong>${escape(key)}:</strong> ${escape(value)}</span>`).join(' · ');
+    const tags = item.tags?.map(tag => '<span class="md-record-tag">' + escape(tag) + '</span>').join(' ');
     const status = item.status ? `<span class="md-record-status md-record-status-${item.status.style}">${escape(item.status.label)}</span>` : '';
-    const scale = item.scale ? `<span class="md-record-scale">${escape(item.scale.label ?? 'Scale')}: ${item.scale.value}/${item.scale.max}</span>` : '';
+    const scale = item.scale ? `<span class="md-record-scale">${escape(item.scale.label ?? 'Scale')}: ${item.scale.value}/${item.scale.max}<span class="md-record-scale-track" aria-hidden="true"><span style="width: ${100 * item.scale.value / item.scale.max}%"></span></span></span>` : '';
     return `<li class="md-record-item" data-record-item><p class="md-record-title"><strong>${prefix}</strong>${status ? ' '+status : ''}${scale ? ' '+scale : ''}</p>${item.detail ? `<p class="md-record-detail">${escape(item.detail)}</p>` : ''}${metadata ? `<p class="md-record-metadata">${metadata}</p>` : ''}${tags ? `<p class="md-record-tags">${tags}</p>` : ''}</li>`;
   }).join('')}</ul></div>`).join('');
   return `<section class="md-record-list md-record-list-${model.variant}" data-component-fit="required" aria-label="${escape(model.heading ?? 'Records')}">${model.heading ? `<p class="md-record-heading" data-record-heading>${escape(model.heading)}</p>` : ''}${groups}</section>\n`;

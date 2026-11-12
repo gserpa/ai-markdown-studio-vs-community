@@ -46,10 +46,10 @@ describe('generated asset manifest', () => {
       .map((entry: { asset: string }) => fs.readFileSync(path.join(assetsRoot, manifest.assets[entry.asset].path), 'utf8'))
       .join('\n').replace(/\s+/gu, '');
 
-    expect(stylesheet).toContain('table{width:max-content;');
-    expect(stylesheet).toContain('th,td{padding:12px16px;');
-    expect(stylesheet).toContain('.presentation-slide-bodytable{');
-    expect(stylesheet.indexOf('table{width:max-content;')).toBeLessThan(stylesheet.indexOf('.presentation-slide-bodytable{'));
+    expect(stylesheet).toContain('table:not(:where([data-table-style=plain])){width:max-content;');
+    expect(stylesheet).toContain('th,:where(table:not(:where([data-table-style=plain])))td{padding:12px16px;');
+    expect(stylesheet).toContain('.presentation-slide-bodytable:not(:where([data-table-style=plain])){');
+    expect(stylesheet.indexOf('table:not(:where([data-table-style=plain])){width:max-content;')).toBeLessThan(stylesheet.indexOf('.presentation-slide-bodytable:not(:where([data-table-style=plain])){'));
   });
   it('builds the combined fallback stylesheet from the source modules in order', () => {
     const stylesRoot = path.resolve(assetsRoot, '..', 'styles');

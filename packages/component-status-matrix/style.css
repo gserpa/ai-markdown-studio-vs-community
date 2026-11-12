@@ -1,31 +1,115 @@
-.markdown-body .md-status-matrix { width: 100%; border-collapse: collapse; overflow-wrap: anywhere; }
-.markdown-body .md-status-matrix th,
-.markdown-body .md-status-matrix td { padding: 0.5em 0.65em; border: 1px solid var(--md-preview-border-color); text-align: left; }
-.markdown-body .md-status-matrix thead th { font-weight: 700; }
-.markdown-body .md-status-matrix .md-matrix-detail { display: block; font-size: 0.82em; font-weight: normal; opacity: 0.8; }
-.markdown-body .md-status-matrix .md-matrix-cell { --md-matrix-color: var(--presentation-accent, #3269b1); }
-.markdown-body .md-status-matrix .md-matrix-neutral, .markdown-body .md-matrix-legend .md-matrix-neutral { --md-matrix-color: var(--md-matrix-neutral-color, var(--presentation-component-unknown, #738095)); }
-.markdown-body .md-status-matrix .md-matrix-info, .markdown-body .md-matrix-legend .md-matrix-info { --md-matrix-color: var(--md-matrix-info-color, var(--presentation-component-primary, #1686c8)); }
-.markdown-body .md-status-matrix .md-matrix-success, .markdown-body .md-matrix-legend .md-matrix-success { --md-matrix-color: var(--md-matrix-success-color, var(--presentation-component-success, #178452)); }
-.markdown-body .md-status-matrix .md-matrix-warning, .markdown-body .md-matrix-legend .md-matrix-warning { --md-matrix-color: var(--md-matrix-warning-color, var(--presentation-component-warning, #c27a0b)); }
-.markdown-body .md-status-matrix .md-matrix-danger, .markdown-body .md-matrix-legend .md-matrix-danger { --md-matrix-color: var(--md-matrix-danger-color, var(--presentation-component-danger, #c94141)); }
-.markdown-body .md-status-matrix .md-matrix-neutral .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-info .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-success .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-warning .md-matrix-status, .markdown-body .md-status-matrix .md-matrix-danger .md-matrix-status { border-left: 0.25em solid var(--md-matrix-color); padding-left: 0.4em; }
-.markdown-body .md-status-matrix .md-matrix-progress { display: block; width: 100%; height: 0.45em; margin-top: 0.3em; background: color-mix(in srgb, var(--md-matrix-color) 20%, transparent); border-radius: 1em; overflow: hidden; }
-.markdown-body .md-status-matrix .md-matrix-progress-fill { display: block; height: 100%; background: var(--md-matrix-color); }
-.markdown-body .md-status-matrix .md-matrix-progress-text { font-size: 0.8em; }
-.markdown-body .md-matrix-legend span { border-left: 0.25em solid var(--md-matrix-color); padding-left: 0.35em; }
-
-/* Matrix row headers use body colors; generic table header rules target every th. */
-.presentation-slide-body table.md-status-matrix tbody th {
-  color: var(--presentation-table-cell-color, var(--presentation-body-color, inherit));
-  background: var(--presentation-table-cell-bg, transparent);
+.markdown-body table.md-status-matrix {
+  --matrix-panel: var(--presentation-panel-bg, color-mix(in srgb, currentColor 8%, transparent));
+  --matrix-text: var(--presentation-body-color, inherit);
+  --matrix-line: var(--presentation-panel-border, var(--md-preview-table-cell-border, #ccd5e1));
+  --matrix-muted: var(--presentation-muted-color, var(--md-preview-muted-color, inherit));
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid var(--matrix-line);
+  border-radius: 10px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  color: var(--matrix-text);
+  background: transparent;
+  box-shadow: none;
+  font-size: .88em;
+  line-height: 1.35;
 }
-.presentation-slide-body table.md-status-matrix tbody tr:nth-child(even) th {
-  background: var(--presentation-table-row-alt-bg, transparent);
+.md-status-matrix th,
+.md-status-matrix td {
+  padding: .62em .48em;
+  vertical-align: middle;
+  border-block-end: 1px solid var(--matrix-line);
 }
-
-.presentation-theme-midnight-delivery .md-status-matrix th,
-.presentation-theme-midnight-delivery .md-status-matrix td { border-color: var(--presentation-panel-border); }
-.presentation-theme-midnight-delivery .md-status-matrix thead th { color: var(--presentation-accent); background: var(--presentation-panel-bg); }
-
-.markdown-body .md-status-matrix .md-matrix-indicator { border-left: 0.25em solid var(--md-matrix-color); padding-left: 0.4em; }
+.md-status-matrix thead th {
+  color: var(--matrix-text);
+  background: var(--matrix-panel);
+  text-align: center;
+  font-weight: 700;
+}
+.md-status-matrix thead th[scope="colgroup"] {
+  color: var(--presentation-accent, var(--md-preview-link-color, inherit));
+  font-size: .84em;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.md-status-matrix thead th + th,
+.md-status-matrix tbody td {
+  border-inline-start: 1px solid var(--matrix-line);
+}
+.md-status-matrix tbody th,
+.md-status-matrix thead tr:first-child th:first-child,
+.md-status-matrix .md-matrix-note {
+  text-align: start;
+  padding-inline: .85em;
+}
+.md-status-matrix tbody th { width: 19%; font-weight: 700; }
+.md-status-matrix tbody .md-matrix-note { width: 24%; font-size: .92em; }
+.md-status-matrix tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--matrix-panel) 55%, transparent);
+}
+.md-status-matrix tbody tr:last-child > * { border-block-end: 0; }
+.md-status-matrix .md-matrix-detail {
+  display: block;
+  margin-block-start: .3em;
+  color: var(--matrix-muted);
+  font-size: .84em;
+  font-weight: 400;
+}
+.md-status-matrix .md-matrix-cell {
+  --md-matrix-color: var(--presentation-accent, #3269b1);
+  text-align: center;
+}
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-neutral { --md-matrix-color: var(--md-matrix-neutral-color, var(--presentation-component-unknown, #738095)); }
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-info { --md-matrix-color: var(--md-matrix-info-color, var(--presentation-component-primary, #1686c8)); }
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-success { --md-matrix-color: var(--md-matrix-success-color, var(--presentation-component-success, #178452)); }
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-warning { --md-matrix-color: var(--md-matrix-warning-color, var(--presentation-component-warning, #c27a0b)); }
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-danger { --md-matrix-color: var(--md-matrix-danger-color, var(--presentation-component-danger, #c94141)); }
+.md-status-matrix :is(.md-matrix-neutral, .md-matrix-info, .md-matrix-success, .md-matrix-warning, .md-matrix-danger) .md-matrix-status {
+  display: inline-block;
+  min-inline-size: 2em;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+  padding: .2em .4em;
+  border: 1px solid color-mix(in srgb, var(--md-matrix-color) 68%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--md-matrix-color) 22%, transparent);
+  font-size: .88em;
+  font-weight: 700;
+}
+.md-status-matrix .md-matrix-indicator {
+  border-inline-start: 3px solid var(--md-matrix-color);
+  padding-inline-start: .45em;
+}
+.md-status-matrix .md-matrix-progress {
+  display: block;
+  height: .4em;
+  margin-block: .4em .15em;
+  border-radius: 1em;
+  background: color-mix(in srgb, var(--md-matrix-color) 25%, transparent);
+  overflow: hidden;
+}
+.md-status-matrix .md-matrix-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--md-matrix-color);
+}
+.md-status-matrix .md-matrix-progress-text { font-size: .83em; }
+.markdown-body .md-matrix-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35em 1em;
+  margin-block: .7em 0;
+  font-size: .85em;
+}
+.md-matrix-legend span::before {
+  content: '';
+  display: inline-block;
+  width: .65em;
+  height: .65em;
+  margin-inline-end: .35em;
+  border-radius: 2px;
+  background: var(--md-matrix-color);
+}

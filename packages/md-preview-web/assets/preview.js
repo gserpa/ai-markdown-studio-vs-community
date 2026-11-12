@@ -365,7 +365,7 @@ function getPreviewThemeRuntime() {
 
 function wrapTablesForScroll({ forceWrap = false } = {}) {
   const defaultLayout = forceWrap || document.body.dataset.documentTableLayout === 'wrap' ? 'wrap' : 'wide';
-  const tables = document.querySelectorAll('.markdown-body table');
+  const tables = document.querySelectorAll('.markdown-body table:not([data-table-style="plain"])');
   for (const table of tables) {
     if (!(table instanceof HTMLTableElement)) {
       continue;
@@ -397,7 +397,7 @@ function wrapTablesForScroll({ forceWrap = false } = {}) {
 }
 
 function wrapPresentationTablesForScroll() {
-  for (const table of document.querySelectorAll('.presentation-slide-body table')) {
+  for (const table of document.querySelectorAll('.presentation-slide-body table:not([data-table-style="plain"])')) {
     if (!(table instanceof HTMLTableElement)) {
       continue;
     }

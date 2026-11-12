@@ -54,7 +54,7 @@ describe('preview stylesheet presentation panels', () => {
   });
 
   it('uses a presentation-only wrapper for native table scrolling', () => {
-    expect(previewStylesheet).toContain(`.presentation-slide-body table {
+    expect(previewStylesheet).toContain(`.presentation-slide-body table:not(:where([data-table-style="plain"])) {
   font-size: 1rem;
 }`);
     expect(previewStylesheet).toContain(`.presentation-table-scroll {

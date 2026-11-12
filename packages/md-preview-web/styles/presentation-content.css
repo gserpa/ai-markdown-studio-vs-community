@@ -88,7 +88,7 @@ body.preview-mode-presentation .presentation-slide-body pre::-webkit-scrollbar-t
   color: var(--presentation-body-color, inherit);
 }
 
-.presentation-slide-body table {
+.presentation-slide-body table:not(:where([data-table-style="plain"])) {
   font-size: 1rem;
 }
 
@@ -277,36 +277,36 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   color: var(--presentation-code-meta-color, #0f766e);
 }
 
-.presentation-slide-body table {
+.presentation-slide-body table:not(:where([data-table-style="plain"])) {
   border-color: var(--presentation-table-border, var(--vscode-panel-border));
   background: var(--presentation-table-bg, transparent);
 }
 
-.presentation-slide-body table th,
-.presentation-slide-body table td {
+.presentation-slide-body table:not(:where([data-table-style="plain"])) th,
+.presentation-slide-body table:not(:where([data-table-style="plain"])) td {
   border-color: var(--presentation-table-border, var(--vscode-panel-border));
 }
 
-.presentation-slide-body table th {
+.presentation-slide-body table:not(:where([data-table-style="plain"])) th {
   color: var(--presentation-table-header-color, var(--presentation-body-color, inherit));
   background: var(--presentation-table-header-bg, color-mix(in srgb, var(--presentation-panel-bg, var(--vscode-editor-background)) 82%, var(--presentation-accent) 18%));
 }
 
-.presentation-slide-body table td {
+.presentation-slide-body table:not(:where([data-table-style="plain"])) td {
   color: var(--presentation-table-cell-color, var(--presentation-body-color, inherit));
   background: var(--presentation-table-cell-bg, transparent);
 }
 
-.presentation-slide-body table tbody tr:nth-child(even) td {
+.presentation-slide-body table:not(:where([data-table-style="plain"])) tbody tr:nth-child(even) td {
   background: var(--presentation-table-row-alt-bg, transparent);
 }
 
-.presentation-slide-body table tr,
-.presentation-slide-body table tr:nth-child(2n) {
+.presentation-slide-body table:not(:where([data-table-style="plain"])) tr,
+.presentation-slide-body table:not(:where([data-table-style="plain"])) tr:nth-child(2n) {
   background: transparent;
 }
 
-.presentation-slide-body table tbody tr:hover {
+.presentation-slide-body table:not(:where([data-table-style="plain"])) tbody tr:hover {
   background: var(--presentation-hover-bg, rgba(0, 0, 0, 0.04));
 }
 
