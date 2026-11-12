@@ -160,6 +160,7 @@
   display: grid;
   place-items: center;
   min-block-size: 2.35em;
+  min-inline-size: 5.3em;
   padding: .3em calc(var(--notch) + .15em);
   box-sizing: border-box;
   color: var(--presentation-resolved-component-heading);
@@ -192,6 +193,23 @@
   border-end-end-radius: .5em;
 }
 .presentation-slide-body .md-status-matrix .md-matrix-note { padding-inline: .8em; }
+.presentation-slide-body .md-status-matrix :is(.md-matrix-indicator-heading, .md-matrix-indicator-cell) {
+  width: 3.5em;
+  padding-inline: .35em;
+  text-align: center;
+}
+.presentation-slide-body .md-matrix-indicator-label,
+.presentation-slide-body .md-matrix-status-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.presentation-slide-body .md-matrix-check { font-size: 1.2em; font-weight: 700; }
 .presentation-slide-body .md-status-matrix tbody .md-matrix-note { width: 19%; }
 .presentation-slide-body .md-status-matrix .md-matrix-indicator {
   display: inline-flex;
@@ -255,7 +273,7 @@
 .presentation-slide-body .md-matrix-tile > [aria-label="Unknown"] { color: var(--matrix-muted); }
 .presentation-slide-body .md-status-matrix .md-matrix-progress {
   position: absolute;
-  inset: 0;
+  inset: .16em .28em;
   z-index: -1;
   height: auto;
   margin: 0;

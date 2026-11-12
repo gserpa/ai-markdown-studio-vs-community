@@ -13,13 +13,19 @@ export function prepareMatrixForPptx(document: Document): void {
       const rowHeader = document.createElement('th');
       rowHeader.textContent = first.cells[0]?.textContent?.trim() || 'Item';
       row.append(rowHeader);
+      const indicator = first.querySelector<HTMLTableCellElement>('.md-matrix-indicator-heading');
+      if (indicator) {
+        const th = document.createElement('th');
+        th.textContent = indicator.textContent?.trim() ?? '';
+        row.append(th);
+      }
       [...second.cells].forEach((cell, i) => {
         const th = document.createElement('th');
         th.textContent = [labels[i], cell.textContent?.trim()].filter(Boolean).join(' / ');
         row.append(th);
       });
       for (const cell of [...first.cells].slice(1)) {
-        if (cell.getAttribute('scope') === 'colgroup') continue;
+        if (cell.getAttribute('scope') === 'colgroup' || cell === indicator) continue;
         const th = document.createElement('th');
         th.textContent = cell.textContent?.trim() ?? '';
         row.append(th);
@@ -27,6 +33,7 @@ export function prepareMatrixForPptx(document: Document): void {
       header.replaceChildren(row);
       table.querySelectorAll('colgroup').forEach(group => group.remove());
     }
+    table.querySelectorAll('.md-matrix-check').forEach(icon => icon.remove());
     table.querySelectorAll('.md-matrix-detail').forEach(detail => detail.before(document.createTextNode(' ')));
     table.querySelectorAll('.md-matrix-progress').forEach(bar => bar.remove());
     table.querySelectorAll('.md-matrix-progress-text').forEach(value => {

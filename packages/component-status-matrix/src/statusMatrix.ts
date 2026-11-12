@@ -7,7 +7,7 @@ const MAX_CELLS = 1000;
 export type MatrixGroup = { label: string; span: number };
 export type MatrixProgress = { text: string; fraction: number };
 export type MatrixCell = { status: string | null; progress?: MatrixProgress };
-export type Matrix = { columns: string[]; groups?: MatrixGroup[]; rows: { label: string; detail?: string; indicator?: { label: string; style: string }; note?: string; cells: (string | null)[]; progress?: (MatrixProgress | undefined)[] }[]; statuses?: Record<string, string>; rowHeader?: string };
+export type Matrix = { columns: string[]; groups?: MatrixGroup[]; rows: { label: string; detail?: string; indicator?: { label: string; style: string }; note?: string; cells: (string | null)[]; progress?: (MatrixProgress | undefined)[] }[]; statuses?: Record<string, string>; rowHeader?: string; indicatorHeader?: string; noteHeader?: string };
 export class MatrixError extends Error { constructor(message: string, readonly fragment?: string) { super(message); } }
 function fail(message: string, fragment?: string): never { throw new MatrixError(message, fragment); }
 function mapping(value: unknown, path: string, keys?: string[]): Record<string, unknown> {
@@ -109,10 +109,12 @@ function orderedGroupKeys(doc: Document): string[] {
   return isMap(node) ? node.items.map(pair => isScalar(pair.key) ? String(pair.key.value) : '') : [];
 }
 export function parseMatrix(value: unknown, doc: Document): Matrix {
-  const data = mapping(value, 'data', ['columns', 'rows', 'markdown-table', 'statuses']);
+  const data = mapping(value, 'data', ['columns', 'rows', 'markdown-table', 'statuses', 'rowHeader', 'indicatorHeader', 'noteHeader']);
   const hasTable = Object.hasOwn(data, 'markdown-table');
   if (hasTable && (Object.hasOwn(data, 'columns') || Object.hasOwn(data, 'rows'))) fail('Choose either markdown-table or columns and rows, not both.');
   let columns: string[], groups: MatrixGroup[] | undefined, rowHeader: string | undefined;
+  const indicatorHeader = data.indicatorHeader === undefined ? undefined : text(data.indicatorHeader, 'data.indicatorHeader');
+  const noteHeader = data.noteHeader === undefined ? undefined : text(data.noteHeader, 'data.noteHeader');
   let parsedRows: { label: string; detail?: string; indicator?: { label: string; style: string }; note?: string; cells: MatrixCell[] }[];
   if (hasTable) {
     if (typeof data['markdown-table'] !== 'string') fail('data.markdown-table must be a YAML literal table.');
@@ -151,6 +153,7 @@ export function parseMatrix(value: unknown, doc: Document): Matrix {
       return { label, ...(detail ? { detail } : {}), ...(indicator ? { indicator } : {}), ...(note ? { note } : {}), cells: columns.map(column => parseCell(Object.hasOwn(cells, column) ? cells[column] : null, `Cell ${label} / ${column}`)) };
     });
   }
+  if (data.rowHeader !== undefined) rowHeader = text(data.rowHeader, 'data.rowHeader');
   let statuses: Record<string, string> | undefined;
   if (data.statuses !== undefined) {
     const supplied = mapping(data.statuses, 'data.statuses');
@@ -163,5 +166,5 @@ export function parseMatrix(value: unknown, doc: Document): Matrix {
     for (const row of parsedRows) for (const cell of row.cells) if (cell.status && !Object.hasOwn(statuses, cell.status)) fail(`Unknown status ${cell.status}; add it to data.statuses.`);
   }
   const rows = parsedRows.map(row => ({ label: row.label, ...(row.detail ? { detail: row.detail } : {}), ...(row.indicator ? { indicator: row.indicator } : {}), ...(row.note ? { note: row.note } : {}), cells: row.cells.map(cell => cell.status), ...(row.cells.some(cell => cell.progress) ? { progress: row.cells.map(cell => cell.progress) } : {}) }));
-  return { columns, ...(groups ? { groups } : {}), rows, ...(statuses ? { statuses } : {}), ...(rowHeader && rowHeader !== 'Item' ? { rowHeader } : {}) };
+  return { columns, ...(groups ? { groups } : {}), rows, ...(statuses ? { statuses } : {}), ...(rowHeader && rowHeader !== 'Item' ? { rowHeader } : {}), ...(indicatorHeader ? { indicatorHeader } : {}), ...(noteHeader ? { noteHeader } : {}) };
 }

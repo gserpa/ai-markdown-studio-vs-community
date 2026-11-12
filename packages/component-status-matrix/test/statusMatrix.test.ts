@@ -102,6 +102,21 @@ data:
     expect([...doc.querySelectorAll('thead th')].map(node => node.textContent)).toEqual(['Item', 'Definition / Scope', 'Definition / Sign-off', 'Build / Development']);
   });
 
+
+  it('renders custom indicator and note headers and retains status labels in PowerPoint', () => {
+    const source = structured
+      .replace('  columns:', '  rowHeader: Workstream\n  indicatorHeader: RAG\n  noteHeader: Next milestone\n  columns:')
+      .replace('    - label: Alpha', '    - label: Alpha\n      indicator: { label: At risk, style: warning }\n      note: Review');
+    const doc = new JSDOM(sanitizeRenderedHtml(createMarkdownRenderer().render('~~~component\n' + source + '~~~'))).window.document;
+    expect(doc.querySelector('.md-matrix-indicator-heading')?.textContent).toBe('RAG');
+    expect(doc.querySelector('.md-matrix-check')).not.toBeNull();
+    expect(doc.querySelector('.md-matrix-status-visually-hidden')?.textContent).toBe('Complete');
+    prepareMatrixForPptx(doc);
+    expect([...doc.querySelectorAll('thead th')].map(node => node.textContent)).toEqual(['Workstream', 'RAG', 'Definition / Scope', 'Definition / Sign-off', 'Build / Development', 'Next milestone']);
+    expect(doc.querySelector('.md-matrix-indicator-cell')?.textContent).toBe('At risk');
+    expect(doc.querySelector('.md-matrix-success')?.textContent).toBe('Complete');
+  });
+
   it('preserves optional generic indicators and trailing notes, including PowerPoint fallback', () => {
     const source = structured.replace('    - label: Alpha', '    - label: Alpha\n      indicator: { label: "Check <now>", style: warning }\n      note: "Review & sign off"');
     const doc = new JSDOM(sanitizeRenderedHtml(createMarkdownRenderer().render('~~~component\n' + source + '~~~'))).window.document;
@@ -109,8 +124,8 @@ data:
     expect(doc.querySelector('tbody td:last-child')?.textContent).toBe('Review & sign off');
     expect(doc.querySelector('thead tr:first-child th:last-child')?.textContent).toBe('Note');
     prepareMatrixForPptx(doc);
-    expect([...doc.querySelectorAll('thead th')].map(node => node.textContent)).toEqual(['Item', 'Definition / Scope', 'Definition / Sign-off', 'Build / Development', 'Note']);
-    expect(doc.querySelector('tbody th')?.textContent).toContain('Check <now>');
+    expect([...doc.querySelectorAll('thead th')].map(node => node.textContent)).toEqual(['Item', 'Status', 'Definition / Scope', 'Definition / Sign-off', 'Build / Development', 'Note']);
+    expect(doc.querySelector('tbody .md-matrix-indicator-cell')?.textContent).toContain('Check <now>');
     expect(doc.querySelector('tbody td:last-child')?.textContent).toBe('Review & sign off');
     expect(parseComponent(source.replace('style: warning', 'style: custom')).valid).toBe(false);
   });
