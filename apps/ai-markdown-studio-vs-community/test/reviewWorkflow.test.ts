@@ -13,6 +13,7 @@ const mock = vi.hoisted(() => ({
   hasAccount: vi.fn(),
   consent: vi.fn(),
   generate: vi.fn(),
+  available: vi.fn(),
 }));
 vi.mock('vscode', () => ({
   workspace: {
@@ -48,9 +49,10 @@ vi.mock('vscode', () => ({
 vi.mock('../src/ai/aiConsent', () => ({
   getAiAccessState: mock.getAiAccessState,
   ensureAiFeaturesEnabled: mock.consent,
+  isAiAuthorizationDenied: () => mock.getAiAccessState() === 'denied',
 }));
 vi.mock('../src/ai/copilotAvailability', () => ({ hasConfiguredCopilotAccount: mock.hasAccount }));
-vi.mock('../src/ai/languageModel', () => ({ generateTextWithLanguageModel: mock.generate }));
+vi.mock('../src/ai/languageModel', () => ({ generateTextWithLanguageModel: mock.generate, isLanguageModelAvailable: mock.available }));
 
 import { registerReviewWorkflow } from '../src/review/reviewWorkflow';
 
@@ -74,6 +76,7 @@ describe('review command AI access and prompt copy', () => {
     vi.clearAllMocks();
     mock.getAiAccessState.mockReturnValue('denied');
     mock.hasAccount.mockResolvedValue(true);
+    mock.available.mockResolvedValue(true);
     mock.document.getText.mockReturnValue(writeReviewComments(markdown, [
       open,
       { ...open, id: 'manual-comment', includeInAi: false, body: 'Private manual note' },
@@ -95,19 +98,36 @@ describe('review command AI access and prompt copy', () => {
   });
 
   it('offers prompt copy as the review workflow when access is denied', async () => {
-    mock.choose.mockResolvedValue({ value: 'copy' });
     await run('reviewComments');
-    expect(mock.choose.mock.calls[0][0]).toEqual([{ label: 'Copy Review Prompt', value: 'copy' }]);
+    expect(mock.choose).not.toHaveBeenCalled();
     expect(mock.clipboard).toHaveBeenCalledOnce();
     expect(mock.generate).not.toHaveBeenCalled();
   });
 
+  it('copies the review prompt from the generation chooser', async () => {
+    mock.getAiAccessState.mockReturnValue('ask');
+    mock.choose.mockResolvedValue({ value: 'clipboard' });
+    await run('reviewComments');
+    expect(mock.clipboard).toHaveBeenCalledOnce();
+    expect(mock.clipboard.mock.calls[0][0]).toContain('Make the passage clearer.');
+    expect(mock.consent).not.toHaveBeenCalled();
+    expect(mock.generate).not.toHaveBeenCalled();
+  });
+
+  it('copies the prompt when no model is available', async () => {
+    mock.available.mockResolvedValue(false);
+    await run('reviewComments');
+    expect(mock.clipboard).toHaveBeenCalledOnce();
+    expect(mock.choose).not.toHaveBeenCalled();
+    expect(mock.consent).not.toHaveBeenCalled();
+  });
+
   it('asks for AI consent after the integrated option is selected', async () => {
     mock.getAiAccessState.mockReturnValue('ask');
-    mock.choose.mockResolvedValue({ value: 'integrated' });
+    mock.choose.mockResolvedValue({ value: 'generate' });
     mock.consent.mockResolvedValue(false);
     await run('reviewComments');
-    expect(mock.choose.mock.calls[0][0][0].value).toBe('integrated');
+    expect(mock.choose.mock.calls[0][0].map((option: { value: string }) => option.value)).toEqual(['generate', 'clipboard']);
     expect(mock.consent).toHaveBeenCalledOnce();
     expect(mock.generate).not.toHaveBeenCalled();
   });

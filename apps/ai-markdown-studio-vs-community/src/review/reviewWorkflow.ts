@@ -4,6 +4,7 @@ import { locateReviewPart, readReviewComments, writeReviewComments, type ReviewC
 import { areAiFeaturesEnabled, ensureAiFeaturesEnabled, getAiAccessState } from '../ai/aiConsent';
 import { hasConfiguredCopilotAccount } from '../ai/copilotAvailability';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
+import { shouldGenerateWithLanguageModel } from '../generate/generationMode';
 import type { PreviewDocumentUpdater } from '../panel/PreviewDocumentUpdater';
 import { readPreviewSelection } from './reviewPreview';
 
@@ -200,25 +201,22 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
       return;
     }
 
-    const access = getAiAccessState();
-    const canOfferIntegrated = mode !== 'copy' && access !== 'denied' && await hasConfiguredCopilotAccount().catch(() => false);
-    const choice = mode ?? (await vscode.window.showQuickPick([
-      ...(canOfferIntegrated ? [{ label: 'Review with GitHub Copilot', value: 'integrated' as const }] : []),
-      { label: 'Copy Review Prompt', value: 'copy' as const },
-    ], { title: 'Review Markdown Comments' }))?.value;
-    if (!choice) return;
-    if (document.version !== version) throw new Error('The Markdown changed. Run the review again.');
-    if (choice === 'copy') {
+    if (mode === 'copy') {
       await vscode.env.clipboard.writeText(buildReviewPrompt(stored.markdown, eligible, false));
       void vscode.window.showInformationMessage('Review prompt copied with the current Markdown and selected comments.');
       return;
     }
-    if (!canOfferIntegrated) throw new Error('Integrated AI review is unavailable. Use Copy Review Prompt to review with another AI.');
+    if (mode === undefined) {
+      if (!(await shouldGenerateWithLanguageModel(buildReviewPrompt(stored.markdown, eligible, false)))) return;
+    } else if (getAiAccessState() === 'denied' || !(await hasConfiguredCopilotAccount().catch(() => false))) {
+      throw new Error('Integrated AI review is unavailable. Use Copy Review Prompt to review with another AI.');
+    }
+    if (document.version !== version) throw new Error('The Markdown changed. Run the review again.');
     const key = uri.toString();
     if (inProgress.has(key)) throw new Error('An AI review is already running for this file.');
     inProgress.add(key);
     try {
-      if (!(await ensureAiFeaturesEnabled())) return;
+      if (mode === 'integrated' && !(await ensureAiFeaturesEnabled())) return;
       if (document.version !== version) throw new Error('The Markdown changed. Run the review again.');
       const response = await vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification, title: 'Reviewing Markdown comments', cancellable: true,

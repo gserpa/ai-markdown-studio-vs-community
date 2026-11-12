@@ -1,8 +1,3 @@
-/* Midnight Delivery uses the flat navy report canvas on every slide type. */
-.presentation-theme-midnight-delivery .presentation-surface {
-  border-radius: 0;
-}
-
 .presentation-theme-midnight-delivery .presentation-standard-header {
   padding: 32px 48px 16px;
 }
