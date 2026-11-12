@@ -46,6 +46,7 @@ const QUICK_PICK_COMMAND_ORDER: Readonly<Record<string, number>> = {
   'markdownAiStudio.exportDocxBasic': 12,
   'markdownAiStudio.reviewComments': 21,
   'markdownAiStudio.viewReviewComments': 21.05,
+  'markdownAiStudio.toggleReviewComments': 21.06,
   'markdownAiStudio.copyReviewPrompt': 21.1,
   'markdownAiStudio.installPresentationSkill': 22,
   'markdownAiStudio.enableAiFeatures': 23,
@@ -276,6 +277,8 @@ function shouldShowCommand(entry: CommandListEntry, context: CommandListContext)
   if (command === 'markdownAiStudio.editAsText') {
     return context.isPreviewMode;
   }
+
+  if (command === 'markdownAiStudio.toggleReviewComments') return context.isPreviewMode;
 
   if (command === 'markdownAiStudio.toggleFrontMatter') {
     return context.isPreviewMode && context.hasFrontMatter;

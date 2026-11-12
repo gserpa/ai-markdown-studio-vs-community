@@ -47,6 +47,27 @@
   let selectedComment;
   let pending;
   let requestId = 0;
+  let commentsVisible = true;
+  let hideTimer;
+
+  function cancelHide() {
+    clearTimeout(hideTimer);
+    hideTimer = undefined;
+  }
+
+  function scheduleHide() {
+    cancelHide();
+    hideTimer = setTimeout(() => {
+      if (!editing) closePopover();
+    }, 5000);
+  }
+
+  popover.addEventListener('pointerenter', cancelHide);
+  popover.addEventListener('pointerleave', () => { if (selectedComment && !editing) scheduleHide(); });
+  popover.addEventListener('focusin', cancelHide);
+  popover.addEventListener('focusout', event => {
+    if (selectedComment && !editing && !popover.contains(event.relatedTarget)) scheduleHide();
+  });
 
   const listButton = button('☰', () => {
     list.hidden = !list.hidden;
@@ -199,6 +220,7 @@
   }
 
   function closePopover() {
+    cancelHide();
     editing = undefined;
     selection = undefined;
     selectedComment = undefined;
@@ -243,13 +265,22 @@
   function renderMarkers() {
     const highlights = [];
     const buttons = [];
+    if (!commentsVisible) {
+      markers.replaceChildren();
+      if (window.CSS?.highlights) CSS.highlights.delete('markdown-review');
+      return;
+    }
     const usedPositions = new Map();
     for (const comment of state.comments) {
       const ranges = commentRanges(comment);
       const rect = ranges[0]?.getClientRects()[0];
       if (!rect || rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) continue;
       highlights.push(...ranges);
-      const marker = button('…', () => openComment(comment), 'Open review comment: ' + comment.body);
+      const marker = button('', () => openComment(comment), 'Open review comment: ' + comment.body);
+      marker.addEventListener('pointerenter', () => { cancelHide(); if (!editing) openComment(comment, false); });
+      marker.addEventListener('pointerleave', () => { if (!editing) scheduleHide(); });
+      marker.addEventListener('focus', () => { cancelHide(); if (!editing) openComment(comment, false); });
+      marker.addEventListener('blur', event => { if (!popover.contains(event.relatedTarget) && !editing) scheduleHide(); });
       marker.classList.add('md-review-marker');
       marker.classList.toggle('is-revised', comment.state === 'revised');
       const x = Math.max(2, Math.min(rect.right + 2, window.innerWidth - 22));
@@ -265,7 +296,7 @@
     if (window.Highlight && window.CSS?.highlights) CSS.highlights.set('markdown-review', new Highlight(...highlights));
   }
 
-  function openComment(comment) {
+  function openComment(comment, focus = true) {
     closePopover();
     selectedComment = comment.id;
     const ranges = commentRanges(comment);
@@ -281,7 +312,7 @@
     popover.replaceChildren(content, button('Close', closePopover));
     popover.hidden = false;
     position(popover, ranges[0]);
-    popover.querySelector('button')?.focus({ preventScroll: true });
+    if (focus) popover.querySelector('button')?.focus({ preventScroll: true });
   }
 
   function renderList() {
@@ -324,7 +355,11 @@
   }
 
   window.addEventListener('message', ({ data }) => {
-    if (data?.command === 'revealReviewComment') {
+    if (data?.command === 'reviewVisibility') {
+      commentsVisible = data.visible !== false;
+      if (!commentsVisible && selectedComment && !editing) closePopover();
+      refresh();
+    } else if (data?.command === 'revealReviewComment') {
       const comment = state.comments.find(item => item.id === data.id);
       if (comment) openComment(comment);
     } else if (data?.command === 'reviewAvailability') {

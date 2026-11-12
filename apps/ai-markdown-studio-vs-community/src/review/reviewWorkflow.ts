@@ -13,6 +13,7 @@ const applyCommand = 'markdownAiStudio.applyReviewRevision';
 const discardCommand = 'markdownAiStudio.discardReviewRevision';
 const baseScheme = 'markdown-ai-studio-review-base';
 const reviewPanels = new Map<string, Set<vscode.WebviewPanel>>();
+const hiddenReviewComments = new Set<string>();
 let activeReviewUri: vscode.Uri | undefined;
 let refreshReviewView: (() => Promise<void>) | undefined;
 
@@ -76,6 +77,7 @@ export function attachReviewPreview(
       const document = getDocument();
       if (request.action === 'ready') {
         ready = true;
+        await panel.webview.postMessage({ command: 'reviewVisibility', visible: !hiddenReviewComments.has(key) });
         await postAvailability();
         return;
       }
@@ -293,6 +295,16 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
   return vscode.Disposable.from(
     changed,
     vscode.window.registerTreeDataProvider('markdownAiStudio.reviewCommentsView', provider),
+    vscode.commands.registerCommand('markdownAiStudio.toggleReviewComments', async (resource?: vscode.Uri) => {
+      const uri = resource?.scheme === 'file' ? resource : activeReviewUri ?? resolveUri();
+      if (!uri) return;
+      const key = uri.toString();
+      if (hiddenReviewComments.has(key)) hiddenReviewComments.delete(key);
+      else hiddenReviewComments.add(key);
+      for (const panel of reviewPanels.get(key) ?? []) {
+        await panel.webview.postMessage({ command: 'reviewVisibility', visible: !hiddenReviewComments.has(key) });
+      }
+    }),
     vscode.commands.registerCommand('markdownAiStudio.viewReviewComments', async () => {
       await refresh();
       await vscode.commands.executeCommand('markdownAiStudio.reviewCommentsView.focus');

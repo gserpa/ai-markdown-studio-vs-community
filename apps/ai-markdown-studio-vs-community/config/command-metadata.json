@@ -9,6 +9,7 @@
   { "command": "markdownAiStudio.generateDocument", "title": "Generate Document (AI)", "category": "AI Markdown Studio", "quickPickTitle": "AI: Generate Document" },
   { "command": "markdownAiStudio.generatePresentation", "title": "Generate Presentation (AI)", "category": "AI Markdown Studio", "quickPickTitle": "AI: Generate Presentation" },
   { "command": "markdownAiStudio.reviewComments", "title": "Revise from Comments", "category": "AI Markdown Studio", "quickPickTitle": "AI: Revise from Comments" },
+  { "command": "markdownAiStudio.toggleReviewComments", "title": "Toggle Review Comments", "category": "AI Markdown Studio", "quickPickTitle": "Hide / Show Review Comments" },
   { "command": "markdownAiStudio.viewReviewComments", "title": "View Review Comments", "category": "AI Markdown Studio", "quickPickTitle": "View Review Comments" },
   { "command": "markdownAiStudio.runReviewComments", "title": "Revise from Comments", "category": "AI Markdown Studio", "icon": "$(sparkle)" },
   { "command": "markdownAiStudio.copyReviewPrompt", "title": "Copy Review Prompt", "category": "AI Markdown Studio", "quickPickTitle": "Copy Review Prompt" },

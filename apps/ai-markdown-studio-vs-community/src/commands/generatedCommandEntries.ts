@@ -11,6 +11,7 @@ export const commandEntries = [
   { command: "markdownAiStudio.generateDocument", title: "AI: Generate Document" },
   { command: "markdownAiStudio.generatePresentation", title: "AI: Generate Presentation" },
   { command: "markdownAiStudio.reviewComments", title: "AI: Revise from Comments" },
+  { command: "markdownAiStudio.toggleReviewComments", title: "Hide / Show Review Comments" },
   { command: "markdownAiStudio.viewReviewComments", title: "View Review Comments" },
   { command: "markdownAiStudio.copyReviewPrompt", title: "Copy Review Prompt" },
   { command: "markdownAiStudio.installPresentationSkill", title: "AI: Install Presentation Skill" },
