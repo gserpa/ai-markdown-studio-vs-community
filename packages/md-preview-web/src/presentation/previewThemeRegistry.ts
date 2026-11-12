@@ -96,6 +96,17 @@ const PREVIEW_THEME_TOKEN_GROUPS = {
     '--presentation-component-heatmap-medium-fill',
     '--presentation-component-heatmap-high-fill',
     '--presentation-component-focus',
+    '--presentation-component-heading-color',
+    '--presentation-component-badge-color',
+    '--presentation-matrix-stage-tertiary',
+    '--presentation-matrix-success-fill',
+    '--presentation-matrix-success-color',
+    '--presentation-matrix-danger-fill',
+    '--presentation-matrix-danger-color',
+    '--presentation-matrix-progress-color',
+  ],
+  componentAppearance: [
+    '--presentation-component-badge-accent-coverage',
   ],
   surfaces: [
     '--presentation-body-bg',
@@ -568,11 +579,13 @@ function normalizeThemeTokens(value: unknown, themeName: string): {
     }
 
     // These new contract groups have narrower value types than legacy color tokens.
-    // Font stacks contain local family names only; component colors are opaque RGB.
+    // Font stacks contain local family names, component colors are opaque RGB,
+    // and badge accent coverage is a percentage.
     const isComponentColor = (PREVIEW_THEME_TOKEN_GROUPS.componentColors as readonly string[]).includes(tokenName);
+    const isBadgeCoverage = tokenName === '--presentation-component-badge-accent-coverage';
     const isFont = (PREVIEW_THEME_TOKEN_GROUPS.typography as readonly string[]).includes(tokenName);
     if (typeof tokenValue !== 'string' || tokenValue.trim().length === 0) {
-      if (isComponentColor || isFont) {
+      if (isComponentColor || isBadgeCoverage || isFont) {
         warnings.push(`Presentation theme "${themeName}" has an invalid value for token "${tokenName}". It will be ignored.`);
       }
       continue;
@@ -580,6 +593,7 @@ function normalizeThemeTokens(value: unknown, themeName: string): {
 
     const normalizedValue = tokenValue.trim();
     if ((isComponentColor && !/^#[a-f0-9]{6}$/iu.test(normalizedValue))
+      || (isBadgeCoverage && !/^(?:100|[1-9]?\d)%$/u.test(normalizedValue))
       || (isFont && (normalizedValue.length > 256 || !/^[\w\s,'"-]+$/u.test(normalizedValue)))) {
       warnings.push(`Presentation theme "${themeName}" has an invalid value for token "${tokenName}". It will be ignored.`);
       continue;

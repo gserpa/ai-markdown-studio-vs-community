@@ -62,11 +62,11 @@
   --md-matrix-color: var(--presentation-accent, #3269b1);
   text-align: center;
 }
-.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-neutral { --md-matrix-color: var(--md-matrix-neutral-color, var(--presentation-component-unknown, #738095)); }
-.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-info { --md-matrix-color: var(--md-matrix-info-color, var(--presentation-component-primary, #1686c8)); }
-.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-success { --md-matrix-color: var(--md-matrix-success-color, var(--presentation-component-success, #178452)); }
-.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-warning { --md-matrix-color: var(--md-matrix-warning-color, var(--presentation-component-warning, #c27a0b)); }
-.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-danger { --md-matrix-color: var(--md-matrix-danger-color, var(--presentation-component-danger, #c94141)); }
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-neutral { --md-matrix-color: var(--md-matrix-neutral-color, var(--presentation-resolved-component-neutral, #738095)); }
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-info { --md-matrix-color: var(--md-matrix-info-color, var(--presentation-resolved-component-primary, #1686c8)); }
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-success { --md-matrix-color: var(--md-matrix-success-color, var(--presentation-resolved-component-success, #178452)); }
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-warning { --md-matrix-color: var(--md-matrix-warning-color, var(--presentation-resolved-component-warning, #c27a0b)); }
+.markdown-body :is(.md-status-matrix, .md-matrix-legend) .md-matrix-danger { --md-matrix-color: var(--md-matrix-danger-color, var(--presentation-resolved-component-danger, #c94141)); }
 .md-status-matrix :is(.md-matrix-neutral, .md-matrix-info, .md-matrix-success, .md-matrix-warning, .md-matrix-danger) .md-matrix-status {
   display: inline-block;
   min-inline-size: 2em;
@@ -114,44 +114,45 @@
   background: var(--md-matrix-color);
 }
 
-/* Midnight Delivery uses the dashboard's stage ribbon and separate workstream bands. */
-.presentation-theme-midnight-delivery .markdown-body table.md-status-matrix {
+/* Presentation matrices use a stage ribbon and separate row bands. */
+.presentation-slide-body table.md-status-matrix {
+  --matrix-text: var(--presentation-body-color, currentColor);
   border: 0;
   border-spacing: 0 .35em;
   overflow: visible;
   font-size: .86em;
 }
-.presentation-theme-midnight-delivery .md-status-matrix [data-matrix-stage] {
-  --matrix-stage: var(--presentation-component-primary, #2bc4f3);
+.presentation-slide-body .md-status-matrix [data-matrix-stage] {
+  --matrix-stage: var(--presentation-resolved-component-primary);
 }
-.presentation-theme-midnight-delivery .md-status-matrix [data-matrix-stage="1"] { --matrix-stage: #a78bfa; }
-.presentation-theme-midnight-delivery .md-status-matrix [data-matrix-stage="2"] { --matrix-stage: #f472b6; }
-.presentation-theme-midnight-delivery .md-status-matrix [data-matrix-stage="3"] { --matrix-stage: var(--presentation-component-success, #34d399); }
-.presentation-theme-midnight-delivery .md-status-matrix [data-matrix-stage="4"] { --matrix-stage: var(--presentation-component-warning, #f6ad3c); }
-.presentation-theme-midnight-delivery .md-status-matrix :is(th, td) {
+.presentation-slide-body .md-status-matrix [data-matrix-stage="1"] { --matrix-stage: var(--presentation-resolved-component-secondary); }
+.presentation-slide-body .md-status-matrix [data-matrix-stage="2"] { --matrix-stage: var(--presentation-matrix-stage-tertiary, var(--presentation-resolved-component-danger)); }
+.presentation-slide-body .md-status-matrix [data-matrix-stage="3"] { --matrix-stage: var(--presentation-resolved-component-success); }
+.presentation-slide-body .md-status-matrix [data-matrix-stage="4"] { --matrix-stage: var(--presentation-resolved-component-warning); }
+.presentation-slide-body .md-status-matrix :is(th, td) {
   padding: .4em .32em;
   border: 0;
 }
-.presentation-theme-midnight-delivery .md-status-matrix thead th { background: transparent; }
-.presentation-theme-midnight-delivery .md-status-matrix thead th[scope="colgroup"] {
+.presentation-slide-body .md-status-matrix thead th { background: transparent; }
+.presentation-slide-body .md-status-matrix thead th[scope="colgroup"] {
   padding-block: 0 .1em;
-  color: var(--matrix-stage);
+  color: color-mix(in srgb, var(--matrix-stage) 44%, var(--matrix-text));
   letter-spacing: .14em;
 }
-.presentation-theme-midnight-delivery .md-matrix-group-label {
+.presentation-slide-body .md-matrix-group-label {
   display: block;
   padding-block-end: .45em;
   border-block-end: .19em solid var(--matrix-stage);
 }
-.presentation-theme-midnight-delivery .md-status-matrix thead th[scope="col"]:not([data-matrix-stage]) {
+.presentation-slide-body .md-status-matrix thead th[scope="col"]:not([data-matrix-stage]) {
   color: var(--matrix-muted);
   vertical-align: bottom;
   font-size: .84em;
   letter-spacing: .1em;
   text-transform: uppercase;
 }
-.presentation-theme-midnight-delivery .md-status-matrix thead th[scope="col"][data-matrix-stage] { padding: 0 .12em .3em; }
-.presentation-theme-midnight-delivery .md-matrix-stage-label {
+.presentation-slide-body .md-status-matrix thead th[scope="col"][data-matrix-stage] { padding: 0 .12em .3em; }
+.presentation-slide-body .md-matrix-stage-label {
   --notch: .55em;
   --left-notch: var(--notch);
   position: relative;
@@ -161,27 +162,38 @@
   min-block-size: 2.35em;
   padding: .3em calc(var(--notch) + .15em);
   box-sizing: border-box;
-  color: var(--presentation-heading-color, #fff);
+  color: var(--presentation-resolved-component-heading);
   text-align: center;
   font-size: .88em;
 }
-.presentation-theme-midnight-delivery .md-matrix-stage-label[data-matrix-first-stage] { --left-notch: 0em; }
-.presentation-theme-midnight-delivery .md-matrix-stage-label::before,
-.presentation-theme-midnight-delivery .md-matrix-stage-label::after {
+.presentation-slide-body .md-matrix-stage-label[data-matrix-first-stage] { --left-notch: 0em; }
+.presentation-slide-body .md-matrix-stage-label::before,
+.presentation-slide-body .md-matrix-stage-label::after {
   content: '';
   position: absolute;
   clip-path: polygon(0 0, calc(100% - var(--notch)) 0, 100% 50%, calc(100% - var(--notch)) 100%, 0 100%, var(--left-notch) 50%);
 }
-.presentation-theme-midnight-delivery .md-matrix-stage-label::before { inset: 0; z-index: -2; background: var(--matrix-stage); }
-.presentation-theme-midnight-delivery .md-matrix-stage-label::after { inset: 1px 2px; z-index: -1; background: var(--matrix-panel); }
-.presentation-theme-midnight-delivery .md-status-matrix tbody tr:nth-child(even) { background: transparent; }
-.presentation-theme-midnight-delivery .md-status-matrix tbody tr > * { background: var(--matrix-panel); }
-.presentation-theme-midnight-delivery .md-status-matrix tbody th { padding: .52em .85em; }
-.presentation-theme-midnight-delivery .md-status-matrix tbody tr > :first-child { border-radius: .5em 0 0 .5em; }
-.presentation-theme-midnight-delivery .md-status-matrix tbody tr > :last-child { border-radius: 0 .5em .5em 0; }
-.presentation-theme-midnight-delivery .md-status-matrix .md-matrix-note { padding-inline: .8em; }
-.presentation-theme-midnight-delivery .md-status-matrix tbody .md-matrix-note { width: 19%; }
-.presentation-theme-midnight-delivery .md-status-matrix .md-matrix-indicator {
+.presentation-slide-body .md-matrix-stage-label::before { inset: 0; z-index: -2; background: var(--matrix-stage); }
+.presentation-slide-body .md-matrix-stage-label::after { inset: 1px 2px; z-index: -1; background: var(--matrix-panel); }
+.presentation-slide-body .md-status-matrix tbody tr:nth-child(even) { background: transparent; }
+.presentation-slide-body .md-status-matrix tbody tr > * {
+  background: var(--matrix-panel);
+  border-block: 1px solid var(--matrix-line);
+}
+.presentation-slide-body .md-status-matrix tbody th { padding: .52em .85em; }
+.presentation-slide-body .md-status-matrix tbody tr > :first-child {
+  border-inline-start: 1px solid var(--matrix-line);
+  border-start-start-radius: .5em;
+  border-end-start-radius: .5em;
+}
+.presentation-slide-body .md-status-matrix tbody tr > :last-child {
+  border-inline-end: 1px solid var(--matrix-line);
+  border-start-end-radius: .5em;
+  border-end-end-radius: .5em;
+}
+.presentation-slide-body .md-status-matrix .md-matrix-note { padding-inline: .8em; }
+.presentation-slide-body .md-status-matrix tbody .md-matrix-note { width: 19%; }
+.presentation-slide-body .md-status-matrix .md-matrix-indicator {
   display: inline-flex;
   align-items: center;
   gap: .4em;
@@ -189,7 +201,7 @@
   border: 0;
   padding: 0;
 }
-.presentation-theme-midnight-delivery .md-matrix-indicator::before {
+.presentation-slide-body .md-matrix-indicator::before {
   content: '';
   flex: none;
   inline-size: .8em;
@@ -198,8 +210,8 @@
   border-radius: 50%;
   background: var(--md-matrix-color);
 }
-.presentation-theme-midnight-delivery .md-matrix-indicator.md-matrix-neutral::before { background: transparent; }
-.presentation-theme-midnight-delivery .md-matrix-tile {
+.presentation-slide-body .md-matrix-indicator.md-matrix-neutral::before { background: transparent; }
+.presentation-slide-body .md-matrix-tile {
   position: relative;
   isolation: isolate;
   display: flex;
@@ -217,16 +229,22 @@
   line-height: 1.2;
 }
 .md-matrix-tile { display: contents; }
-.presentation-theme-midnight-delivery .md-matrix-cell.md-matrix-neutral { --tile-line: #5363ad; }
-.presentation-theme-midnight-delivery .md-matrix-cell.md-matrix-info {
+.presentation-slide-body .md-matrix-cell.md-matrix-neutral { --tile-line: var(--presentation-component-inactive-outline, var(--md-matrix-color)); }
+.presentation-slide-body .md-matrix-cell.md-matrix-info {
   --tile-line: var(--matrix-stage);
   --tile-bg: color-mix(in srgb, var(--matrix-stage) 14%, transparent);
 }
-.presentation-theme-midnight-delivery .md-matrix-cell.md-matrix-success { --tile-bg: #168652; --tile-text: #fff; }
-.presentation-theme-midnight-delivery .md-matrix-cell.md-matrix-danger { --tile-bg: var(--md-matrix-color); --tile-text: #0a1240; }
-.presentation-theme-midnight-delivery .md-matrix-cell.md-matrix-warning { --tile-line: var(--md-matrix-color); --tile-bg: color-mix(in srgb, var(--md-matrix-color) 20%, transparent); }
-.presentation-theme-midnight-delivery .md-matrix-cell:has(.md-matrix-progress) { --tile-line: var(--matrix-stage); --tile-bg: transparent; --tile-text: #fff; }
-.presentation-theme-midnight-delivery .md-status-matrix .md-matrix-cell .md-matrix-status {
+.presentation-slide-body .md-matrix-cell.md-matrix-success {
+  --tile-bg: var(--presentation-matrix-success-fill, color-mix(in srgb, var(--md-matrix-color) 22%, var(--matrix-panel)));
+  --tile-text: var(--presentation-matrix-success-color, var(--matrix-text));
+}
+.presentation-slide-body .md-matrix-cell.md-matrix-danger {
+  --tile-bg: var(--presentation-matrix-danger-fill, color-mix(in srgb, var(--md-matrix-color) 22%, var(--matrix-panel)));
+  --tile-text: var(--presentation-matrix-danger-color, var(--matrix-text));
+}
+.presentation-slide-body .md-matrix-cell.md-matrix-warning { --tile-line: var(--md-matrix-color); --tile-bg: color-mix(in srgb, var(--md-matrix-color) 20%, transparent); }
+.presentation-slide-body .md-matrix-cell:has(.md-matrix-progress) { --tile-line: var(--matrix-stage); --tile-bg: transparent; --tile-text: var(--presentation-matrix-progress-color, var(--matrix-text)); }
+.presentation-slide-body .md-status-matrix .md-matrix-cell .md-matrix-status {
   min-inline-size: 0;
   padding: 0;
   border: 0;
@@ -234,8 +252,8 @@
   font-size: inherit;
   font-weight: 700;
 }
-.presentation-theme-midnight-delivery .md-matrix-tile > [aria-label="Unknown"] { color: var(--matrix-muted); }
-.presentation-theme-midnight-delivery .md-status-matrix .md-matrix-progress {
+.presentation-slide-body .md-matrix-tile > [aria-label="Unknown"] { color: var(--matrix-muted); }
+.presentation-slide-body .md-status-matrix .md-matrix-progress {
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -244,8 +262,8 @@
   border-radius: 0;
   background: transparent;
 }
-.presentation-theme-midnight-delivery .md-status-matrix .md-matrix-progress-fill {
+.presentation-slide-body .md-status-matrix .md-matrix-progress-fill {
   border-radius: .35em;
   background: color-mix(in srgb, var(--matrix-stage) 55%, transparent);
 }
-.presentation-theme-midnight-delivery .md-matrix-progress-text { font-size: 1em; font-weight: 700; }
+.presentation-slide-body .md-matrix-progress-text { font-size: 1em; font-weight: 700; }

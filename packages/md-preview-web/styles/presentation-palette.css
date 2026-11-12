@@ -60,3 +60,14 @@ body.preview-mode-presentation .mermaid-zoom-trigger {
 .presentation-canvas :is(code, pre) {
   font-family: var(--presentation-code-font, var(--md-preview-code-font));
 }
+
+/* Component defaults resolve against the active presentation palette. */
+.presentation-slide-body {
+  --presentation-resolved-component-heading: var(--presentation-component-heading-color, var(--presentation-body-color, currentColor));
+  --presentation-resolved-component-primary: var(--presentation-component-primary, var(--presentation-link-color, var(--presentation-accent, #3269b1)));
+  --presentation-resolved-component-secondary: var(--presentation-component-secondary, var(--presentation-accent-soft, var(--presentation-resolved-component-primary)));
+  --presentation-resolved-component-success: var(--presentation-component-success, light-dark(#178452, #34d399));
+  --presentation-resolved-component-warning: var(--presentation-component-warning, light-dark(#965100, #f6ad3c));
+  --presentation-resolved-component-danger: var(--presentation-component-danger, light-dark(#b6344f, #f87991));
+  --presentation-resolved-component-neutral: var(--presentation-component-unknown, var(--presentation-muted-color, #738095));
+}

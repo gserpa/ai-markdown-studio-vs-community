@@ -113,6 +113,15 @@
     "--presentation-component-heatmap-medium-fill": "#403951",
     "--presentation-component-heatmap-high-fill": "#3F275A",
     "--presentation-component-focus": "#2BC4F3",
+    "--presentation-component-heading-color": "#FFFFFF",
+    "--presentation-component-badge-color": "#0A1240",
+    "--presentation-component-badge-accent-coverage": "100%",
+    "--presentation-matrix-stage-tertiary": "#F472B6",
+    "--presentation-matrix-success-fill": "#168652",
+    "--presentation-matrix-success-color": "#FFFFFF",
+    "--presentation-matrix-danger-fill": "#F0566B",
+    "--presentation-matrix-danger-color": "#0A1240",
+    "--presentation-matrix-progress-color": "#FFFFFF",
     "--presentation-label-color": "#2BC4F3",
     "--presentation-subtitle-color": "#AAB3D6"
   }

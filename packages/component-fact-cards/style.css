@@ -8,36 +8,37 @@
 .markdown-body .md-fact-value strong { font-size: 1.7em; line-height: 1.15; }
 .markdown-body .md-fact-value-long strong { font-size: 1.1em; }
 .markdown-body .md-fact-detail { color: var(--presentation-muted-color, var(--md-preview-muted-color, inherit)); font-size: .85em; }
-.markdown-body .md-fact-neutral { --md-fact-accent: var(--md-fact-neutral-color, var(--presentation-component-unknown, #738095)); }
-.markdown-body .md-fact-info { --md-fact-accent: var(--md-fact-info-color, var(--presentation-component-primary, #1686c8)); }
-.markdown-body .md-fact-success { --md-fact-accent: var(--md-fact-success-color, var(--presentation-component-success, #178452)); }
-.markdown-body .md-fact-warning { --md-fact-accent: var(--md-fact-warning-color, var(--presentation-component-warning, #c27a0b)); }
-.markdown-body .md-fact-danger { --md-fact-accent: var(--md-fact-danger-color, var(--presentation-component-danger, #c94141)); }
+.markdown-body .md-fact-neutral { --md-fact-accent: var(--md-fact-neutral-color, var(--presentation-resolved-component-neutral, #738095)); }
+.markdown-body .md-fact-info { --md-fact-accent: var(--md-fact-info-color, var(--presentation-resolved-component-primary, #1686c8)); }
+.markdown-body .md-fact-success { --md-fact-accent: var(--md-fact-success-color, var(--presentation-resolved-component-success, #178452)); }
+.markdown-body .md-fact-warning { --md-fact-accent: var(--md-fact-warning-color, var(--presentation-resolved-component-warning, #c27a0b)); }
+.markdown-body .md-fact-danger { --md-fact-accent: var(--md-fact-danger-color, var(--presentation-resolved-component-danger, #c94141)); }
 
-.presentation-theme-midnight-delivery .markdown-body .md-fact-card {
+.presentation-slide-body .md-fact-card {
+  border-top-color: var(--md-fact-accent, var(--presentation-resolved-component-primary));
   padding: 1em;
   border-radius: .55em;
 }
-.presentation-theme-midnight-delivery .markdown-body .md-fact-label {
+.presentation-slide-body .md-fact-label {
   display: flex;
   align-items: center;
   gap: .65em;
-  color: var(--md-fact-accent, var(--presentation-accent, #2bc4f3));
+  color: color-mix(in srgb, var(--md-fact-accent, var(--presentation-resolved-component-primary)) 44%, var(--presentation-resolved-component-heading));
   font-size: .8em;
   font-weight: 700;
   letter-spacing: .09em;
   text-transform: uppercase;
 }
-.presentation-theme-midnight-delivery .md-fact-items:has(.md-fact-icon) .md-fact-label { min-block-size: max(2.5em, 2lh); }
-.presentation-theme-midnight-delivery .md-fact-icon {
+.presentation-slide-body .md-fact-items:has(.md-fact-icon) .md-fact-label { min-block-size: max(2.5em, 2lh); }
+.presentation-slide-body .md-fact-icon {
   display: grid;
   flex: none;
   place-items: center;
   inline-size: 2.5em;
   block-size: 2.5em;
   border-radius: 50%;
-  background: var(--md-fact-accent, var(--presentation-accent, #2bc4f3));
-  color: #0a1240;
+  background: color-mix(in srgb, var(--md-fact-accent, var(--presentation-resolved-component-primary)) var(--presentation-component-badge-accent-coverage, 18%), transparent);
+  color: var(--presentation-component-badge-color, var(--presentation-body-color, currentColor));
   letter-spacing: 0;
 }
-.presentation-theme-midnight-delivery .md-fact-value strong { color: var(--presentation-heading-color, #fff); }
+.presentation-slide-body .md-fact-value strong { color: var(--presentation-resolved-component-heading); }
