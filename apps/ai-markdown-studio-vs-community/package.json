@@ -110,6 +110,57 @@
         "category": "AI Markdown Studio"
       },
       {
+        "command": "markdownAiStudio.revealReviewComment",
+        "title": "Go to Comment",
+        "category": "AI Markdown Studio",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "markdownAiStudio.resolveReviewComment",
+        "title": "Mark Resolved",
+        "category": "AI Markdown Studio",
+        "icon": "$(check)"
+      },
+      {
+        "command": "markdownAiStudio.reopenReviewComment",
+        "title": "Reopen Comment",
+        "category": "AI Markdown Studio",
+        "icon": "$(discard)"
+      },
+      {
+        "command": "markdownAiStudio.removeReviewComment",
+        "title": "Remove Comment",
+        "category": "AI Markdown Studio",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "markdownAiStudio.selectReviewCommentForAi",
+        "title": "Select for AI Review",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.selectReviewCommentForManual",
+        "title": "Select for Manual Review",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.implementSelectedReviews",
+        "title": "Implement Selected with AI",
+        "category": "AI Markdown Studio",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "markdownAiStudio.clearResolvedReviewComments",
+        "title": "Clear All Resolved",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.clearAllReviewComments",
+        "title": "Clear All Comments",
+        "category": "AI Markdown Studio",
+        "icon": "$(trash)"
+      },
+      {
         "command": "markdownAiStudio.runReviewComments",
         "title": "Revise from Comments",
         "category": "AI Markdown Studio",
@@ -315,6 +366,42 @@
     "menus": {
       "commandPalette": [
         {
+          "command": "markdownAiStudio.revealReviewComment",
+          "when": "false"
+        },
+        {
+          "command": "markdownAiStudio.resolveReviewComment",
+          "when": "false"
+        },
+        {
+          "command": "markdownAiStudio.reopenReviewComment",
+          "when": "false"
+        },
+        {
+          "command": "markdownAiStudio.removeReviewComment",
+          "when": "false"
+        },
+        {
+          "command": "markdownAiStudio.selectReviewCommentForAi",
+          "when": "false"
+        },
+        {
+          "command": "markdownAiStudio.selectReviewCommentForManual",
+          "when": "false"
+        },
+        {
+          "command": "markdownAiStudio.implementSelectedReviews",
+          "when": "false"
+        },
+        {
+          "command": "markdownAiStudio.clearResolvedReviewComments",
+          "when": "false"
+        },
+        {
+          "command": "markdownAiStudio.clearAllReviewComments",
+          "when": "false"
+        },
+        {
           "command": "markdownAiStudio.applyReviewRevision",
           "when": "markdownAiStudio.reviewDraftActive"
         },
@@ -337,6 +424,70 @@
         {
           "command": "markdownAiStudio.exportDocxBasic",
           "when": "!markdownAiStudio.proInstalled"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "markdownAiStudio.revealReviewComment",
+          "when": "view == markdownAiStudio.reviewCommentsView",
+          "group": "1_comment@1"
+        },
+        {
+          "command": "markdownAiStudio.resolveReviewComment",
+          "when": "view == markdownAiStudio.reviewCommentsView && (viewItem == reviewCommentOpenAi || viewItem == reviewCommentOpenManual)",
+          "group": "1_comment@2"
+        },
+        {
+          "command": "markdownAiStudio.reopenReviewComment",
+          "when": "view == markdownAiStudio.reviewCommentsView && (viewItem == reviewCommentResolvedAi || viewItem == reviewCommentResolvedManual)",
+          "group": "1_comment@2"
+        },
+        {
+          "command": "markdownAiStudio.removeReviewComment",
+          "when": "view == markdownAiStudio.reviewCommentsView",
+          "group": "1_comment@3"
+        },
+        {
+          "command": "markdownAiStudio.selectReviewCommentForAi",
+          "when": "view == markdownAiStudio.reviewCommentsView && (viewItem == reviewCommentOpenManual || viewItem == reviewCommentResolvedManual)",
+          "group": "2_review@1"
+        },
+        {
+          "command": "markdownAiStudio.selectReviewCommentForManual",
+          "when": "view == markdownAiStudio.reviewCommentsView && (viewItem == reviewCommentOpenAi || viewItem == reviewCommentResolvedAi)",
+          "group": "2_review@1"
+        },
+        {
+          "command": "markdownAiStudio.implementSelectedReviews",
+          "when": "view == markdownAiStudio.reviewCommentsView",
+          "group": "2_review@2"
+        },
+        {
+          "command": "markdownAiStudio.clearResolvedReviewComments",
+          "when": "view == markdownAiStudio.reviewCommentsView",
+          "group": "3_cleanup@1"
+        },
+        {
+          "command": "markdownAiStudio.clearAllReviewComments",
+          "when": "view == markdownAiStudio.reviewCommentsView",
+          "group": "3_cleanup@2"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "markdownAiStudio.implementSelectedReviews",
+          "when": "view == markdownAiStudio.reviewCommentsView",
+          "group": "1_review@1"
+        },
+        {
+          "command": "markdownAiStudio.clearResolvedReviewComments",
+          "when": "view == markdownAiStudio.reviewCommentsView",
+          "group": "2_cleanup@1"
+        },
+        {
+          "command": "markdownAiStudio.clearAllReviewComments",
+          "when": "view == markdownAiStudio.reviewCommentsView",
+          "group": "2_cleanup@2"
         }
       ],
       "explorer/context": [

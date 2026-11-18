@@ -143,9 +143,13 @@ $$
 
 Select rendered text in a Markdown document or an MPS slide, then choose **Add Review Comment**. In a presentation, a simple click still changes slides. Dragging to select text keeps the current slide visible.
 
-Comments travel inside the Markdown file. Choose **View Review Comments** from the preview command menu to open the Explorer sidebar and find the selected text, reattach a detached comment, mark a comment revised, or resolve it. Resolving removes the comment. Clear **Include in AI review** to handle an open comment manually.
+Comments travel inside the Markdown file as short `<!--review:1-->` and `<!--/review:1-->` markers around the selected text, with their text in the `review-comments` front-matter list. Hover a marker in the preview to preview the comment; click it or the comment text to edit. In a presentation preview, open **Review Comments** in the bottom panel and select a comment to navigate to its slide and edit it. Review overlays are hidden in full-screen presentation mode. Press **Ctrl+Enter** or click outside to save a non-empty comment, or **Escape** to cancel. Clear **Include in AI review** to handle an open comment manually.
 
-**AI: Revise from Comments** offers Copilot or prompt copy. The preview title bar also provides a direct Copilot review button. Copilot opens an editable diff. Use **Apply Revision** to apply the draft and choose which comments to mark revised. **Copy Review Prompt** copies the current Markdown and selected comments for another assistant, including when integrated AI is disabled.
+Use the check icon to mark a comment resolved, or the same button to reopen it. The bin deletes it. Clicking an action while editing saves the comment first and then performs the action. **View Review Comments** opens the Explorer sidebar to find or reattach comments.
+
+Right-click a sidebar comment to go to it, resolve or reopen it, remove it, or switch between AI and manual review. The context menu and sidebar title menu also offer **Implement Selected with AI**, **Clear All Resolved**, and **Clear All Comments**. The AI action uses all open, attached comments selected for AI in that file. Clearing all comments requires confirmation.
+
+**AI: Revise from Comments** offers Copilot or prompt copy. The preview title bar also provides a direct Copilot review button. Copilot may change nearby text to make a revision fit and opens an editable diff. Use **Apply Revision** to apply the draft and choose which comments to mark resolved. **Copy Review Prompt** copies selected comments and their nearby context for another assistant, including when integrated AI is disabled.
 
 ## Document themes
 

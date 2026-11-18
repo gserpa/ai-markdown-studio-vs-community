@@ -1,79 +1,173 @@
 import MarkdownIt from 'markdown-it';
+import { isMap, parseDocument } from 'yaml';
 
-export type ReviewSelection = {
-  quote: string;
-  parts: ReviewAnchorPart[];
-};
-
-export type ReviewAnchorPart = {
-  quote: string;
-  startLine: number;
-  endLine: number;
-  source: string;
-  before: string;
-  after: string;
-  renderedBefore: string;
-  renderedAfter: string;
-};
-
+export type ReviewRange = { start: number; end: number };
 export type ReviewComment = {
   id: string;
   body: string;
-  state: 'open' | 'revised';
+  state: 'open' | 'resolved';
   includeInAi: boolean;
-  original: ReviewSelection;
-  anchor?: ReviewSelection;
+  range?: ReviewRange;
 };
 
-const marker = '<!-- markdown-ai-studio-review';
+const key = 'review-comments';
+const marker = /<!--(\/?)review:([1-9]\d*)-->/gu;
 const parser = new MarkdownIt({ html: true });
 
-export function readReviewComments(markdown: string): {
+type FrontMatter = { end: number; contentStart: number; contentEnd: number };
+
+function codeRanges(source: string): ReviewRange[] {
+  const offsets = lineOffsets(source);
+  const ranges: ReviewRange[] = [];
+  for (const token of parser.parse(source, {})) {
+    if (!token.map) continue;
+    const start = offsets[token.map[0]];
+    const end = offsets[token.map[1]] ?? source.length;
+    if (token.type === 'fence' || token.type === 'code_block') {
+      ranges.push({ start, end });
+    } else if (token.type === 'inline') {
+      const code = /(?<!\\)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)/gu;
+      for (const match of source.slice(start, end).matchAll(code)) {
+        ranges.push({ start: start + match.index, end: start + match.index + match[0].length });
+      }
+    }
+  }
+  return ranges;
+}
+
+function frontMatter(source: string): FrontMatter | undefined {
+  const opening = source.match(/^\uFEFF?---[ \t]*\r?\n/u);
+  if (!opening) return undefined;
+  const closing = /^---[ \t]*(?:\r?\n|$)/gmu;
+  closing.lastIndex = opening[0].length;
+  const match = closing.exec(source);
+  if (!match) return undefined;
+  return { end: closing.lastIndex, contentStart: opening[0].length, contentEnd: match.index };
+}
+
+export function readReviewComments(source: string): {
   markdown: string;
   comments: ReviewComment[];
   range?: { start: number; end: number };
   error?: string;
 } {
-  if (!markdown.includes(marker)) return { markdown, comments: [] };
-  const offsets = lineOffsets(markdown);
-  const blocks = parser.parse(markdown, {}).filter(token => token.type === 'html_block'
-    && token.level === 0 && token.map && token.content.startsWith(marker));
-  if (!blocks.length) return { markdown, comments: [] };
-  const block = blocks[0];
-  const first = offsets[block.map![0]];
-  const end = offsets[block.map![1]] ?? markdown.length;
-  const prefix = markdown.slice(0, first);
-  const trailing = markdown.slice(end);
-  // Preserve line numbers when text has been added after the metadata.
-  const clean = trailing.length ? prefix + markdown.slice(first, end).replace(/[^\r\n]/gu, '') + trailing
-    : prefix.replace(/(?:\r?\n){2}$/u, '');
-  const range = { start: trailing.length ? first : clean.length, end };
+  const front = frontMatter(source);
+  if (!front) return { markdown: source, comments: [] };
+  const yaml = source.slice(front.contentStart, front.contentEnd);
+  if (!new RegExp(`^${key}\\s*:`, 'mu').test(yaml)) return { markdown: source, comments: [] };
   try {
-    if (blocks.length !== 1) throw new Error();
-    const match = block.content.match(/^<!-- markdown-ai-studio-review v1\n([\s\S]+)\n-->\s*$/u);
-    if (!match) throw new Error();
-    const comments: unknown = JSON.parse(match[1]);
-    if (!Array.isArray(comments) || !comments.every(isReviewComment)
-      || new Set(comments.map(comment => comment.id)).size !== comments.length) throw new Error();
-    return { markdown: clean, comments, range };
+    const document = parseDocument(yaml);
+    if (document.errors.length || !isMap(document.contents)) throw new Error();
+    const pair = document.contents.items.find(item => String(item.key) === key);
+    if (!pair || !pair.key || !pair.value || !('range' in pair.key) || !('range' in pair.value)
+      || !pair.key.range || !pair.value.range) throw new Error();
+    const data: unknown = document.toJS()[key];
+    if (!Array.isArray(data)) throw new Error();
+    const comments: ReviewComment[] = data.map(entry => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw new Error();
+      const entries = Object.entries(entry);
+      if (entries.length !== 1 || !validId(entries[0][0])) throw new Error();
+      const [id, value] = entries[0];
+      if (typeof value === 'string' && value.trim()) return { id, body: value, state: 'open', includeInAi: true };
+      if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error();
+      const detail = value as { text?: unknown; ai?: unknown; state?: unknown };
+      if (typeof detail.text !== 'string' || !detail.text.trim()
+        || (detail.ai !== undefined && typeof detail.ai !== 'boolean')
+        || (detail.state !== undefined && detail.state !== 'open' && detail.state !== 'resolved')) throw new Error();
+      return { id, body: detail.text, state: detail.state ?? 'open', includeInAi: detail.ai ?? true };
+    });
+    if (new Set(comments.map(comment => comment.id)).size !== comments.length) throw new Error();
+    const start = front.contentStart + pair.key.range[0];
+    const end = front.contentStart + pair.value.range[2];
+    const withoutMetadata = source.slice(0, start) + source.slice(end);
+    const ids = new Set(comments.map(comment => comment.id));
+    const positions = new Map<string, { open: number[]; close: number[] }>();
+    const protectedRanges = codeRanges(withoutMetadata);
+    let markdown = '';
+    let last = 0;
+    for (const match of withoutMetadata.matchAll(marker)) {
+      if (!ids.has(match[2]) || match.index < front.end - (end - start)
+        || protectedRanges.some(range => match.index >= range.start && match.index < range.end)) continue;
+      markdown += withoutMetadata.slice(last, match.index);
+      const position = positions.get(match[2]) ?? { open: [], close: [] };
+      const after = match.index + match[0].length;
+      const newline = withoutMetadata.slice(after).match(/^\r?\n/u)?.[0] ?? '';
+      const standaloneOpen = !match[1] && newline && (match.index === 0 || withoutMetadata[match.index - 1] === '\n');
+      (match[1] ? position.close : position.open).push(markdown.length + (!match[1] && newline && !standaloneOpen ? newline.length : 0));
+      positions.set(match[2], position);
+      last = after + (standaloneOpen ? newline.length : 0);
+    }
+    markdown += withoutMetadata.slice(last);
+    for (const comment of comments) {
+      const position = positions.get(comment.id);
+      if (position?.open.length === 1 && position.close.length === 1 && position.open[0] < position.close[0]) {
+        comment.range = { start: position.open[0], end: position.close[0] };
+      }
+    }
+    return { markdown, comments, range: { start, end } };
   } catch {
-    return { markdown: clean, comments: [], range, error: 'The embedded review comments could not be read. Repair the review block in the Markdown source.' };
+    return { markdown: source, comments: [], error: 'The review-comments front matter could not be read. Repair it in the Markdown source.' };
   }
 }
 
-export function writeReviewComments(markdown: string, comments: readonly ReviewComment[]): string {
-  const stored = readReviewComments(markdown);
+export function writeReviewComments(source: string, comments: readonly ReviewComment[]): string {
+  const stored = readReviewComments(source);
   if (stored.error) throw new Error(stored.error);
-  const eol = markdown.includes('\r\n') ? '\r\n' : '\n';
-  const tail = stored.range ? markdown.slice(stored.range.end) : '';
-  const prefix = stored.range ? markdown.slice(0, stored.range.start) : markdown;
-  if (!comments.length) return prefix + tail;
-  const json = JSON.stringify(comments, null, 2)
-    .replaceAll('--', '\\u002d\\u002d').replaceAll('<', '\\u003c').replaceAll('>', '\\u003e').replaceAll('\x60', '\\u0060');
-  const block = [marker + ' v1', json, '-->', ''].join('\n').replaceAll('\n', eol);
-  const result = prefix + (tail.length ? '' : eol + eol) + block + tail;
-  if (!readReviewComments(result).range) throw new Error('Close the Markdown block at the end of the file before adding review comments.');
+  const clean = stored.markdown;
+  if (new Set(comments.map(comment => comment.id)).size !== comments.length
+    || comments.some(comment => !validId(comment.id) || !comment.body.trim())) {
+    throw new Error('Review comments must have unique numeric IDs and non-empty text.');
+  }
+  const events: { offset: number; text: string; order: number }[] = [];
+  const eol = clean.includes('\r\n') ? '\r\n' : '\n';
+  for (const comment of comments) {
+    if (!comment.range) continue;
+    const { start, end } = comment.range;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || start >= end || end > clean.length) {
+      throw new Error('The review selection is no longer valid. Reattach the comment.');
+    }
+    const atLineStart = start === 0 || clean[start - 1] === '\n';
+    const previousLineStart = clean.lastIndexOf('\n', start - 2) + 1;
+    const previousLine = clean.slice(previousLineStart, start).trim();
+    const standalone = atLineStart && (start === 0 || !previousLine || previousLine === '---');
+    const openOffset = atLineStart && !standalone ? start - (clean[start - 2] === '\r' ? 2 : 1) : start;
+    events.push({ offset: openOffset, text: `<!--review:${comment.id}-->` + (standalone ? eol : ''), order: 0 });
+    events.push({ offset: end, text: `<!--/review:${comment.id}-->`, order: 1 });
+  }
+  let marked = clean;
+  for (const event of events.sort((a, b) => b.offset - a.offset || a.order - b.order)) {
+    marked = marked.slice(0, event.offset) + event.text + marked.slice(event.offset);
+  }
+  if (parser.render(marked).replace(/^<!--review:[1-9]\d*-->\r?\n/gmu, '').replace(marker, '')
+    !== parser.render(clean).replace(marker, '')) {
+    throw new Error('This selection cannot be marked without changing the Markdown rendering. Select text within a Markdown text block.');
+  }
+  if (!comments.length) return marked;
+  const entries = comments.map(comment => {
+    const value = JSON.stringify(comment.body);
+    if (comment.includeInAi && comment.state === 'open') return `  - ${comment.id}: ${value}`;
+    return `  - ${comment.id}:${eol}      text: ${value}${comment.includeInAi ? '' : `${eol}      ai: false`}${comment.state === 'open' ? '' : `${eol}      state: resolved`}`;
+  });
+  const block = [key + ':', ...entries, ''].join(eol);
+  const front = frontMatter(marked);
+  const bom = marked.startsWith('\uFEFF') ? '\uFEFF' : '';
+  const result = front ? marked.slice(0, front.contentEnd) + block + marked.slice(front.contentEnd)
+    : bom + '---' + eol + block + '---' + eol + marked.slice(bom.length);
+  const verified = readReviewComments(result);
+  if (verified.error || verified.comments.length !== comments.length
+    || comments.some(comment => {
+      const actual = verified.comments.find(item => item.id === comment.id);
+      return !actual || actual.body !== comment.body || actual.state !== comment.state || actual.includeInAi !== comment.includeInAi
+        || (comment.range && (!actual.range || clean.slice(comment.range.start, comment.range.end)
+          !== verified.markdown.slice(actual.range.start, actual.range.end)));
+    })) {
+    throw new Error('Review comments could not be saved safely. Check the front matter and selected Markdown.');
+  }
   return result;
+}
+
+function validId(id: string): boolean {
+  return /^[1-9]\d*$/u.test(id) && Number.isSafeInteger(Number(id));
 }
 
 export function stripReviewComments(markdown: string): string {
@@ -84,63 +178,11 @@ export function lineOffsets(source: string): number[] {
   return [0, ...Array.from(source.matchAll(/\n/gu), match => match.index + 1)];
 }
 
-export function locateReviewPart(source: string, part: ReviewAnchorPart): { startLine: number; endLine: number } | undefined {
+export function reviewRangeLines(source: string, range: ReviewRange): { startLine: number; endLine: number } {
   const offsets = lineOffsets(source);
-  const candidates: number[] = [];
-  for (let index = source.indexOf(part.source); index !== -1; index = source.indexOf(part.source, index + 1)) {
-    if (index !== 0 && source[index - 1] !== '\n') continue;
-    const end = index + part.source.length;
-    if (part.source.endsWith('\n') || end === source.length || /^\r?\n/u.test(source.slice(end))) candidates.push(index);
-  }
-  const contextual = candidates.filter(index => source.slice(0, index).endsWith(part.before)
-    && source.slice(index + part.source.length).startsWith(part.after));
-  const index = candidates.length === 1 ? candidates[0] : contextual.length === 1 ? contextual[0] : undefined;
-  if (index === undefined) return candidates.length === 0 ? locateEditedReviewPart(source, offsets, part) : undefined;
-  const startLine = lineAt(offsets, index);
-  const endLine = lineAt(offsets, index + part.source.trimEnd().length - 1);
-  const exact = part.source.indexOf(part.quote);
-  if (exact !== -1 && part.source.indexOf(part.quote, exact + 1) === -1) {
-    return { startLine: lineAt(offsets, index + exact), endLine: lineAt(offsets, index + exact + part.quote.length - 1) };
-  }
-  return { startLine, endLine };
-}
-
-function locateEditedReviewPart(source: string, offsets: readonly number[], part: ReviewAnchorPart) {
-  const initial = part.source.indexOf(part.quote);
-  if (initial === -1 || part.source.indexOf(part.quote, initial + 1) !== -1) return undefined;
-  const before = (part.before + part.source.slice(0, initial)).slice(-48).split(/\r?\n/u).at(-1) ?? '';
-  const after = (part.source.slice(initial + part.quote.length) + part.after).slice(0, 48).split(/\r?\n/u)[0];
-  const candidates: number[] = [];
-  for (let start = source.indexOf(part.quote); start !== -1; start = source.indexOf(part.quote, start + 1)) {
-    const left = /[\p{L}\p{N}]/u.test(before) && source.slice(Math.max(0, start - before.length), start) === before;
-    const end = start + part.quote.length;
-    const right = /[\p{L}\p{N}]/u.test(after) && source.startsWith(after, end);
-    if (left || right) candidates.push(start);
-  }
-  if (candidates.length !== 1) return undefined;
-  return { startLine: lineAt(offsets, candidates[0]), endLine: lineAt(offsets, candidates[0] + part.quote.length - 1) };
-}
-
-function lineAt(offsets: readonly number[], offset: number): number {
-  const line = offsets.findIndex(start => start > offset);
-  return line === -1 ? offsets.length : Math.max(1, line);
-}
-
-function isReviewComment(value: unknown): value is ReviewComment {
-  if (typeof value !== 'object' || !value) return false;
-  const item = value as Partial<ReviewComment>;
-  return typeof item.id === 'string' && typeof item.body === 'string' && typeof item.includeInAi === 'boolean'
-    && (item.state === 'open' || item.state === 'revised') && isSelection(item.original)
-    && (item.anchor === undefined || isSelection(item.anchor));
-}
-
-function isSelection(value: unknown): value is ReviewSelection {
-  if (typeof value !== 'object' || !value) return false;
-  const selection = value as Partial<ReviewSelection>;
-  return typeof selection.quote === 'string' && selection.quote.length > 0
-    && Array.isArray(selection.parts) && selection.parts.length > 0 && selection.parts.every(part =>
-      part && typeof part === 'object' && Number.isSafeInteger(part.startLine) && part.startLine > 0
-      && Number.isSafeInteger(part.endLine) && part.endLine >= part.startLine
-      && [part.quote, part.source, part.before, part.after, part.renderedBefore, part.renderedAfter].every(field => typeof field === 'string')
-      && part.quote.length > 0 && part.source.length > 0);
+  const lineAt = (offset: number) => {
+    const line = offsets.findIndex(start => start > offset);
+    return line === -1 ? offsets.length : Math.max(1, line);
+  };
+  return { startLine: lineAt(range.start), endLine: lineAt(range.end - 1) };
 }

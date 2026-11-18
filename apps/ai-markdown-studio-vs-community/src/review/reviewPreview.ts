@@ -1,12 +1,13 @@
 import { createHash } from 'node:crypto';
 import { JSDOM } from 'jsdom';
 import {
-  createMarkdownRenderer, lineOffsets, locateReviewPart, readReviewComments, sanitizeRenderedHtml,
-  type ReviewComment, type ReviewSelection,
+  createMarkdownRenderer, lineOffsets, readReviewComments, reviewRangeLines, sanitizeRenderedHtml,
+  type ReviewComment, type ReviewRange,
 } from '@mfo/core';
 
 type ReviewBlock = { id: string; text: string; startLine: number; endLine: number };
 type ReviewSlice = { id: string; start: number; end: number };
+const anchorRenderer = createMarkdownRenderer();
 export type ReviewPreview = {
   version: number;
   blocks: ReviewBlock[];
@@ -62,11 +63,12 @@ export function buildReviewPreview(body: string, rawMarkdown: string, version: n
     }
     const comments = store.comments.map(comment => ({
       id: comment.id, body: comment.body, state: comment.state, includeInAi: comment.includeInAi,
-      originalQuote: comment.original.quote, originalLines: selectionLines(comment.original),
+      originalQuote: comment.range ? store.markdown.slice(comment.range.start, comment.range.end) : 'Selection unavailable',
+      originalLines: comment.range ? reviewRangeLines(store.markdown, comment.range) : { startLine: 0, endLine: 0 },
       placement: locatePlacement(store.markdown, comment, blocks),
     }));
     root.setAttribute('data-review-state', JSON.stringify({
-      version, contentKey: createHash('sha256').update(store.markdown).digest('hex'), comments, error: store.error,
+      version, contentKey: createHash('sha256').update(store.markdown.replace(/^\uFEFF?---[ \t]*\r?\n---[ \t]*\r?\n/u, '')).digest('hex'), comments, error: store.error,
     }));
     return { body: dom.window.document.body.innerHTML, review: { version, blocks } satisfies ReviewPreview };
   } finally {
@@ -74,41 +76,55 @@ export function buildReviewPreview(body: string, rawMarkdown: string, version: n
   }
 }
 
-function selectionLines(selection: ReviewSelection) {
-  return {
-    startLine: Math.min(...selection.parts.map(part => part.startLine)),
-    endLine: Math.max(...selection.parts.map(part => part.endLine)),
-  };
-}
-
 function locatePlacement(markdown: string, comment: ReviewComment, blocks: ReviewBlock[]) {
-  const pieces = (comment.anchor ?? comment.original).parts.map(part => {
-    const lines = locateReviewPart(markdown, part);
-    if (!lines) return undefined;
-    const matches = blocks.flatMap(block => {
-      if (block.startLine > lines.startLine || block.endLine < lines.endLine) return [];
-      const starts: number[] = [];
-      for (let start = block.text.indexOf(part.quote); start !== -1; start = block.text.indexOf(part.quote, start + 1)) {
-        starts.push(start);
-      }
-      return starts.map(start => ({
-        id: block.id, start, end: start + part.quote.length, ...lines,
-        contextMatches: block.text.slice(0, start).endsWith(part.renderedBefore)
-          && block.text.slice(start + part.quote.length).startsWith(part.renderedAfter),
-      }));
-    });
-    const contextual = matches.filter(match => match.contextMatches);
-    return matches.length === 1 ? matches[0] : contextual.length === 1 ? contextual[0] : undefined;
+  if (!comment.range) return undefined;
+  const offsets = lineOffsets(markdown);
+  const lines = reviewRangeLines(markdown, comment.range);
+  const relevant = blocks.filter(block => block.startLine <= lines.endLine && block.endLine >= lines.startLine);
+  const pieces = relevant.map(block => {
+    const from = offsets[block.startLine - 1];
+    const to = offsets[block.endLine] ?? markdown.length;
+    const source = markdown.slice(from, to);
+    const start = Math.max(from, comment.range!.start) - from;
+    const end = Math.min(to, comment.range!.end) - from;
+    const slice = renderedSlice(source, start, end, block.text);
+    return slice ? { id: block.id, ...slice } : undefined;
   });
-  if (!pieces.every(piece => piece !== undefined)) return undefined;
-  return {
-    slices: pieces.map(({ id, start, end }) => ({ id, start, end })),
-    startLine: Math.min(...pieces.map(piece => piece.startLine)),
-    endLine: Math.max(...pieces.map(piece => piece.endLine)),
-  };
+  return pieces.length && pieces.every(piece => piece !== undefined) ? { slices: pieces, ...lines } : undefined;
 }
 
-export function readPreviewSelection(markdown: string, preview: ReviewPreview, input: unknown): ReviewSelection {
+function renderedSlice(source: string, start: number, end: number, blockText: string) {
+  const atLineStart = start === 0 || source[start - 1] === '\n';
+  const previousLineStart = source.lastIndexOf('\n', start - 2) + 1;
+  const previousLine = source.slice(previousLineStart, start).trim();
+  const standalone = atLineStart && (start === 0 || !previousLine || previousLine === '---');
+  const moved = atLineStart && !standalone;
+  const open = moved ? start - (source[start - 2] === '\r' ? 2 : 1) : start;
+  const eol = source.includes('\r\n') ? '\r\n' : '\n';
+  const marked = source.slice(0, open) + '<!--review:1-->' + (standalone ? eol : '')
+    + source.slice(open, end) + '<!--/review:1-->' + source.slice(end);
+  const dom = new JSDOM('<body>' + anchorRenderer.render(marked) + '</body>');
+  try {
+    const walker = dom.window.document.createTreeWalker(dom.window.document.body, dom.window.NodeFilter.SHOW_TEXT | dom.window.NodeFilter.SHOW_COMMENT);
+    let text = '';
+    let startOffset: number | undefined;
+    let endOffset: number | undefined;
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (node.nodeType === dom.window.Node.TEXT_NODE) text += node.textContent ?? '';
+      else if (node.textContent === 'review:1') startOffset = text.length;
+      else if (node.textContent === '/review:1') endOffset = text.length;
+    }
+    const blockOffset = text.indexOf(blockText);
+    if (startOffset === undefined || endOffset === undefined || blockOffset < 0) return undefined;
+    const first = Math.max(startOffset + (moved ? 1 : 0), blockOffset) - blockOffset;
+    const last = Math.min(endOffset, blockOffset + blockText.length) - blockOffset;
+    return first < last ? { start: first, end: last } : undefined;
+  } finally {
+    dom.window.close();
+  }
+}
+
+export function readPreviewSelection(markdown: string, preview: ReviewPreview, input: unknown): ReviewRange {
   if (!Array.isArray(input) || !input.length || input.length > 200) throw new Error('Select text in the Markdown preview.');
   const offsets = lineOffsets(markdown);
   const parts = input.map((value: ReviewSlice) => {
@@ -119,21 +135,21 @@ export function readPreviewSelection(markdown: string, preview: ReviewPreview, i
     const end = offsets[block.endLine] ?? markdown.length;
     const source = markdown.slice(start, end);
     const quote = block.text.slice(value.start, value.end);
-    const part = {
-      quote, source, startLine: block.startLine, endLine: block.endLine,
-      before: markdown.slice(Math.max(0, start - 100), start), after: markdown.slice(end, end + 100),
-      renderedBefore: block.text.slice(Math.max(0, value.start - 64), value.start),
-      renderedAfter: block.text.slice(value.end, value.end + 64),
-    };
-    // Refine the original line even when another copy of the same block occurs elsewhere.
-    const position = source.indexOf(quote);
-    if (position !== -1 && source.indexOf(quote, position + 1) === -1) {
-      part.startLine += lineOffsets(source.slice(0, position)).length - 1;
-      part.endLine = part.startLine + lineOffsets(quote).length - 1;
+    const candidates: number[] = [];
+    for (let position = source.indexOf(quote); position !== -1; position = source.indexOf(quote, position + 1)) {
+      candidates.push(position);
     }
-    return part;
+    const matches = candidates.filter(position => {
+      const slice = renderedSlice(source, position, position + quote.length, block.text);
+      return slice?.start === value.start && slice.end === value.end;
+    });
+    if (matches.length !== 1) {
+      throw new Error('This selection cannot be mapped uniquely to Markdown. Select a smaller passage.');
+    }
+    return { start: start + matches[0], end: start + matches[0] + quote.length };
   });
-  const quote = parts.map(part => part.quote).join('\n');
-  if (!quote.trim() || quote.length > 50_000) throw new Error('Select a smaller passage in the preview.');
-  return { quote, parts };
+  const range = { start: parts[0].start, end: parts[parts.length - 1].end };
+  if (parts.some((part, index) => index > 0 && part.start < parts[index - 1].end)
+    || range.end - range.start > 50_000) throw new Error('Select a smaller passage in the preview.');
+  return range;
 }

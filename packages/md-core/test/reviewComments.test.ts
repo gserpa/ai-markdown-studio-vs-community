@@ -1,47 +1,65 @@
 import { describe, expect, it } from 'vitest';
-import { locateReviewPart, readReviewComments, stripReviewComments, writeReviewComments, type ReviewComment } from '../src';
+import { readReviewComments, stripReviewComments, writeReviewComments, type ReviewComment } from '../src';
 
-const quote = 'selected text';
-const part = {
-  quote, startLine: 3, endLine: 3, source: quote + '\n',
-  before: '# Title\n\n', after: '', renderedBefore: '', renderedAfter: '',
-};
-const comment: ReviewComment = {
-  id: 'a', body: 'Keep -->, <tag>, and backtick \x60 safe.', state: 'open', includeInAi: true,
-  original: { quote, parts: [part] },
-};
+function comment(source: string, text = 'selected text'): ReviewComment {
+  const start = source.indexOf(text);
+  return { id: '1', body: 'Make this clearer.', state: 'open', includeInAi: true, range: { start, end: start + text.length } };
+}
 
-describe('embedded Markdown review comments', () => {
-  it.each(['\n', '\r\n'])('preserves document bytes with %j line endings', eol => {
-    const markdown = '# Title' + eol + eol + quote + eol;
-    const saved = writeReviewComments(markdown, [comment]);
-    expect(readReviewComments(saved).comments).toEqual([comment]);
+describe('compact review comments', () => {
+  it.each(['\n', '\r\n'])('stores a compact marker and preserves front matter with %j endings', eol => {
+    const markdown = ['---', 'title: Example', 'theme: galaxy', '---', '', 'A selected text here.', ''].join(eol);
+    const saved = writeReviewComments(markdown, [comment(markdown)]);
+    expect(saved).toContain('  - 1: "Make this clearer."');
+    expect(saved).toContain('<!--review:1-->selected text<!--/review:1-->');
     expect(stripReviewComments(saved)).toBe(markdown);
+    const stored = readReviewComments(saved);
+    expect(stored.comments).toEqual([comment(markdown)]);
     expect(writeReviewComments(saved, [])).toBe(markdown);
-    expect(saved).not.toContain('Keep -->');
   });
 
-  it('leaves fenced examples alone and rejects an unclosed block', () => {
-    const fence = '\x60'.repeat(3);
-    const example = fence + '\n<!-- markdown-ai-studio-review v1\n[]\n-->\n' + fence;
-    expect(stripReviewComments(example)).toBe(example);
-    expect(() => writeReviewComments(fence + '\nexample', [comment])).toThrow('Close the Markdown block');
+  it('handles selections at the start of a paragraph without changing the text', () => {
+    const markdown = 'selected text and more.\n';
+    const saved = writeReviewComments(markdown, [comment(markdown)]);
+    const stored = readReviewComments(saved);
+    expect(saved).toContain('<!--review:1-->\nselected text<!--/review:1-->');
+    expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe('selected text');
   });
 
-  it('preserves later content and fails safely on malformed metadata', () => {
-    const markdown = '# Title\n\n' + quote + '\n';
-    const saved = writeReviewComments(markdown, [comment]);
-    const appended = saved + '\n## Later text\n';
-    expect(readReviewComments(appended).comments).toEqual([comment]);
-    expect(stripReviewComments(appended)).toContain('## Later text');
-    expect(readReviewComments(saved.replace('v1', 'v2')).error).toBeDefined();
-    expect(() => writeReviewComments(saved.replace('v1', 'v2'), [])).toThrow('could not be read');
+  it('tracks edits within markers and preserves optional review state', () => {
+    const markdown = 'A selected text here.\n';
+    const saved = writeReviewComments(markdown, [{ ...comment(markdown), includeInAi: false, state: 'resolved' }]);
+    const edited = saved.replace('selected text', 'new wording');
+    const stored = readReviewComments(edited);
+    expect(stored.comments[0]).toMatchObject({ body: 'Make this clearer.', includeInAi: false, state: 'resolved' });
+    expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe('new wording');
+    expect(readReviewComments(edited.replace('<!--/review:1-->', '')).comments[0].range).toBeUndefined();
   });
 
-  it('tracks moved source, uses context for duplicates, and leaves missing text detached', () => {
-    expect(locateReviewPart('Introduction\n\n# Title\n\n' + quote + '\n', part)).toEqual({ startLine: 5, endLine: 5 });
-    expect(locateReviewPart(quote + '\n\n# Title\n\n' + quote + '\n', part)).toEqual({ startLine: 5, endLine: 5 });
-    expect(locateReviewPart('# Title\n\nReplacement\n', part)).toBeUndefined();
-    expect(locateReviewPart('Edited lead selected text and its explanation.\n', { ...part, source: 'Original lead selected text and its explanation.\n' })).toEqual({ startLine: 1, endLine: 1 });
+  it('preserves unrelated front-matter comments and fields when deleting a review', () => {
+    const markdown = '---\ntitle: Example # title note\n# author note\nauthor: Someone\n---\n\nA selected text here.\n';
+    const saved = writeReviewComments(markdown, [comment(markdown)]);
+    expect(writeReviewComments(saved, [])).toBe(markdown);
+  });
+
+  it('rejects code selections rather than changing Markdown rendering', () => {
+    const markdown = 'Example `selected text`.\n';
+    expect(() => writeReviewComments(markdown, [comment(markdown)])).toThrow('without changing the Markdown rendering');
+  });
+
+  it('does not interpret examples inside code as review markers', () => {
+    const markdown = 'A selected text here.\n\n`<!--review:1-->`\n\n```\n<!--review:1-->example<!--/review:1-->\n```\n';
+    const saved = writeReviewComments(markdown, [comment(markdown)]);
+    const stored = readReviewComments(saved);
+    expect(stored.markdown).toContain('`<!--review:1-->`');
+    expect(stored.markdown).toContain('<!--review:1-->example<!--/review:1-->');
+    expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe('selected text');
+  });
+
+  it('rejects malformed or duplicate review data without removing content', () => {
+    const markdown = '---\nreview-comments:\n  - 1: first\n  - 1: second\n---\nA sentence.\n';
+    expect(readReviewComments(markdown).error).toBeDefined();
+    expect(stripReviewComments(markdown)).toBe(markdown);
+    expect(() => writeReviewComments(markdown, [])).toThrow('could not be read');
   });
 });
