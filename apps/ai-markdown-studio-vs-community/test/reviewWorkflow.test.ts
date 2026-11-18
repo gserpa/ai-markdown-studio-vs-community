@@ -248,6 +248,37 @@ describe('review command AI access and prompt copy', () => {
     dispose();
   });
 
+  it('synchronizes visibility from the presentation panel with the title command and other previews', async () => {
+    const receivers: Array<(request: unknown) => Promise<void>> = [];
+    const disposers: Array<() => void> = [];
+    const posts = [vi.fn().mockResolvedValue(true), vi.fn().mockResolvedValue(true)];
+    for (const postMessage of posts) {
+      const panel = {
+        active: false,
+        webview: {
+          postMessage,
+          onDidReceiveMessage: (callback: (request: unknown) => Promise<void>) => {
+            receivers.push(callback);
+            return mock.disposable();
+          },
+        },
+        onDidChangeViewState: mock.disposable,
+        onDidDispose: (callback: () => void) => { disposers.push(callback); },
+      };
+      attachReviewPreview(panel as never, {} as never, () => mock.document as never);
+    }
+
+    await receivers[0]({ command: 'previewReview', action: 'toggleVisibility', requestId: 7 });
+    for (const post of posts) expect(post).toHaveBeenCalledWith({ command: 'reviewVisibility', visible: false });
+    expect(posts[0]).toHaveBeenCalledWith({ command: 'reviewResult', requestId: 7 });
+    posts[1].mockClear();
+    await receivers[1]({ command: 'previewReview', action: 'ready' });
+    expect(posts[1]).toHaveBeenCalledWith({ command: 'reviewVisibility', visible: false });
+    await run('toggleReviewComments', uri);
+    for (const post of posts) expect(post).toHaveBeenCalledWith({ command: 'reviewVisibility', visible: true });
+    disposers.forEach(dispose => dispose());
+  });
+
   describe('sidebar actions', () => {
     const provider = () => mock.treeProvider.mock.calls.at(-1)![1] as {
       getChildren(): Promise<Array<{ comment: ReviewComment }>>;

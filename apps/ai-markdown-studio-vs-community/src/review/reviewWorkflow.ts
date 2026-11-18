@@ -61,6 +61,14 @@ type ReviewTreeEntry = {
   location: string;
 };
 
+async function toggleReviewVisibility(key: string): Promise<void> {
+  if (hiddenReviewComments.has(key)) hiddenReviewComments.delete(key);
+  else hiddenReviewComments.add(key);
+  for (const panel of reviewPanels.get(key) ?? []) {
+    await panel.webview.postMessage({ command: 'reviewVisibility', visible: !hiddenReviewComments.has(key) });
+  }
+}
+
 export function attachReviewPreview(
   panel: vscode.WebviewPanel, updater: PreviewDocumentUpdater, getDocument: () => vscode.TextDocument,
 ): void {
@@ -102,20 +110,24 @@ export function attachReviewPreview(
       }
       const result = { command: 'reviewResult', requestId: request.requestId };
       try {
-        const preview = typeof request.sessionId === 'string' && request.version === document.version
-          ? updater.getReviewPage(request.sessionId, document.version) : undefined;
-        if (!preview) throw new Error('The preview changed. Select the text again.');
-        if (request.action === 'run') {
-          if (!areAiFeaturesEnabled()) throw new Error('Integrated AI review is disabled.');
-          await vscode.commands.executeCommand(reviewCommand, document.uri, 'integrated');
+        if (request.action === 'toggleVisibility') {
+          await toggleReviewVisibility(key);
         } else {
-          const raw = document.getText();
-          const stored = readReviewComments(raw);
-          if (stored.error) throw new Error(stored.error);
-          const comments = updateComments(stored.markdown, stored.comments, preview, request);
-          await replaceDocument(document, request.version!, writeReviewComments(raw, comments), true);
-          if (request.action === 'edit') pendingReattach = request.afterEdit === 'reattach' ? request.id : undefined;
-          else if (request.action === 'reattach') pendingReattach = undefined;
+          const preview = typeof request.sessionId === 'string' && request.version === document.version
+            ? updater.getReviewPage(request.sessionId, document.version) : undefined;
+          if (!preview) throw new Error('The preview changed. Select the text again.');
+          if (request.action === 'run') {
+            if (!areAiFeaturesEnabled()) throw new Error('Integrated AI review is disabled.');
+            await vscode.commands.executeCommand(reviewCommand, document.uri, 'integrated');
+          } else {
+            const raw = document.getText();
+            const stored = readReviewComments(raw);
+            if (stored.error) throw new Error(stored.error);
+            const comments = updateComments(stored.markdown, stored.comments, preview, request);
+            await replaceDocument(document, request.version!, writeReviewComments(raw, comments), true);
+            if (request.action === 'edit') pendingReattach = request.afterEdit === 'reattach' ? request.id : undefined;
+            else if (request.action === 'reattach') pendingReattach = undefined;
+          }
         }
         await panel.webview.postMessage(result);
         if (request.action === 'edit' && pendingReattach) {
@@ -367,12 +379,7 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
     vscode.commands.registerCommand('markdownAiStudio.toggleReviewComments', async (resource?: vscode.Uri) => {
       const uri = resource?.scheme === 'file' ? resource : activeReviewUri ?? resolveUri();
       if (!uri) return;
-      const key = uri.toString();
-      if (hiddenReviewComments.has(key)) hiddenReviewComments.delete(key);
-      else hiddenReviewComments.add(key);
-      for (const panel of reviewPanels.get(key) ?? []) {
-        await panel.webview.postMessage({ command: 'reviewVisibility', visible: !hiddenReviewComments.has(key) });
-      }
+      await toggleReviewVisibility(uri.toString());
     }),
     vscode.commands.registerCommand('markdownAiStudio.viewReviewComments', async () => {
       await refresh();

@@ -47,6 +47,8 @@
   document.body.append(overlays);
 
   let reviewPanel;
+  let reviewPanelContents;
+  let visibilityButton;
   if (presentation) {
     const bottomBar = root.querySelector('[data-presentation-bottom-bar]');
     const tabs = bottomBar?.querySelector('.presentation-bottom-bar-tabs');
@@ -60,6 +62,10 @@
       reviewPanel = make('div', 'presentation-bottom-panel md-review-panel');
       reviewPanel.dataset.panel = 'review';
       reviewPanel.dataset.reviewUi = '';
+      visibilityButton = button('', () => send('toggleVisibility'));
+      visibilityButton.classList.add('md-review-visibility');
+      reviewPanelContents = make('div');
+      reviewPanel.append(visibilityButton, reviewPanelContents);
       const active = bridge.getState()?.presentationActivePanelTab === 'review';
       tab.classList.toggle('is-active', active);
       reviewPanel.hidden = !active;
@@ -155,7 +161,10 @@
     runButton.title = label;
     runButton.setAttribute('aria-label', label);
     if (!list.hidden) renderList();
-    if (reviewPanel) renderReviewPanel();
+    if (reviewPanel) {
+      visibilityButton.textContent = commentsVisible ? 'Hide Review Comments' : 'Show Review Comments';
+      renderReviewPanel();
+    }
     scheduleLayout();
   }
 
@@ -481,10 +490,10 @@
 
   function renderReviewPanel() {
     if (!state.comments.length) {
-      reviewPanel.replaceChildren(make('p', 'md-review-panel-empty', 'No review comments.'));
+      reviewPanelContents.replaceChildren(make('p', 'md-review-panel-empty', 'No review comments.'));
       return;
     }
-    reviewPanel.replaceChildren(...state.comments.map(comment => {
+    reviewPanelContents.replaceChildren(...state.comments.map(comment => {
       const item = button('', () => openComment(comment));
       item.classList.add('md-review-panel-item');
       const lines = comment.placement ?? comment.originalLines;
