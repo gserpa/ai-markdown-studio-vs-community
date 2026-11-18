@@ -65,6 +65,12 @@
   overflow: auto;
 }
 
+.md-review-popover.is-composer {
+  min-width: min(315px, calc(100vw - 36px));
+  min-height: 180px;
+  resize: both;
+}
+
 .md-review-status {
   inset: auto 8px 8px auto;
 }
@@ -73,9 +79,15 @@
   display: none;
 }
 
-.md-review-card,
-.md-review-composer {
+.md-review-card {
   width: min(315px, calc(100vw - 42px));
+  overflow-wrap: anywhere;
+}
+
+.md-review-composer {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: min(315px, calc(100vw - 42px));
   overflow-wrap: anywhere;
 }
 
@@ -108,6 +120,18 @@
   font: inherit;
   color: var(--vscode-input-foreground, inherit);
   background: var(--vscode-input-background, transparent);
+  resize: none;
+}
+
+.md-review-composer-hint {
+  margin-bottom: 8px;
+  color: var(--vscode-descriptionForeground, #666);
+  font-size: 12px;
+}
+
+.md-review-composer .md-review-ai-option {
+  display: block;
+  text-align: right;
 }
 
 .md-review-actions {

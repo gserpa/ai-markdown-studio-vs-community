@@ -49,6 +49,7 @@
   let requestId = 0;
   let commentsVisible = true;
   let hideTimer;
+  let composerForm;
 
   function cancelHide() {
     clearTimeout(hideTimer);
@@ -88,8 +89,12 @@
   function readState() {
     const next = JSON.parse(root.dataset.reviewState);
     if (state && state.version !== next.version) {
-      selection = undefined;
-      if (!editing && !selectedComment) popover.hidden = true;
+      if (!state.contentKey || state.contentKey !== next.contentKey) {
+        selection = undefined;
+        if (!editing && !selectedComment) popover.hidden = true;
+      } else if (editing) {
+        editing.version = next.version;
+      }
     }
     state = next;
     if (selectedComment && !state.comments.some(comment => comment.id === selectedComment)) closePopover();
@@ -182,6 +187,7 @@
   function openComposer(comment) {
     editing = { version: state.version };
     const form = make('form', 'md-review-composer');
+    const hint = make('div', 'md-review-composer-hint', 'Esc cancels · Ctrl+Enter saves · Click outside to save');
     const text = make('textarea');
     text.value = comment?.body ?? '';
     text.required = true;
@@ -192,13 +198,13 @@
     const check = make('input');
     check.type = 'checkbox';
     check.checked = comment?.includeInAi ?? true;
-    const label = make('label');
+    const label = make('label', 'md-review-ai-option');
     label.append(check, ' Include in AI review');
     const actions = make('div', 'md-review-actions');
-    const submit = button('Save Comment', () => {});
+    const submit = button('Save', () => {});
     submit.type = 'submit';
     actions.append(button('Cancel', closePopover), submit);
-    form.append(text, label, actions);
+    form.append(hint, text, label, actions);
     form.addEventListener('submit', event => {
       event.preventDefault();
       if (editing.version !== state.version) {
@@ -208,7 +214,10 @@
       send(comment ? 'edit' : 'add', {
         id: comment?.id, body: text.value, includeInAi: check.checked, selection: selection?.slices,
       });
+      if (pending) closePopover();
     });
+    composerForm = form;
+    popover.classList.add('is-composer');
     popover.replaceChildren(form);
     popover.hidden = false;
     if (selection) position(popover, selection.range);
@@ -222,6 +231,8 @@
 
   function closePopover() {
     cancelHide();
+    composerForm = undefined;
+    popover.classList.remove('is-composer');
     editing = undefined;
     selection = undefined;
     selectedComment = undefined;
@@ -389,6 +400,13 @@
   });
   document.addEventListener('pointerdown', event => {
     if (!event.isPrimary || event.button !== 0 || event.target.closest?.('[data-review-ui]')) return;
+    if (editing && composerForm) {
+      event.preventDefault();
+      if (!composerForm.reportValidity()) return;
+      composerForm.requestSubmit();
+      closePopover();
+      return;
+    }
     pressed = true;
   });
   window.addEventListener('pointerup', () => {
@@ -399,6 +417,12 @@
   window.addEventListener('blur', () => { pressed = false; });
   document.addEventListener('selectionchange', readSelection);
   document.addEventListener('keydown', event => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && editing && composerForm) {
+      event.preventDefault();
+      event.stopPropagation();
+      composerForm.requestSubmit();
+      return;
+    }
     if (event.key === 'Escape' && (reattach || !popover.hidden || !list.hidden)) {
       event.stopPropagation();
       reattach = undefined;

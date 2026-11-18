@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { JSDOM } from 'jsdom';
 import {
   createMarkdownRenderer, lineOffsets, locateReviewPart, readReviewComments, sanitizeRenderedHtml,
@@ -64,7 +65,9 @@ export function buildReviewPreview(body: string, rawMarkdown: string, version: n
       originalQuote: comment.original.quote, originalLines: selectionLines(comment.original),
       placement: locatePlacement(store.markdown, comment, blocks),
     }));
-    root.setAttribute('data-review-state', JSON.stringify({ version, comments, error: store.error }));
+    root.setAttribute('data-review-state', JSON.stringify({
+      version, contentKey: createHash('sha256').update(store.markdown).digest('hex'), comments, error: store.error,
+    }));
     return { body: dom.window.document.body.innerHTML, review: { version, blocks } satisfies ReviewPreview };
   } finally {
     dom.window.close();
