@@ -16,6 +16,14 @@
   position: static;
 }
 
+.md-review-tab-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .md-review-button {
   cursor: pointer;
   border: 1px solid var(--vscode-widget-border, #8885);

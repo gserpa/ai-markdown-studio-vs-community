@@ -134,6 +134,8 @@ Hello world.
     expect(preview.html).toContain('data-panel="notes"');
     expect(preview.html).toContain('data-panel="slides"');
     expect(preview.html).toContain('data-panel="info"');
+  expect([...dom.window.document.querySelectorAll('.presentation-bottom-bar-tabs .presentation-tab')]
+    .map(tab => tab.getAttribute('data-panel'))).toEqual(['slides', 'notes', 'info']);
   expect(slideDataElement).not.toBeNull();
   expect(slideData).toHaveLength(2);
   expect(slideData[0]?.notesHtml).toContain('<div class="rendered">note</div>');

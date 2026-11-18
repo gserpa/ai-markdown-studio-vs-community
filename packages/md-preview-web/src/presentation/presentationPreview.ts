@@ -152,13 +152,13 @@ export function renderPresentationPreview(
       </div>
       <div class="presentation-bottom-bar" data-presentation-bottom-bar>
         <div class="presentation-bottom-bar-tabs">
-          <button class="presentation-tab" type="button" data-panel="notes" aria-label="Speaker Notes" title="Speaker Notes">
-            <span class="presentation-icon presentation-icon-notes" aria-hidden="true"></span>
-            Speaker Notes
-          </button>
           <button class="presentation-tab" type="button" data-panel="slides" aria-label="Slide list" title="Slide list">
             <span class="presentation-icon presentation-icon-slides" aria-hidden="true"></span>
             Slide List
+          </button>
+          <button class="presentation-tab" type="button" data-panel="notes" aria-label="Speaker Notes" title="Speaker Notes">
+            <span class="presentation-icon presentation-icon-notes" aria-hidden="true"></span>
+            Speaker Notes
           </button>
           <button class="presentation-tab" type="button" data-panel="info" aria-label="Slide Info" title="Slide Info">
             <span class="presentation-icon presentation-icon-info" aria-hidden="true"></span>

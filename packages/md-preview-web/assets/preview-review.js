@@ -53,12 +53,20 @@
     const bottomBar = root.querySelector('[data-presentation-bottom-bar]');
     const tabs = bottomBar?.querySelector('.presentation-bottom-bar-tabs');
     if (bottomBar && tabs) {
-      const tab = make('button', 'presentation-tab', 'Review Comments');
+      const tab = make('button', 'presentation-tab');
       tab.type = 'button';
       tab.dataset.panel = 'review';
       tab.dataset.reviewUi = '';
       tab.setAttribute('aria-label', 'Review Comments');
       tab.title = 'Review Comments';
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('class', 'presentation-icon md-review-tab-icon');
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.setAttribute('aria-hidden', 'true');
+      const shape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      shape.setAttribute('d', 'M4 4h16v12H9l-5 4V4zm4 5h8m-8 3h6');
+      icon.append(shape);
+      tab.append(icon, 'Review Comments');
       reviewPanel = make('div', 'presentation-bottom-panel md-review-panel');
       reviewPanel.dataset.panel = 'review';
       reviewPanel.dataset.reviewUi = '';
@@ -69,7 +77,9 @@
       const active = bridge.getState()?.presentationActivePanelTab === 'review';
       tab.classList.toggle('is-active', active);
       reviewPanel.hidden = !active;
-      tabs.prepend(tab);
+      const notesTab = tabs.querySelector('.presentation-tab[data-panel="notes"]');
+      if (notesTab) notesTab.after(tab);
+      else tabs.append(tab);
       bottomBar.append(reviewPanel);
     }
   }
