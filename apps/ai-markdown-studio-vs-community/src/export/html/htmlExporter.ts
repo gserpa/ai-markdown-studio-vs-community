@@ -29,7 +29,7 @@ import * as vscode from 'vscode';
 import type { ThemeCssArtifact } from '@mfo/preview-web';
 import { HtmlExportAssetCache, inlineKatexFontUrls, selectReferencedPreviewFonts } from './htmlExportAssets';
 import { preparePortableMarkdown } from './portableMarkdown';
-import { buildPortableReviewShell, validatePortableMediaResources } from './portableReviewHtml';
+import { portableReviewBody, portableReviewHead, safeScript, validatePortableMediaResources, type PortableShellOptions } from './portableReviewHtml';
 
 export type ExportMode = 'theme' | 'paper' | 'paper-borderless';
 type VisualizationExportAssets = { runtime: string; notices: string };
@@ -58,7 +58,7 @@ async function buildRenderedHtmlArtifact(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
   options: HtmlArtifactOptions,
-  portableSource?: string,
+  portable?: PortableShellOptions,
 ): Promise<HtmlArtifact> {
   const exportMode = options.exportMode ?? 'theme';
   const manifest = loadPreviewAssetManifest(extensionUri);
@@ -88,15 +88,16 @@ async function buildRenderedHtmlArtifact(
     const previewCss = await inlinePreviewFontUrls(selectedCss, extensionUri);
     return {
       previewCss,
-      katexCss: portableSource === undefined ? rewriteKatexCssUrls(katexCss) : await inlineKatexFontUrls(
+      katexCss: !portable ? rewriteKatexCssUrls(katexCss) : await inlineKatexFontUrls(
         katexCss, name => exportAssets.fontDataUri(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'fonts', name).fsPath),
       ), mermaidScript,
       previewThemeRuntimeScript, previewCoreRuntimeScript, modeRuntimeScript, themeCss, visualizations,
     };
   };
 
-  const source = stripReviewComments(portableSource ?? document.getText());
-  const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
+  const source = stripReviewComments(portable?.markdown ?? document.getText());
+  const allowRemoteResources = portable?.allowRemoteResources
+    ?? vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const renderer = createMarkdownRenderer({
     resolveImageSrc: (rawPath) => {
       if (/^data:image\//i.test(rawPath)) return rawPath;
@@ -136,38 +137,40 @@ async function buildRenderedHtmlArtifact(
     );
 
     const presentationBody = await embedLocalHtmlImages(rendered.html, document);
+    if (portable) validatePortableMediaResources(presentationBody, allowRemoteResources);
     const assets = await loadAssets(presentationBody, 'presentation', buildPreviewThemeCssArtifact(registry, rendered.themeSelection.themeName));
-    const rawHtml = buildPresentationStandaloneHtml({
+    const html = buildStandaloneHtml({
+      mode: 'presentation',
       title: path.basename(document.fileName),
       body: presentationBody,
       ...assets,
-      previewPresentationRuntimeScript: assets.modeRuntimeScript,
       exportMode,
       hostThemeClass: exportMode === 'theme' ? getHostThemeClass() : '',
-      previewThemeCss: assets.themeCss,
+      allowRemoteResources,
+      portable,
     });
-    const html = rawHtml.replace(/<body\b([^>]*)>/u, '<body$1 data-md-chart-remote-images="' + allowRemoteResources + '">');
     return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
   }
 
   const exportMarkdown = getExportMarkdown(source);
   const body = await embedLocalHtmlImages(renderMarkdown(exportMarkdown), document);
+  if (portable) validatePortableMediaResources(body, allowRemoteResources);
   const theme = resolveExportDocumentTheme(extensionUri, document, source, exportMode);
   const documentTableLayout = getDocumentTableLayout(document);
 
   const assets = await loadAssets(body, 'document', theme.documentThemeArtifact);
-  const rawHtml = buildStandaloneHtml({
+  const html = buildStandaloneHtml({
+    mode: 'document',
     title: path.basename(document.fileName),
     body,
     ...assets,
-    previewDocumentRuntimeScript: assets.modeRuntimeScript,
-    htmlClass: theme.hostThemeClass,
+    hostThemeClass: theme.hostThemeClass,
     bodyClass: theme.bodyClass,
     bodyAttributes: `${theme.bodyAttributes} data-preview-page-width="${documentTableLayout === 'wide' ? 'full' : 'readable'}" data-document-table-layout="${documentTableLayout}"`,
-    documentThemeCss: assets.themeCss,
     exportMode,
+    allowRemoteResources,
+    portable,
   });
-  const html = rawHtml.replace(/<body\b([^>]*)>/u, '<body$1 data-md-chart-remote-images="' + allowRemoteResources + '">');
   return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
 }
 
@@ -182,8 +185,6 @@ export async function buildPortableReviewHtml(extensionUri: vscode.Uri, document
     }
     return imageDataUri(document, source, allowRemoteResources);
   });
-  const artifact = await buildRenderedHtmlArtifact(extensionUri, document, { assetMode: 'inline' }, markdown);
-  validatePortableMediaResources(artifact.html, allowRemoteResources);
   const manifest = loadPreviewAssetManifest(extensionUri);
   const readAsset = (name: string) => {
     const descriptor = manifest.assets[name];
@@ -195,7 +196,7 @@ export async function buildPortableReviewHtml(extensionUri: vscode.Uri, document
     readAsset('previewReviewStyle'), readAsset('portableReviewHostRuntime'), readAsset('portableReviewNotices'),
   ]);
   const name = path.parse(document.fileName).name;
-  return buildPortableReviewShell(artifact.html, {
+  const artifact = await buildRenderedHtmlArtifact(extensionUri, document, { assetMode: 'inline' }, {
     markdown, mode: isMarkdownPresentationSource(markdown) ? 'presentation' : 'document',
     htmlName: `${name}.html`, markdownName: `${name}.md`,
     presentationThemes: loadPreviewThemeRegistryForDocument(extensionUri, document.uri),
@@ -203,6 +204,7 @@ export async function buildPortableReviewHtml(extensionUri: vscode.Uri, document
     themeMode: getHostThemeClass() === 'vscode-dark' ? 'dark' : 'light',
     allowRemoteResources, renderer, reviewUi, reviewCss, host, notices,
   });
+  return artifact.html;
 }
 
 export async function exportMarkdownAsHtml(extensionUri: vscode.Uri, document: vscode.TextDocument): Promise<vscode.Uri | undefined> {
@@ -341,7 +343,7 @@ function getDocumentTableLayout(document: vscode.TextDocument): 'wide' | 'wrap' 
   return configured === 'wrap' ? 'wrap' : 'wide';
 }
 
-function buildStandaloneHtml(input: {
+type StandaloneHtmlInput = {
   title: string;
   body: string;
   previewCss: string;
@@ -349,79 +351,40 @@ function buildStandaloneHtml(input: {
   mermaidScript: string;
   previewThemeRuntimeScript: string;
   previewCoreRuntimeScript: string;
-  previewDocumentRuntimeScript: string;
+  modeRuntimeScript: string;
   visualizations?: VisualizationExportAssets;
-  htmlClass: string;
-  bodyClass: string;
-  bodyAttributes: string;
-  documentThemeCss: string;
-  exportMode: ExportMode;
-}): string {
-  return `<!DOCTYPE html>
-<html lang="en" data-md-host-scheme="auto"${input.htmlClass ? ` class="${escapeHtml(input.htmlClass)}"` : ''}>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${escapeHtml(input.title)}</title>
-  <style data-ams-export-asset="styles">
-${input.previewCss}
-  </style>
-  ${input.katexCss ? `<style data-ams-export-asset="styles">
-${input.katexCss}
-  </style>` : ''}
-  ${input.documentThemeCss ? `<style data-ams-export-asset="styles">
-${input.documentThemeCss}
-  </style>` : ''}
-  <style data-ams-export-asset="styles">
-${getExportThemeCss()}
-  </style>
-  ${input.exportMode !== 'theme' ? `<style data-ams-export-asset="styles">
-${getPrinterFriendlyExportCss(input.exportMode)}
-  </style>` : ''}
-  <style data-ams-export-asset="styles">
-${getExportScrollCss()}
-  </style>
-</head>
-<body class="${escapeHtml(input.bodyClass)}" data-md-preview-root data-preview-mode="document"${input.bodyAttributes}>
-  <main class="markdown-body">${input.body}</main>
-  <script>
-${getStandalonePreviewBridgeScript()}
-  </script>
-  ${input.mermaidScript ? `<script data-ams-export-asset="mermaid">
-${input.mermaidScript}
-  </script>` : ''}
-  <script data-ams-export-asset="preview-theme-runtime">
-${input.previewThemeRuntimeScript}
-  </script>
-  <script data-ams-export-asset="preview-core-runtime">
-${input.previewCoreRuntimeScript}
-  </script>
-  <script data-ams-export-asset="preview-document-runtime">
-${input.previewDocumentRuntimeScript}
-  </script>
-  ${visualizationExportHtml(input.visualizations)}
-</body>
-</html>`;
-}
-
-function buildPresentationStandaloneHtml(input: {
-  title: string;
-  body: string;
-  previewCss: string;
-  katexCss: string;
-  mermaidScript: string;
-  previewThemeRuntimeScript: string;
-  previewCoreRuntimeScript: string;
-  previewPresentationRuntimeScript: string;
-  visualizations?: VisualizationExportAssets;
-  previewThemeCss: string;
+  themeCss: string;
   hostThemeClass: string;
   exportMode: ExportMode;
-}): string {
-  const fallback = buildPresentationExportFallback(input.body);
+  allowRemoteResources: boolean;
+  portable?: PortableShellOptions;
+} & (
+  | { mode: 'document'; bodyClass: string; bodyAttributes: string }
+  | { mode: 'presentation' }
+);
+
+function buildStandaloneHtml(input: StandaloneHtmlInput): string {
+  const fallback = input.mode === 'presentation' ? buildPresentationExportFallback(input.body, !!input.portable) : undefined;
+  const bodyClass = input.mode === 'document'
+    ? input.bodyClass
+    : ['preview-mode-presentation', input.hostThemeClass].filter(Boolean).join(' ');
+  const bodyAttributes = input.mode === 'document'
+    ? ` data-md-preview-root data-preview-mode="document"${input.bodyAttributes}`
+    : ' data-preview-mode="presentation" data-presentation-content-overflow="scaleToFit"';
+  const portableHead = input.portable ? portableReviewHead(input.portable) : undefined;
+  const script = (name: string, source: string) => input.portable
+    ? `<script data-ams-export-asset="${name}" type="application/x-ams-runtime">\n${safeScript(source)}\n  </script>`
+    : `<script data-ams-export-asset="${name}">\n${source}\n  </script>`;
+  const bridge = input.portable ? '' : `<script>
+${getStandalonePreviewBridgeScript()}
+${input.mode === 'presentation' ? `document.addEventListener('md-slide-changed', () => {
+  document.body.dataset.amsPresentationReady = 'true';
+}, { once: true });` : ''}
+  </script>`;
   return `<!DOCTYPE html>
 <html lang="en" data-md-host-scheme="auto"${input.hostThemeClass ? ` class="${escapeHtml(input.hostThemeClass)}"` : ''}>
 <head>
+  ${portableHead?.policy ?? ''}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(input.title)}</title>
@@ -431,47 +394,40 @@ ${input.previewCss}
   ${input.katexCss ? `<style data-ams-export-asset="styles">
 ${input.katexCss}
   </style>` : ''}
-  <style data-ams-export-asset="styles">
-${input.previewThemeCss}
-  </style>
+  ${input.themeCss || input.mode === 'presentation' ? `<style data-ams-export-asset="styles">
+${input.themeCss}
+  </style>` : ''}
   <style data-ams-export-asset="styles">
 ${getExportThemeCss()}
   </style>
-  <style data-ams-export-asset="styles">
+  ${fallback ? `<style data-ams-export-asset="styles">
 ${fallback.css}
-  </style>
+  </style>` : ''}
   ${input.exportMode !== 'theme' ? `<style data-ams-export-asset="styles">
 ${getPrinterFriendlyExportCss(input.exportMode)}
   </style>` : ''}
+  ${input.mode === 'document' ? `<style data-ams-export-asset="styles">
+${getExportScrollCss()}
+  </style>` : ''}
+  ${portableHead?.style ?? ''}
 </head>
-<body class="${escapeHtml(['preview-mode-presentation', input.hostThemeClass].filter(Boolean).join(' '))}" data-preview-mode="presentation" data-presentation-content-overflow="scaleToFit">
-  ${fallback.body}
-  <script>
-${getStandalonePreviewBridgeScript()}
-document.addEventListener('md-slide-changed', () => {
-  document.body.dataset.amsPresentationReady = 'true';
-}, { once: true });
-  </script>
-  ${input.mermaidScript ? `<script data-ams-export-asset="mermaid">
-${input.mermaidScript}
-  </script>` : ''}
-  <script data-ams-export-asset="preview-theme-runtime">
-${input.previewThemeRuntimeScript}
-  </script>
-  <script data-ams-export-asset="preview-core-runtime">
-${input.previewCoreRuntimeScript}
-  </script>
-  <script data-ams-export-asset="preview-presentation-runtime">
-${input.previewPresentationRuntimeScript}
-  </script>
-  ${visualizationExportHtml(input.visualizations)}
+<body class="${escapeHtml(bodyClass)}"${bodyAttributes} data-md-chart-remote-images="${input.allowRemoteResources}">
+  ${fallback ? fallback.body : `<main class="markdown-body">${input.body}</main>`}
+  ${bridge}
+  ${input.mermaidScript ? script('mermaid', input.mermaidScript) : ''}
+  ${script('preview-theme-runtime', input.previewThemeRuntimeScript)}
+  ${script('preview-core-runtime', input.previewCoreRuntimeScript)}
+  ${script(`preview-${input.mode}-runtime`, input.modeRuntimeScript)}
+  ${visualizationExportHtml(input.visualizations, script)}
+  ${input.portable ? portableReviewBody(input.portable, escapeHtml) : ''}
 </body>
 </html>`;
 }
 
-function buildPresentationExportFallback(body: string): { body: string; css: string } {
+function buildPresentationExportFallback(body: string, portable: boolean): { body: string; css: string } {
   const dom = new JSDOM(body);
   const document = dom.window.document;
+  if (portable) document.querySelectorAll('script:not([data-ams-export-asset])').forEach(script => script.remove());
   const stage = document.querySelector<HTMLElement>('.presentation-preview > .presentation-stage');
   if (!stage) {
     throw new Error('Cannot build presentation HTML without a slide stage.');
@@ -563,14 +519,12 @@ ${fallback} .presentation-frame.presentation-ratio-4-3 .presentation-canvas {
   return { body: renderedBody, css };
 }
 
-function visualizationExportHtml(assets: VisualizationExportAssets | undefined): string {
+function visualizationExportHtml(assets: VisualizationExportAssets | undefined, script: (name: string, source: string) => string): string {
   if (!assets) return '';
   // Keep the complete distribution notices inert and portable in a single file.
   // Website exports extract this template into one fingerprinted license asset.
   return `<template data-ams-visualization-notices>${escapeHtml(assets.notices)}</template>
-  <script data-ams-export-asset="preview-visualizations-runtime">
-${assets.runtime.replace(/<\/script/giu, '<\\/script')}
-  </script>`;
+  ${script('preview-visualizations-runtime', safeScript(assets.runtime))}`;
 }
 
 function getStandalonePreviewBridgeScript(): string {

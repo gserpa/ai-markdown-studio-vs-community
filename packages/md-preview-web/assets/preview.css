@@ -3257,6 +3257,7 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   display: flex;
   flex-direction: row;
   align-items: stretch;
+  overflow-x: auto;
 }
 
 .presentation-bottom-bar:has(.presentation-bottom-panel:not([hidden])) .presentation-bottom-bar-tabs {
@@ -3267,6 +3268,7 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
   appearance: none;
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 7px;
   padding: 10px 16px;
   border: none;

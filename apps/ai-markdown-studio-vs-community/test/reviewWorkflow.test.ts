@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { readReviewComments, writeReviewComments, type ReviewComment } from '@mfo/core';
+import { createReviewCommentActions } from '@mfo/review';
 
 const mock = vi.hoisted(() => ({
   commands: new Map<string, (...args: any[]) => Promise<void>>(),
@@ -28,7 +29,6 @@ vi.mock('vscode', () => ({
   workspace: {
     openTextDocument: mock.openDocument,
     applyEdit: mock.applyEdit,
-    onDidChangeConfiguration: mock.disposable,
     onDidChangeTextDocument: mock.disposable,
     registerTextDocumentContentProvider: mock.disposable,
   },
@@ -40,7 +40,6 @@ vi.mock('vscode', () => ({
     },
   },
   env: { clipboard: { writeText: mock.clipboard } },
-  authentication: { onDidChangeSessions: mock.disposable },
   window: {
     showQuickPick: mock.choose,
     registerTreeDataProvider: mock.treeProvider,
@@ -69,7 +68,6 @@ vi.mock('vscode', () => ({
   Disposable: { from: mock.disposable },
 }));
 vi.mock('../src/ai/aiConsent', () => ({
-  areAiFeaturesEnabled: () => false,
   getAiAccessState: mock.getAiAccessState,
   ensureAiFeaturesEnabled: mock.consent,
   isAiAuthorizationDenied: () => mock.getAiAccessState() === 'denied',
@@ -77,8 +75,10 @@ vi.mock('../src/ai/aiConsent', () => ({
 vi.mock('../src/ai/copilotAvailability', () => ({ hasConfiguredCopilotAccount: mock.hasAccount }));
 vi.mock('../src/ai/languageModel', () => ({ generateTextWithLanguageModel: mock.generate, isLanguageModelAvailable: mock.available }));
 
-import { applyReplacements, attachReviewPreview, registerReviewWorkflow, updateComments } from '../src/review/reviewWorkflow';
+import { applyReplacements, attachReviewPreview, registerReviewWorkflow } from '../src/review/reviewWorkflow';
+import { readPreviewSelection } from '../src/review/reviewPreview';
 
+const updateComments = createReviewCommentActions(readPreviewSelection);
 const markdown = '# Document\n\nPassage for review.\n';
 const start = markdown.indexOf('Passage for review.');
 const open: ReviewComment = {

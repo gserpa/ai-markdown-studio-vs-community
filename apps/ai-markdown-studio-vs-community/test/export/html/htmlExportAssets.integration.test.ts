@@ -188,6 +188,14 @@ describe('HTML export with real built assets', () => {
         expect(annotated).toContain('pixel.png');
         expect(dom.window.document.querySelector('script[data-ams-runtime="renderer"]')?.getAttribute('type')).toBe('application/x-ams-runtime');
         expect(dom.window.document.querySelectorAll('script:not([type])')).toHaveLength(allowRemote ? 1 : 2);
+        const assets = [...dom.window.document.querySelectorAll<HTMLScriptElement>('script[data-ams-export-asset]')];
+        expect(assets.length).toBeGreaterThan(0);
+        expect(assets.every(script => script.type === 'application/x-ams-runtime')).toBe(true);
+        expect(dom.window.document.querySelector('main.markdown-body, .presentation-slide')?.textContent).toContain('A target');
+        if (mode === 'presentation') {
+          expect(dom.window.document.querySelector('.presentation-export-fallback input:checked')).not.toBeNull();
+          expect(dom.window.document.querySelector('script[data-presentation-slide-data]')).toBeNull();
+        }
         const policy = dom.window.document.querySelector('meta[http-equiv="Content-Security-Policy"]');
         if (allowRemote) expect(policy).toBeNull();
         else {
@@ -228,6 +236,19 @@ describe('HTML export with real built assets', () => {
         const page = browser.window.document;
         await vi.waitFor(() => expect(page.getElementById('ams-portable-controls')?.hidden).toBe(false), { timeout: 10000 });
         expect(Reflect.get(browser.window, 'injected')).toBeUndefined();
+        const controls = page.getElementById('ams-portable-controls')!;
+        const saveHtml = page.querySelector<HTMLButtonElement>('#ams-save-html')!;
+        const saveMarkdown = page.querySelector<HTMLButtonElement>('#ams-save-markdown')!;
+        if (mode === 'presentation') {
+          expect(controls.parentElement?.classList.contains('presentation-bottom-bar-tabs')).toBe(true);
+          expect(saveHtml.classList.contains('presentation-tab')).toBe(true);
+          expect(saveMarkdown.classList.contains('presentation-tab')).toBe(true);
+          expect(saveHtml.querySelector('svg path')?.getAttribute('d')).not.toBe(saveMarkdown.querySelector('svg path')?.getAttribute('d'));
+        } else {
+          expect(controls.parentElement).toBe(page.body);
+          expect(saveHtml.classList.contains('presentation-tab')).toBe(false);
+          expect(saveMarkdown.classList.contains('presentation-tab')).toBe(false);
+        }
         if (!allowRemote) {
           page.dispatchEvent(new browser.window.Event('securitypolicyviolation'));
           expect(page.getElementById('ams-portable-resource-warning')!.textContent).toContain('blocked');
@@ -245,7 +266,10 @@ describe('HTML export with real built assets', () => {
         const unload = new browser.window.Event('beforeunload', { cancelable: true });
         browser.window.dispatchEvent(unload);
         expect(unload.defaultPrevented).toBe(true);
-        page.querySelector<HTMLButtonElement>('#ams-save-html')!.click();
+        const notesTab = page.querySelector<HTMLButtonElement>('.presentation-tab[data-panel="notes"]');
+        notesTab?.click();
+        saveHtml.click();
+        if (notesTab) expect(notesTab.classList.contains('is-active')).toBe(true);
         expect(downloads).toHaveLength(1);
         expect(openLink).not.toHaveBeenCalled();
         const savedHtml = await downloads[0].text();
@@ -260,7 +284,8 @@ describe('HTML export with real built assets', () => {
           expect(saved.window.document.querySelector<HTMLTemplateElement>('template[data-ams-portable-notices]')!.content.textContent).toContain('launder@1.7.1');
           expect(!!saved.window.document.querySelector('meta[http-equiv="Content-Security-Policy"]')).toBe(!allowRemote);
         } finally { saved.window.close(); }
-        page.querySelector<HTMLButtonElement>('#ams-save-markdown')!.click();
+        saveMarkdown.click();
+        if (notesTab) expect(notesTab.classList.contains('is-active')).toBe(true);
         expect(readReviewComments(await downloads[1].text()).comments[0].body).toBe('Edited offline');
         expect(page.getElementById('ams-portable-status')!.textContent).toContain('Confirm that your browser saved');
         if (!allowRemote) expect(page.getElementById('ams-portable-resource-warning')!.textContent).toContain('blocked');

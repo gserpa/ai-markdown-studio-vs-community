@@ -1,5 +1,5 @@
 
-[data-review-ui] {
+[data-review-ui]:not(.presentation-tab) {
   font: 13px/1.4 var(--vscode-font-family, sans-serif);
   color: var(--vscode-editorWidget-foreground, #222);
 }
@@ -10,10 +10,6 @@
   z-index: 50;
   display: flex;
   gap: 4px;
-}
-
-.md-review-slide-toolbar {
-  position: static;
 }
 
 .md-review-tab-icon {

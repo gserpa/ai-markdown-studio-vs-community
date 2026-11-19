@@ -40,11 +40,8 @@
   const toolbar = make('div', 'md-review-toolbar');
   const overlays = make('div', 'md-review-overlays');
   toolbar.dataset.reviewUi = overlays.dataset.reviewUi = '';
-  const presentationToolbar = root.querySelector('.presentation-header-controls');
   const presentation = root.matches('.presentation-preview');
   const standalone = bridge.reviewStandalone === true;
-  // Review navigation is provided by the VS Code title bar and sidebar.
-  if (presentationToolbar) toolbar.classList.add('md-review-slide-toolbar');
   document.body.append(overlays);
 
   let reviewPanel;
@@ -96,7 +93,6 @@
   overlays.append(markers, list, popover, status);
 
   let state;
-  let enabled = false;
   let selection;
   let editing;
   let reattach;
@@ -141,9 +137,6 @@
     toolbar.append(listButton);
     document.body.append(toolbar);
   }
-  const runButton = button('✦', () => send('run'), 'Run AI Review');
-
-
   function send(action, details = {}) {
     if (pending || !state) return;
     status.textContent = '';
@@ -169,12 +162,7 @@
   }
 
   function refresh() {
-    const count = state.comments.filter(comment => comment.state === 'open' && comment.includeInAi && comment.placement).length;
     listButton.hidden = state.comments.length === 0;
-    const label = count === 1 ? 'Run AI Review for 1 comment' : 'Run AI Review for ' + count + ' comments';
-    runButton.hidden = !enabled || !count;
-    runButton.title = label;
-    runButton.setAttribute('aria-label', label);
     if (!list.hidden) renderList();
     if (reviewPanel) {
       visibilityButton.textContent = commentsVisible ? 'Hide Review Comments' : 'Show Review Comments';
@@ -563,9 +551,6 @@
     } else if (data?.command === 'revealReviewComment') {
       const comment = state.comments.find(item => item.id === data.id);
       if (comment) openComment(comment);
-    } else if (data?.command === 'reviewAvailability') {
-      enabled = data.enabled === true;
-      refresh();
     } else if (data?.command === 'beginReviewReattach') {
       beginReattach(data.id);
     } else if (data?.command === 'reviewResult' && pending?.requestId === data.requestId) {

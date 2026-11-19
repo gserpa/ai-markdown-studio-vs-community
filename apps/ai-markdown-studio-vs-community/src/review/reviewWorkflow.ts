@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import * as vscode from 'vscode';
 import { lineOffsets, readReviewComments, reviewRangeLines, writeReviewComments, type ReviewComment, type ReviewRange } from '@mfo/core';
-import { createReviewActionHandler, createReviewCommentActions, type ReviewRequest } from '@mfo/review';
-import { areAiFeaturesEnabled, ensureAiFeaturesEnabled, getAiAccessState } from '../ai/aiConsent';
+import { createReviewActionHandler, type ReviewRequest } from '@mfo/review';
+import { ensureAiFeaturesEnabled, getAiAccessState } from '../ai/aiConsent';
 import { hasConfiguredCopilotAccount } from '../ai/copilotAvailability';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
 import { shouldGenerateWithLanguageModel } from '../generate/generationMode';
@@ -64,73 +64,48 @@ export function attachReviewPreview(
   const panels = reviewPanels.get(key) ?? new Set<vscode.WebviewPanel>();
   panels.add(panel);
   reviewPanels.set(key, panels);
-  let ready = false;
-  let generation = 0;
   let pendingReattach: string | undefined;
-  const postAvailability = async () => {
-    if (!ready) return;
-    const current = ++generation;
-    const enabled = areAiFeaturesEnabled() && await hasConfiguredCopilotAccount().catch(() => false);
-    if (current === generation && ready) {
-      await panel.webview.postMessage({ command: 'reviewAvailability', enabled });
+  const messageSubscription = panel.webview.onDidReceiveMessage(async (request: ReviewRequest) => {
+    if (request?.command !== 'previewReview') return;
+    const document = getDocument();
+    if (request.action === 'ready') {
+      await panel.webview.postMessage({ command: 'reviewVisibility', visible: !hiddenReviewComments.has(key) });
+      if (pendingReattach) await panel.webview.postMessage({ command: 'beginReviewReattach', id: pendingReattach });
+      return;
     }
-  };
-  const disposables = [
-    vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('markdownAiStudio.aiAccess')) void postAvailability();
-    }),
-    vscode.authentication.onDidChangeSessions(event => {
-      if (event.provider.id === 'github' || event.provider.id === 'github-enterprise') void postAvailability();
-    }),
-    panel.webview.onDidReceiveMessage(async (request: ReviewRequest) => {
-      if (request?.command !== 'previewReview') return;
-      const document = getDocument();
-      if (request.action === 'ready') {
-        ready = true;
-        await panel.webview.postMessage({ command: 'reviewVisibility', visible: !hiddenReviewComments.has(key) });
-        await postAvailability();
-        if (pendingReattach) await panel.webview.postMessage({ command: 'beginReviewReattach', id: pendingReattach });
-        return;
-      }
-      if (request.action === 'cancelReattach') {
-        pendingReattach = undefined;
-        return;
-      }
-      const result = { command: 'reviewResult', requestId: request.requestId };
-      try {
-        if (request.action === 'toggleVisibility') {
-          await toggleReviewVisibility(key);
-        } else {
-          const sessionId = request.sessionId;
-          const preview = typeof sessionId === 'string' && request.version === document.version
-            ? updater.getReviewPage(sessionId, document.version) : undefined;
-          if (!preview || typeof sessionId !== 'string') throw new Error('The preview changed. Select the text again.');
-          if (request.action === 'run') {
-            if (!areAiFeaturesEnabled()) throw new Error('Integrated AI review is disabled.');
-            await vscode.commands.executeCommand(reviewCommand, document.uri, 'integrated');
-          } else {
-            await applyReviewAction({
-              markdown: document.getText(), version: document.version, sessionId, preview,
-            }, request, async (updated, expectedVersion, expectedSessionId) => {
-              if (!updater.getReviewPage(expectedSessionId, expectedVersion)) {
-                throw new Error('The preview changed. Select the text again.');
-              }
-              await replaceDocument(document, expectedVersion, updated, true);
-              return true;
-            });
-            if (request.action === 'edit') pendingReattach = request.afterEdit === 'reattach' ? request.id : undefined;
-            else if (request.action === 'reattach') pendingReattach = undefined;
+    if (request.action === 'cancelReattach') {
+      pendingReattach = undefined;
+      return;
+    }
+    const result = { command: 'reviewResult', requestId: request.requestId };
+    try {
+      if (request.action === 'toggleVisibility') {
+        await toggleReviewVisibility(key);
+      } else {
+        const sessionId = request.sessionId;
+        const preview = typeof sessionId === 'string' && request.version === document.version
+          ? updater.getReviewPage(sessionId, document.version) : undefined;
+        if (!preview || typeof sessionId !== 'string') throw new Error('The preview changed. Select the text again.');
+        await applyReviewAction({
+          markdown: document.getText(), version: document.version, sessionId, preview,
+        }, request, async (updated, expectedVersion, expectedSessionId) => {
+          if (!updater.getReviewPage(expectedSessionId, expectedVersion)) {
+            throw new Error('The preview changed. Select the text again.');
           }
-        }
-        await panel.webview.postMessage(result);
-        if (request.action === 'edit' && pendingReattach) {
-          await panel.webview.postMessage({ command: 'beginReviewReattach', id: pendingReattach });
-        }
-      } catch (error) {
-        await panel.webview.postMessage({ ...result, error: errorMessage(error) });
+          await replaceDocument(document, expectedVersion, updated, true);
+          return true;
+        });
+        if (request.action === 'edit') pendingReattach = request.afterEdit === 'reattach' ? request.id : undefined;
+        else if (request.action === 'reattach') pendingReattach = undefined;
       }
-    }),
-  ];
+      await panel.webview.postMessage(result);
+      if (request.action === 'edit' && pendingReattach) {
+        await panel.webview.postMessage({ command: 'beginReviewReattach', id: pendingReattach });
+      }
+    } catch (error) {
+      await panel.webview.postMessage({ ...result, error: errorMessage(error) });
+    }
+  });
   panel.onDidChangeViewState(event => {
     if (event.webviewPanel.active) {
       activeReviewUri = getDocument().uri;
@@ -142,18 +117,16 @@ export function attachReviewPreview(
     void refreshReviewView?.();
   }
   panel.onDidDispose(() => {
-    ready = false;
     panels.delete(panel);
     if (!panels.size) {
       reviewPanels.delete(key);
       if (activeReviewUri?.toString() === key) activeReviewUri = undefined;
     }
     void refreshReviewView?.();
-    for (const disposable of disposables) disposable.dispose();
+    messageSubscription.dispose();
   });
 }
 
-export const updateComments = createReviewCommentActions(readPreviewSelection);
 const applyReviewAction = createReviewActionHandler(readPreviewSelection);
 
 export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined): vscode.Disposable {

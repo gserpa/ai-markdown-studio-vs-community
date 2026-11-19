@@ -1,7 +1,7 @@
 import { JSDOM } from 'jsdom';
 import type { PreviewThemeRegistry } from '@mfo/preview-web';
 
-type PortableShellOptions = {
+export type PortableShellOptions = {
   markdown: string;
   mode: 'document' | 'presentation';
   htmlName: string;
@@ -41,103 +41,60 @@ export function validatePortableMediaResources(renderedHtml: string, allowRemote
   }
 }
 
-export function buildPortableReviewShell(renderedHtml: string, options: PortableShellOptions): string {
-  const dom = new JSDOM(renderedHtml);
-  try {
-    const document = dom.window.document;
-    for (const script of document.querySelectorAll('script')) {
-      if (!script.hasAttribute('data-ams-export-asset')) {
-        script.remove();
-      } else {
-        script.type = 'application/x-ams-runtime';
-        script.textContent = safeScript(script.textContent ?? '');
-      }
-    }
-    if (!options.allowRemoteResources) {
-      const policy = document.createElement('meta');
-      policy.httpEquiv = 'Content-Security-Policy';
-      policy.content = "img-src data: blob:; media-src file: data: blob:; font-src data: blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'unsafe-eval' blob: data:; worker-src blob: data:; connect-src 'none'; frame-src 'none'; object-src 'none'";
-      const warning = document.createElement('script');
-      warning.textContent = `document.addEventListener('securitypolicyviolation', () => {
+export function portableReviewHead(options: PortableShellOptions): { policy: string; style: string } {
+  const policy = options.allowRemoteResources ? '' : `<meta http-equiv="Content-Security-Policy" content="img-src data: blob:; media-src file: data: blob:; font-src data: blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'unsafe-eval' blob: data:; worker-src blob: data:; connect-src 'none'; frame-src 'none'; object-src 'none'">
+<script>document.addEventListener('securitypolicyviolation', () => {
   const show = () => { document.getElementById('ams-portable-resource-warning').textContent =
     'Some resources were blocked by the portable resource policy. The preview may be incomplete.'; };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show, { once: true });
   else show();
-});`;
-      document.head.prepend(policy, warning);
-    }
-    const style = document.createElement('style');
-    style.textContent = options.reviewCss + `
+});</script>`;
+  const style = `<style>${options.reviewCss}
 #ams-portable-controls { position: fixed; top: 8px; left: 8px; z-index: 90; display: flex; gap: 6px; }
 #ams-portable-controls[hidden] { display: none; }
-#ams-portable-controls button { cursor: pointer; padding: 5px 8px; }
+#ams-portable-controls:not(.presentation-portable-downloads) button { cursor: pointer; padding: 5px 8px; }
+#ams-portable-controls.presentation-portable-downloads { position: static; display: contents; }
+#ams-portable-controls.presentation-portable-downloads[hidden] { display: none; }
 #ams-portable-status { position: fixed; bottom: 8px; left: 8px; z-index: 90; color: #222; background: #fff; }
 #ams-portable-resource-warning { position: fixed; bottom: 40px; left: 8px; z-index: 90; color: #222; background: #fff; }
 #ams-portable-status:empty, #ams-portable-resource-warning:empty { display: none; }
-@media print { #ams-portable-controls, #ams-portable-status, #ams-portable-resource-warning { display: none; } }
-`;
-    document.head.append(style);
-    const controls = document.createElement('nav');
-    controls.id = 'ams-portable-controls';
-    controls.setAttribute('aria-label', 'Portable review downloads');
-    controls.hidden = true;
-    for (const [id, label] of [['ams-save-html', 'Save reviewed HTML'], ['ams-save-markdown', 'Download Markdown']]) {
-      const button = document.createElement('button');
-      button.id = id;
-      button.type = 'button';
-      button.textContent = label;
-      controls.append(button);
-    }
-    const status = document.createElement('div');
-    status.id = 'ams-portable-status';
-    status.setAttribute('role', 'status');
-    status.textContent = 'Initializing portable review...';
-    const resourceWarning = document.createElement('div');
-    resourceWarning.id = 'ams-portable-resource-warning';
-    resourceWarning.setAttribute('role', 'status');
-    document.body.append(controls, status, resourceWarning);
-    const notices = document.createElement('template');
-    notices.setAttribute('data-ams-portable-notices', '');
-    notices.content.textContent = options.notices;
-    document.body.append(notices);
-    const data = (id: string, value: unknown) => {
-      const element = document.createElement('script');
-      element.type = 'application/octet-stream';
-      element.id = id;
-      element.textContent = Buffer.from(JSON.stringify(value), 'utf8').toString('base64');
-      document.body.append(element);
-    };
-    data('ams-portable-source', options.markdown);
-    data('ams-portable-config', {
-      mode: options.mode,
-      htmlName: options.htmlName,
-      markdownName: options.markdownName,
-      presentationTheme: options.presentationTheme,
-      themeMode: options.themeMode,
-      presentationThemes: {
-        ...options.presentationThemes,
-        themes: [...options.presentationThemes.themes],
-        aliases: [...options.presentationThemes.aliases],
-      },
-    });
-    const runtime = (name: string, text: string) => {
-      const element = document.createElement('script');
-      element.type = 'application/x-ams-runtime';
-      element.dataset.amsRuntime = name;
-      element.textContent = safeScript(text);
-      document.body.append(element);
-    };
-    runtime('renderer', options.renderer);
-    runtime('review', options.reviewUi);
-    const host = document.createElement('script');
-    host.textContent = safeScript(options.host);
-    document.body.append(host);
-    return dom.serialize();
-  } finally {
-    dom.window.close();
-  }
+@media print { #ams-portable-controls, #ams-portable-controls.presentation-portable-downloads, #ams-portable-status, #ams-portable-resource-warning { display: none; } }
+</style>`;
+  return { policy, style };
 }
 
-function safeScript(source: string): string {
+export function portableReviewBody(options: PortableShellOptions, escapeHtml: (value: string) => string): string {
+  const button = (id: string, label: string, path: string) => options.mode === 'presentation'
+    ? `<button id="${id}" type="button" class="presentation-tab"><svg class="presentation-icon md-review-tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"></path></svg>${label}</button>`
+    : `<button id="${id}" type="button">${label}</button>`;
+  const data = (id: string, value: unknown) =>
+    `<script type="application/octet-stream" id="${id}">${Buffer.from(JSON.stringify(value), 'utf8').toString('base64')}</script>`;
+  const config = {
+    mode: options.mode,
+    htmlName: options.htmlName,
+    markdownName: options.markdownName,
+    presentationTheme: options.presentationTheme,
+    themeMode: options.themeMode,
+    presentationThemes: {
+      ...options.presentationThemes,
+      themes: [...options.presentationThemes.themes],
+      aliases: [...options.presentationThemes.aliases],
+    },
+  };
+  return `<nav id="ams-portable-controls" aria-label="Portable review downloads" hidden>
+${button('ams-save-html', 'Save reviewed HTML', 'M6 3h9l3 3v15H6z M9 3v6h6V3 M9 21v-7h6v7')}
+${button('ams-save-markdown', 'Download Markdown', 'M12 3v12 M8 11l4 4 4-4 M5 17v4h14v-4')}
+</nav>
+<div id="ams-portable-status" role="status">Initializing portable review...</div>
+<div id="ams-portable-resource-warning" role="status"></div>
+<template data-ams-portable-notices>${escapeHtml(options.notices)}</template>
+${data('ams-portable-source', options.markdown)}
+${data('ams-portable-config', config)}
+<script type="application/x-ams-runtime" data-ams-runtime="renderer">${safeScript(options.renderer)}</script>
+<script type="application/x-ams-runtime" data-ams-runtime="review">${safeScript(options.reviewUi)}</script>
+<script>${safeScript(options.host)}</script>`;
+}
+
+export function safeScript(source: string): string {
   return source.replace(/<\/script/giu, '<\\/script');
 }

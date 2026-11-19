@@ -69,6 +69,14 @@
     const root = template.content.firstElementChild;
     if (!root) throw new Error('The portable preview could not be rendered.');
     previousRoot.replaceWith(template.content);
+    const controls = document.getElementById('ams-portable-controls');
+    if (config.mode === 'presentation') {
+      const tabs = root.querySelector('.presentation-bottom-bar-tabs');
+      if (!tabs) throw new Error('The presentation controls are missing.');
+      controls.classList.add('presentation-portable-downloads');
+      tabs.append(controls);
+      controls.addEventListener('click', event => event.stopPropagation());
+    }
     window.__previewBridge = {
       ...api.createPortableReviewBridge(host, root, sessionId),
       openLink: href => { if (href) window.open(href, '_blank', 'noopener,noreferrer'); },
@@ -98,7 +106,7 @@
       try { saveDownload(config.markdownName, 'text/markdown;charset=utf-8', host.snapshot().markdown); }
       catch (error) { status.textContent = 'Could not request Markdown download: ' + (error instanceof Error ? error.message : String(error)); }
     });
-    document.getElementById('ams-portable-controls').hidden = false;
+    controls.hidden = false;
     status.textContent = '';
   })().catch(error => {
     status.textContent = 'Cannot initialize portable review: ' + (error instanceof Error ? error.message : String(error));
