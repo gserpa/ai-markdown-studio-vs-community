@@ -2,7 +2,28 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFile, stat } from 'node:fs/promises';
 
 vi.mock('node:fs/promises', () => ({ readFile: vi.fn(), stat: vi.fn() }));
-import { HtmlExportAssetCache, selectReferencedPreviewFonts } from '../../../src/export/html/htmlExportAssets';
+import { HtmlExportAssetCache, inlineKatexFontUrls, selectReferencedPreviewFonts } from '../../../src/export/html/htmlExportAssets';
+
+describe('portable KaTeX fonts', () => {
+  it('embeds every fallback with its media type and reads repeat references once', async () => {
+    vi.mocked(readFile).mockReset().mockResolvedValue(Buffer.from('font'));
+    vi.mocked(stat).mockReset().mockResolvedValue({ size: 4, mtimeMs: 1, ctimeMs: 1 } as never);
+    const cache = new HtmlExportAssetCache();
+    const load = vi.fn((name: string) => cache.fontDataUri(name));
+    const css = '@font-face{src:url(fonts/KaTeX_Main.woff2) format("woff2"),url("./fonts/KaTeX_Main.woff") format("woff"),url(\'fonts/KaTeX_Main.ttf\') format("truetype")} .a{src:url(fonts/KaTeX_Main.woff2)}';
+    const result = await inlineKatexFontUrls(css, load);
+    expect(result).not.toContain('fonts/');
+    expect(result.match(/data:font\/woff2;base64,Zm9udA==/gu)).toHaveLength(2);
+    expect(result).toContain('data:font/woff;base64,Zm9udA==');
+    expect(result).toContain('data:font/ttf;base64,Zm9udA==');
+    expect(load).toHaveBeenCalledTimes(3);
+  });
+
+  it('reports a missing font instead of emitting a relative URL', async () => {
+    const load = vi.fn().mockRejectedValue(new Error('missing font'));
+    await expect(inlineKatexFontUrls('src:url(fonts/KaTeX_Main.woff2)', load)).rejects.toThrow('missing font');
+  });
+});
 
 const faces = ['Inter', 'Fraunces', 'JetBrains Mono'].map(family =>
   [400, 700].map(weight => `@font-face { font-family: '${family}'; font-weight: ${weight}; src: url('../fonts/${family}-${weight}.woff2'); }`).join('\n'),

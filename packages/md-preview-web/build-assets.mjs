@@ -66,6 +66,11 @@ assets.previewReviewRuntime = writeTextAsset(
   readFileSync(path.join(assetsRoot, 'preview-review.js'), 'utf8'),
   'text/javascript; charset=utf-8',
 );
+assets.portableReviewHostRuntime = writeTextAsset(
+  'portable-review-host-runtime.js',
+  readFileSync(path.join(assetsRoot, 'portable-review-host.js'), 'utf8'),
+  'text/javascript; charset=utf-8',
+);
 assets.previewReviewStyle = writeTextAsset(
   'preview-review.css',
   readFileSync(path.join(assetsRoot, 'preview-review.css'), 'utf8'),
@@ -87,6 +92,33 @@ assets.previewThemeRuntime = writeTextAsset(
   'text/javascript; charset=utf-8',
 );
 
+const portableReview = await build({
+  absWorkingDir: packageRoot,
+  entryPoints: ['src/portableReviewRenderer.ts'],
+  bundle: true, minify: true, format: 'iife', globalName: '__mfoPortableReview',
+  platform: 'browser', target: 'es2022', write: false, metafile: true, legalComments: 'eof',
+  plugins: [{
+    name: 'portable-review-node-theme-stubs',
+    setup(builder) {
+      builder.onResolve({ filter: /^node:(fs|path)$/ }, args => ({
+        path: args.path, namespace: 'portable-review-node-theme',
+      }));
+      builder.onLoad({ filter: /.*/, namespace: 'portable-review-node-theme' }, args => {
+        const names = args.path === 'node:fs' ? ['readdirSync', 'readFileSync', 'existsSync'] : ['join'];
+        return { contents: names.map(name => `export function ${name}() { throw new Error('Filesystem theme loading is unavailable in portable review.'); }`).join('\n') };
+      });
+    },
+  }],
+});
+assert(Object.values(portableReview.metafile.outputs).every(output => output.imports.every(entry => !entry.external)), 'Portable review must bundle every import locally.');
+assets.portableReviewRenderer = writeTextAsset('portable-review-renderer.js', portableReview.outputFiles[0].text, 'text/javascript; charset=utf-8');
+assets.portableReviewNotices = writeTextAsset('portable-review-notices.txt', [
+  `Markdown AI Studio Community\n${readFileSync(path.resolve(packageRoot, '../../LICENSE'), 'utf8')}`,
+  ...bundledLicenses(portableReview.metafile.inputs),
+  ...['LICENSE-Inter-OFL-1.1.txt', 'LICENSE-Fraunces-OFL-1.1.txt', 'LICENSE-JetBrains-Mono-OFL-1.1.txt']
+    .map(name => `${name}\n${readFileSync(path.join(assetsRoot, 'fonts', name), 'utf8')}`),
+].join('\n\n' + '='.repeat(72) + '\n\n') + '\n', 'text/plain; charset=utf-8');
+
 const visualizations = await build({
   absWorkingDir: packageRoot,
   entryPoints: ['src/visualizations/browser.mts'],
@@ -97,20 +129,9 @@ assert(Object.values(visualizations.metafile.outputs).every(output => output.imp
 assets.previewVisualizationsRuntime = writeTextAsset('preview-visualizations-runtime.js', visualizations.outputFiles[0].text, 'text/javascript; charset=utf-8');
 
 // Ship complete license texts for the packages actually included in the bundle.
-const bundledDirectories = [...new Set(Object.keys(visualizations.metafile.inputs).flatMap(input => {
-  const match = [...input.matchAll(/(?:^|\/)node_modules\/((?:@[^/]+\/)?[^/]+)/gu)].at(-1);
-  return match ? [input.slice(0, match.index + match[0].length)] : [];
-}))].sort();
-const notices = bundledDirectories.map(directory => {
-  const dependencyRoot = path.resolve(packageRoot, directory);
-  const dependency = JSON.parse(readFileSync(path.join(dependencyRoot, 'package.json'), 'utf8'));
-  const licenses = readdirSync(dependencyRoot).filter(name => /^(?:licen[cs]e|copying|notice)(?:\.|$)/iu.test(name)).sort();
-  assert(licenses.length, `Missing bundled license: ${dependency.name}`);
-  return `${dependency.name}@${dependency.version} (${dependency.license})\n${licenses.map(name => readFileSync(path.join(dependencyRoot, name), 'utf8')).join('\n')}`;
-});
 assets.previewVisualizationsNotices = writeTextAsset('preview-visualizations-notices.txt', [
   `Markdown AI Studio Community\n${readFileSync(path.resolve(packageRoot, '../../LICENSE'), 'utf8')}`,
-  ...notices,
+  ...bundledLicenses(visualizations.metafile.inputs),
 ].join('\n\n' + '='.repeat(72) + '\n\n') + '\n', 'text/plain; charset=utf-8');
 
 const documentRegistry = loadDocumentThemeRegistryFromDirectories([
@@ -164,6 +185,25 @@ function writeTextAsset(suggestedPath, source, mediaType) {
 
 function contentHash(source) {
   return createHash('sha256').update(source).digest('base64url').slice(0, 18);
+}
+
+function bundledLicenses(inputs) {
+  const directories = [...new Set(Object.keys(inputs).filter(input => !input.startsWith('(disabled):')).flatMap(input => {
+    const match = [...input.matchAll(/(?:^|\/)node_modules\/((?:@[^/]+\/)?[^/]+)/gu)].at(-1);
+    return match ? [input.slice(0, match.index + match[0].length)] : [];
+  }))].sort();
+  return directories.map(directory => {
+    const root = path.resolve(packageRoot, directory);
+    const dependency = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
+    const licenses = readdirSync(root).filter(name => /^(?:unlicense|licen[cs]e|copying|notice)(?:[.-]|$)/iu.test(name)).sort();
+    const texts = licenses.map(name => readFileSync(path.join(root, name), 'utf8'));
+    // The published 1.7.1 package omits https://github.com/apostrophecms/apostrophe/blob/main/packages/launder/LICENSE.md.
+    if (!texts.length && dependency.name === 'launder' && dependency.version === '1.7.1') {
+      texts.push(readFileSync(path.join(packageRoot, 'licenses', 'launder-1.7.1-LICENSE.md'), 'utf8'));
+    }
+    assert(texts.length, `Missing bundled license: ${dependency.name}@${dependency.version}`);
+    return `${dependency.name}@${dependency.version} (${dependency.license})\n${texts.join('\n')}`;
+  });
 }
 
 function rewriteGeneratedFontUrls(source) {

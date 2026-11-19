@@ -27,7 +27,9 @@ import { loadPreviewAssetManifest, matchingThemeAsset, previewAssetUri, selectPr
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { ThemeCssArtifact } from '@mfo/preview-web';
-import { HtmlExportAssetCache, selectReferencedPreviewFonts } from './htmlExportAssets';
+import { HtmlExportAssetCache, inlineKatexFontUrls, selectReferencedPreviewFonts } from './htmlExportAssets';
+import { preparePortableMarkdown } from './portableMarkdown';
+import { buildPortableReviewShell, validatePortableMediaResources } from './portableReviewHtml';
 
 export type ExportMode = 'theme' | 'paper' | 'paper-borderless';
 type VisualizationExportAssets = { runtime: string; notices: string };
@@ -48,6 +50,15 @@ export async function buildExportHtmlArtifact(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
   options: HtmlArtifactOptions,
+): Promise<HtmlArtifact> {
+  return buildRenderedHtmlArtifact(extensionUri, document, options);
+}
+
+async function buildRenderedHtmlArtifact(
+  extensionUri: vscode.Uri,
+  document: vscode.TextDocument,
+  options: HtmlArtifactOptions,
+  portableSource?: string,
 ): Promise<HtmlArtifact> {
   const exportMode = options.exportMode ?? 'theme';
   const manifest = loadPreviewAssetManifest(extensionUri);
@@ -77,12 +88,14 @@ export async function buildExportHtmlArtifact(
     const previewCss = await inlinePreviewFontUrls(selectedCss, extensionUri);
     return {
       previewCss,
-      katexCss: rewriteKatexCssUrls(katexCss), mermaidScript,
+      katexCss: portableSource === undefined ? rewriteKatexCssUrls(katexCss) : await inlineKatexFontUrls(
+        katexCss, name => exportAssets.fontDataUri(resolveExtensionNodeModulesUri(extensionUri, 'katex', 'dist', 'fonts', name).fsPath),
+      ), mermaidScript,
       previewThemeRuntimeScript, previewCoreRuntimeScript, modeRuntimeScript, themeCss, visualizations,
     };
   };
 
-  const source = stripReviewComments(document.getText());
+  const source = stripReviewComments(portableSource ?? document.getText());
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const renderer = createMarkdownRenderer({
     resolveImageSrc: (rawPath) => {
@@ -158,6 +171,40 @@ export async function buildExportHtmlArtifact(
   return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
 }
 
+export async function buildPortableReviewHtml(extensionUri: vscode.Uri, document: vscode.TextDocument): Promise<string> {
+  const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
+  const markdown = await preparePortableMarkdown(document.getText(), source => {
+    if (!allowRemoteResources && !/^(?:data:image\/|https?:)/iu.test(source)) {
+      const uri = resolveDocumentResource(document, source);
+      if (/^[/\\]{2}/u.test(source) || (uri?.scheme === 'file' && (uri.authority || /^[/\\]{2}/u.test(uri.fsPath)))) {
+        throw new Error('Remote resources are disabled in settings.');
+      }
+    }
+    return imageDataUri(document, source, allowRemoteResources);
+  });
+  const artifact = await buildRenderedHtmlArtifact(extensionUri, document, { assetMode: 'inline' }, markdown);
+  validatePortableMediaResources(artifact.html, allowRemoteResources);
+  const manifest = loadPreviewAssetManifest(extensionUri);
+  const readAsset = (name: string) => {
+    const descriptor = manifest.assets[name];
+    if (!descriptor) throw new Error('Missing portable review asset: ' + name);
+    return exportAssets.readText(previewAssetUri(extensionUri, descriptor).fsPath, descriptor.contentHash);
+  };
+  const [renderer, reviewUi, reviewCss, host, notices] = await Promise.all([
+    readAsset('portableReviewRenderer'), readAsset('previewReviewRuntime'),
+    readAsset('previewReviewStyle'), readAsset('portableReviewHostRuntime'), readAsset('portableReviewNotices'),
+  ]);
+  const name = path.parse(document.fileName).name;
+  return buildPortableReviewShell(artifact.html, {
+    markdown, mode: isMarkdownPresentationSource(markdown) ? 'presentation' : 'document',
+    htmlName: `${name}.html`, markdownName: `${name}.md`,
+    presentationThemes: loadPreviewThemeRegistryForDocument(extensionUri, document.uri),
+    presentationTheme: getResolvedPresentationPreviewThemeSetting(document.uri),
+    themeMode: getHostThemeClass() === 'vscode-dark' ? 'dark' : 'light',
+    allowRemoteResources, renderer, reviewUi, reviewCss, host, notices,
+  });
+}
+
 export async function exportMarkdownAsHtml(extensionUri: vscode.Uri, document: vscode.TextDocument): Promise<vscode.Uri | undefined> {
   const defaultTarget = vscode.Uri.file(path.join(path.dirname(document.uri.fsPath), `${path.parse(document.fileName).name}.html`));
   const targetUri = await vscode.window.showSaveDialog({
@@ -172,7 +219,7 @@ export async function exportMarkdownAsHtml(extensionUri: vscode.Uri, document: v
     return undefined;
   }
 
-  const html = await buildExportHtmlString(extensionUri, document);
+  const html = await buildPortableReviewHtml(extensionUri, document);
   await writeFile(targetUri.fsPath, html, 'utf8');
   return targetUri;
 }

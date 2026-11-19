@@ -46,6 +46,12 @@ describe('embedMarkdownImages', () => {
     expect(result.markdown).toContain('`<img src="ignored.png">`');
   });
 
+  it('decodes HTML entities without treating backslashes as Markdown escapes', async () => {
+    const load = vi.fn(async () => data);
+    await embedMarkdownImages('<img src="\\\\server\\share\\a&amp;b.png">', load);
+    expect(load).toHaveBeenCalledWith('\\\\server\\share\\a&b.png');
+  });
+
   it('skips existing embedded images and leaves failed links intact', async () => {
     const result = await embedMarkdownImages('![embedded](' + data + ')\n\n![missing](missing.png)\n\n![ok](ok.png)', async (source) => {
       if (source === 'missing.png') throw new Error('File not found');

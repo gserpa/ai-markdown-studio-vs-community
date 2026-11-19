@@ -11,7 +11,7 @@ export const vegaLiteAdapter: VisualizationAdapter = {
     signal.throwIfAborted();
     const spec = block.spec;
     const imageUrls = chartImageUrls(spec);
-    if (!allowRemoteImages && imageUrls.some(url => url.startsWith('https:'))) {
+    if (!allowRemoteImages && imageUrls.some(url => new URL(url).protocol === 'https:')) {
       throw new Error('Remote chart images are disabled by allowRemoteResources. Use an inline raster image or enable remote resources.');
     }
     await Promise.all(imageUrls.map(url => new Promise<void>((resolve, reject) => {
@@ -96,7 +96,7 @@ export const vegaLiteAdapter: VisualizationAdapter = {
           sanitize: async (uri: string, options?: { context?: string }) => {
             if (options?.context !== 'image') throw new Error('Visualization navigation is disabled.');
             const href = validateChartImageUrl(uri);
-            if (!imageUrls.includes(href) || href.startsWith('https:') && !allowRemoteImages) throw new Error('Chart image is outside the approved image policy.');
+            if (!imageUrls.includes(href) || new URL(href).protocol === 'https:' && !allowRemoteImages) throw new Error('Chart image is outside the approved image policy.');
             return { href, crossOrigin: 'anonymous' };
           },
           http: async () => { throw new Error('External visualization resources are disabled.'); },

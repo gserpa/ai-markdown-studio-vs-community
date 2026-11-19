@@ -202,6 +202,24 @@ describe('review command AI access and prompt copy', () => {
     })).toThrow('Enter a comment');
   });
 
+  it('rejects a preview session that expires before the edit is applied', async () => {
+    let receive!: (request: unknown) => Promise<void>;
+    let dispose!: () => void;
+    const postMessage = vi.fn().mockResolvedValue(true);
+    const panel = {
+      active: false,
+      webview: { postMessage, onDidReceiveMessage: (callback: typeof receive) => { receive = callback; return mock.disposable(); } },
+      onDidChangeViewState: mock.disposable,
+      onDidDispose: (callback: () => void) => { dispose = callback; },
+    };
+    const updater = { getReviewPage: vi.fn().mockReturnValueOnce({ version: 1, blocks: [] }).mockReturnValueOnce(undefined) };
+    attachReviewPreview(panel as never, updater as never, () => mock.document as never);
+    await receive({ command: 'previewReview', sessionId: 'session', version: 1, requestId: 1, action: 'resolve', id: '1' });
+    expect(mock.applyEdit).not.toHaveBeenCalled();
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({ command: 'reviewResult', error: 'The preview changed. Select the text again.' }));
+    dispose();
+  });
+
   it('restores reattachment after a preview reload only after the edit succeeds', async () => {
     let receive!: (request: unknown) => Promise<void>;
     let dispose!: () => void;

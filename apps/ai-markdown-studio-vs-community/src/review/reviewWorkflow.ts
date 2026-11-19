@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import * as vscode from 'vscode';
 import { lineOffsets, readReviewComments, reviewRangeLines, writeReviewComments, type ReviewComment, type ReviewRange } from '@mfo/core';
+import { createReviewActionHandler, createReviewCommentActions, type ReviewRequest } from '@mfo/review';
 import { areAiFeaturesEnabled, ensureAiFeaturesEnabled, getAiAccessState } from '../ai/aiConsent';
 import { hasConfiguredCopilotAccount } from '../ai/copilotAvailability';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
@@ -17,19 +18,6 @@ const reviewPanels = new Map<string, Set<vscode.WebviewPanel>>();
 const hiddenReviewComments = new Set<string>();
 let activeReviewUri: vscode.Uri | undefined;
 let refreshReviewView: (() => Promise<void>) | undefined;
-
-type ReviewRequest = {
-  command?: string;
-  action?: string;
-  sessionId?: string;
-  requestId?: number;
-  version?: number;
-  id?: string;
-  body?: string;
-  includeInAi?: boolean;
-  selection?: unknown;
-  afterEdit?: 'resolve' | 'reopen' | 'delete' | 'reattach';
-};
 
 type EligibleComment = {
   id: string;
@@ -113,18 +101,23 @@ export function attachReviewPreview(
         if (request.action === 'toggleVisibility') {
           await toggleReviewVisibility(key);
         } else {
-          const preview = typeof request.sessionId === 'string' && request.version === document.version
-            ? updater.getReviewPage(request.sessionId, document.version) : undefined;
-          if (!preview) throw new Error('The preview changed. Select the text again.');
+          const sessionId = request.sessionId;
+          const preview = typeof sessionId === 'string' && request.version === document.version
+            ? updater.getReviewPage(sessionId, document.version) : undefined;
+          if (!preview || typeof sessionId !== 'string') throw new Error('The preview changed. Select the text again.');
           if (request.action === 'run') {
             if (!areAiFeaturesEnabled()) throw new Error('Integrated AI review is disabled.');
             await vscode.commands.executeCommand(reviewCommand, document.uri, 'integrated');
           } else {
-            const raw = document.getText();
-            const stored = readReviewComments(raw);
-            if (stored.error) throw new Error(stored.error);
-            const comments = updateComments(stored.markdown, stored.comments, preview, request);
-            await replaceDocument(document, request.version!, writeReviewComments(raw, comments), true);
+            await applyReviewAction({
+              markdown: document.getText(), version: document.version, sessionId, preview,
+            }, request, async (updated, expectedVersion, expectedSessionId) => {
+              if (!updater.getReviewPage(expectedSessionId, expectedVersion)) {
+                throw new Error('The preview changed. Select the text again.');
+              }
+              await replaceDocument(document, expectedVersion, updated, true);
+              return true;
+            });
             if (request.action === 'edit') pendingReattach = request.afterEdit === 'reattach' ? request.id : undefined;
             else if (request.action === 'reattach') pendingReattach = undefined;
           }
@@ -160,52 +153,8 @@ export function attachReviewPreview(
   });
 }
 
-export function updateComments(
-  markdown: string, comments: ReviewComment[],
-  preview: NonNullable<ReturnType<PreviewDocumentUpdater['getReviewPage']>>, request: ReviewRequest,
-): ReviewComment[] {
-  const body = typeof request.body === 'string' ? request.body.trim() : '';
-  if ((request.action === 'add' || request.action === 'edit') && (!body || body.length > 20_000)) {
-    throw new Error('Enter a comment of up to 20,000 characters.');
-  }
-  if (request.action === 'add') {
-    const range = readPreviewSelection(markdown, preview, request.selection);
-    const next = comments.reduce((max, comment) => Math.max(max, Number(comment.id)), 0) + 1;
-    if (!Number.isSafeInteger(next)) throw new Error('No more review comment IDs are available.');
-    const id = String(next);
-    return [...comments, { id, body, range, includeInAi: request.includeInAi !== false, state: 'open' }];
-  }
-  const index = comments.findIndex(comment => comment.id === request.id);
-  if (index < 0) throw new Error('This comment is no longer in the document.');
-  const comment = comments[index];
-  switch (request.action) {
-    case 'edit':
-      comments[index] = { ...comment, body, includeInAi: request.includeInAi !== false };
-      if (request.afterEdit === 'resolve') comments[index].state = 'resolved';
-      else if (request.afterEdit === 'reopen') comments[index].state = 'open';
-      else if (request.afterEdit === 'delete') comments.splice(index, 1);
-      else if (request.afterEdit !== undefined && request.afterEdit !== 'reattach') throw new Error('Unknown review action.');
-      break;
-    case 'toggle':
-      comments[index] = { ...comment, includeInAi: request.includeInAi === true };
-      break;
-    case 'resolve':
-      comments[index] = { ...comment, state: 'resolved' };
-      break;
-    case 'reopen':
-      comments[index] = { ...comment, state: 'open' };
-      break;
-    case 'delete':
-      comments.splice(index, 1);
-      break;
-    case 'reattach':
-      comments[index] = { ...comment, range: readPreviewSelection(markdown, preview, request.selection) };
-      break;
-    default:
-      throw new Error('Unknown review action.');
-  }
-  return comments;
-}
+export const updateComments = createReviewCommentActions(readPreviewSelection);
+const applyReviewAction = createReviewActionHandler(readPreviewSelection);
 
 export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined): vscode.Disposable {
   const drafts = new Map<string, Draft>();

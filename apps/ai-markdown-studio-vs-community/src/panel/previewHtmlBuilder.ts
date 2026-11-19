@@ -1,9 +1,9 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { JSDOM } from 'jsdom';
-import { createMarkdownRenderer, readReviewComments, stripMarkdownFrontMatter } from '@mfo/core';
+import { createMarkdownRenderer, readReviewComments } from '@mfo/core';
 import { isMarkdownPresentationSource, extractMarkdownFrontMatterMeta } from '@mfo/core';
-import { renderPresentationPreview } from '@mfo/preview-web';
+import { renderDocumentPreviewBody, renderPresentationPreview } from '@mfo/preview-web';
 import { buildPreviewThemeCssArtifact, buildDocumentThemeCssArtifact, resolveDocumentThemeSelection } from '@mfo/preview-web';
 import { getResolvedDocumentPreviewThemeSetting } from '../document/documentPreviewThemeSettings';
 import { loadPreviewThemeRegistryForDocument } from '../presentation/previewThemeSupport';
@@ -90,11 +90,6 @@ export function buildPreviewPage(
   });
   const renderMarkdown = (markdown: string, lines?: readonly (number | undefined)[]) =>
     renderReviewMarkdown(renderer, markdown, reviewEnabled ? lines : undefined, nonce);
-  const renderDocumentMarkdown = (markdown: string) => {
-    const lines = markdown.split(/\r?\n/u);
-    const offset = source.split(/\r?\n/u).length - lines.length;
-    return renderMarkdown(markdown, lines.map((_line, index) => offset + index + 1));
-  };
   let previewMode: 'presentation' | 'document' = isPresentation ? 'presentation' : 'document';
   let inlineThemeStylesheet = '';
   let themeStylesheetUri = '';
@@ -105,7 +100,7 @@ export function buildPreviewPage(
   let documentMermaidTransparentBackgroundLight = false;
   let documentMermaidTransparentBackgroundDark = false;
   let documentThemeName = 'auto';
-  let previewBody = buildDocumentPreviewBody(source, renderDocumentMarkdown, showFrontMatter);
+  let previewBody = buildDocumentPreviewBody(source, renderMarkdown, showFrontMatter);
 
   if (!isPresentation) {
     try {
@@ -144,7 +139,7 @@ export function buildPreviewPage(
       previewMode = 'document';
       previewBody = buildDocumentPreviewBody(
         source,
-        renderDocumentMarkdown,
+        renderMarkdown,
         showFrontMatter,
         '<p><strong>Presentation preview failed to render.</strong> Showing the source as a document preview instead.</p>',
       );
@@ -273,15 +268,14 @@ export function buildFrontMatterPanel(source: string): string {
 
 export function buildDocumentPreviewBody(
   source: string,
-  renderMarkdown: (markdown: string) => string,
+  renderMarkdown: Parameters<typeof renderDocumentPreviewBody>[1],
   showFrontMatter: boolean,
   documentPrefix = '',
 ): string {
   const frontMatter = showFrontMatter
     ? `<aside class="frontmatter-shell">${buildFrontMatterPanel(source)}</aside>`
     : '';
-  const documentBody = `${documentPrefix}${renderMarkdown(stripMarkdownFrontMatter(source))}`;
-  return `<div class="document-preview-shell">${frontMatter}<div class="document-preview-scroll"><main class="markdown-body">${documentBody}</main></div></div>`;
+  return renderDocumentPreviewBody(source, renderMarkdown, { beforeScroll: frontMatter, beforeContent: documentPrefix });
 }
 
 function formatFrontMatterValue(value: unknown): string {

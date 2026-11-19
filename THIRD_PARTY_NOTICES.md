@@ -15,7 +15,7 @@ license texts are distributed alongside the fonts under
 | Library | License |
 | --- | --- |
 | markdown-it | MIT |
-| markdown-it-anchor | MIT |
+| markdown-it-anchor | Unlicense |
 | markdown-it-emoji | MIT |
 | markdown-it-footnote | MIT |
 | markdown-it-task-lists | ISC |
@@ -34,6 +34,12 @@ license texts are distributed alongside the fonts under
 | argparse (via js-yaml/mermaid) | Python-2.0 |
 
 ## Bundled fonts
+
+Complete license texts for the portable review renderer, its transitive
+dependencies, and bundled fonts ship in the generated
+`portable-review-notices.*.txt` asset and in portable review HTML. The published
+`launder@1.7.1` package omits its MIT license file; the matching upstream license
+is retained under `packages/md-preview-web/licenses/`.
 
 Complete license texts for the chart bundle and its transitive dependencies ship
 in the generated `preview-visualizations-notices.*.txt` asset. The preview asset
@@ -57,7 +63,7 @@ full license texts ship under `packages/md-preview-web/assets/fonts/`:
 
 ## License compatibility
 
-All bundled licenses (MIT, ISC, BSD-2-Clause, BSD-3-Clause, Apache-2.0, Python-2.0, and
+All bundled licenses (MIT, ISC, BSD-2-Clause, BSD-3-Clause, Apache-2.0, Unlicense, Python-2.0, and
 SIL OFL-1.1 for fonts) are permissive and compatible with distribution of this extension
 under the MIT License.
 

@@ -1,6 +1,12 @@
 import MarkdownIt from 'markdown-it';
+import { JSDOM } from 'jsdom';
 
-export type ImageEmbeddingResult = { markdown: string; embedded: number; failures: Array<{ source: string; message: string }> };
+export type ImageEmbeddingResult = {
+  markdown: string;
+  embedded: number;
+  failures: Array<{ source: string; message: string }>;
+  replacements: Array<{ start: number; end: number; value: string }>;
+};
 type ImageUse = { start: number; end: number; source: string; replacement: (data: string) => string };
 
 /** Rewrite parsed image uses only, leaving code, normal links and reference definitions intact. */
@@ -55,8 +61,10 @@ export async function embedMarkdownImages(markdown: string, load: (source: strin
       const prefix = attr[0].slice(attr[0].indexOf('=') + 1);
       const start = tag.index! + valueOffset + prefix.indexOf(value);
       if (!value || map[start] === undefined || map[start + value.length - 1] === undefined) continue;
+      const source = JSDOM.fragment('<img' + attr[0] + '>').firstElementChild?.getAttribute('src');
+      if (source == null) throw new Error('Cannot parse the HTML image source.');
       uses.push({ start: map[start], end: map[start + value.length - 1] + 1,
-        source: md.utils.unescapeAll(value), replacement: (data) => data });
+        source, replacement: (data) => data });
     }
   };
   ruleParser.inline.ruler.enableOnly(['html_inline']);
@@ -84,7 +92,7 @@ export async function embedMarkdownImages(markdown: string, load: (source: strin
   });
   md.parse(markdown, {});
   const cache = new Map<string, Promise<string>>();
-  const replacements: Array<{ start: number; end: number; value: string }> = [];
+  const replacements: ImageEmbeddingResult['replacements'] = [];
   const failures: ImageEmbeddingResult['failures'] = [];
   for (const use of uses) {
     if (/^data:image\//iu.test(use.source)) continue;
@@ -98,7 +106,7 @@ export async function embedMarkdownImages(markdown: string, load: (source: strin
   }
   let result = markdown;
   for (const edit of replacements.sort((a, b) => b.start - a.start)) result = result.slice(0, edit.start) + edit.value + result.slice(edit.end);
-  return { markdown: result, embedded: replacements.length, failures };
+  return { markdown: result, embedded: replacements.length, failures, replacements };
 }
 
 function mapContent(token: { content: string }, range: [number, number], lines: string[], offsets: number[], mappedUntil: number): number[] {

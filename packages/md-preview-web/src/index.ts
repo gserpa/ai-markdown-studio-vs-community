@@ -30,6 +30,8 @@ export type {
 } from './presentation/previewThemeRegistry';
 
 // Document theme registry
+export { renderDocumentPreviewBody } from './document/documentPreviewBody';
+
 export {
   loadDocumentThemeRegistryFromDirectories,
   loadDocumentThemeRegistryFromData,

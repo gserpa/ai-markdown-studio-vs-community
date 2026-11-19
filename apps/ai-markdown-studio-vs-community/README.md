@@ -167,7 +167,7 @@ and verification commands.
 - **Basic DOCX export** - export rendered Markdown to DOCX through the Community DOCX path.
 - **Front matter toggle** - show or hide a rendered front-matter summary in the preview.
 - **Table formatting and preview layouts** - auto-align Markdown tables with a single command, also available through **Format Document**; preview tables can stay wide and scroll horizontally or wrap to the available width.
-- **HTML export** - save the rendered document as a standalone, self-contained HTML file.
+- **HTML export** - share a reviewable HTML snapshot of a document or presentation.
 - **Command launcher** - quick access to the extension's main actions from the editor title bar. The launcher is extensible: when a compatible feature extension such as AI Markdown Studio Pro is installed, its commands appear alongside the Community commands.
 - **Command palette settings shortcut** - jump directly to the extension's settings with **Change Settings...**.
 - **Single-tab per file** - always one tab per file; switching modes closes the other surface.
@@ -284,13 +284,13 @@ Set the resource-scoped **`markdownAiStudio.documentTableLayout`** setting to ch
 
 ### HTML Export
 
-Run **Export Markdown as HTML** from the Command Palette or the command list to save the current Markdown file as a self-contained `.html` file. The exported file includes the extension's styling and rendered content for sharing outside VS Code.
+Run **Export Markdown as HTML** from the Command Palette or the command list to create a reviewable `.html` file for sharing outside VS Code. It contains the complete Markdown snapshot, front matter, and comments, all of which recipients can inspect. The original file is not changed.
 
-Local images are always embedded in the exported HTML, including presentation images and HTML image tags. Moving the HTML file to another folder or computer keeps those images available. If a local image cannot be read, export reports the failing image instead of creating an incomplete portable preview. Image and Mermaid zoom viewers work in the exported file as well.
+Linked Markdown and HTML images are embedded in the snapshot; permitted remote images are downloaded during export. If an image cannot be embedded, export reports the failure. Comments whose markers occur inside image syntax that needs rewriting must be moved or reattached first. Media, chart images, and custom theme resources are not all embedded, so the file is not guaranteed to be fully offline.
 
-To embed images in the Markdown itself, run **Embed Linked Images in File**. It replaces image uses with embedded data, supports local files and remote URLs, and preserves normal links, code examples, and reference definitions. Save the Markdown afterward; the edit can be undone. Images that cannot be loaded keep their original links and are reported. Remote downloads respect **`markdownAiStudio.allowRemoteResources`**. Run this command before exporting if remote images must also travel with the HTML file; otherwise remote image URLs remain remote.
+In a JavaScript-enabled desktop browser, select text to add comments and use **Review Comments** to navigate and manage them. Desktop Chrome and Edge have been tested. **Save reviewed HTML** downloads a new reviewable file; **Download Markdown** downloads the current annotated Markdown. The browser may prompt or cancel the download, and the page cannot confirm it was saved. It warns before leaving with changes where supported. Neither download updates the original automatically.
 
-The setting **`markdownAiStudio.allowRemoteResources`** controls whether remote `http(s)` resources referenced in your Markdown may be loaded. Set it to `false` in privacy-sensitive environments.
+The setting **`markdownAiStudio.allowRemoteResources`** controls remote image downloads and other resources. When disabled, the portable file blocks remote browser resources and warns if content is blocked. See the [user guide](https://github.com/gserpa/ai-markdown-studio-vs-community/blob/HEAD/apps/ai-markdown-studio-vs-community/docs/user/user-guide.md#html-export) for browser and resource limitations.
 
 ### AI-Assisted Generation
 

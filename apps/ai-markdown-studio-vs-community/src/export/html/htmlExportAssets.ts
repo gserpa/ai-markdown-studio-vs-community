@@ -16,7 +16,8 @@ export class HtmlExportAssetCache {
     const version = await this.fileVersion(filePath);
     return this.cached(this.fonts, JSON.stringify([filePath, version]), async () => {
       const bytes = await readFile(filePath);
-      const mediaType = filePath.toLowerCase().endsWith('.woff2') ? 'font/woff2' : 'application/octet-stream';
+      const format = /\.(woff2?|ttf)$/iu.exec(filePath)?.[1].toLowerCase();
+      const mediaType = format ? `font/${format}` : 'application/octet-stream';
       return `data:${mediaType};base64,${bytes.toString('base64')}`;
     });
   }
@@ -36,6 +37,14 @@ export class HtmlExportAssetCache {
     void pending.catch(() => { if (cache.get(key) === pending) cache.delete(key); });
     return pending;
   }
+}
+
+/** Inline the relative font references in the bundled KaTeX stylesheet only. */
+export async function inlineKatexFontUrls(css: string, loadFont: (name: string) => Promise<string>): Promise<string> {
+  const fontUrl = /url\(\s*(['"]?)(?:\.\/)?fonts\/([a-z0-9_-]+\.(?:woff2?|ttf))\1\s*\)/giu;
+  const names = new Set([...css.matchAll(fontUrl)].map(match => match[2]));
+  const fonts = new Map(await Promise.all([...names].map(async name => [name, await loadFont(name)] as const)));
+  return css.replace(fontUrl, (_match, _quote: string, name: string) => `url("${fonts.get(name)}")`);
 }
 
 /** Filter only the simple, generated bundled font-face blocks, retaining every weight of a referenced family. */

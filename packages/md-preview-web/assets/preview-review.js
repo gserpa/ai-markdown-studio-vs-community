@@ -42,6 +42,7 @@
   toolbar.dataset.reviewUi = overlays.dataset.reviewUi = '';
   const presentationToolbar = root.querySelector('.presentation-header-controls');
   const presentation = root.matches('.presentation-preview');
+  const standalone = bridge.reviewStandalone === true;
   // Review navigation is provided by the VS Code title bar and sidebar.
   if (presentationToolbar) toolbar.classList.add('md-review-slide-toolbar');
   document.body.append(overlays);
@@ -136,6 +137,10 @@
     if (!list.hidden) renderList();
   }, 'Review Comments');
   listButton.setAttribute('aria-expanded', 'false');
+  if (standalone && !presentation) {
+    toolbar.append(listButton);
+    document.body.append(toolbar);
+  }
   const runButton = button('✦', () => send('run'), 'Run AI Review');
 
 
@@ -269,7 +274,8 @@
     });
     const label = make('label', 'md-review-ai-option');
     label.append('Include in AI review', check);
-    header.append(title, label);
+    header.append(title);
+    if (!standalone) header.append(label);
     const actions = make('div', 'md-review-actions');
     const tools = make('div', 'md-review-comment-tools');
     const saveActions = make('div', 'md-review-save-actions');
@@ -544,7 +550,8 @@
         status.textContent = 'Select the text to reattach this comment. Press Escape to cancel.';
       }),
     );
-    card.append(label, actions);
+    if (!standalone) card.append(label);
+    card.append(actions);
     return card;
   }
 

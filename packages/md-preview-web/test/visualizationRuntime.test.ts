@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { createMarkdownRenderer, sanitizeRenderedHtml } from '@mfo/core';
 import { createVisualizationRuntime } from '../src/visualizations/visualizationRuntime.mjs';
+import { vegaLiteAdapter } from '../src/visualizations/vegaLiteAdapter.mjs';
 import type { VisualizationAdapter, VisualizationHandle } from '../src/visualizations/visualizationTypes';
 
 const chart = (title = 'Debt') => ({ title, data: { values: [{ year: '2025', debt: 89.2 }] }, mark: 'bar', encoding: { x: { field: 'year', type: 'ordinal' }, y: { field: 'debt', type: 'quantitative' } } });
@@ -34,6 +35,48 @@ function setup(customMount?: VisualizationAdapter['mount']) {
 }
 
 describe('visualization coordinator', () => {
+  it.each([
+    'https://example.invalid/image.png',
+    'HTTPS://example.invalid/image.png',
+    ' \nhttps://example.invalid/image.png',
+  ])('blocks normalized remote chart image URLs before loading: %s', async image => {
+    const { dom, document, runtime } = setup(vegaLiteAdapter.mount);
+    const requests: string[] = [];
+    Object.defineProperty(dom.window, 'Image', { value: class {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      crossOrigin = '';
+      set src(value: string) { requests.push(value); queueMicrotask(() => this.onerror?.()); }
+    } });
+    document.querySelector('code')!.textContent = JSON.stringify({
+      data: { values: [{ image }] }, mark: 'image', encoding: { url: { field: 'image', type: 'nominal' } },
+    });
+    await runtime.refresh();
+    expect(requests).toEqual([]);
+    expect(document.querySelector('.md-visualization-error-message')!.textContent).toContain('Remote chart images are disabled');
+  });
+
+  it.each([
+    ['HTTPS://example.invalid/image.png', true],
+    ['data:image/png;base64,AA==', false],
+  ])('permits approved chart image loading: %s', async (image, allowRemote) => {
+    const { dom, document, runtime } = setup(vegaLiteAdapter.mount);
+    const requests: string[] = [];
+    Object.defineProperty(dom.window, 'Image', { value: class {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      crossOrigin = '';
+      set src(value: string) { requests.push(value); queueMicrotask(() => this.onerror?.()); }
+    } });
+    document.body.dataset.mdChartRemoteImages = String(allowRemote);
+    document.querySelector('code')!.textContent = JSON.stringify({
+      data: { values: [{ image }] }, mark: 'image', encoding: { url: { field: 'image', type: 'nominal' } },
+    });
+    await runtime.refresh();
+    expect(requests).toEqual([image]);
+    expect(document.querySelector('.md-visualization-error-message')!.textContent).toContain('could not be loaded');
+  });
+
   it('passes the trusted image setting to adapters and rechecks it after changes', async () => {
     const { document, runtime, mount } = setup();
     await runtime.refresh();

@@ -286,13 +286,19 @@ Set **`markdownAiStudio.documentTableLayout`** to choose a document's default la
 
 ## HTML export
 
-Run **Export Markdown as HTML** to save the current document as a self-contained `.html` file you can share or open in any browser. The export bundles the extension's rendered styling so the output looks like the preview.
+Run **Export Markdown as HTML** to create a reviewable `.html` file for a document or presentation. It contains a copy of the complete Markdown, front matter, and review comments, along with the preview renderer and styling. Anyone receiving the HTML can inspect that embedded source, including comments and metadata, even if they are not visible in the rendered view. Review sensitive content before sharing.
+
+The export embeds linked Markdown and HTML images into the copy, including permitted remote images; it does not change or save the original Markdown. Export fails with details if an image cannot be embedded or review metadata is invalid. If review markers occur inside image syntax that must be rewritten, move or reattach the comment outside that syntax before exporting.
+
+Open the file in a JavaScript-enabled desktop browser. Desktop Chrome and Edge have been tested. Select rendered text and choose **Add Review Comment**; use **Review Comments** to navigate existing comments. The document list or presentation panel provides edit, resolve, reopen, delete, and reattach actions. Browser review does not run AI; existing AI-inclusion metadata is preserved.
+
+Use **Save reviewed HTML** to download a new reviewable copy, or **Download Markdown** to download the current Markdown with comments and embedded images. These are separate files: they do not overwrite or sync the original. The browser may show a Save As dialog, block downloads, or let you cancel them. Confirm the file was actually saved; the page cannot verify that and keeps its unsaved-change warning after requesting a download. It may warn when you leave after changes, where the browser permits. Keep your own copy before closing.
 
 If an embedded viewer blocks presentation scripts, the export offers limited slide navigation without JavaScript. Some viewers may restrict even these controls; open the file in a browser if needed. Script-rendered diagrams and charts, animations, and other interactive features require JavaScript.
 
 Supported [visualization blocks](./visualizations.md) render as interactive charts and HTML metric cards in exported documents and presentations. The chart runtime is bundled locally. Chart source stays available if JavaScript is disabled or rendering fails.
 
-Whether remote resources referenced in the document may be loaded is governed by **`markdownAiStudio.allowRemoteResources`** (see below).
+**`markdownAiStudio.allowRemoteResources`** controls whether remote images may be downloaded during export. With it disabled, remote media and network-share images are rejected, and the HTML blocks remote theme resources and other browser requests with a warning if content is blocked. Local video and track files are not embedded, and local non-embedded posters may be blocked. With remote resources enabled, chart images, media, or custom theme resources can still require network access; they are not guaranteed to work offline.
 
 ## DOCX export
 
@@ -322,7 +328,7 @@ Open settings with **Change Settings...**, or `Ctrl+,` and search for `markdownA
 AI Markdown Studio Community has no product account or server component and does not collect telemetry. Outbound network activity can occur in two user-controlled situations:
 
 - **AI commands:** after GitHub Copilot is configured in VS Code and you allow native generation, AI Markdown Studio may use the Copilot service already configured there for document generation, presentation generation, and AI Paste to Markdown. The content you provide is shared with that embedded AI service for processing. Copying a presentation prompt and installing the presentation skill are local operations; any content subsequently shared with Claude or another assistant is governed by that assistant and its configuration. AI Markdown Studio does not connect to another AI service or bring its own AI credentials. Only set **`markdownAiStudio.aiAccess`** to `enabled`, or accept a one-time disclosure from `ask`, if you are authorized to share content through the configured Copilot service.
-- **Remote resources:** previews and exported HTML can load resources that your Markdown explicitly references, such as an image at an `https://` URL.
+- **Remote resources:** previews and exported HTML can load resources referenced by Markdown, charts, media, or custom themes. Portable export downloads permitted linked images into its Markdown copy; other resources may still be requested when the HTML opens.
 
 To prevent that — for example when reviewing untrusted documents or working in a restricted environment — set:
 
