@@ -31,6 +31,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Added a script-free presentation navigation fallback for embedded HTML viewers that block or cannot initialize the presentation runtime.
 - Preserved intrinsic proportions and frames for presentation preview images, and corrected light/dark table colors and contrast across built-in presentation themes.
 
 ## [1.3.0] - 2026-10-24

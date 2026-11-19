@@ -175,7 +175,7 @@ describe('buildExportHtmlString', () => {
     } as never;
     for (const assetMode of ['inline', 'external'] as const) {
       vi.mocked(renderPresentationPreview).mockReturnValueOnce({
-        html: '<section class="presentation-preview"><img src="file:///C:/docs/local.png" data-source-src="local.png"></section>',
+        html: '<section class="presentation-preview"><div class="presentation-stage"><section class="presentation-slide"><img src="file:///C:/docs/local.png" data-source-src="local.png"></section></div></section>',
         themeSelection: { themeName: 'auto' },
       } as never);
       const artifact = await buildExportHtmlArtifact({ fsPath: 'C:/extension', scheme: 'file' } as never, document, { assetMode });
@@ -415,6 +415,17 @@ describe('buildExportHtmlString', () => {
     expect(html).not.toContain('preview-mode-document');
     expect(html).not.toContain('No `<!--slide:-->` marker is set');
     expect(html).not.toContain('marker is set, so this should render');
+    const dom = new JSDOM(html);
+    try {
+      const slides = dom.window.document.querySelectorAll('.presentation-stage > .presentation-slide');
+      const choices = dom.window.document.querySelectorAll<HTMLInputElement>('.presentation-export-fallback input');
+      expect(choices).toHaveLength(2);
+      expect(choices[0].checked).toBe(true);
+      expect(choices[1].value).toBe('1');
+      expect(slides[1].getAttribute('data-slide-index')).toBe('1');
+      expect([...slides].every(slide => !slide.hasAttribute('aria-hidden'))).toBe(true);
+      expect(html).toContain("document.body.dataset.amsPresentationReady = 'true'");
+    } finally { dom.window.close(); }
   });
 
   it('pins auto-theme presentation exports to the current VS Code dark mode when preview is dark', async () => {
@@ -610,7 +621,7 @@ describe('visualization HTML export', () => {
   function sourceFor(mode: 'document' | 'presentation') {
     if (mode === 'document') return chart + '\n\n' + metric;
     vi.mocked(renderPresentationPreview).mockReturnValueOnce({
-      html: '<section class="presentation-preview"><article class="markdown-body">' + sanitizeRenderedHtml(createMarkdownRenderer().render(chart + '\n\n' + metric)) + '</article></section>',
+      html: '<section class="presentation-preview"><div class="presentation-stage"><section class="presentation-slide"><article class="markdown-body">' + sanitizeRenderedHtml(createMarkdownRenderer().render(chart + '\n\n' + metric)) + '</article></section></div></section>',
       themeSelection: { themeName: 'auto' },
     } as never);
     return '---\ndocument: presentation\n---\n# Charts\n\n' + chart + '\n\n' + metric;

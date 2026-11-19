@@ -68,6 +68,15 @@ describe('prepareHtmlForBasicDocx', () => {
     expect(result).toContain('<pre><code class="language-mermaid">flowchart TD\nA--&gt;B</code></pre>');
     expect(result).not.toContain('class="mermaid"');
   });
+
+  it('omits script-free presentation navigation from basic DOCX content', () => {
+    const result = prepareHtmlForBasicDocx(
+      '<html><body><section class="presentation-slide"><h1>Slide</h1></section>'
+      + '<form class="presentation-export-fallback">Limited view: select a slide</form></body></html>',
+    );
+    expect(result).toContain('<h1>Slide</h1>');
+    expect(result).not.toContain('Limited view');
+  });
 });
 
 describe('inlineLocalFileImagesForBasicDocx', () => {

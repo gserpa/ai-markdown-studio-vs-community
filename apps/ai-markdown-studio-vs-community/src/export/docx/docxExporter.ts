@@ -40,6 +40,7 @@ export function prepareHtmlForBasicDocx(html: string): string {
   const { document } = dom.window;
   const contentRoot = document.querySelector('main.markdown-body') ?? document.body;
 
+  contentRoot.querySelectorAll('.presentation-export-fallback').forEach((navigation) => navigation.remove());
   contentRoot
     .querySelectorAll('div.mermaid, div.mermaid-rendered')
     .forEach((block) => replaceMermaidBlockWithCode(document, block));

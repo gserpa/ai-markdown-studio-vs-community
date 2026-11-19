@@ -371,6 +371,7 @@ function buildPresentationStandaloneHtml(input: {
   hostThemeClass: string;
   exportMode: ExportMode;
 }): string {
+  const fallback = buildPresentationExportFallback(input.body);
   return `<!DOCTYPE html>
 <html lang="en" data-md-host-scheme="auto"${input.hostThemeClass ? ` class="${escapeHtml(input.hostThemeClass)}"` : ''}>
 <head>
@@ -389,14 +390,20 @@ ${input.previewThemeCss}
   <style data-ams-export-asset="styles">
 ${getExportThemeCss()}
   </style>
+  <style data-ams-export-asset="styles">
+${fallback.css}
+  </style>
   ${input.exportMode !== 'theme' ? `<style data-ams-export-asset="styles">
 ${getPrinterFriendlyExportCss(input.exportMode)}
   </style>` : ''}
 </head>
 <body class="${escapeHtml(['preview-mode-presentation', input.hostThemeClass].filter(Boolean).join(' '))}" data-preview-mode="presentation" data-presentation-content-overflow="scaleToFit">
-  ${input.body}
+  ${fallback.body}
   <script>
 ${getStandalonePreviewBridgeScript()}
+document.addEventListener('md-slide-changed', () => {
+  document.body.dataset.amsPresentationReady = 'true';
+}, { once: true });
   </script>
   ${input.mermaidScript ? `<script data-ams-export-asset="mermaid">
 ${input.mermaidScript}
@@ -413,6 +420,100 @@ ${input.previewPresentationRuntimeScript}
   ${visualizationExportHtml(input.visualizations)}
 </body>
 </html>`;
+}
+
+function buildPresentationExportFallback(body: string): { body: string; css: string } {
+  const dom = new JSDOM(body);
+  const document = dom.window.document;
+  const stage = document.querySelector<HTMLElement>('.presentation-preview > .presentation-stage');
+  if (!stage) {
+    throw new Error('Cannot build presentation HTML without a slide stage.');
+  }
+  const slides = [...stage.querySelectorAll<HTMLElement>(':scope > .presentation-slide')];
+  if (!slides.length) {
+    throw new Error('Cannot build presentation HTML without slides.');
+  }
+
+  const navigation = document.createElement('form');
+  navigation.className = 'presentation-export-fallback';
+  navigation.setAttribute('aria-label', 'Slide navigation, limited view');
+  const heading = document.createElement('span');
+  heading.textContent = 'Limited view: select a slide';
+  navigation.append(heading);
+  for (const [index, slide] of slides.entries()) {
+    slide.dataset.slideIndex = String(index);
+    slide.removeAttribute('aria-hidden');
+    const label = document.createElement('label');
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'ams-export-slide';
+    radio.value = String(index);
+    if (index === 0) radio.setAttribute('checked', '');
+    radio.setAttribute('aria-label', `Slide ${index + 1}: ${slide.dataset.slideTitle || `Slide ${index + 1}`}`);
+    const number = document.createElement('span');
+    number.textContent = String(index + 1);
+    number.setAttribute('aria-hidden', 'true');
+    label.append(radio, number);
+    navigation.append(label);
+  }
+  stage.after(navigation);
+
+  const fallback = 'body.preview-mode-presentation:not([data-ams-presentation-ready])';
+  const selectionCss = slides.map((_, index) => {
+    const selected = `${fallback} .presentation-preview:has(> .presentation-export-fallback input[value="${index}"]:checked) > .presentation-stage > .presentation-slide`;
+    return `${selected} { display: none; }\n${selected}[data-slide-index="${index}"] { display: block; }`;
+  }).join('\n');
+  const css = `
+.presentation-export-fallback { display: none; }
+${fallback} .presentation-header-controls,
+${fallback} .presentation-bottom-bar { display: none; }
+${fallback} .presentation-export-fallback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: auto;
+  color: var(--vscode-editor-foreground);
+}
+${fallback} .presentation-export-fallback > span { flex: none; }
+${fallback} .presentation-export-fallback label { flex: none; cursor: pointer; }
+${fallback} .presentation-export-fallback input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+${fallback} .presentation-export-fallback label span {
+  display: block;
+  padding: 4px 10px;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+}
+${fallback} .presentation-export-fallback input:checked + span {
+  background: var(--presentation-accent);
+  color: var(--presentation-contrast);
+}
+${fallback} .presentation-export-fallback input:focus-visible + span {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+${fallback} .presentation-stage { container-type: size; }
+${selectionCss}
+${fallback} .presentation-frame.presentation-ratio-16-9 { width: min(100cqw, 177.7777778cqh); }
+${fallback} .presentation-frame.presentation-ratio-4-3 { width: min(100cqw, 133.3333333cqh); }
+${fallback} .presentation-frame .presentation-canvas {
+  width: 1280px;
+  height: 720px;
+  transform: scale(min(calc(100cqw / 1280px), calc(100cqh / 720px)));
+}
+${fallback} .presentation-frame.presentation-ratio-4-3 .presentation-canvas {
+  height: 960px;
+  transform: scale(min(calc(100cqw / 1280px), calc(100cqh / 960px)));
+}
+`;
+  const renderedBody = document.body.innerHTML;
+  dom.window.close();
+  return { body: renderedBody, css };
 }
 
 function visualizationExportHtml(assets: VisualizationExportAssets | undefined): string {

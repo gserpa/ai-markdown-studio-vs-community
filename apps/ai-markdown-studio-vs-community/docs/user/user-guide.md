@@ -288,6 +288,8 @@ Set **`markdownAiStudio.documentTableLayout`** to choose a document's default la
 
 Run **Export Markdown as HTML** to save the current document as a self-contained `.html` file you can share or open in any browser. The export bundles the extension's rendered styling so the output looks like the preview.
 
+If an embedded viewer blocks presentation scripts, the export offers limited slide navigation without JavaScript. Some viewers may restrict even these controls; open the file in a browser if needed. Script-rendered diagrams and charts, animations, and other interactive features require JavaScript.
+
 Supported [visualization blocks](./visualizations.md) render as interactive charts and HTML metric cards in exported documents and presentations. The chart runtime is bundled locally. Chart source stays available if JavaScript is disabled or rendering fails.
 
 Whether remote resources referenced in the document may be loaded is governed by **`markdownAiStudio.allowRemoteResources`** (see below).
