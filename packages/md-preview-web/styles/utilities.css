@@ -41,7 +41,7 @@ input[type='checkbox'] {
 
 .footnotes {
   margin-top: 32px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--md-preview-muted-color);
   font-size: 0.9em;
 }
 

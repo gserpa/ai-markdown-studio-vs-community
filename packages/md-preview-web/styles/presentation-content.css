@@ -82,6 +82,10 @@ body.preview-mode-presentation .presentation-slide-body pre::-webkit-scrollbar-t
   color: var(--presentation-emphasis-color, var(--presentation-body-color, inherit));
 }
 
+.presentation-slide-body .footnotes {
+  color: var(--presentation-muted-color, var(--presentation-body-color, inherit));
+}
+
 .presentation-slide-body h2,
 .presentation-slide-body h3,
 .presentation-slide-body h4 {

@@ -1404,7 +1404,7 @@ input[type='checkbox'] {
 
 .footnotes {
   margin-top: 32px;
-  color: var(--vscode-descriptionForeground);
+  color: var(--md-preview-muted-color);
   font-size: 0.9em;
 }
 
@@ -2231,6 +2231,10 @@ body.preview-mode-presentation .presentation-slide-body pre::-webkit-scrollbar-t
 
 .presentation-slide-body blockquote {
   color: var(--presentation-emphasis-color, var(--presentation-body-color, inherit));
+}
+
+.presentation-slide-body .footnotes {
+  color: var(--presentation-muted-color, var(--presentation-body-color, inherit));
 }
 
 .presentation-slide-body h2,
@@ -3293,11 +3297,14 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 }
 
 .presentation-bottom-panel {
+  --presentation-panel-scrollbar-track: color-mix(in srgb, var(--vscode-editor-background) 92%, var(--vscode-editor-foreground) 8%);
+  --presentation-panel-scrollbar-thumb: var(--vscode-scrollbarSlider-background, color-mix(in srgb, var(--vscode-editor-foreground) 28%, var(--vscode-editor-background) 72%));
+  --presentation-panel-scrollbar-thumb-hover: var(--vscode-scrollbarSlider-hoverBackground, color-mix(in srgb, var(--vscode-editor-foreground) 40%, var(--vscode-editor-background) 60%));
   padding: 12px 14px;
   overflow-y: auto;
   max-height: 180px;
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%) color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+  scrollbar-color: var(--presentation-panel-scrollbar-thumb) var(--presentation-panel-scrollbar-track);
 }
 
 .presentation-bottom-panel[data-panel="slides"] {
@@ -3313,17 +3320,17 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 }
 
 .presentation-bottom-panel::-webkit-scrollbar-track {
-  background: color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+  background: var(--presentation-panel-scrollbar-track);
 }
 
 .presentation-bottom-panel::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 28%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 72%);
+  background: var(--presentation-panel-scrollbar-thumb);
   border-radius: 999px;
-  border: 2px solid color-mix(in srgb, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 86%, transparent);
+  border: 2px solid var(--presentation-panel-scrollbar-track);
 }
 
 .presentation-bottom-panel::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--presentation-body-color, var(--presentation-contrast, #e5e7eb)) 40%, var(--presentation-panel-bg-soft, var(--presentation-panel-bg, #111827)) 60%);
+  background: var(--presentation-panel-scrollbar-thumb-hover);
 }
 
 .presentation-bottom-panel[hidden] {
