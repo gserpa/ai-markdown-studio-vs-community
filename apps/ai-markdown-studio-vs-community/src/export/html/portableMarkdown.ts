@@ -1,9 +1,12 @@
 import { readReviewComments } from '@mfo/core';
 import { embedMarkdownImages } from '../../images/embedMarkdownImages';
 
+export type RemoteImageFailure = { source: string; message: string };
+
 export async function preparePortableMarkdown(
   source: string,
   loadImage: (source: string) => Promise<string>,
+  onRemoteImageFallback?: (failures: readonly RemoteImageFailure[]) => void,
 ): Promise<string> {
   const before = readReviewComments(source);
   if (before.error) throw new Error(before.error);
@@ -23,7 +26,7 @@ export async function preparePortableMarkdown(
   const clean = await embedMarkdownImages(before.markdown.slice(cleanFrontMatter.length), load);
   const failures = [...result.failures, ...clean.failures]
     .filter((failure, index, all) => all.findIndex(item => item.source === failure.source) === index);
-  if (failures.length) {
+  if (failures.length && (!onRemoteImageFallback || failures.some(failure => !/^https?:\/\//iu.test(failure.source)))) {
     const details = failures.map(failure => `${failure.source}: ${failure.message}`).join('\n');
     throw new Error(`Cannot export portable HTML: could not embed image(s).\n${details}`);
   }
@@ -50,6 +53,7 @@ export async function preparePortableMarkdown(
     })) {
     throw new Error('Cannot export portable HTML: embedding images would change a review comment or its selection.');
   }
+  if (failures.length && onRemoteImageFallback) onRemoteImageFallback(failures);
   return markdown;
 }
 

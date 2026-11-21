@@ -13,7 +13,7 @@ vi.mock('vscode', async () => {
   const file = (fsPath: string): unknown => ({ fsPath, scheme: 'file', fragment: '', toString: () => pathToFileURL(fsPath).href, with: () => file(fsPath) });
   return {
     ColorThemeKind: { Light: 1, Dark: 2, HighContrast: 3, HighContrastLight: 4 },
-    window: { activeColorTheme: { kind: 1 }, showSaveDialog: vi.fn() },
+    window: { activeColorTheme: { kind: 1 }, showSaveDialog: vi.fn(), showWarningMessage: vi.fn() },
     extensions: { getExtension: () => undefined },
     workspace: {
       fs: { readFile: (uri: { fsPath: string }) => import('node:fs/promises').then(fs => fs.readFile(uri.fsPath)) },
@@ -98,6 +98,102 @@ describe('HTML export with real built assets', () => {
       await expect(exportMarkdownAsHtml(extension, document)).rejects.toThrow('missing.png');
       expect(existsSync(target)).toBe(false);
     } finally { dialog.mockRestore(); rmSync(directory, { recursive: true, force: true }); }
+  });
+
+  it('exports with remote links without an alert after a rate limit and does not retry the download', async () => {
+    const directory = mkdtempSync(path.join(tmpdir(), 'ams-export-remote-'));
+    const dialog = vi.spyOn(vscode.window, 'showSaveDialog');
+    const warning = vi.spyOn(vscode.window, 'showWarningMessage');
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 429 }));
+    try {
+      const fsPath = path.join(directory, 'document.md');
+      const target = path.join(directory, 'document.html');
+      const url = 'https://example.test/limited.png';
+      const source = `---\ndocument: presentation\n---\n# Test\n\nA target.\n\n![Remote](${url})\n\n![Local](pixel.png)\n`;
+      const start = source.indexOf('target');
+      const annotated = writeReviewComments(source, [
+        { id: '1', body: 'Review note', state: 'open', includeInAi: false, range: { start, end: start + 6 } },
+      ]);
+      writeFileSync(path.join(directory, 'pixel.png'), Buffer.from('89504e470d0a1a0a', 'hex'));
+      dialog.mockResolvedValue(vscode.Uri.file(target));
+      const document = { fileName: fsPath, uri: vscode.Uri.file(fsPath), getText: () => annotated };
+      expect((await exportMarkdownAsHtml(extension, document as never))?.fsPath).toBe(target);
+      const dom = new JSDOM(readFileSync(target, 'utf8'));
+      try {
+        const encoded = dom.window.document.getElementById('ams-portable-source')!.textContent!;
+        const stored = readReviewComments(JSON.parse(Buffer.from(encoded, 'base64').toString('utf8')));
+        expect(stored.markdown).toContain(`![Remote](${url})`);
+        expect(stored.markdown).toContain('data:image/png;base64,');
+        expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe('target');
+        expect(dom.window.document.querySelector(`img[src="${url}"]`)).not.toBeNull();
+        expect(dom.window.document.getElementById('ams-save-html')).not.toBeNull();
+      } finally { dom.window.close(); }
+      expect(warning).not.toHaveBeenCalled();
+      expect(log).toHaveBeenCalledWith(expect.stringContaining('Could not embed 1 remote image(s)'), ['Image download failed (HTTP 429).']);
+      expect(fetch).toHaveBeenCalledOnce();
+      expect(document.getText()).toBe(annotated);
+      const browser = new JSDOM(readFileSync(target, 'utf8'), {
+        runScripts: 'dangerously', pretendToBeVisual: true,
+        beforeParse(window) {
+          Object.assign(window, { TextEncoder, TextDecoder, Blob });
+          Object.defineProperty(window.crypto, 'subtle', { value: webcrypto.subtle });
+          window.HTMLElement.prototype.scrollIntoView = () => {};
+          Object.assign(window.Range.prototype, {
+            getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
+            getClientRects: () => [],
+          });
+        },
+      });
+      try {
+        const page = browser.window.document;
+        await vi.waitFor(() => expect(page.getElementById('ams-portable-controls')?.hidden).toBe(false), { timeout: 10000 });
+        expect(page.querySelector(`.presentation-slide img[src="${url}"]`)).not.toBeNull();
+        page.querySelector<HTMLButtonElement>('.md-review-panel-item')!.click();
+        const text = page.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
+        text.value = 'Edited review';
+        text.dispatchEvent(new browser.window.Event('input', { bubbles: true }));
+        page.querySelector<HTMLFormElement>('.md-review-composer')!.requestSubmit();
+        await vi.waitFor(() => expect(JSON.parse(page.querySelector('[data-review-state]')!.getAttribute('data-review-state')!).comments[0].body).toBe('Edited review'));
+      } finally { browser.window.close(); }
+    } finally { dialog.mockRestore(); warning.mockRestore(); log.mockRestore(); fetch.mockRestore(); rmSync(directory, { recursive: true, force: true }); }
+  });
+
+  it('does not overwrite a file when a local image also fails', async () => {
+    const directory = mkdtempSync(path.join(tmpdir(), 'ams-export-local-failure-'));
+    const dialog = vi.spyOn(vscode.window, 'showSaveDialog');
+    const warning = vi.spyOn(vscode.window, 'showWarningMessage');
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 429 }));
+    try {
+      const fsPath = path.join(directory, 'document.md');
+      const target = path.join(directory, 'document.html');
+      const document = { fileName: fsPath, uri: vscode.Uri.file(fsPath), getText: () => '# Test\n\n![Remote](https://example.test/image.png)\n\n![Local](missing.png)' } as never;
+      writeFileSync(target, 'existing file');
+      dialog.mockResolvedValue(vscode.Uri.file(target));
+      await expect(exportMarkdownAsHtml(extension, document)).rejects.toThrow('missing.png');
+      expect(warning).not.toHaveBeenCalled();
+      expect(readFileSync(target, 'utf8')).toBe('existing file');
+    } finally { dialog.mockRestore(); warning.mockRestore(); fetch.mockRestore(); rmSync(directory, { recursive: true, force: true }); }
+  });
+
+  it('does not fall back to remote links when remote resources are disabled', async () => {
+    const directory = mkdtempSync(path.join(tmpdir(), 'ams-export-remote-disabled-'));
+    const dialog = vi.spyOn(vscode.window, 'showSaveDialog');
+    const warning = vi.spyOn(vscode.window, 'showWarningMessage');
+    const fetch = vi.spyOn(globalThis, 'fetch');
+    const config = vi.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
+      get: (key: string, fallback: unknown) => key === 'allowRemoteResources' ? false : fallback,
+    } as never);
+    try {
+      const fsPath = path.join(directory, 'document.md');
+      const target = path.join(directory, 'document.html');
+      const document = { fileName: fsPath, uri: vscode.Uri.file(fsPath), getText: () => '# Test\n\n![Remote](https://example.test/image.png)' } as never;
+      dialog.mockResolvedValue(vscode.Uri.file(target));
+      await expect(exportMarkdownAsHtml(extension, document)).rejects.toThrow('Remote resources are disabled');
+      expect(warning).not.toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+      expect(existsSync(target)).toBe(false);
+    } finally { dialog.mockRestore(); warning.mockRestore(); fetch.mockRestore(); config.mockRestore(); rmSync(directory, { recursive: true, force: true }); }
   });
 
   it.each([

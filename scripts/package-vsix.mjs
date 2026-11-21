@@ -34,7 +34,15 @@ try {
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/README.md', 'README.md');
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/CHANGELOG.md', 'CHANGELOG.md');
   copyRepoEntryTo('apps/ai-markdown-studio-vs-community/SUPPORT.md', 'SUPPORT.md');
-  copyRepoEntryTo('apps/ai-markdown-studio-vs-community/docs', 'docs');
+  cpSync(
+    path.join(extensionAppRoot, 'docs'),
+    path.join(stageDirectory, 'docs'),
+    {
+      recursive: true,
+      dereference: true,
+      filter: sourcePath => path.resolve(sourcePath) !== path.join(extensionAppRoot, 'docs', 'user', 'security-review.md'),
+    },
+  );
 
   copyWebviewRuntimeAssets();
 

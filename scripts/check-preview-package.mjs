@@ -58,7 +58,9 @@ const portableNotices = files.get('extension/assets/preview/' + manifest.assets.
 for (const text of ['Markdown AI Studio Community', 'markdown-it@', 'launder@', 'Apostrophe Technologies', 'katex@', 'SIL OPEN FONT LICENSE']) {
   assert(portableNotices.includes(text), `Missing portable review notice: ${text}`);
 }
-for (const entry of required) {
+const skill = files.get(required[0])?.toString('utf8');
+assert(skill?.includes('references/visualizations.md'), `Missing packaged visualization reference link: ${required[0]}`);
+for (const entry of required.slice(1)) {
   const reference = files.get(entry)?.toString('utf8');
   assert(reference?.includes('```vega-lite') && reference.includes('```metric'), `Missing packaged visualization authoring reference: ${entry}`);
 }

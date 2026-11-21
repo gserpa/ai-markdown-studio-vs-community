@@ -30,12 +30,22 @@ const requiredPackageEntries = [
   'extension/assets/vendor/mermaid/dist/mermaid.esm.min.mjs',
   'extension/assets/vendor/mermaid/dist/mermaid.min.js',
   'extension/docs/user/visualizations.md',
+  'extension/docs/user/user-guide.md',
+  'extension/docs/user/authoring-reference.md',
+  'extension/docs/user/security-and-privacy.md',
+  'extension/docs/user/first-document.md',
+  'extension/docs/user/first-presentation.md',
+  'extension/docs/examples/dashboard-composition.md',
 ];
 
 const maxCompressedBytes = 58 * 1024 * 1024;
 const maxUncompressedBytes = 140 * 1024 * 1024;
 
 const forbiddenEntryRules = [
+  {
+    description: 'private maintainer documentation',
+    test: (fileName) => /(?:deployment-guide|security-review|html-export-size|bundled-components\/README)\.md$/u.test(fileName),
+  },
   {
     description: 'demo directories inside node_modules',
     test: (fileName) => fileName.includes('/node_modules/') && /\/demo(?:s)?\//u.test(fileName),

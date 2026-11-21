@@ -28,7 +28,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import type { ThemeCssArtifact } from '@mfo/preview-web';
 import { HtmlExportAssetCache, inlineKatexFontUrls, selectReferencedPreviewFonts } from './htmlExportAssets';
-import { preparePortableMarkdown } from './portableMarkdown';
+import { preparePortableMarkdown, type RemoteImageFailure } from './portableMarkdown';
 import { portableReviewBody, portableReviewHead, safeScript, validatePortableMediaResources, type PortableShellOptions } from './portableReviewHtml';
 
 export type ExportMode = 'theme' | 'paper' | 'paper-borderless';
@@ -174,7 +174,11 @@ async function buildRenderedHtmlArtifact(
   return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
 }
 
-export async function buildPortableReviewHtml(extensionUri: vscode.Uri, document: vscode.TextDocument): Promise<string> {
+export async function buildPortableReviewHtml(
+  extensionUri: vscode.Uri,
+  document: vscode.TextDocument,
+  onRemoteImageFallback?: (failures: readonly RemoteImageFailure[]) => void,
+): Promise<string> {
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio', document.uri).get<boolean>('allowRemoteResources', true);
   const markdown = await preparePortableMarkdown(document.getText(), source => {
     if (!allowRemoteResources && !/^(?:data:image\/|https?:)/iu.test(source)) {
@@ -184,7 +188,7 @@ export async function buildPortableReviewHtml(extensionUri: vscode.Uri, document
       }
     }
     return imageDataUri(document, source, allowRemoteResources);
-  });
+  }, allowRemoteResources ? onRemoteImageFallback : undefined);
   const manifest = loadPreviewAssetManifest(extensionUri);
   const readAsset = (name: string) => {
     const descriptor = manifest.assets[name];
@@ -221,7 +225,9 @@ export async function exportMarkdownAsHtml(extensionUri: vscode.Uri, document: v
     return undefined;
   }
 
-  const html = await buildPortableReviewHtml(extensionUri, document);
+  const html = await buildPortableReviewHtml(extensionUri, document, failures => {
+    console.warn(`[markdown-ai-studio] Could not embed ${failures.length} remote image(s); HTML export uses image links that require network access.`, failures.map(failure => failure.message));
+  });
   await writeFile(targetUri.fsPath, html, 'utf8');
   return targetUri;
 }

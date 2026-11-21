@@ -5,17 +5,12 @@ Metric blocks render as HTML cards. Chart blocks render as interactive SVG chart
 with tooltips, resizing, and colors from the active document or presentation theme.
 Other Markdown viewers display the original fenced JSON.
 
-Document previews update after a 150 ms typing pause. Unchanged charts keep their
-instances, including repeated identical blocks, and replaced or removed charts
-release their resources. Unchanged diagrams, images, table controls, and chart
-source disclosures also retain their state. Changing preview mode, theme, or the
-required assets reloads the page; presentation edits currently use a full reload.
+The preview updates as you edit. Switching preview mode or theme may reload the view.
 
 ## HTML export
 
-HTML exports include the same validated chart renderer for documents and
-presentations. The self-contained export embeds the runtime; website exports
-store it as a shared, fingerprinted asset alongside its complete license notices.
+HTML exports include charts for documents and presentations. A self-contained
+export embeds the chart runtime.
 Charts and metrics work offline without a chart service or CDN.
 
 JavaScript enables chart rendering, tooltips, and responsive sizing. If scripts
@@ -154,7 +149,7 @@ references must name a declared repeat dimension and supplied inline fields.
 Compositions are bounded to 32 expanded rendered views. Dimensions on a composite
 root are applied to its child views; the preview contains the resulting grid.
 
-The [complete gallery](../../../../examples/vega-lite-chart-gallery.md) covers all
+The [complete gallery](https://github.com/gserpa/ai-markdown-studio-vs-community/blob/main/examples/vega-lite-chart-gallery.md) covers all
 built-in marks and composition forms, including map, image, reference-rule,
 text-label, variable-width trail, and uncertainty examples.
 

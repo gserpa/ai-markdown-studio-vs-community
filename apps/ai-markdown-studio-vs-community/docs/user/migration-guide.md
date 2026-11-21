@@ -35,14 +35,3 @@ For example, replace `<!--slide: image-right-->` with `<!--slide: illustrated-te
 ## HTML exports
 
 No source migration is required for ordinary Markdown documents. HTML export embeds only referenced bundled font families, loads optional libraries when needed, and includes shared CSS modules once. Existing exported HTML files remain as they were; export again to receive the size reductions. Fonts needed by a selected family keep their available weights.
-
-## Developers and custom preview hosts
-
-Preview asset manifest **schema 2** adds ordered `stylesheets.document` and `stylesheets.presentation` lists. These lists reference fingerprinted CSS modules and mark optional media modules. Consumers must select the mode's entries in order and include media entries when images or diagrams need them. Reading only the old core/presentation files no longer supplies all shared styles. The combined `assets/preview.css` remains available for hosts that still load one stylesheet.
-
-1. Update code and assets together. Do not mix an old preview host with an incomplete set of new generated assets.
-2. Run `npm run compile` from the Community repository. It builds the shared packages, generates the manifest and hashed CSS, bundles the extension, and synchronizes preview assets.
-3. Edit CSS under `packages/md-preview-web/styles/`; `modules.json` defines cascade order. Do not edit the generated `assets/preview.css`, `assets/generated/`, or copied host assets. CSS-only changes can use `npm run build:assets --workspace=packages/md-preview-web`, followed by the host's asset-sync command.
-4. Run the test and packaging checks, and reload the development extension before checking previews and exports.
-
-Pro maintainers must commit Community first, update `community-source.json` to that exact commit, and rebuild Pro against the clean checkout. Run `npm run check:community-pin`, `npm run compile:pro`, and the Pro verification checks. Commit the pin with its matching Pro changes. The CSS asset schema is a build/host contract; it is separate from the PowerPoint template manifest schema.

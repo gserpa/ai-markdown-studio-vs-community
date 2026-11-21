@@ -27,6 +27,7 @@ This guide covers everything in the Community edition. Advanced conversion, them
 - [HTML export](#html-export)
 - [Settings reference](#settings-reference)
 - [Privacy and remote resources](#privacy-and-remote-resources)
+- [Markdown and MPS authoring reference](authoring-reference.md)
 - [Upgrading to Pro](#upgrading-to-pro)
 - [Troubleshooting](#troubleshooting)
 
@@ -246,7 +247,7 @@ The service returns a validated response.
 
 ### Flowing default slide bodies
 
-Use `default` for ordinary mixed content. After the title, paragraphs, tables, images,
+Use `content` for ordinary mixed content. After the title, paragraphs, tables, images,
 and Mermaid diagrams keep their Markdown order in one body region, including multiple
 tables or diagrams with text between them. A table does not require a separate slide type.
 
@@ -288,7 +289,7 @@ Set **`markdownAiStudio.documentTableLayout`** to choose a document's default la
 
 Run **Export Markdown as HTML** to create a reviewable `.html` file for a document or presentation. It contains a copy of the complete Markdown, front matter, and review comments, along with the preview renderer and styling. Anyone receiving the HTML can inspect that embedded source, including comments and metadata, even if they are not visible in the rendered view. Review sensitive content before sharing.
 
-The export embeds linked Markdown and HTML images into the copy, including permitted remote images; it does not change or save the original Markdown. Export fails with details if an image cannot be embedded or review metadata is invalid. If review markers occur inside image syntax that must be rewritten, move or reattach the comment outside that syntax before exporting.
+The export embeds linked Markdown and HTML images into the copy, including permitted remote images; it does not change or save the original Markdown. If a remote image cannot be downloaded, export retains its link and logs a warning. Linked images require network access and may be unavailable when the HTML is opened. Local image failures and invalid review metadata still stop export. If review markers occur inside image syntax that must be rewritten, move or reattach the comment outside that syntax before exporting.
 
 Open the file in a JavaScript-enabled desktop browser. Desktop Chrome and Edge have been tested. Select rendered text and choose **Add Review Comment**; use **Review Comments** to navigate existing comments. The document list or presentation panel provides edit, resolve, reopen, delete, and reattach actions. Browser review does not run AI; existing AI-inclusion metadata is preserved.
 
@@ -338,7 +339,7 @@ To prevent that — for example when reviewing untrusted documents or working in
 }
 ```
 
-As a general precaution, treat Markdown from untrusted sources carefully because it can reference local files and remote resources, and review sensitive text before sending it through an AI command. See [security-review.md](./security-review.md) for the full assessment.
+As a general precaution, treat Markdown from untrusted sources carefully because it can reference local files and remote resources, and review sensitive text before sending it through an AI command. See [security and privacy](security-and-privacy.md) for the user-facing data-handling summary and private vulnerability reporting route.
 
 ## Upgrading to Pro
 
@@ -350,7 +351,7 @@ If you need the advanced automation and Office-native export layer, install **AI
 - export using your organization's existing **PowerPoint templates**
 - additional Copilot Chat tools for creating and reviewing documents and themes
 
-Pro will be distributed as its own standalone extension, built from a tested Community foundation plus a private Pro overlay. Your Community previews, bundled themes, documents, and presentations continue to work unchanged; Pro simply adds the advanced commands and settings on top. See [upgrade-to-pro.md](./upgrade-to-pro.md) for the full comparison.
+Pro is distributed as its own standalone extension, built from a tested Community foundation plus a private Pro overlay. Your Community previews, bundled themes, documents, and presentations continue to work unchanged; Pro adds advanced commands and settings. See [upgrade-to-pro.md](./upgrade-to-pro.md) for the full comparison.
 
 ## Troubleshooting
 
@@ -372,7 +373,7 @@ Pro will be distributed as its own standalone extension, built from a tested Com
 
 Opening a presentation preview with retired names shows one warning with **Review migration**. Preview renders immediately using temporary current-type replacements. Dismissing the warning leaves the Markdown unchanged. The review command offers choices for ambiguous slides, opens a diff, and applies edits only when you choose **Apply migration**. Retired names have editor warnings; unknown names have errors.
 
-See the [migration guide](migration-guide.md) for why types changed, the replacement table, step-by-step review, and developer asset migration.
+See the [migration guide](migration-guide.md) for why types changed, the replacement table, and reviewed edits.
 
 
 ## Optional slide heading details

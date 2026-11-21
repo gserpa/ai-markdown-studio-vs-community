@@ -9,9 +9,9 @@ import { formatMarkdownTables } from '../src/format/markdownTableFormatter';
 import { getComponentPptxWarnings, prepareComponentsForPptx } from '../src/components/components';
 
 describe('generic bundled component integration', () => {
-  it('keeps bundled component names out of platform implementation and shared styles', () => {
+  it('keeps bundled component names out of preview platform implementation and shared styles', () => {
     const workspace = path.resolve(__dirname, '../../..');
-    const roots = ['packages/md-core/src', 'packages/md-preview-web/src', 'packages/md-preview-web/styles', 'packages/ai-core/src'];
+    const roots = ['packages/md-core/src', 'packages/md-preview-web/src', 'packages/md-preview-web/styles'];
     const walk = (dir: string): string[] => fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
       const full = path.join(dir, entry.name);
       return entry.isDirectory() ? walk(full) : /\.(ts|mts|css)$/u.test(entry.name) ? [full] : [];

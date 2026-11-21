@@ -8,14 +8,13 @@ AI Markdown Studio Community is the MIT-licensed open-source core of AI Markdown
 
 It provides preview-first Markdown authoring, live document and presentation previews, Mermaid, KaTeX, syntax highlighting, table formatting, document and presentation themes, speaker notes in presentation view, AI-assisted document and presentation generation, MPS agent tools and provider-specific skills, AI Paste to Markdown, HTML export, and basic DOCX export.
 
-AI Markdown Studio Pro is a separate product that extends Community with AI theme generation, file conversion, PDF/PPTX export, high-fidelity DOCX, additional document/theme Copilot tools, shared custom theme folders, and corporate PowerPoint template automation. Pro ships as its own standalone extension, built from a pinned Community revision plus a Pro overlay; Community contains no Pro implementation.
+AI Markdown Studio Pro is a separate product that extends Community with AI theme generation, file conversion, PDF/PPTX export, high-fidelity DOCX, additional document/theme Copilot tools, shared custom theme folders, and corporate PowerPoint template automation. Pro is a standalone extension; users do not need to install Community alongside it.
 
 ## Start Here
 
-- [Extension README](./apps/ai-markdown-studio-vs-community/README.md) - full user guide, feature tour, MPS tools and skills, security notes, and Pro comparison
+- [Documentation](docs/README.md) - tutorials, task help, syntax reference, privacy, and examples
+- [Extension README](./apps/ai-markdown-studio-vs-community/README.md) - feature tour and user-facing overview
 - [Why Upgrade to Pro?](./apps/ai-markdown-studio-vs-community/docs/user/upgrade-to-pro.md) - Community-to-Pro comparison focused on advanced conversion, export, theming, and Copilot workflows
-- [Extension Manifest](./apps/ai-markdown-studio-vs-community/package.json) - the VS Code extension entrypoint and contributed commands/settings
-- [Workspace Package](./package.json) - the private workspace scripts and shared dependency pins
 
 ## Installation
 
@@ -44,19 +43,6 @@ code --install-extension markdown-ai-studio-1.3.0.vsix
 - AI Paste to Markdown
 - HTML export and basic DOCX export
 - Command launcher and settings shortcuts built into the editor UI
-
-## Development
-
-Use Node.js 22 or newer to build the locally bundled visualization libraries.
-
-```powershell
-npm install
-npm run verify
-```
-
-`npm run verify` runs the Community boundary check, builds the workspace packages, runs tests, and packages the VSIX.
-
-The packaged extension README is generated from `apps/ai-markdown-studio-vs-community/README.md`, so keep that file as the user-facing source of truth.
 
 ## License
 

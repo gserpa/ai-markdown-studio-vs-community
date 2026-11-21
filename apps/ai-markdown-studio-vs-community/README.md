@@ -119,9 +119,8 @@ export, so your Markdown knowledge base stays useful to both people and AI every
   - [AI Paste to Markdown](#ai-paste-to-markdown)
   - [Basic DOCX Export](#basic-docx-export)
   - [Command List](#command-list)
-  - [Mermaid Diagram Example](#mermaid-example)
 - [Security](#security)
-- [AI Markdown Studio Pro](#markdown-ai-studio-pro)
+- [AI Markdown Studio Pro](#ai-markdown-studio-pro)
 - [Acknowledgments & Third-Party Licenses](#acknowledgments--third-party-licenses)
 
 ## Installation
@@ -286,11 +285,11 @@ Set the resource-scoped **`markdownAiStudio.documentTableLayout`** setting to ch
 
 Run **Export Markdown as HTML** from the Command Palette or the command list to create a reviewable `.html` file for sharing outside VS Code. It contains the complete Markdown snapshot, front matter, and comments, all of which recipients can inspect. The original file is not changed.
 
-Linked Markdown and HTML images are embedded in the snapshot; permitted remote images are downloaded during export. If an image cannot be embedded, export reports the failure. Comments whose markers occur inside image syntax that needs rewriting must be moved or reattached first. Media, chart images, and custom theme resources are not all embedded, so the file is not guaranteed to be fully offline.
+Linked Markdown and HTML images are embedded in the snapshot where possible; permitted remote images are downloaded during export. When a remote download fails, its link is retained and a warning is logged. Local image failures stop the export. Comments whose markers occur inside image syntax that needs rewriting must be moved or reattached first. Media, chart images, and custom theme resources are not all embedded, so the file is not guaranteed to be fully offline.
 
 In a JavaScript-enabled desktop browser, select text to add comments and use **Review Comments** to navigate and manage them. Desktop Chrome and Edge have been tested. **Save reviewed HTML** downloads a new reviewable file; **Download Markdown** downloads the current annotated Markdown. The browser may prompt or cancel the download, and the page cannot confirm it was saved. It warns before leaving with changes where supported. Neither download updates the original automatically.
 
-The setting **`markdownAiStudio.allowRemoteResources`** controls remote image downloads and other resources. When disabled, the portable file blocks remote browser resources and warns if content is blocked. See the [user guide](https://github.com/gserpa/ai-markdown-studio-vs-community/blob/HEAD/apps/ai-markdown-studio-vs-community/docs/user/user-guide.md#html-export) for browser and resource limitations.
+The setting **`markdownAiStudio.allowRemoteResources`** controls remote image downloads and other resources. Linked images require network access and may be unavailable. When remote resources are disabled, the portable file blocks remote browser resources and warns if content is blocked. See the [user guide](https://github.com/gserpa/ai-markdown-studio-vs-community/blob/HEAD/apps/ai-markdown-studio-vs-community/docs/user/user-guide.md#html-export) for browser and resource limitations.
 
 ### AI-Assisted Generation
 
@@ -358,9 +357,10 @@ When a compatible feature extension such as AI Markdown Studio Pro is installed,
 - The extension does not collect or transmit user data on its own. AI features stay locked until the user explicitly enables them and accepts that AI requests use the GitHub Copilot service already configured in VS Code.
 - Rendered and exported documents may include content from referenced resources.
 - HTML sanitization and a restrictive webview Content Security Policy (CSP) are applied to reduce XSS and script-injection risks. Mermaid runs in `securityLevel: 'strict'` mode.
-- All dependencies are permissively licensed and regularly audited for vulnerabilities. If you discover a security issue, please report it via the project repository.
+- If you suspect a security issue, use the private reporting route in [Support](./SUPPORT.md), not a public issue.
 
-See [security-review.md](./docs/user/security-review.md) for a detailed security assessment and mitigation strategies.
+See [security and privacy](./docs/user/security-and-privacy.md) for data handling, remote resources, and the private vulnerability reporting route.
+For the detailed, point-in-time assessment, see the [Community security review](https://github.com/gserpa/ai-markdown-studio-vs-community/blob/HEAD/apps/ai-markdown-studio-vs-community/docs/user/security-review.md).
 
 ## AI Markdown Studio Pro
 

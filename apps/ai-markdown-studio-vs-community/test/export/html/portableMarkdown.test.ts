@@ -37,6 +37,37 @@ describe('portable Markdown snapshot', () => {
     expect(load).not.toHaveBeenCalled();
   });
 
+  it('keeps only failed remote images as links and preserves review selections', async () => {
+    const url = 'https://example.test/limited.png';
+    const source = `![Local](local.png)\n\n![Remote](${url})\n\n<img src="${url}" alt="Remote">\n\nReview this passage.\n`;
+    const start = source.indexOf('this passage');
+    const annotated = writeReviewComments(source, [{
+      id: '1', body: 'Check.', state: 'open', includeInAi: false,
+      range: { start, end: start + 'this passage'.length },
+    }]);
+    const load = vi.fn(async (path: string) => {
+      if (path === url) throw new Error('HTTP 429');
+      return image;
+    });
+    const reportFallback = vi.fn();
+    const result = await preparePortableMarkdown(annotated, load, reportFallback);
+    const review = readReviewComments(result);
+    expect(result).toContain('![Local](<' + image + '>)');
+    expect(result).toContain(`![Remote](${url})`);
+    expect(result).toContain(`<img src="${url}" alt="Remote">`);
+    expect(review.markdown.slice(review.comments[0].range!.start, review.comments[0].range!.end)).toBe('this passage');
+    expect(reportFallback).toHaveBeenCalledExactlyOnceWith([{ source: url, message: 'HTTP 429' }]);
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not fall back to remote links when any local image fails', async () => {
+    const reportFallback = vi.fn();
+    await expect(preparePortableMarkdown('![Remote](https://example.test/a.png)\n\n![Local](missing.png)', async path => {
+      throw new Error(path === 'missing.png' ? 'File not found' : 'HTTP 429');
+    }, reportFallback)).rejects.toThrow('missing.png: File not found');
+    expect(reportFallback).not.toHaveBeenCalled();
+  });
+
   it('preserves a comment spanning an image while rewriting its source', async () => {
     const source = 'Before ![Photo](local.png) after.\n';
     const original = writeReviewComments(source, [{

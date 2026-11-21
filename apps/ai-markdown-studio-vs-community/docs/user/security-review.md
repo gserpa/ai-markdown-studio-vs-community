@@ -22,7 +22,7 @@ This review is part of the developer's ongoing due diligence to keep AI Markdown
 - A substitute for an independent third-party security audit, particularly before use with sensitive, confidential, or regulated content.
 - A living document — it reflects the code as of the document version and date above. Later code, dependency, or configuration changes are not automatically reflected here.
 
-**No liability.** This review is provided "as is", without warranty of any kind. To the fullest extent permitted by applicable law, the developer disclaims all liability for any security incident, data loss, or other damages arising from use of AI Markdown Studio, whether or not the underlying issue is discussed in this document. Use of this software is governed by the [MIT License](../../../LICENSE).
+**No liability.** This review is provided "as is", without warranty of any kind. To the fullest extent permitted by applicable law, the developer disclaims all liability for any security incident, data loss, or other damages arising from use of AI Markdown Studio, whether or not the underlying issue is discussed in this document. Use of this software is governed by the [Community MIT License](https://github.com/gserpa/ai-markdown-studio-vs-community/blob/main/LICENSE).
 
 ## 1. Executive summary
 

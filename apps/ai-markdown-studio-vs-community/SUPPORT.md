@@ -13,8 +13,8 @@ If you encounter a bug, open an issue in the project repository (`https://github
 
 ## Before reporting
 
-- Check [docs/user-guide.md](docs/user-guide.md) for usage guidance on the Markdown preview, presentation preview, table formatting, themes, and HTML export.
-- Check [docs/security-review.md](docs/security-review.md) if the question relates to data handling, remote resources, or content sanitization.
+- Check the [user guide](docs/user/user-guide.md) for preview, presentation, themes, and export help.
+- Check [security and privacy](docs/user/security-and-privacy.md) for AI data sharing and remote resource settings.
 - If the issue only reproduces when AI Markdown Studio Pro is also installed, also check Pro's own support channel, since Pro registers additional commands and contributions on top of Community.
 
 ## Security issues
