@@ -42,6 +42,39 @@ body.preview-mode-document .markdown-body td {
   --md-preview-table-control-color: var(--md-preview-table-header-color, var(--md-preview-body-color, #24292f));
 }
 
+body.preview-mode-document .markdown-body .table-scroll-wrapper {
+  --md-preview-table-scrollbar-track: var(--md-preview-table-row-bg, #ffffff);
+  --md-preview-table-scrollbar-thumb: var(--md-preview-muted-color, #6e7781);
+  --md-preview-table-scrollbar-thumb-hover: var(--md-preview-body-color, #24292f);
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-preview-table-scrollbar-thumb) var(--md-preview-table-scrollbar-track);
+}
+
+@supports (color: color-mix(in srgb, black, white)) {
+  body.preview-mode-document .markdown-body .table-scroll-wrapper {
+    --md-preview-table-scrollbar-thumb: color-mix(in srgb, var(--md-preview-body-color, #24292f) 28%, var(--md-preview-table-scrollbar-track) 72%);
+    --md-preview-table-scrollbar-thumb-hover: color-mix(in srgb, var(--md-preview-body-color, #24292f) 40%, var(--md-preview-table-scrollbar-track) 60%);
+  }
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper::-webkit-scrollbar {
+  height: 10px;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper::-webkit-scrollbar-track {
+  background: var(--md-preview-table-scrollbar-track);
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: var(--md-preview-table-scrollbar-thumb);
+  border: 2px solid var(--md-preview-table-scrollbar-track);
+  border-radius: 999px;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--md-preview-table-scrollbar-thumb-hover);
+}
+
 :is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-table-layout='wide'] table {
   width: max-content;
   min-width: 100%;
