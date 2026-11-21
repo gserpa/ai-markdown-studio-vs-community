@@ -65,9 +65,10 @@ export function attachReviewPreview(
   panels.add(panel);
   reviewPanels.set(key, panels);
   let pendingReattach: string | undefined;
+  let reopenedDocument: vscode.TextDocument | undefined;
+  let reopenedSnapshot: { documentVersion: number; previewVersion: number; markdown: string } | undefined;
   const messageSubscription = panel.webview.onDidReceiveMessage(async (request: ReviewRequest) => {
     if (request?.command !== 'previewReview') return;
-    const document = getDocument();
     if (request.action === 'ready') {
       await panel.webview.postMessage({ command: 'reviewVisibility', visible: !hiddenReviewComments.has(key) });
       if (pendingReattach) await panel.webview.postMessage({ command: 'beginReviewReattach', id: pendingReattach });
@@ -82,17 +83,38 @@ export function attachReviewPreview(
       if (request.action === 'toggleVisibility') {
         await toggleReviewVisibility(key);
       } else {
+        const previewDocument = getDocument();
+        const snapshotDocument = previewDocument.isClosed && reopenedDocument ? reopenedDocument : previewDocument;
+        const markdown = snapshotDocument.getText();
+        // Reopening can reset VS Code's version even when the preview content is unchanged.
+        const snapshotVersion = snapshotDocument === reopenedDocument && reopenedSnapshot
+          && snapshotDocument.version === reopenedSnapshot.documentVersion
+          && request.version === reopenedSnapshot.previewVersion && markdown === reopenedSnapshot.markdown
+          ? reopenedSnapshot.previewVersion : snapshotDocument.version;
+        const document = snapshotDocument.isClosed
+          ? await vscode.workspace.openTextDocument(snapshotDocument.uri) : snapshotDocument;
+        if (document.isClosed || document.getText() !== markdown) {
+          throw new Error('The preview changed. Select the text again.');
+        }
+        if (document !== snapshotDocument) {
+          reopenedDocument = document;
+          reopenedSnapshot = { documentVersion: document.version, previewVersion: snapshotVersion, markdown };
+        }
+        const documentVersion = document.version;
         const sessionId = request.sessionId;
-        const preview = typeof sessionId === 'string' && request.version === document.version
-          ? updater.getReviewPage(sessionId, document.version) : undefined;
+        const preview = typeof sessionId === 'string' && request.version === snapshotVersion
+          ? updater.getReviewPage(sessionId, snapshotVersion) : undefined;
         if (!preview || typeof sessionId !== 'string') throw new Error('The preview changed. Select the text again.');
         await applyReviewAction({
-          markdown: document.getText(), version: document.version, sessionId, preview,
+          markdown, version: snapshotVersion, sessionId, preview,
         }, request, async (updated, expectedVersion, expectedSessionId) => {
           if (!updater.getReviewPage(expectedSessionId, expectedVersion)) {
             throw new Error('The preview changed. Select the text again.');
           }
-          await replaceDocument(document, expectedVersion, updated, true);
+          if (document.isClosed || document.version !== documentVersion || document.getText() !== markdown) {
+            throw new Error('The Markdown changed. Try the review action again.');
+          }
+          await replaceDocument(document, documentVersion, updated, true);
           return true;
         });
         if (request.action === 'edit') pendingReattach = request.afterEdit === 'reattach' ? request.id : undefined;

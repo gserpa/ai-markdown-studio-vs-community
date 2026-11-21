@@ -31,6 +31,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Reopened closed preview documents when adding or managing review comments, while rejecting changes made since the preview.
 - Matched document table scrollbar colors to the document theme, including light documents in dark hosts.
 - Kept short IDs and words intact in wrapped document tables while allowing long tokens to break and narrow tables to scroll.
 - Added a script-free presentation navigation fallback for embedded HTML viewers that block or cannot initialize the presentation runtime.

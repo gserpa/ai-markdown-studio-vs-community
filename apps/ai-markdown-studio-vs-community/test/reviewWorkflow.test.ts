@@ -93,6 +93,8 @@ describe('review command AI access and prompt copy', () => {
     vi.clearAllMocks();
     mock.commands.clear();
     mock.document.version = 1;
+    mock.document.isClosed = false;
+    mock.document.isDirty = false;
     mock.document.uri = uri;
     mock.openDocument.mockResolvedValue(mock.document);
     mock.treeProvider.mockReturnValue(mock.disposable());
@@ -217,6 +219,75 @@ describe('review command AI access and prompt copy', () => {
     await receive({ command: 'previewReview', sessionId: 'session', version: 1, requestId: 1, action: 'resolve', id: '1' });
     expect(mock.applyEdit).not.toHaveBeenCalled();
     expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({ command: 'reviewResult', error: 'The preview changed. Select the text again.' }));
+    dispose();
+  });
+
+  it('reopens a closed preview document to add a comment and uses the new document for subsequent actions', async () => {
+    let receive!: (request: unknown) => Promise<void>;
+    let dispose!: () => void;
+    const postMessage = vi.fn().mockResolvedValue(true);
+    const panel = {
+      active: false,
+      webview: { postMessage, onDidReceiveMessage: (callback: typeof receive) => { receive = callback; return mock.disposable(); } },
+      onDidChangeViewState: mock.disposable,
+      onDidDispose: (callback: () => void) => { dispose = callback; },
+    };
+    const oldDocument = { ...mock.document, version: 7, isClosed: true, getText: () => markdown };
+    let currentText = markdown;
+    const currentDocument = {
+      ...mock.document, version: 1, isClosed: false, isDirty: true,
+      getText: () => currentText,
+    };
+    mock.openDocument.mockResolvedValue(currentDocument);
+    mock.applyEdit.mockImplementation(async (edit: { change: { range: { start: number; end: number }; text: string } }) => {
+      const { range, text } = edit.change;
+      currentText = currentText.slice(0, range.start) + text + currentText.slice(range.end);
+      currentDocument.version += 1;
+      return true;
+    });
+    const updater = { getReviewPage: vi.fn((_session: string, version: number) => ({
+      version, blocks: [{ id: '0', text: 'Passage for review.', startLine: 3, endLine: 3 }],
+    })) };
+    attachReviewPreview(panel as never, updater as never, () => oldDocument as never);
+    mock.openDocument.mockClear();
+    await receive({ command: 'previewReview', sessionId: 'session', version: 7, requestId: 1, action: 'add',
+      body: '', selection: [{ id: '0', start: 0, end: 7 }] });
+    expect(postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ error: 'Enter a comment of up to 20,000 characters.' }));
+    await receive({ command: 'previewReview', sessionId: 'session', version: 7, requestId: 1, action: 'add',
+      body: 'Clarify.', selection: [{ id: '0', start: 0, end: 7 }] });
+    expect(postMessage).toHaveBeenLastCalledWith({ command: 'reviewResult', requestId: 1 });
+    expect(readReviewComments(currentText).comments).toEqual([expect.objectContaining({ id: '1', body: 'Clarify.' })]);
+
+    await receive({ command: 'previewReview', sessionId: 'session', version: 2, requestId: 2, action: 'resolve', id: '1' });
+    expect(postMessage).toHaveBeenLastCalledWith({ command: 'reviewResult', requestId: 2 });
+    expect(readReviewComments(currentText).comments[0].state).toBe('resolved');
+    expect(mock.openDocument).toHaveBeenCalledTimes(1);
+    currentDocument.isClosed = true;
+    const reopenedAgain = { ...currentDocument, version: 1, isClosed: false };
+    mock.openDocument.mockResolvedValue(reopenedAgain);
+    await receive({ command: 'previewReview', sessionId: 'session', version: 3, requestId: 3, action: 'reopen', id: '1' });
+    expect(postMessage).toHaveBeenLastCalledWith({ command: 'reviewResult', requestId: 3 });
+    expect(readReviewComments(currentText).comments[0].state).toBe('open');
+    dispose();
+  });
+
+  it('rejects a reopened document whose text no longer matches the preview snapshot', async () => {
+    let receive!: (request: unknown) => Promise<void>;
+    let dispose!: () => void;
+    const postMessage = vi.fn().mockResolvedValue(true);
+    const panel = {
+      active: false,
+      webview: { postMessage, onDidReceiveMessage: (callback: typeof receive) => { receive = callback; return mock.disposable(); } },
+      onDidChangeViewState: mock.disposable,
+      onDidDispose: (callback: () => void) => { dispose = callback; },
+    };
+    const oldDocument = { ...mock.document, isClosed: true, getText: () => markdown };
+    mock.openDocument.mockResolvedValue({ ...mock.document, getText: () => `${markdown}Changed.` });
+    const updater = { getReviewPage: vi.fn(() => ({ version: 1, blocks: [] })) };
+    attachReviewPreview(panel as never, updater as never, () => oldDocument as never);
+    await receive({ command: 'previewReview', sessionId: 'session', version: 1, requestId: 1, action: 'add', body: 'Clarify.' });
+    expect(mock.applyEdit).not.toHaveBeenCalled();
+    expect(postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ error: 'The preview changed. Select the text again.' }));
     dispose();
   });
 
