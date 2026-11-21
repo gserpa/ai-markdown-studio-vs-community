@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createMarkdownRenderer } from '@mfo/core';
 import { parseVisualizationBlock, type VisualizationKind } from '@mfo/core/visualizations';
+import { createFeatureAuthoringReference } from '../src/featureAuthoring';
 import { createDocumentPrompt, createPresentationPrompt, createPresentationRepairPrompt } from '../src/generationPrompts';
 import { validateMarkdownStudioDocument } from '../src/documentValidation';
 import { validateMarkdownStudioPresentation } from '../src/presentationValidation';
@@ -26,10 +27,10 @@ describe('visualization authoring guidance', () => {
     }
   });
 
-  it.each(['markdown-ai-studio-presentation', 'markdown-ai-studio-presentation-copilot'])('keeps the %s portable reference aligned with canonical prompts', skill => {
+  it.each(['markdown-ai-studio-document', 'markdown-ai-studio-presentation', 'markdown-ai-studio-presentation-copilot'])('ships the full shared authoring guide with %s', skill => {
     const directory = path.resolve(__dirname, '../../../apps/ai-markdown-studio-vs-community/skills', skill);
     const reference = readFileSync(path.join(directory, 'references/visualizations.md'), 'utf8');
-    expect(reference).toContain(createVisualizationAuthoringInstructions());
+    expect(reference.replace(/\r\n/g, '\n')).toContain(createFeatureAuthoringReference());
     expect(readFileSync(path.join(directory, 'SKILL.md'), 'utf8')).toContain('references/visualizations.md');
     expect(validateVisualizationFences(reference)).toEqual([]);
   });
@@ -46,10 +47,20 @@ describe('visualization authoring guidance', () => {
   it('accepts every chart in the supported gallery through the AI validation boundary', () => {
     const gallery = readFileSync(path.resolve(__dirname, '../../../examples/vega-lite-chart-gallery.md'), 'utf8');
     expect(validateVisualizationFences(gallery)).toEqual([]);
-    const instructions = createVisualizationAuthoringInstructions();
+    const instructions = createVisualizationAuthoringInstructions({ reference: true });
     for (const feature of ['area', 'point', 'arc', 'rect', 'boxplot', 'tick', 'geoshape', 'image', 'errorband', 'hconcat', 'facet', 'repeat', 'xOffset', 'aggregate: "count"']) {
       expect(instructions).toContain(feature);
     }
+  });
+
+  it('accepts a bundled component in a document and reports a malformed one without reading tutorial fences', () => {
+    const header = '---\nfilename: facts.md\ntheme: auto\n---\n# Facts\n\n';
+    const invalid = '~~~component\ntype: fact-cards\nversion: 2\ndata:\n  cards:\n    - label: Total\n      value: 2\n~~~';
+    expect(validateMarkdownStudioDocument(header + invalid.replace('version: 2', 'version: 1')).valid).toBe(true);
+    expect(validateMarkdownStudioDocument(header + '````markdown\n' + invalid + '\n````').valid).toBe(true);
+    expect(validateMarkdownStudioDocument(header + invalid).issues).toEqual([
+      'Component block at body line 3: Use component version: 1.',
+    ]);
   });
 
   it('reports invalid blocks through both shared AI validators without discarding valid content', () => {

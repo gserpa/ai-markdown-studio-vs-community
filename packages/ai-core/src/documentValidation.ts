@@ -1,3 +1,4 @@
+import { createMarkdownRenderer, parseComponent, stripMarkdownFrontMatter } from '@mfo/core';
 import { validateVisualizationFences } from './visualizationAuthoring';
 
 export type DocumentValidationResult = {
@@ -36,6 +37,11 @@ export function validateMarkdownStudioDocument(markdown: string): DocumentValida
   }
 
   issues.push(...validateVisualizationFences(markdown));
+  for (const token of createMarkdownRenderer().parse(stripMarkdownFrontMatter(markdown), {})) {
+    if (token.type !== 'fence' || token.info.trim().split(/\s+/u)[0].toLowerCase() !== 'component') continue;
+    const result = parseComponent(token.content);
+    if (!result.valid) issues.push(`Component block at body line ${(token.map?.[0] ?? 0) + 1}: ${result.error}`);
+  }
   const uniqueIssues = [...new Set(issues)];
   return {
     valid: uniqueIssues.length === 0,

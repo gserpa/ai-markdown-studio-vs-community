@@ -14,13 +14,13 @@ Use the extension tools in this order:
 3. Call `#validateMarkdownPresentation`; repair every structural issue and validate again.
 4. Ask the user to approve the destination, then call `#saveMarkdownStudioFile`. Never overwrite an existing file.
 
-For requested charts or metrics, follow [the visualization authoring reference](references/visualizations.md) as well as the canonical prompt. Use supplied inline data in supported `vega-lite` chart and `metric` JSON fences; repair visualization errors reported by the validator before saving.
+During planning and final review, use [the shared authoring reference](references/visualizations.md), even if the brief does not name any features. Choose the simplest format that supports the takeaway; consider Mermaid, combined charts, metrics, formulas, emoji and components where useful. Repair any invalid authored blocks reported by validation before saving.
 
 If a tool is unavailable, use this backup specification: include YAML front matter with `filename`, `document: presentation`, `title`, `theme`, and `ratio`; separate slides with top-level `---`; use one `# H1` title per slide; place at most one supported `<!--slide: name-->` directive immediately after a separator and before the title; use concise `<!--notes: ...-->` comments on content slides; and do not invent image URLs or local paths. Use `content` for mixed material and tables, `illustrated-text` for explanation with a supporting visual, `featured-visual` for a dominant visual, and `brief` for a compact orientation. Use `<!--column-break-->` between two-column bodies. The theme and PPTX template choose placement. Supported directives are `content`, `cover`, `two-column`, `illustrated-text`, `featured-visual`, `brief`, `divider`, and `thanks`.
 
 ## Mixed body content and template defaults
 
-Prefer `default` for ordinary slides containing paragraphs, tables, images, and Mermaid diagrams.
+Prefer `content` for ordinary slides containing paragraphs, tables, images, and Mermaid diagrams.
 Preserve their Markdown sequence, including text between multiple tables or media blocks.
 Use specialized layouts for intentional structural differences rather than each content combination.
 Do not add template or manifest paths merely to repeat a configured default: Pro uses workspace/global
@@ -34,11 +34,3 @@ Keep ordinary slides simple: existing headings and body paragraphs need no extra
 ## Optional content areas
 
 Ordinary slides need no area markers. When a content slide needs two to four independent areas, place `<!-- region-break -->` between non-empty areas, at most three times. Do not mix it with `<!--column-break-->`. PowerPoint currently exports area content in normal flow and warns that the arrangement is not retained.
-
-## Status matrices
-
-Use a `component` fence with `type: status-matrix`, `version: 1`, and either structured `data.columns` / `data.rows` or `data.markdown-table`. For grouped structured columns, map each group to a list of leaf names. Use `progress: "1/2"` or `progress: "50%"` only when supplied. Optional status labels map to `neutral`, `info`, `success`, `warning`, or `danger`. A table literal uses a group header such as `Definition {2}`, a leaf header, then a Markdown separator; `Active :: 1/2` combines status and supplied progress. Keep the table small enough to fit. PowerPoint simplifies grouped headers and shows progress as text.
-
-## Record lists and fact cards
-
-Use `record-list` for supplied records, choosing `data.records` or `data.groups`; include optional ID, detail, ordinal, metadata, tags, status or scale only when provided. Use `fact-cards` for a supplied collection of text, numeric or explicit ratio values. Both use `~~~component`, `type`, `version: 1` and `data`. Do not infer totals, progress, ratings, dates or status. Both render as text in PowerPoint with simplified styling.

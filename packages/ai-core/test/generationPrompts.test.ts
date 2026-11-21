@@ -2,6 +2,22 @@ import { describe, expect, it } from 'vitest';
 import { createDocumentPrompt, createPresentationPrompt } from '../src/generationPrompts';
 
 describe('generation prompt builders', () => {
+  it.each([createDocumentPrompt, createPresentationPrompt])('guides feature choice for a brief that names no Markdown features', build => {
+    const prompt = build({ brief: 'Explain our rollout priorities', audience: 'Team', tone: 'Plain', length: 'Short' });
+    for (const guidance of [
+      'even if the brief names no Markdown features',
+      'choose the simplest format',
+      'review the draft for material opportunities missed',
+      'quadrantChart',
+      'bar + rule',
+      'facet/repeat',
+      'KaTeX',
+      'emoji sparingly',
+      'type: fact-cards',
+    ]) expect(prompt).toContain(guidance);
+    expect(prompt).not.toContain('when the user requests a chart');
+  });
+
   it('builds a self-contained document prompt', () => {
     const prompt = createDocumentPrompt({
       brief: 'Write a project update',
@@ -67,5 +83,6 @@ describe('generation prompt builders', () => {
     expect(prompt).toContain('Remote image embeds are NOT allowed in this workspace');
     expect(prompt).toContain('Do not embed remote image URLs in the Markdown');
     expect(prompt).toContain('Use speaker-note or blockquote image suggestions instead');
+    expect(prompt).not.toMatch(/!\[[^\]]*\]\(https?:/);
   });
 });

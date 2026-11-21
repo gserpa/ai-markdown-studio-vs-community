@@ -10,7 +10,7 @@ Create a complete Markdown file, not an outline. Do not assume AI Markdown Studi
 ## Workflow
 
 1. Resolve the output path before writing. If the user supplied one, use it. If not and the workspace is clear, choose a sensible workspace-relative filename and report it in the final response. Ask only when the location is consequential or an existing file would be overwritten. Never overwrite an existing file without confirmation.
-2. Plan the slide count, narrative arc, layouts, notes, and image needs before drafting. Use a slide ledger: every separator-delimited unit counts as one slide, including `cover`, `divider`, and `thanks`. Match an explicit slide count exactly.
+2. Plan the slide count, narrative arc, layouts, notes, and features before drafting. Use the feature-selection guide below. Use a slide ledger: every separator-delimited unit counts as one slide, including `cover`, `divider`, and `thanks`. Match an explicit slide count exactly.
 3. Write the complete deck, then validate its structure with the available tools or a front-matter-aware manual check. Do not count slides by splitting the entire file on `---`.
 4. Repair every structural issue and run the complete structural check again. Never correct count by deleting only a separator, directive, or title; add or remove a complete separator-delimited slide unit. When a local preview or export command is available, use it as a second check; otherwise report structural validation only and do not claim visual rendering QA.
 
@@ -22,9 +22,9 @@ Create a complete Markdown file, not an outline. Do not assume AI Markdown Studi
 - Use `<!--column-break-->` between the two bodies of `two-column`; headings are optional. Use `content` for mixed material and tables, `illustrated-text` for explanation with a supporting visual, `featured-visual` for a dominant visual with a short description, and `brief` for a compact orientation such as an agenda or next steps. Theme and PPTX template choose placement.
 - Add concise `<!--notes: ...-->` speaker notes to content slides. Cover, divider, and thanks slides may omit notes. Keep visible slide content concise and vary layouts deliberately.
 
-## Charts and metrics
+## Feature selection
 
-When the user requests data visualizations, read [the visualization authoring reference](references/visualizations.md). Use supported native `vega-lite` chart fences and `metric` fences with supplied inline data. Prefer a `default` slide with one chart and a short takeaway. Validate these JSON blocks as well as the deck structure. Other viewers retain the JSON source; native DOCX/PPTX chart conversion is not provided.
+Read [the shared authoring reference](references/visualizations.md) when planning, even when no specific feature was requested. Consider diagrams, single or combined charts, metrics, formulas, emoji, and components based on what readers need to understand. Review the choices before delivery; do not force features. Keep Vega-Lite and metric fences in a `content` slide body rather than an image-only slot. Validate authored blocks and deck structure with available tools.
 
 ## Images
 
@@ -38,7 +38,7 @@ Use a front-matter-aware validation process rather than an ad-hoc separator spli
 
 ## Mixed body content and template defaults
 
-Prefer `default` for ordinary slides containing paragraphs, tables, images, and Mermaid diagrams.
+Prefer `content` for ordinary slides containing paragraphs, tables, images, and Mermaid diagrams.
 Preserve their Markdown sequence, including text between multiple tables or media blocks.
 Use specialized layouts for intentional structural differences rather than each content combination.
 Do not add template or manifest paths merely to repeat a configured default: Pro uses workspace/global
@@ -52,11 +52,3 @@ Keep ordinary slides simple: existing headings and body paragraphs need no extra
 ## Optional content areas
 
 Ordinary slides need no area markers. When a content slide needs two to four independent areas, place `<!-- region-break -->` between non-empty areas, at most three times. Do not mix it with `<!--column-break-->`. PowerPoint currently exports area content in normal flow and warns that the arrangement is not retained.
-
-## Status matrices
-
-Use a `component` fence with `type: status-matrix`, `version: 1`, and either structured `data.columns` / `data.rows` or `data.markdown-table`. For grouped structured columns, map each group to a list of leaf names. Use `progress: "1/2"` or `progress: "50%"` only when supplied. Optional status labels map to `neutral`, `info`, `success`, `warning`, or `danger`. A table literal uses a group header such as `Definition {2}`, a leaf header, then a Markdown separator; `Active :: 1/2` combines status and supplied progress. Keep the table small enough to fit. PowerPoint simplifies grouped headers and shows progress as text.
-
-## Record lists and fact cards
-
-Use `record-list` for supplied records, choosing `data.records` or `data.groups`; include optional ID, detail, ordinal, metadata, tags, status or scale only when provided. Use `fact-cards` for a supplied collection of text, numeric or explicit ratio values. Both use `~~~component`, `type`, `version: 1` and `data`. Do not infer totals, progress, ratings, dates or status. Both render as text in PowerPoint with simplified styling.

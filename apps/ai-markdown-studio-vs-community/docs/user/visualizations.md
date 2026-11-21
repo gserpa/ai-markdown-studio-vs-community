@@ -42,9 +42,18 @@ definitions that remain invalid. Review generated content and verify its data.
 **AI Paste to Markdown** preserves existing visualization JSON rather than
 inventing charts during faithful format conversion.
 
-Newly installed presentation skills include a
-[portable visualization reference](../../skills/markdown-ai-studio-presentation/references/visualizations.md)
-for agents that cannot call the extension tools. Generation and validation rules
+Studio's document and presentation prompts consider visualizations even when none
+are explicitly requested. They choose by reader intent and use charts only when
+the available data and target format support them.
+
+The [document skill](../../skills/markdown-ai-studio-document/SKILL.md) is
+bundled for VS Code; agents without extension tools can use the entire skill
+folder, including its `references` directory. Newly installed presentation skills
+include the same [shared authoring reference](../../skills/markdown-ai-studio-presentation/references/visualizations.md),
+with intent tables for Mermaid, Vega-Lite (including combined charts), metrics,
+formulas, emoji, and components. The installer does not overwrite existing
+workspace skills; refresh those copies manually to pick up the new guide.
+Generation and validation rules
 are shared by Community and Pro. Native chart conversion for DOCX/PPTX is outside
 this feature; use preview or HTML export for interactive visualizations.
 

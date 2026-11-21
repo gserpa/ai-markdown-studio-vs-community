@@ -8,6 +8,8 @@ const yauzl = require('yauzl');
 const files = new Map();
 const generated = 'extension/assets/preview/generated/';
 const required = [
+  'extension/skills/markdown-ai-studio-document/SKILL.md',
+  'extension/skills/markdown-ai-studio-document/references/visualizations.md',
   'extension/skills/markdown-ai-studio-presentation/references/visualizations.md',
   'extension/skills/markdown-ai-studio-presentation-copilot/references/visualizations.md',
 ];

@@ -5,6 +5,18 @@ import { describe, expect, it } from 'vitest';
 const extensionRoot = path.join(__dirname, '..', '..');
 
 describe('presentation skill profiles', () => {
+  it('exposes the document skill in VS Code while retaining a tool-free workflow', () => {
+    const manifest = JSON.parse(readFileSync(path.join(extensionRoot, 'package.json'), 'utf8'));
+    const skill = readSkill('markdown-ai-studio-document');
+
+    expect(manifest.contributes.chatSkills).toContainEqual({
+      path: './skills/markdown-ai-studio-document/SKILL.md',
+    });
+    expect(skill).toContain('document prompt tool if available');
+    expect(skill).toContain('otherwise review front matter, heading and fence structure manually');
+    expect(skill).toContain('even if no feature was requested');
+  });
+
   it('registers the tool-first Copilot skill with VS Code', () => {
     const manifest = JSON.parse(readFileSync(path.join(extensionRoot, 'package.json'), 'utf8'));
     const skill = readSkill('markdown-ai-studio-presentation-copilot');

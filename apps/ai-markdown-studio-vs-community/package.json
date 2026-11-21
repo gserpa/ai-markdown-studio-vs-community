@@ -352,6 +352,9 @@
     ],
     "chatSkills": [
       {
+        "path": "./skills/markdown-ai-studio-document/SKILL.md"
+      },
+      {
         "path": "./skills/markdown-ai-studio-presentation-copilot/SKILL.md"
       }
     ],
