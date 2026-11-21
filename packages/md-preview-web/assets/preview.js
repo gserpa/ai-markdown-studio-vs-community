@@ -376,6 +376,10 @@ function wrapTablesForScroll({ forceWrap = false } = {}) {
       continue;
     }
 
+    if (table.parentElement?.dataset.tableEnhanced !== 'true') {
+      markTableLongTokens(table);
+    }
+
     if (table.parentElement?.classList.contains('table-scroll-wrapper')) {
       if (forceWrap) {
         table.parentElement.dataset.tableLayout = 'wrap';
@@ -402,7 +406,7 @@ function wrapPresentationTablesForScroll() {
       continue;
     }
 
-    markPresentationTableLongTokens(table);
+    markTableLongTokens(table);
     if (table.parentElement?.classList.contains('table-scroll-wrapper')) {
       continue;
     }
@@ -417,7 +421,7 @@ function wrapPresentationTablesForScroll() {
   }
 }
 
-function markPresentationTableLongTokens(table) {
+function markTableLongTokens(table) {
   // More than 40 consecutive characters is exceptional; whitespace, soft hyphens,
   // and zero-width spaces already provide wrapping opportunities.
   const longToken = /[^\s\u00ad\u200b]{41}/u;

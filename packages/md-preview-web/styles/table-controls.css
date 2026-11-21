@@ -69,6 +69,18 @@ body.preview-mode-document .markdown-body td {
   overflow-wrap: anywhere;
 }
 
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] {
+  overflow-x: auto;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+body.preview-mode-document .markdown-body .table-scroll-wrapper[data-table-layout='wrap'] :is(th, td)[data-table-long-token] {
+  overflow-wrap: anywhere;
+}
+
 :is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-overflow-capable='true'] table > thead > tr > :last-child,
 :is(body.preview-mode-document .markdown-body, body.preview-mode-presentation .presentation-slide-body) .table-scroll-wrapper[data-overflow-capable='true'] table > tbody > tr:first-child > th:last-child {
   padding-right: calc(16px + var(--md-preview-table-control-width));

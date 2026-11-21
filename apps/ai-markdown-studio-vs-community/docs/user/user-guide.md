@@ -280,7 +280,7 @@ Turn on **`markdownAiStudio.formatTablesOnSave`** if you want the extension to a
 Document preview offers two table layouts:
 
 - **Wide** (default) keeps cell text on one line. Tables wider than the preview scroll horizontally, with left and right controls shown when you hover an edge.
-- **Wrap** fits a table to the preview width by wrapping text inside its cells.
+- **Wrap** wraps text within cells, keeping ordinary words and IDs together when possible. Exceptionally long tokens can break, and tables scroll horizontally if their whole-word minimum widths cannot fit the preview.
 
 Set **`markdownAiStudio.documentTableLayout`** to choose a document's default layout. This is a resource-scoped setting, so you can use different defaults for different files or folders. In the preview, the table-header control lets you switch an individual table between **Wrap table text** and **Use wide table layout** for the current session; this does not change the setting or the Markdown source.
 

@@ -122,6 +122,20 @@ describe('document preview updates', () => {
     expect(document.querySelector<HTMLInputElement>('input')!.disabled).toBe(true);
   });
 
+  it('marks long tokens in document tables, including replacements after an edit', async () => {
+    const table = (value: string) => `| ID | Text |\n| --- | --- |\n| REF123 | ${value} |`;
+    const { document, update } = await setup(table('ordinary words'));
+    expect(document.querySelectorAll('[data-table-long-token]')).toHaveLength(0);
+
+    await update(table('x'.repeat(41)));
+    const cells = document.querySelectorAll('tbody td');
+    expect(cells[0].hasAttribute('data-table-long-token')).toBe(false);
+    expect(cells[1].hasAttribute('data-table-long-token')).toBe(true);
+
+    await update(table(`${'x'.repeat(25)}\u200b${'y'.repeat(25)}`));
+    expect(document.querySelectorAll('[data-table-long-token]')).toHaveLength(0);
+  });
+
   it('applies a concurrent theme change to retained diagrams', async () => {
     const { document, mermaid, update } = await setup(chart() + rich);
     const diagram = document.querySelector('.mermaid-rendered');
