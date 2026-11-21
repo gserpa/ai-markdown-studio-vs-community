@@ -25,7 +25,7 @@ function extractSection(startMarker: string, endMarker: string): string {
 }
 
 describe('preview stylesheet presentation panels', () => {
-  it('keeps bottom-panel scrollbars on presentation theme variables', () => {
+  it('keeps bottom-panel scrollbars on host theme variables', () => {
     const panelSection = extractSection(
       '.presentation-bottom-panel {',
       '.presentation-bottom-panel[hidden] {',
@@ -33,10 +33,8 @@ describe('preview stylesheet presentation panels', () => {
 
     expect(panelSection).toContain('scrollbar-width: thin;');
     expect(panelSection).toContain('scrollbar-color:');
-    expect(panelSection).toContain('--presentation-body-color');
-    expect(panelSection).toContain('--presentation-panel-bg-soft');
-    expect(panelSection).not.toContain('--vscode-editor-background');
-    expect(panelSection).not.toContain('--vscode-editor-foreground');
+    expect(panelSection).toContain('--vscode-editor-background');
+    expect(panelSection).toContain('--vscode-editor-foreground');
   });
 
   it('keeps presentation headings and bold table cells on the presentation body palette', () => {

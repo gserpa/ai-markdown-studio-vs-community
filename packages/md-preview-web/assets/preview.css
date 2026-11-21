@@ -3342,9 +3342,9 @@ body.preview-mode-presentation .presentation-table-scroll .table-edge-scroll-but
 }
 
 .presentation-bottom-panel {
-  --presentation-panel-scrollbar-track: var(--presentation-panel-bg-soft, #f8faff);
-  --presentation-panel-scrollbar-thumb: color-mix(in srgb, var(--presentation-body-color, #1f2937) 32%, var(--presentation-panel-bg, #ffffff) 68%);
-  --presentation-panel-scrollbar-thumb-hover: color-mix(in srgb, var(--presentation-body-color, #1f2937) 46%, var(--presentation-panel-bg, #ffffff) 54%);
+  --presentation-panel-scrollbar-track: color-mix(in srgb, var(--vscode-editor-background) 92%, var(--vscode-editor-foreground) 8%);
+  --presentation-panel-scrollbar-thumb: var(--vscode-scrollbarSlider-background, color-mix(in srgb, var(--vscode-editor-foreground) 28%, var(--vscode-editor-background) 72%));
+  --presentation-panel-scrollbar-thumb-hover: var(--vscode-scrollbarSlider-hoverBackground, color-mix(in srgb, var(--vscode-editor-foreground) 40%, var(--vscode-editor-background) 60%));
   padding: 12px 14px;
   overflow-y: auto;
   max-height: 180px;
