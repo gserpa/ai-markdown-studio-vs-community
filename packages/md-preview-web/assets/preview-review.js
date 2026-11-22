@@ -165,6 +165,7 @@
     listButton.hidden = state.comments.length === 0;
     if (!list.hidden) renderList();
     if (reviewPanel) {
+      visibilityButton.hidden = state.comments.length === 0;
       visibilityButton.textContent = commentsVisible ? 'Hide Review Comments' : 'Show Review Comments';
       renderReviewPanel();
     }

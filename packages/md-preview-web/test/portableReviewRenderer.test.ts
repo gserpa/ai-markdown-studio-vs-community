@@ -215,6 +215,41 @@ it('retains the presentation review panel and its edited comment on the stable r
   }
 });
 
+it('shows the presentation visibility toggle only while comments exist', async () => {
+  const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
+  vi.stubGlobal('document', dom.window.document);
+  vi.stubGlobal('crypto', webcrypto);
+  try {
+    const host = await createPortableReviewHost('---\ndocument: presentation\n---\n\n# Slide\n\nA target here.\n', 'session', options);
+    dom.window.document.body.innerHTML = host.snapshot().body;
+    const root = dom.window.document.querySelector('[data-review-state]')!;
+    const bridge = createPortableReviewBridge(host, root, 'session');
+    Object.assign(dom.window, { __previewBridge: bridge });
+    dom.window.eval(readFileSync(new URL('../assets/preview-review.js', import.meta.url), 'utf8'));
+    const toggle = root.querySelector<HTMLButtonElement>('.md-review-visibility')!;
+    expect(toggle.hidden).toBe(true);
+
+    const block = [...root.querySelectorAll('[data-review-block]')].find(item => item.textContent?.includes('target'))!;
+    const start = block.textContent!.indexOf('target');
+    const selection = [{ id: block.getAttribute('data-review-block')!, start, end: start + 6 }];
+    await bridge.review({ action: 'add', body: 'Review', version: 1, requestId: 1, selection });
+    expect(toggle.hidden).toBe(false);
+    expect(toggle.textContent).toBe('Hide Review Comments');
+    toggle.click();
+    expect(toggle.textContent).toBe('Show Review Comments');
+
+    await bridge.review({ action: 'delete', id: '1', version: 2, requestId: 2 });
+    expect(toggle.hidden).toBe(true);
+    expect(root.querySelector('.md-review-panel-empty')?.textContent).toBe('No review comments.');
+    await bridge.review({ action: 'add', body: 'Another review', version: 3, requestId: 3, selection });
+    expect(toggle.hidden).toBe(false);
+    expect(toggle.textContent).toBe('Show Review Comments');
+  } finally {
+    vi.unstubAllGlobals();
+    dom.window.close();
+  }
+});
+
 it('preserves code-block mapping for session IDs containing punctuation', async () => {
   const dom = new JSDOM('');
   vi.stubGlobal('document', dom.window.document);
