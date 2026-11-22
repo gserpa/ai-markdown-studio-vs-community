@@ -1,6 +1,6 @@
 ---
-date: 2026-10-24
-version: 1.3.0
+date: 2026-11-22
+version: 1.4.0
 ---
 
 # AI Markdown Studio Community — User Guide
@@ -35,7 +35,7 @@ This guide covers everything in the Community edition. Advanced conversion, them
 
 1. Install **AI Markdown Studio Community** from the Extensions view, or run `code --install-extension GustavoSerpa.markdown-ai-studio`.
 2. Open any `.md` file. It opens in the **preview** by default.
-3. Use the pencil (**Edit Markdown**) icon in the preview's title bar to switch to the text editor, and the eye (**Preview Markdown**) icon to switch back.
+3. Use the pencil (**Document Editor**) icon to open VS Code's WYSIWYG editor, or choose **Edit Markdown** from the command launcher to edit the source. Use the eye (**Preview Markdown**) icon to return to the preview.
 
 No account, sign-in, or network connection is required for authoring, preview, themes, HTML export, or basic DOCX export. The optional AI features use the GitHub Copilot service already configured in VS Code. **Generate Presentation (AI)** remains available without Copilot and copies a complete presentation prompt for use in Claude or another AI assistant.
 
@@ -45,10 +45,14 @@ Opening a Markdown file shows the rendered preview first. Switching between prev
 
 You can switch modes in several ways:
 
-- **Editor title bar** — the eye icon (**Preview Markdown**) when editing, and the pencil icon (**Edit Markdown**) when previewing.
-- **Command Palette** (`Ctrl+Shift+P`) — run **Preview Markdown** or **Edit Markdown**.
+- **Editor title bar** — the eye icon (**Preview Markdown**) when editing, and the pencil (**Document Editor**) icon when previewing.
+- **Command Palette** (`Ctrl+Shift+P`) — run **Preview Markdown**, **Document Editor**, or **Edit Markdown**.
 - **Command launcher** — run **Show AI Markdown Studio Commands** and pick a mode.
-- **Explorer file context menu** — right-click a Markdown file and choose **Edit Markdown** to open it directly as text.
+- **Explorer file context menu** — right-click a Markdown file and choose **Open Preview**, **Document Editor**, or **Edit Markdown**. **Open Preview** is also available on the editor tab's context menu.
+
+The context-menu **Open Preview** opens AI Markdown Studio's preview. While Community is active, VS Code hides its built-in Markdown preview buttons in the editor title bar and context menus; its Command Palette commands remain available.
+
+VS Code controls the Document Editor's reading and editing modes. Its `markdown.editor.initialMode` setting can request edit mode initially, but the editor remembers a mode you subsequently choose.
 
 ## Commands
 
@@ -57,6 +61,7 @@ All commands are available from the Command Palette (`Ctrl+Shift+P`). The most c
 | Command                                           | What it does                                                                                                                                                        |                                                                      |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | **Preview Markdown**                              | Opens or focuses the rendered preview for the current file.                                                                                                         |                                                                      |
+| **Document Editor**                               | Opens the file in VS Code's native WYSIWYG Markdown editor.                                                                                                         |                                                                      |
 | **Edit Markdown**                                 | Switches the current file to the text editor.                                                                                                                       |                                                                      |
 | **Format Markdown Tables**                        | Aligns every Markdown table in the active file. Also runs via **Format Document**.                                                                                  |                                                                      |
 | **`markdownAiStudio.formatTablesOnSave`**         | `false`                                                                                                                                                             | Automatically formats Markdown tables when you save a Markdown file. |
@@ -79,6 +84,8 @@ Community provides guided workflows for creating both documents and presentation
 - **Generate Presentation (AI)** ensures the result follows AI Markdown Studio's presentation format. Without Copilot, it copies the ready-to-use prompt automatically and never sends the brief to a model.
 
 Both native-generation workflows create a new Markdown file and open it for review without changing your current document. Choosing **Copy Prompt**, or using the presentation workflow without Copilot, does not contact Copilot; it copies the instructions to your clipboard. The presentation prompt is self-contained: it includes the MPS front matter, slide separators, layouts, directives, notes, image guidance, and validation rules.
+
+The theme picker uses the installed theme registry, including bundled themes and, in Pro, global themes and themes from the workspace where generation was started. If saving into a different workspace, a workspace-only theme must also be available there.
 
 After the first presentation prompt is copied, Community can offer to install a workspace skill for a selected agent. You can also run **Install Presentation Agent Skill in Workspace** at any time. Choose **GitHub Copilot** to install the tool-first skill at `.github/skills/markdown-ai-studio-presentation-copilot/SKILL.md`; it directs Copilot to the extension's canonical prompt, validation, and confirmed-save tools. Choose **Claude** to install the complete standalone skill at `.claude/skills/markdown-ai-studio-presentation/SKILL.md`, or **Codex** to install that standalone skill at `.agents/skills/markdown-ai-studio-presentation/SKILL.md`. The complete skill embeds the MPS rules, so it remains useful when an agent cannot call extension tools. The packaged Copilot skill is manually invoked and therefore does not replace the existing tools automatically.
 
@@ -148,13 +155,13 @@ Comments travel inside the Markdown file as short `<!--review:1-->` and `<!--/re
 
 For component text, markers are placed inside the component's YAML and identified in review metadata. AI Markdown Studio removes them before rendering; other component processors may need the markers removed first. When a selection within one component cannot be mapped precisely, the comment attaches to the whole component. Some other selections cannot be mapped safely; select a smaller passage if prompted.
 
-Use **Hide Review Comments** or **Show Review Comments** in the presentation's Review Comments panel to toggle markers across previews of the same file. The panel list remains available for navigation.
+When the file has comments, use **Hide / Show Review Comments** in the preview title bar or command menu, or the visibility button in the presentation's Review Comments panel, to toggle markers across previews of the same file. The panel list remains available for navigation.
 
-Use the check icon to mark a comment resolved, or the same button to reopen it. The bin deletes it. Clicking an action while editing saves the comment first and then performs the action. **View Review Comments** opens the Explorer sidebar to find or reattach comments.
+Use the check icon to mark a comment resolved, or the same button to reopen it. The bin deletes it. Clicking an action while editing saves the comment first and then performs the action. The Explorer's **Review Comments** sidebar can also find or reattach comments.
 
 Right-click a sidebar comment to go to it, resolve or reopen it, remove it, or switch between AI and manual review. The context menu and sidebar title menu also offer **Implement Selected with AI**, **Clear All Resolved**, and **Clear All Comments**. The AI action uses all open, attached comments selected for AI in that file. Clearing all comments requires confirmation.
 
-**AI: Revise from Comments** offers Copilot or prompt copy. The preview title bar also provides a direct Copilot review button. Copilot may change nearby text to make a revision fit and opens an editable diff. Use **Apply Revision** to apply the draft and choose which comments to mark resolved. **Copy Review Prompt** copies selected comments and their nearby context for another assistant, including when integrated AI is disabled.
+When the current file has an open, attached comment selected for AI review, **AI: Revise from Comments** is available in the command menu and the presentation's Review Comments panel; it offers Copilot or prompt copy. The preview title bar also provides a direct Copilot review button when available. Copilot may change nearby text to make a revision fit and opens an editable diff. Use **Apply Revision** to apply the draft and choose which comments to mark resolved. The prompt-copy option copies selected comments and their nearby context for another assistant, including when integrated AI is disabled.
 
 ## Document themes
 
@@ -273,7 +280,7 @@ Use **Toggle Frontmatter** (also a title-bar control when the active preview has
 
 ## Table formatting
 
-Run **Format Markdown Tables** to align every Markdown table in the active file into evenly padded columns, making the raw Markdown easier to read and diff.
+While editing Markdown source, run **Format Markdown Tables** to align every table in the active file into evenly padded columns, making the raw Markdown easier to read and diff. The command is hidden in the preview and Document Editor.
 
 This command is also registered as a document formatter, so **Format Document** (`Shift+Alt+F`) on a `.md` file reformats its tables too. You can enable format-on-save for Markdown if you want tables aligned automatically.
 Turn on **`markdownAiStudio.formatTablesOnSave`** if you want the extension to apply the same formatting automatically when saving Markdown files.
@@ -289,13 +296,11 @@ Set **`markdownAiStudio.documentTableLayout`** to choose a document's default la
 
 ## HTML export
 
-Run **Export Markdown as HTML** to create a reviewable `.html` file for a document or presentation. It contains a copy of the complete Markdown, front matter, and review comments, along with the preview renderer and styling. Anyone receiving the HTML can inspect that embedded source, including comments and metadata, even if they are not visible in the rendered view. Review sensitive content before sharing.
+Run **Export Markdown as HTML** to create an `.html` snapshot of a document or presentation. It contains a copy of the complete Markdown, front matter, and review comments, along with the preview styling and runtime. Anyone receiving the HTML can inspect that embedded source, including comments and metadata, even if they are not visible in the rendered view. Review sensitive content before sharing.
 
 The export embeds linked Markdown and HTML images into the copy, including permitted remote images; it does not change or save the original Markdown. If a remote image cannot be downloaded, export retains its link and logs a warning. Linked images require network access and may be unavailable when the HTML is opened. Local image failures and invalid review metadata still stop export. If review markers occur inside image syntax that must be rewritten, move or reattach the comment outside that syntax before exporting.
 
-Open the file in a JavaScript-enabled desktop browser. Desktop Chrome and Edge have been tested. Select rendered text and choose **Add Review Comment**; use **Review Comments** to navigate existing comments. The document list or presentation panel provides edit, resolve, reopen, delete, and reattach actions. Browser review does not run AI; existing AI-inclusion metadata is preserved.
-
-Use **Save reviewed HTML** to download a new reviewable copy, or **Download Markdown** to download the current Markdown with comments and embedded images. In a presentation, both controls are in the bottom bar and appear only in the exported HTML. These are separate files: they do not overwrite or sync the original. The browser may show a Save As dialog, block downloads, or let you cancel them. Confirm the file was actually saved; the page cannot verify that and keeps its unsaved-change warning after requesting a download. It may warn when you leave after changes, where the browser permits. Keep your own copy before closing.
+Open the file in a JavaScript-enabled browser. In a document, move the pointer to the top-right corner or focus the export menu with the keyboard; on touch devices the menu is visible. In a presentation, use the bottom bar. **Download Markdown** saves the embedded snapshot with existing comments and embedded images, without changing or syncing the original. Browsers may block or cancel downloads; confirm the file was saved. Review comments are not displayed or editable in new exports; use VS Code to review them. Existing exported files retain their previous behavior.
 
 If an embedded viewer blocks presentation scripts, the export offers limited slide navigation without JavaScript. Some viewers may restrict even these controls; open the file in a browser if needed. Script-rendered diagrams and charts, animations, and other interactive features require JavaScript.
 
@@ -324,7 +329,8 @@ Open settings with **Change Settings...**, or `Ctrl+,` and search for `markdownA
 | `markdownAiStudio.presentationContentOverflow` | `scaleToFit`   | Controls overflowing presentation content. `scaleToFit` scales dense slide content down to fit, stopping at 60% before retaining scrolling; `scroll` preserves scrolling instead.                                                                                                   |
 | `markdownAiStudio.allowRemoteResources`        | `true`         | Whether previews and exports may load images and other content from the internet.                                                                                                                                                                                                   |
 | `markdownAiStudio.aiAccess`                    | `ask`          | Controls native Copilot generation. `ask` shows the disclosure only after native generation is chosen, `enabled` allows Copilot-backed features, and `denied` disables them. Presentation prompt copy and presentation-skill installation remain local and available in all states. |
-| `markdownAiStudio.aiModel`                     | `gpt-5.6-luna` | Preferred Copilot model family, with documented fallback models used if it is unavailable.                                                                                                                                                                                          |
+| `markdownAiStudio.aiModel`                     | `gpt-5.6-luna` | Preferred Copilot model family for conversions, paste, review, and theme generation. Falls back to `gpt-5.4-mini`, then other available Copilot models. |
+| `markdownAiStudio.aiGenerationModel`           | `claude-opus-5.5` | Preferred Copilot model family or ID for document and presentation workflows and repairs. Falls back to `claude-opus-5.5`, `claude-sonnet-5.5`, `gpt-5.6-luna`, `gpt-5.4-mini`, then other available Copilot models. Fallbacks also apply to failed requests. |
 
 ## Privacy and remote resources
 

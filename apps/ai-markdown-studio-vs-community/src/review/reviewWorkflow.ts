@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import * as vscode from 'vscode';
 import { lineOffsets, readReviewComments, reviewRangeLines, writeReviewComments, type ReviewComment, type ReviewRange } from '@mfo/core';
-import { createReviewActionHandler, type ReviewRequest } from '@mfo/review';
+import { createReviewActionHandler, isAiReviewEligible, type ReviewRequest } from '@mfo/review';
 import { ensureAiFeaturesEnabled, getAiAccessState } from '../ai/aiConsent';
 import { hasConfiguredCopilotAccount } from '../ai/copilotAvailability';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
@@ -10,13 +10,13 @@ import type { PreviewDocumentUpdater } from '../panel/PreviewDocumentUpdater';
 import { readPreviewSelection } from './reviewPreview';
 
 const reviewCommand = 'markdownAiStudio.reviewComments';
-const copyCommand = 'markdownAiStudio.copyReviewPrompt';
 const applyCommand = 'markdownAiStudio.applyReviewRevision';
 const discardCommand = 'markdownAiStudio.discardReviewRevision';
 const baseScheme = 'markdown-ai-studio-review-base';
 const reviewPanels = new Map<string, Set<vscode.WebviewPanel>>();
 const hiddenReviewComments = new Set<string>();
 let activeReviewUri: vscode.Uri | undefined;
+let activeReviewPanel: vscode.WebviewPanel | undefined;
 let refreshReviewView: (() => Promise<void>) | undefined;
 
 type EligibleComment = {
@@ -105,18 +105,25 @@ export function attachReviewPreview(
         const preview = typeof sessionId === 'string' && request.version === snapshotVersion
           ? updater.getReviewPage(sessionId, snapshotVersion) : undefined;
         if (!preview || typeof sessionId !== 'string') throw new Error('The preview changed. Select the text again.');
-        await applyReviewAction({
-          markdown, version: snapshotVersion, sessionId, preview,
-        }, request, async (updated, expectedVersion, expectedSessionId) => {
-          if (!updater.getReviewPage(expectedSessionId, expectedVersion)) {
-            throw new Error('The preview changed. Select the text again.');
+        if (request.action === 'revise') {
+          if (!Number.isSafeInteger(request.requestId) || !request.requestId || request.requestId < 1) {
+            throw new Error('Invalid review action.');
           }
-          if (document.isClosed || document.version !== documentVersion || document.getText() !== markdown) {
-            throw new Error('The Markdown changed. Try the review action again.');
-          }
-          await replaceDocument(document, documentVersion, updated, true);
-          return true;
-        });
+          await vscode.commands.executeCommand(reviewCommand, document.uri);
+        } else {
+          await applyReviewAction({
+            markdown, version: snapshotVersion, sessionId, preview,
+          }, request, async (updated, expectedVersion, expectedSessionId) => {
+            if (!updater.getReviewPage(expectedSessionId, expectedVersion)) {
+              throw new Error('The preview changed. Select the text again.');
+            }
+            if (document.isClosed || document.version !== documentVersion || document.getText() !== markdown) {
+              throw new Error('The Markdown changed. Try the review action again.');
+            }
+            await replaceDocument(document, documentVersion, updated, true);
+            return true;
+          });
+        }
         if (request.action === 'edit') pendingReattach = request.afterEdit === 'reattach' ? request.id : undefined;
         else if (request.action === 'reattach') pendingReattach = undefined;
       }
@@ -130,11 +137,16 @@ export function attachReviewPreview(
   });
   panel.onDidChangeViewState(event => {
     if (event.webviewPanel.active) {
+      activeReviewPanel = panel;
       activeReviewUri = getDocument().uri;
-      void refreshReviewView?.();
+    } else if (activeReviewPanel === panel) {
+      activeReviewPanel = undefined;
+      activeReviewUri = undefined;
     }
+    queueMicrotask(() => { void refreshReviewView?.(); });
   });
   if (panel.active) {
+    activeReviewPanel = panel;
     activeReviewUri = getDocument().uri;
     void refreshReviewView?.();
   }
@@ -142,7 +154,10 @@ export function attachReviewPreview(
     panels.delete(panel);
     if (!panels.size) {
       reviewPanels.delete(key);
-      if (activeReviewUri?.toString() === key) activeReviewUri = undefined;
+    }
+    if (activeReviewPanel === panel) {
+      activeReviewPanel = undefined;
+      activeReviewUri = undefined;
     }
     void refreshReviewView?.();
     messageSubscription.dispose();
@@ -169,7 +184,7 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
     originals.delete(draft.base.toString());
   };
 
-  const review = async (resource?: vscode.Uri, mode?: 'copy' | 'integrated') => {
+  const review = async (resource?: vscode.Uri, mode?: 'integrated') => {
     const uri = resource?.scheme === 'file' ? resource : resolveUri();
     if (!uri || uri.scheme !== 'file') {
       void vscode.window.showInformationMessage('Open a saved Markdown file to review comments.');
@@ -187,15 +202,10 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
       return;
     }
 
-    if (mode === 'copy') {
-      await vscode.env.clipboard.writeText(buildReviewPrompt(stored.markdown, eligible, false));
-      void vscode.window.showInformationMessage('Review prompt copied with the current Markdown and selected comments.');
-      return;
-    }
     if (mode === undefined) {
       if (!(await shouldGenerateWithLanguageModel(buildReviewPrompt(stored.markdown, eligible, false)))) return;
     } else if (getAiAccessState() === 'denied' || !(await hasConfiguredCopilotAccount().catch(() => false))) {
-      throw new Error('Integrated AI review is unavailable. Use Copy Review Prompt to review with another AI.');
+      throw new Error('Integrated AI review is unavailable. Use AI: Revise from Comments to copy a prompt for another AI.');
     }
     if (document.version !== version) throw new Error('The Markdown changed. Run the review again.');
     const key = uri.toString();
@@ -304,16 +314,24 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
     }
     await replaceDocument(target.document, target.version, writeReviewComments(target.original, comments), true);
   };
+  let refreshVersion = 0;
   const refresh = async () => {
+    const version = ++refreshVersion;
     changed.fire();
     const uri = activeReviewUri ?? resolveUri();
     let eligible = false;
+    let hasComments = false;
     if (uri?.scheme === 'file') {
       const document = await vscode.workspace.openTextDocument(uri);
       const stored = readReviewComments(document.getText());
-      eligible = eligibleComments(stored.markdown, stored.comments).length > 0;
+      hasComments = !stored.error && stored.comments.length > 0;
+      eligible = !stored.error && stored.comments.some(isAiReviewEligible);
     }
-    await vscode.commands.executeCommand('setContext', 'markdownAiStudio.reviewPending', eligible);
+    if (version !== refreshVersion) return;
+    await Promise.all([
+      vscode.commands.executeCommand('setContext', 'markdownAiStudio.reviewPending', eligible),
+      vscode.commands.executeCommand('setContext', 'markdownAiStudio.reviewHasComments', hasComments),
+    ]);
   };
   refreshReviewView = refresh;
   void refresh();
@@ -324,10 +342,6 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
       const uri = resource?.scheme === 'file' ? resource : activeReviewUri ?? resolveUri();
       if (!uri) return;
       await toggleReviewVisibility(uri.toString());
-    }),
-    vscode.commands.registerCommand('markdownAiStudio.viewReviewComments', async () => {
-      await refresh();
-      await vscode.commands.executeCommand('markdownAiStudio.reviewCommentsView.focus');
     }),
     vscode.commands.registerCommand('markdownAiStudio.revealReviewComment', (entry: ReviewTreeEntry) => report(async () => {
       if (!entry?.comment) throw new Error('Select a review comment first.');
@@ -358,7 +372,6 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
       provideTextDocumentContent: uri => originals.get(uri.toString()) ?? '',
     }),
     vscode.commands.registerCommand(reviewCommand, (uri?: vscode.Uri, mode?: 'integrated') => report(() => review(uri, mode))),
-    vscode.commands.registerCommand(copyCommand, (uri?: vscode.Uri) => report(() => review(uri, 'copy'))),
     vscode.commands.registerCommand(applyCommand, () => report(async () => {
       const draft = activeDraft();
       if (!draft || draft.applied) return;
@@ -407,7 +420,7 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
 
 function eligibleComments(markdown: string, comments: ReviewComment[]): EligibleComment[] {
   return comments.flatMap(comment => {
-    if (!comment.includeInAi || comment.state !== 'open' || !comment.range) return [];
+    if (!isAiReviewEligible(comment) || !comment.range) return [];
     const { startLine, endLine } = reviewRangeLines(markdown, comment.range);
     const offsets = lineOffsets(markdown);
     let first = Math.max(0, startLine - 4);

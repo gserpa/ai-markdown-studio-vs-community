@@ -47,6 +47,7 @@
   let reviewPanel;
   let reviewPanelContents;
   let visibilityButton;
+  let reviseButton;
   if (presentation) {
     const bottomBar = root.querySelector('[data-presentation-bottom-bar]');
     const tabs = bottomBar?.querySelector('.presentation-bottom-bar-tabs');
@@ -70,8 +71,14 @@
       reviewPanel.dataset.reviewUi = '';
       visibilityButton = button('', () => send('toggleVisibility'));
       visibilityButton.classList.add('md-review-visibility');
+      if (!standalone) {
+        reviseButton = button('AI: Revise from Comments', () => send('revise'));
+        reviseButton.classList.add('md-review-revise');
+      }
       reviewPanelContents = make('div');
-      reviewPanel.append(visibilityButton, reviewPanelContents);
+      reviewPanel.append(visibilityButton);
+      if (reviseButton) reviewPanel.append(reviseButton);
+      reviewPanel.append(reviewPanelContents);
       const active = bridge.getState()?.presentationActivePanelTab === 'review';
       tab.classList.toggle('is-active', active);
       reviewPanel.hidden = !active;
@@ -167,6 +174,7 @@
     if (reviewPanel) {
       visibilityButton.hidden = state.comments.length === 0;
       visibilityButton.textContent = commentsVisible ? 'Hide Review Comments' : 'Show Review Comments';
+      if (reviseButton) reviseButton.hidden = !state.comments.some(comment => comment.eligibleForAi);
       renderReviewPanel();
     }
     scheduleLayout();

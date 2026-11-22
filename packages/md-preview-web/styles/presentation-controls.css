@@ -226,6 +226,12 @@
   padding: 0;
 }
 
+.presentation-bottom-panel-notes .presentation-notes-empty {
+  margin: 0;
+  font: 13px/1.4 var(--vscode-font-family, sans-serif);
+  color: var(--vscode-editor-foreground, #222);
+}
+
 .presentation-bottom-panel-info.markdown-body {
   max-width: none;
   margin: 0;

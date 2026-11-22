@@ -1,6 +1,6 @@
 # Migrating presentations and preview assets
 
-This guide applies to the changes listed under **Unreleased** after version 1.3.0.
+This guide applies to the changes in version 1.4.0.
 
 ## Why migration is needed
 

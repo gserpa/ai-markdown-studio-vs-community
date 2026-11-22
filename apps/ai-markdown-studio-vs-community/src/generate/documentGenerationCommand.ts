@@ -2,10 +2,10 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { createDocumentPrompt, createVisualizationRepairPrompt, validateVisualizationFences } from '@mfo/ai-core';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
+import { loadDocumentThemeRegistryForDocument } from '../document/documentThemeSupport';
 import { shouldGenerateWithLanguageModel } from './generationMode';
 
 const LENGTHS = ['Short', 'Standard', 'Detailed'] as const;
-const THEMES = ['auto', 'light-modern-blue', 'dark-modern-aurora', 'night-sky', 'midnight-delivery'] as const;
 type DocumentGenerationRequest = {
   brief: string;
   audience: string;
@@ -14,8 +14,10 @@ type DocumentGenerationRequest = {
   theme: string;
 };
 
-export async function generateDocumentCommand(resource?: vscode.Uri): Promise<void> {
-  const request = await collectRequest();
+export async function generateDocumentCommand(extensionUri: vscode.Uri, resource?: vscode.Uri): Promise<void> {
+  const themeContext = resource ?? vscode.window.activeTextEditor?.document.uri ?? vscode.workspace.workspaceFolders?.[0]?.uri ?? extensionUri;
+  const themes = loadDocumentThemeRegistryForDocument(extensionUri, themeContext);
+  const request = await collectRequest(['auto', ...[...themes.themes.keys()].filter((name) => name !== 'auto')]);
   if (!request) return;
 
   const prompt = createDocumentPrompt({ ...request, documentTheme: request.theme });
@@ -29,6 +31,10 @@ export async function generateDocumentCommand(resource?: vscode.Uri): Promise<vo
     saveLabel: 'Generate Document',
   });
   if (!target) return;
+  if (request.theme !== 'auto' && !loadDocumentThemeRegistryForDocument(extensionUri, target).themes.has(request.theme)) {
+    void vscode.window.showErrorMessage(`The document theme "${request.theme}" is not available in the selected destination. Start generation from that workspace or choose another destination.`);
+    return;
+  }
 
   try {
     await vscode.window.withProgress({
@@ -36,12 +42,12 @@ export async function generateDocumentCommand(resource?: vscode.Uri): Promise<vo
       title: 'Generating Markdown document...',
       cancellable: true,
     }, async (_progress, token) => {
-      const raw = await generateTextWithLanguageModel(prompt, token, 'Generate a Markdown document');
+      const raw = await generateTextWithLanguageModel(prompt, token, 'Generate a Markdown document', 'generation');
       let markdown = normalizeMarkdown(raw, request);
       const issues = validateVisualizationFences(markdown);
       if (issues.length) {
         markdown = normalizeMarkdown(await generateTextWithLanguageModel(
-          createVisualizationRepairPrompt(markdown, issues), token, 'Repair generated visualizations',
+          createVisualizationRepairPrompt(markdown, issues), token, 'Repair generated visualizations', 'generation',
         ), request);
         const remaining = validateVisualizationFences(markdown);
         if (remaining.length) throw new Error(`Generated visualizations need correction: ${remaining.slice(0, 3).join(' ')}`);
@@ -55,7 +61,7 @@ export async function generateDocumentCommand(resource?: vscode.Uri): Promise<vo
   }
 }
 
-async function collectRequest(): Promise<DocumentGenerationRequest | undefined> {
+async function collectRequest(themes: readonly string[]): Promise<DocumentGenerationRequest | undefined> {
   const brief = await vscode.window.showInputBox({
     title: 'Generate Document (AI)',
     prompt: 'Describe the Markdown document you want to generate',
@@ -68,7 +74,7 @@ async function collectRequest(): Promise<DocumentGenerationRequest | undefined> 
   if (tone === undefined) return undefined;
   const length = await vscode.window.showQuickPick(LENGTHS, { title: 'Generate Document (AI)', placeHolder: 'Choose the target length' });
   if (!length) return undefined;
-  const theme = await vscode.window.showQuickPick(THEMES, { title: 'Generate Document (AI)', placeHolder: 'Choose a document theme' });
+  const theme = await vscode.window.showQuickPick(themes, { title: 'Generate Document (AI)', placeHolder: 'Choose a document theme' });
   if (!theme) return undefined;
   return { brief: brief.trim(), audience: audience.trim() || 'General audience', tone: tone.trim() || 'Professional', length, theme };
 }

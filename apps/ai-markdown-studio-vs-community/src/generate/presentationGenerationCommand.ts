@@ -3,11 +3,11 @@ import * as vscode from 'vscode';
 import { createPresentationPrompt, createPresentationRepairPrompt, validateVisualizationFences } from '@mfo/ai-core';
 import { generateTextWithLanguageModel } from '../ai/languageModel';
 import { validatePresentation } from '../ai/presentationValidation';
+import { loadPreviewThemeRegistryForDocument } from '../presentation/previewThemeSupport';
 import { normalizeGeneratedPresentationImages } from './generatedPresentationImages';
 import { shouldGenerateWithLanguageModel } from './generationMode';
 import { offerPresentationSkillInstallation } from '../skills/presentationSkillInstaller';
 
-const THEMES = ['auto', 'default', 'galaxy', 'modern-blue', 'black', 'midnight-delivery'] as const;
 const RATIOS = ['16:9', '4:3'] as const;
 type PresentationGenerationRequest = {
   brief: string;
@@ -19,10 +19,12 @@ type PresentationGenerationRequest = {
 };
 
 export async function generatePresentationCommand(
-  resource?: vscode.Uri,
-  extensionContext?: vscode.ExtensionContext,
+  resource: vscode.Uri | undefined,
+  extensionContext: vscode.ExtensionContext,
 ): Promise<void> {
-  const request = await collectRequest();
+  const themeContext = resource ?? vscode.window.activeTextEditor?.document.uri ?? vscode.workspace.workspaceFolders?.[0]?.uri ?? extensionContext.extensionUri;
+  const themes = loadPreviewThemeRegistryForDocument(extensionContext.extensionUri, themeContext);
+  const request = await collectRequest(['auto', 'default', ...[...themes.themes.keys()].filter((name) => name !== 'auto' && name !== 'default')]);
   if (!request) return;
   const allowRemoteResources = vscode.workspace.getConfiguration('markdownAiStudio').get<boolean>('allowRemoteResources', true);
 
@@ -37,7 +39,7 @@ export async function generatePresentationCommand(
   });
   if (!(await shouldGenerateWithLanguageModel(
     prompt,
-    extensionContext ? () => offerPresentationSkillInstallation(extensionContext, resource) : undefined,
+    () => offerPresentationSkillInstallation(extensionContext, resource),
   ))) return;
 
   const folder = await resolveOutputFolder(resource);
@@ -48,6 +50,11 @@ export async function generatePresentationCommand(
     saveLabel: 'Generate Presentation',
   });
   if (!target) return;
+  if (request.theme !== 'auto' && request.theme !== 'default'
+    && !loadPreviewThemeRegistryForDocument(extensionContext.extensionUri, target).themes.has(request.theme)) {
+    void vscode.window.showErrorMessage(`The presentation theme "${request.theme}" is not available in the selected destination. Start generation from that workspace or choose another destination.`);
+    return;
+  }
 
   try {
     await vscode.window.withProgress({
@@ -59,6 +66,7 @@ export async function generatePresentationCommand(
         prompt,
         token,
         'Generate a Markdown Presentation Specification deck',
+        'generation',
       ), request);
       const issues = validatePresentation(markdown);
       if (issues.length > 0) {
@@ -66,6 +74,7 @@ export async function generatePresentationCommand(
           createPresentationRepairPrompt(markdown, issues),
           token,
           'Repair a generated Markdown Presentation Specification deck',
+          'generation',
         ), request);
         const remainingIssues = validatePresentation(markdown);
         if (remainingIssues.length > 0) {
@@ -98,7 +107,7 @@ export async function generatePresentationCommand(
   }
 }
 
-async function collectRequest(): Promise<PresentationGenerationRequest | undefined> {
+async function collectRequest(themes: readonly string[]): Promise<PresentationGenerationRequest | undefined> {
   const brief = await vscode.window.showInputBox({
     title: 'Generate Presentation (AI)',
     prompt: 'Describe the presentation you want to generate',
@@ -117,7 +126,7 @@ async function collectRequest(): Promise<PresentationGenerationRequest | undefin
     ignoreFocusOut: true,
   });
   if (!slideCountText) return undefined;
-  const theme = await vscode.window.showQuickPick(THEMES, { title: 'Generate Presentation (AI)', placeHolder: 'Choose a presentation theme' });
+  const theme = await vscode.window.showQuickPick(themes, { title: 'Generate Presentation (AI)', placeHolder: 'Choose a presentation theme' });
   if (!theme) return undefined;
   const ratio = await vscode.window.showQuickPick(RATIOS, { title: 'Generate Presentation (AI)', placeHolder: 'Choose a slide ratio' });
   if (!ratio) return undefined;

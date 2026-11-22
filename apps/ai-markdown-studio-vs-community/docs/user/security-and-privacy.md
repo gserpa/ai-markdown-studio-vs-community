@@ -6,4 +6,6 @@ AI commands can send the content you provide to the GitHub Copilot service confi
 
 Markdown, charts, media, and exported HTML may reference remote resources. To prevent remote loading while reviewing an untrusted document or working in a restricted environment, set `markdownAiStudio.allowRemoteResources` to `false` in VS Code settings. Local file links and images may also reveal files you choose to reference.
 
+HTML exports embed the complete Markdown snapshot, including front matter and review comments. Recipients can inspect it even when comments are not shown in the page.
+
 For a product problem, use [Support](../../SUPPORT.md). **Do not report a suspected vulnerability in a public issue.** Use the private contact route described in Support. For command and setting details, see the [user guide](user-guide.md#privacy-and-remote-resources).

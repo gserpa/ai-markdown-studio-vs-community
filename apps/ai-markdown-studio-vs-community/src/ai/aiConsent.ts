@@ -14,7 +14,7 @@ export type AiAccessState = typeof AI_ACCESS_STATES[number];
 const AI_DISCLOSURE = [
   'By enabling AI features, you accept that AI Markdown Studio may use the GitHub Copilot service already configured in VS Code for AI-supported functionality, such as document generation, presentation generation, AI Paste to Markdown, and review of the current document with selected comments.',
   '',
-  'These features run only after you trigger an AI action. They use the model made available through your VS Code/Copilot setup, preferring the model configured in markdownAiStudio.aiModel and then the documented fallbacks. Depending on your Copilot plan or configured AI provider, requests may consume token quota or incur usage charges.',
+  'These features run only after you trigger an AI action. They use models made available through your VS Code/Copilot setup, preferring markdownAiStudio.aiGenerationModel for document and presentation workflows and markdownAiStudio.aiModel for other AI actions, then the documented fallbacks. Depending on your Copilot plan or configured AI provider, requests may consume token quota or incur usage charges.',
   '',
   'By selecting Enable AI Features, you accept responsibility for any token usage or charges resulting from AI actions you trigger.',
   '',

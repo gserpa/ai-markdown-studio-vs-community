@@ -25,18 +25,6 @@ export class MarkdownPreviewCustomEditor implements vscode.CustomReadonlyEditorP
     return MarkdownPreviewCustomEditor.activeDocumentUri;
   }
 
-  public closeForUri(uri: vscode.Uri): void {
-    const key = uri.toString();
-    const panels = this.panels.get(key);
-    if (!panels) {
-      return;
-    }
-
-    for (const panel of [...panels]) {
-      panel.dispose();
-    }
-  }
-
   public openCustomDocument(uri: vscode.Uri): vscode.CustomDocument {
     return {
       uri,

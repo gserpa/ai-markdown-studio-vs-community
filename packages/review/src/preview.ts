@@ -3,6 +3,7 @@ import {
   type createMarkdownRenderer,
   type ReviewComment, type ReviewRange,
 } from '@mfo/core';
+import { isAiReviewEligible } from './eligibility';
 
 type ReviewBlock = { id: string; text: string; startLine: number; endLine: number; component?: boolean };
 export type ReviewPreview = {
@@ -96,6 +97,7 @@ function buildReviewPreview(adapters: ReviewPreviewAdapters, body: string, store
     }
     const comments = store.comments.map(comment => ({
       id: comment.id, body: comment.body, state: comment.state, includeInAi: comment.includeInAi,
+      eligibleForAi: !store.error && isAiReviewEligible(comment),
       originalQuote: comment.range ? store.markdown.slice(comment.range.start, comment.range.end) : 'Selection unavailable',
       originalLines: comment.range ? reviewRangeLines(store.markdown, comment.range) : { startLine: 0, endLine: 0 },
       placement: locatePlacement(adapters, store.markdown, comment, blocks),

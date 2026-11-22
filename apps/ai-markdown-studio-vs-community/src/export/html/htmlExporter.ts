@@ -29,7 +29,7 @@ import * as vscode from 'vscode';
 import type { ThemeCssArtifact } from '@mfo/preview-web';
 import { HtmlExportAssetCache, inlineKatexFontUrls, selectReferencedPreviewFonts } from './htmlExportAssets';
 import { preparePortableMarkdown, type RemoteImageFailure } from './portableMarkdown';
-import { portableReviewBody, portableReviewHead, safeScript, validatePortableMediaResources, type PortableShellOptions } from './portableReviewHtml';
+import { portableBody, portableDownloadControl, portableHead, safeScript, validatePortableMediaResources, type PortableShellOptions } from './portableHtml';
 
 export type ExportMode = 'theme' | 'paper' | 'paper-borderless';
 type VisualizationExportAssets = { runtime: string; notices: string };
@@ -174,7 +174,7 @@ async function buildRenderedHtmlArtifact(
   return options.assetMode === 'external' ? externalizeHtmlArtifact(html) : { html, assets: [] };
 }
 
-export async function buildPortableReviewHtml(
+export async function buildPortableHtml(
   extensionUri: vscode.Uri,
   document: vscode.TextDocument,
   onRemoteImageFallback?: (failures: readonly RemoteImageFailure[]) => void,
@@ -190,23 +190,12 @@ export async function buildPortableReviewHtml(
     return imageDataUri(document, source, allowRemoteResources);
   }, allowRemoteResources ? onRemoteImageFallback : undefined);
   const manifest = loadPreviewAssetManifest(extensionUri);
-  const readAsset = (name: string) => {
-    const descriptor = manifest.assets[name];
-    if (!descriptor) throw new Error('Missing portable review asset: ' + name);
-    return exportAssets.readText(previewAssetUri(extensionUri, descriptor).fsPath, descriptor.contentHash);
-  };
-  const [renderer, reviewUi, reviewCss, host, notices] = await Promise.all([
-    readAsset('portableReviewRenderer'), readAsset('previewReviewRuntime'),
-    readAsset('previewReviewStyle'), readAsset('portableReviewHostRuntime'), readAsset('portableReviewNotices'),
-  ]);
+  const noticesAsset = manifest.assets.htmlExportNotices;
+  if (!noticesAsset) throw new Error('Missing HTML export notices asset.');
+  const notices = await exportAssets.readText(previewAssetUri(extensionUri, noticesAsset).fsPath, noticesAsset.contentHash);
   const name = path.parse(document.fileName).name;
   const artifact = await buildRenderedHtmlArtifact(extensionUri, document, { assetMode: 'inline' }, {
-    markdown, mode: isMarkdownPresentationSource(markdown) ? 'presentation' : 'document',
-    htmlName: `${name}.html`, markdownName: `${name}.md`,
-    presentationThemes: loadPreviewThemeRegistryForDocument(extensionUri, document.uri),
-    presentationTheme: getResolvedPresentationPreviewThemeSetting(document.uri),
-    themeMode: getHostThemeClass() === 'vscode-dark' ? 'dark' : 'light',
-    allowRemoteResources, renderer, reviewUi, reviewCss, host, notices,
+    markdown, markdownName: `${name}.md`, allowRemoteResources, notices,
   });
   return artifact.html;
 }
@@ -225,7 +214,7 @@ export async function exportMarkdownAsHtml(extensionUri: vscode.Uri, document: v
     return undefined;
   }
 
-  const html = await buildPortableReviewHtml(extensionUri, document, failures => {
+  const html = await buildPortableHtml(extensionUri, document, failures => {
     console.warn(`[markdown-ai-studio] Could not embed ${failures.length} remote image(s); HTML export uses image links that require network access.`, failures.map(failure => failure.message));
   });
   await writeFile(targetUri.fsPath, html, 'utf8');
@@ -377,11 +366,9 @@ function buildStandaloneHtml(input: StandaloneHtmlInput): string {
   const bodyAttributes = input.mode === 'document'
     ? ` data-md-preview-root data-preview-mode="document"${input.bodyAttributes}`
     : ' data-preview-mode="presentation" data-presentation-content-overflow="scaleToFit"';
-  const portableHead = input.portable ? portableReviewHead(input.portable) : undefined;
-  const script = (name: string, source: string) => input.portable
-    ? `<script data-ams-export-asset="${name}" type="application/x-ams-runtime">\n${safeScript(source)}\n  </script>`
-    : `<script data-ams-export-asset="${name}">\n${source}\n  </script>`;
-  const bridge = input.portable ? '' : `<script>
+  const head = input.portable ? portableHead(input.portable) : undefined;
+  const script = (name: string, source: string) => `<script data-ams-export-asset="${name}">\n${input.portable ? safeScript(source) : source}\n  </script>`;
+  const bridge = `<script>
 ${getStandalonePreviewBridgeScript()}
 ${input.mode === 'presentation' ? `document.addEventListener('md-slide-changed', () => {
   document.body.dataset.amsPresentationReady = 'true';
@@ -390,7 +377,7 @@ ${input.mode === 'presentation' ? `document.addEventListener('md-slide-changed',
   return `<!DOCTYPE html>
 <html lang="en" data-md-host-scheme="auto"${input.hostThemeClass ? ` class="${escapeHtml(input.hostThemeClass)}"` : ''}>
 <head>
-  ${portableHead?.policy ?? ''}
+  ${head?.policy ?? ''}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(input.title)}</title>
@@ -415,7 +402,7 @@ ${getPrinterFriendlyExportCss(input.exportMode)}
   ${input.mode === 'document' ? `<style data-ams-export-asset="styles">
 ${getExportScrollCss()}
   </style>` : ''}
-  ${portableHead?.style ?? ''}
+  ${head?.style ?? ''}
 </head>
 <body class="${escapeHtml(bodyClass)}"${bodyAttributes} data-md-chart-remote-images="${input.allowRemoteResources}">
   ${fallback ? fallback.body : `<main class="markdown-body">${input.body}</main>`}
@@ -425,7 +412,7 @@ ${getExportScrollCss()}
   ${script('preview-core-runtime', input.previewCoreRuntimeScript)}
   ${script(`preview-${input.mode}-runtime`, input.modeRuntimeScript)}
   ${visualizationExportHtml(input.visualizations, script)}
-  ${input.portable ? portableReviewBody(input.portable, escapeHtml) : ''}
+  ${input.portable ? portableBody(input.portable, input.mode, escapeHtml) : ''}
 </body>
 </html>`;
 }
@@ -433,7 +420,11 @@ ${getExportScrollCss()}
 function buildPresentationExportFallback(body: string, portable: boolean): { body: string; css: string } {
   const dom = new JSDOM(body);
   const document = dom.window.document;
-  if (portable) document.querySelectorAll('script:not([data-ams-export-asset])').forEach(script => script.remove());
+  if (portable) {
+    const tabs = document.querySelector('.presentation-bottom-bar-tabs');
+    if (!tabs) throw new Error('Cannot build presentation HTML without the bottom bar.');
+    tabs.insertAdjacentHTML('beforeend', portableDownloadControl('presentation'));
+  }
   const stage = document.querySelector<HTMLElement>('.presentation-preview > .presentation-stage');
   if (!stage) {
     throw new Error('Cannot build presentation HTML without a slide stage.');

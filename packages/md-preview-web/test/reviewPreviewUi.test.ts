@@ -7,7 +7,7 @@ import { createReviewPreviewTools, reviewContentKeySource } from '@mfo/review';
 import { renderDocumentPreviewBody } from '../src/document/documentPreviewBody';
 import { renderPresentationPreview } from '../src/presentation/presentationPreview';
 import { loadPreviewThemeRegistryFromData } from '../src/presentation/previewThemeRegistry';
-import { createPortableReviewBridge, createPortableReviewHost, readPortableReviewSelection, renderPortableReview } from '../src/portableReviewRenderer';
+import { createPortableReviewBridge, createPortableReviewHost, readPortableReviewSelection, renderPortableReview } from './reviewPreviewHarness';
 
 const presentationThemes = loadPreviewThemeRegistryFromData([{ name: 'test' }]);
 const options = { presentationThemes, presentationTheme: 'test', themeMode: 'light' as const };
@@ -200,6 +200,7 @@ it('retains the presentation review panel and its edited comment on the stable r
     dom.window.eval(readFileSync(new URL('../assets/preview-review.js', import.meta.url), 'utf8'));
     const panel = root.querySelector('.md-review-panel')!;
     expect(panel).not.toBeNull();
+    expect(panel.querySelector('.md-review-revise')).toBeNull();
     panel.querySelector<HTMLButtonElement>('.md-review-panel-item')!.click();
     const textarea = dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
     textarea.value = 'Updated on slide';
@@ -209,6 +210,45 @@ it('retains the presentation review panel and its edited comment on the stable r
     expect(readReviewComments(host.snapshot().markdown).comments[0]).toMatchObject({ body: 'Updated on slide', includeInAi: true });
     expect(dom.window.document.querySelector('[data-review-state]')).toBe(root);
     expect(root.querySelector('.md-review-panel-item')!.textContent).toContain('Updated on slide');
+  } finally {
+    vi.unstubAllGlobals();
+    dom.window.close();
+  }
+});
+
+it('offers presentation AI review only for eligible comments in the extension host', async () => {
+  const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
+  vi.stubGlobal('document', dom.window.document);
+  vi.stubGlobal('crypto', webcrypto);
+  try {
+    const source = '---\ndocument: presentation\n---\n\n# Slide\n\nA target here.\n';
+    const host = await createPortableReviewHost(source, 'session', options);
+    dom.window.document.body.innerHTML = host.snapshot().body;
+    const root = dom.window.document.querySelector<HTMLElement>('[data-review-state]')!;
+    const review = vi.fn();
+    Object.assign(dom.window, { __previewBridge: { getState: () => ({}), review } });
+    dom.window.eval(readFileSync(new URL('../assets/preview-review.js', import.meta.url), 'utf8'));
+    const revise = root.querySelector<HTMLButtonElement>('.md-review-revise')!;
+    expect(revise.hidden).toBe(true);
+
+    const start = source.indexOf('target');
+    const comment = { id: '1', body: 'Clarify', state: 'open' as const, includeInAi: true, range: { start, end: start + 6 } };
+    for (const [comments, eligible] of [
+      [[{ ...comment, includeInAi: false }], false],
+      [[{ ...comment, state: 'resolved' as const }], false],
+      [[{ ...comment, range: undefined }], false],
+      [[comment], true],
+    ] as const) {
+      const annotated = writeReviewComments(source, [...comments]);
+      const rendered = await renderPortableReview(annotated, 2, 'map', options);
+      const template = dom.window.document.createElement('template');
+      template.innerHTML = rendered.body;
+      root.dataset.reviewState = template.content.firstElementChild!.getAttribute('data-review-state')!;
+      dom.window.document.dispatchEvent(new dom.window.Event('md-document-updated'));
+      expect(revise.hidden).toBe(!eligible);
+    }
+    revise.click();
+    expect(review).toHaveBeenCalledWith(expect.objectContaining({ action: 'revise', version: 2 }));
   } finally {
     vi.unstubAllGlobals();
     dom.window.close();

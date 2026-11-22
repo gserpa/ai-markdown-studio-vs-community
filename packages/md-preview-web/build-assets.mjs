@@ -66,11 +66,6 @@ assets.previewReviewRuntime = writeTextAsset(
   readFileSync(path.join(assetsRoot, 'preview-review.js'), 'utf8'),
   'text/javascript; charset=utf-8',
 );
-assets.portableReviewHostRuntime = writeTextAsset(
-  'portable-review-host-runtime.js',
-  readFileSync(path.join(assetsRoot, 'portable-review-host.js'), 'utf8'),
-  'text/javascript; charset=utf-8',
-);
 assets.previewReviewStyle = writeTextAsset(
   'preview-review.css',
   readFileSync(path.join(assetsRoot, 'preview-review.css'), 'utf8'),
@@ -92,29 +87,9 @@ assets.previewThemeRuntime = writeTextAsset(
   'text/javascript; charset=utf-8',
 );
 
-const portableReview = await build({
-  absWorkingDir: packageRoot,
-  entryPoints: ['src/portableReviewRenderer.ts'],
-  bundle: true, minify: true, format: 'iife', globalName: '__mfoPortableReview',
-  platform: 'browser', target: 'es2022', write: false, metafile: true, legalComments: 'eof',
-  plugins: [{
-    name: 'portable-review-node-theme-stubs',
-    setup(builder) {
-      builder.onResolve({ filter: /^node:(fs|path)$/ }, args => ({
-        path: args.path, namespace: 'portable-review-node-theme',
-      }));
-      builder.onLoad({ filter: /.*/, namespace: 'portable-review-node-theme' }, args => {
-        const names = args.path === 'node:fs' ? ['readdirSync', 'readFileSync', 'existsSync'] : ['join'];
-        return { contents: names.map(name => `export function ${name}() { throw new Error('Filesystem theme loading is unavailable in portable review.'); }`).join('\n') };
-      });
-    },
-  }],
-});
-assert(Object.values(portableReview.metafile.outputs).every(output => output.imports.every(entry => !entry.external)), 'Portable review must bundle every import locally.');
-assets.portableReviewRenderer = writeTextAsset('portable-review-renderer.js', portableReview.outputFiles[0].text, 'text/javascript; charset=utf-8');
-assets.portableReviewNotices = writeTextAsset('portable-review-notices.txt', [
+assets.htmlExportNotices = writeTextAsset('html-export-notices.txt', [
   `Markdown AI Studio Community\n${readFileSync(path.resolve(packageRoot, '../../LICENSE'), 'utf8')}`,
-  ...bundledLicenses(portableReview.metafile.inputs),
+  ...['katex', 'mermaid'].map(name => `${name}\n${readFileSync(path.join(path.dirname(resolvePackage.resolve(`${name}/package.json`)), 'LICENSE'), 'utf8')}`),
   ...['LICENSE-Inter-OFL-1.1.txt', 'LICENSE-Fraunces-OFL-1.1.txt', 'LICENSE-JetBrains-Mono-OFL-1.1.txt']
     .map(name => `${name}\n${readFileSync(path.join(assetsRoot, 'fonts', name), 'utf8')}`),
 ].join('\n\n' + '='.repeat(72) + '\n\n') + '\n', 'text/plain; charset=utf-8');

@@ -2,8 +2,8 @@
 
 export const commandEntries = [
   { command: "markdownAiStudio.openPreview", title: "Open Preview" },
+  { command: "markdownAiStudio.openNativeMarkdownEditor", title: "Document Editor" },
   { command: "markdownAiStudio.editAsText", title: "Edit Markdown" },
-  { command: "markdownAiStudio.openNativeMarkdownEditor", title: "Open Native WYSIWYG Editor" },
   { command: "markdownAiStudio.formatTables", title: "Format Tables" },
   { command: "markdownAiStudio.embedLinkedImages", title: "Embed Linked Images in File" },
   { command: "markdownAiStudio.exportHtml", title: "Export: HTML" },
@@ -12,8 +12,6 @@ export const commandEntries = [
   { command: "markdownAiStudio.generatePresentation", title: "AI: Generate Presentation" },
   { command: "markdownAiStudio.reviewComments", title: "AI: Revise from Comments" },
   { command: "markdownAiStudio.toggleReviewComments", title: "Hide / Show Review Comments" },
-  { command: "markdownAiStudio.viewReviewComments", title: "View Review Comments" },
-  { command: "markdownAiStudio.copyReviewPrompt", title: "Copy Review Prompt" },
   { command: "markdownAiStudio.installPresentationSkill", title: "AI: Install Presentation Skill" },
   { command: "markdownAiStudio.reviewSlideTypeMigration", title: "Presentation: Review Slide Type Migration" },
   { command: "markdownAiStudio.enableAiFeatures", title: "AI: Enable Features..." },

@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 const vscodeMocks = vi.hoisted(() => ({
   executeCommand: vi.fn(),
   openTextDocument: vi.fn(),
   showInformationMessage: vi.fn(),
   showQuickPick: vi.fn(),
+  activeTabInput: undefined as unknown,
   copilotConfigured: true,
 }));
 
@@ -17,6 +19,7 @@ vi.mock('vscode', () => ({
   },
   window: {
     activeTextEditor: undefined,
+    tabGroups: { activeTabGroup: { get activeTab() { return { input: vscodeMocks.activeTabInput }; } } },
     showInformationMessage: vscodeMocks.showInformationMessage,
     showQuickPick: vscodeMocks.showQuickPick,
   },
@@ -25,6 +28,12 @@ vi.mock('vscode', () => ({
   },
   Uri: {
     file: vi.fn((fsPath: string) => ({ fsPath, scheme: 'file', toString: () => `file:///${fsPath.replace(/\\/gu, '/')}` })),
+  },
+  TabInputCustom: class {
+    constructor(public uri: unknown, public viewType: string) {}
+  },
+  TabInputText: class {
+    constructor(public uri: unknown) {}
   },
 }));
 
@@ -45,6 +54,7 @@ vi.mock('../../src/ai/aiConsent', () => ({
 }));
 
 import * as vscode from 'vscode';
+import { writeReviewComments, type ReviewComment } from '@mfo/core';
 import { showCommandListCommand } from '../../src/commands/markdownCommands';
 import { MarkdownPreviewCustomEditor } from '../../src/panel/MarkdownPreviewCustomEditor';
 import { MarkdownPreviewPanel } from '../../src/panel/MarkdownPreviewPanel';
@@ -53,6 +63,7 @@ describe('showCommandListCommand', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
+    vscodeMocks.activeTabInput = undefined;
     vscodeMocks.copilotConfigured = true;
     aiConsentMock.getAiAccessState.mockReturnValue('enabled');
     featureContributionsMock.listFeatureContributions.mockReturnValue([
@@ -74,6 +85,7 @@ describe('showCommandListCommand', () => {
 
   it('keeps the quick-pick order and hides preview-only toggles while editing', async () => {
     const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    vscodeMocks.activeTabInput = new vscode.TabInputText(documentUri);
     vscodeMocks.openTextDocument.mockResolvedValue({
       uri: documentUri,
       getText: () => '# Example',
@@ -91,11 +103,10 @@ describe('showCommandListCommand', () => {
 
     expect(capturedLabels).toEqual([
       'Open Preview',
-      'Open Native WYSIWYG Editor',
+      'Document Editor',
       'Format Tables',
       'AI: Generate Document Theme',
       'AI: Generate Presentation Theme',
-      'Embed Linked Images in File',
       'AI: Generate Document',
       'AI: Generate Presentation',
       'Export: DOCX',
@@ -103,9 +114,6 @@ describe('showCommandListCommand', () => {
       'PPTX Tools: Validate Template',
       'PPTX Tools: Generate Template Manifest',
       'Export: HTML',
-      'AI: Revise from Comments',
-      'View Review Comments',
-      'Copy Review Prompt',
       'AI: Install Presentation Skill',
       'Change Settings...',
     ]);
@@ -113,6 +121,118 @@ describe('showCommandListCommand', () => {
     expect(capturedLabels).not.toContain('Edit Markdown');
     expect(capturedLabels).not.toContain('Export: PPTX');
     expect(capturedLabels).not.toContain('Presentation: Review Slide Type Migration');
+  });
+
+  it('only offers table formatting for the active Markdown source tab', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    const otherUri = vscode.Uri.file('C:/workspace/other.md');
+    const labels: string[] = [];
+    vscodeMocks.openTextDocument.mockResolvedValue({ uri: documentUri, getText: () => '# Example' });
+    vscodeMocks.showQuickPick.mockImplementation(async (items: Array<{ label: string }>) => {
+      labels.splice(0, labels.length, ...items.map((item) => item.label));
+      return undefined;
+    });
+
+    for (const [input, visible] of [
+      [new vscode.TabInputText(documentUri), true],
+      [new vscode.TabInputCustom(documentUri, 'vscode.markdown.editor'), false],
+      [new vscode.TabInputCustom(documentUri, MarkdownPreviewCustomEditor.viewType), false],
+      [new vscode.TabInputText(otherUri), false],
+      [undefined, false],
+    ] as Array<[unknown, boolean]>) {
+      vscodeMocks.activeTabInput = input;
+      await showCommandListCommand(documentUri);
+      expect(labels.includes('Format Tables')).toBe(visible);
+    }
+  });
+
+  it('limits the Format Markdown Tables palette command to the Markdown text editor', () => {
+    const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+    expect(manifest.contributes.menus.commandPalette).toContainEqual({
+      command: 'markdownAiStudio.formatTables',
+      when: 'activeEditor == workbench.editors.files.textFileEditor && resourceLangId == markdown',
+    });
+  });
+
+  it('shows image embedding only when the document has linked images', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/images.md');
+    let source = '# No linked images';
+    vscodeMocks.openTextDocument.mockResolvedValue({
+      uri: documentUri,
+      getText: () => source,
+    });
+    const labels: string[] = [];
+    vscodeMocks.showQuickPick.mockImplementation(async (items: Array<{ label: string }>) => {
+      labels.splice(0, labels.length, ...items.map((item) => item.label));
+      return undefined;
+    });
+
+    await showCommandListCommand(documentUri);
+    expect(labels).not.toContain('Embed Linked Images in File');
+
+    source = '![Linked](image.png)';
+    await showCommandListCommand(documentUri);
+    expect(labels).toContain('Embed Linked Images in File');
+  });
+
+  it('only shows review actions for the current document and eligible comments', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/current.md');
+    const otherUri = vscode.Uri.file('C:/workspace/other.md');
+    const source = '# Example\n\nReview this text.\n';
+    const start = source.indexOf('Review this text');
+    const comment: ReviewComment = {
+      id: '1', body: 'Clarify', state: 'open', includeInAi: true,
+      range: { start, end: start + 'Review this text'.length },
+    };
+    const labels: string[] = [];
+    vscodeMocks.showQuickPick.mockImplementation(async (items: Array<{ label: string }>) => {
+      labels.splice(0, labels.length, ...items.map(item => item.label));
+      return undefined;
+    });
+    vi.spyOn(MarkdownPreviewCustomEditor, 'getActiveDocumentUri').mockReturnValue(documentUri);
+    vi.spyOn(MarkdownPreviewPanel, 'getActivePreviewDocumentUri').mockReturnValue(undefined);
+
+    for (const [comments, hasComments, eligible] of [
+      [[], false, false],
+      [[{ ...comment, includeInAi: false }], true, false],
+      [[{ ...comment, state: 'resolved' }], true, false],
+      [[{ ...comment, range: undefined }], true, false],
+      [[comment], true, true],
+    ] as Array<[ReviewComment[], boolean, boolean]>) {
+      const current = writeReviewComments(source, comments);
+      vscodeMocks.openTextDocument.mockImplementation(async (uri: vscode.Uri) => ({
+        uri, getText: () => uri.toString() === documentUri.toString() ? current : source,
+      }));
+      await showCommandListCommand(documentUri);
+      expect(labels.includes('Hide / Show Review Comments')).toBe(hasComments);
+      expect(labels.includes('AI: Revise from Comments')).toBe(eligible);
+      expect(labels).not.toContain('View Review Comments');
+    }
+    await showCommandListCommand(otherUri);
+    expect(labels).not.toContain('Hide / Show Review Comments');
+    expect(labels).not.toContain('AI: Revise from Comments');
+  });
+
+  it('keeps review prompt copy reachable when integrated AI is disabled', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/current.md');
+    const source = '# Example\n\nReview this text.\n';
+    const start = source.indexOf('Review this text');
+    const annotated = writeReviewComments(source, [{
+      id: '1', body: 'Clarify', state: 'open', includeInAi: true,
+      range: { start, end: start + 'Review this text'.length },
+    }]);
+    aiConsentMock.getAiAccessState.mockReturnValue('denied');
+    vscodeMocks.copilotConfigured = false;
+    vscodeMocks.openTextDocument.mockResolvedValue({ uri: documentUri, getText: () => annotated });
+    const labels: string[] = [];
+    vscodeMocks.showQuickPick.mockImplementation(async (items: Array<{ label: string }>) => {
+      labels.push(...items.map(item => item.label));
+      return undefined;
+    });
+
+    await showCommandListCommand(documentUri);
+    expect(labels).toContain('AI: Revise from Comments');
+    expect(labels).not.toContain('Copy Review Prompt');
   });
 
   it('switches to edit mode and only shows PPTX export for presentations', async () => {
@@ -132,11 +252,36 @@ describe('showCommandListCommand', () => {
 
     await showCommandListCommand(documentUri);
 
-    expect(capturedLabels[0]).toBe('Edit Markdown');
+    expect(capturedLabels.slice(0, 2)).toEqual(['Document Editor', 'Edit Markdown']);
     expect(capturedLabels).toContain('Export: PPTX');
     expect(capturedLabels).toContain('Presentation: Review Slide Type Migration');
     expect(capturedLabels).not.toContain('Export: DOCX (Basic)');
     expect(capturedLabels).not.toContain('Open Preview');
+  });
+
+  it('resolves the native editor document and offers source editing in its launcher', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    vscodeMocks.activeTabInput = new vscode.TabInputCustom(documentUri, 'vscode.markdown.editor');
+    vscodeMocks.openTextDocument.mockResolvedValue({ uri: documentUri, languageId: 'markdown', getText: () => '# Example' });
+    vscodeMocks.showQuickPick.mockImplementation(async (items: Array<{ label: string; command: string }>) => {
+      expect(items.slice(0, 2).map((item) => item.label)).toEqual(['Open Preview', 'Edit Markdown']);
+      expect(items.map((item) => item.label)).not.toContain('Document Editor');
+      return items[1];
+    });
+
+    await showCommandListCommand();
+    expect(vscodeMocks.executeCommand).toHaveBeenCalledWith('markdownAiStudio.editAsText', documentUri);
+  });
+
+  it('routes Open Preview in the native editor launcher to the studio preview command', async () => {
+    const documentUri = vscode.Uri.file('C:/workspace/example.md');
+    vscodeMocks.activeTabInput = new vscode.TabInputCustom(documentUri, 'vscode.markdown.editor');
+    vscodeMocks.openTextDocument.mockResolvedValue({ uri: documentUri, languageId: 'markdown', getText: () => '# Example' });
+    vscodeMocks.showQuickPick.mockImplementation(async (items: Array<{ label: string; command: string }>) =>
+      items.find((item) => item.label === 'Open Preview'));
+
+    await showCommandListCommand();
+    expect(vscodeMocks.executeCommand).toHaveBeenCalledWith('markdownAiStudio.openPreview', documentUri);
   });
 
   it('shows Toggle Frontmatter only for previews with displayable front matter', async () => {

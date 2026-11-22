@@ -7,19 +7,24 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [1.4.0] - 2026-11-21
+## [1.4.0] - 2026-11-22
 
 ### Added
 
+- Added review comments to document and presentation previews, including component text. Manage comments in the Review Comments sidebar, mark them for manual or AI review, and review an editable diff before applying AI revisions. A prompt-copy option is available without integrated AI.
+- Added reusable `status-matrix`, `record-list`, and `fact-cards` components, theme-aware dashboard layouts, and the Midnight Delivery document and presentation themes.
 - Replaced the chart property allowlist with a precompiled validator from the installed Vega-Lite schema, covering all 17 primitive/composite marks and all six composition operators. Added a 26-example gallery, inherited data/encoding support, map fitting, resource-aware image marks, and schema-drift checks.
 - Updated shared AI guidance and portable references to describe the supported chart grammar.
+- Added a browser **Download Markdown** control to standalone HTML exports. The downloaded snapshot retains existing comments and embedded images without changing the original file.
 
 ### Changed
 
-- Hid the source disclosure for successfully rendered charts in preview and HTML export, retaining source fallbacks for errors and unavailable JavaScript.
-
+- Reorganized the command launcher and settings, and clarified navigation between the studio preview, VS Code's Document Editor, and Markdown source.
+- Added a separate preferred model setting for document and presentation generation, with fallback models when requests fail or a model is unavailable. The AI consent notice explains potential usage charges.
+- Presentation previews support mouse-wheel navigation while preserving text selection and scrolling within overflowing content.
+- HTML exports contain the complete Markdown snapshot, including front matter and review comments, which recipients can inspect. New exports do not display or edit review comments; use VS Code for review.
+- Hid the source disclosure for successfully rendered charts and metrics in preview and HTML export, retaining source fallbacks for errors and unavailable JavaScript.
 - Single-view and layered charts with omitted dimensions now use the native presentation content area, preserve their proportions during slide fitting, and share height when several charts occupy one region. Explicit dimensions still win; remove fixed heights from older decks to opt into automatic sizing.
-
 - Presentation directives now describe eight content types: `content`, `cover`, `two-column`, `illustrated-text`, `featured-visual`, `brief`, `divider`, and `thanks`. Preview themes select placement; editor completion, validation, and AI guidance use the same catalog.
 - Added `<!--column-break-->` for explicit two-column groups and optional theme layout mappings. Retired slide names render through temporary replacements and offer a reviewed source migration with a diff and explicit apply action.
 - Reduced HTML export size by selecting referenced font families, loading optional assets only when needed, caching asset reads/font encoding, and minifying generated CSS. Twenty ordered CSS source modules are shared by preview and export, without duplicate media/lightbox inclusion.
@@ -38,6 +43,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Kept short IDs and words intact in wrapped document tables while allowing long tokens to break and narrow tables to scroll.
 - Added a script-free presentation navigation fallback for embedded HTML viewers that block or cannot initialize the presentation runtime.
 - Preserved intrinsic proportions and frames for presentation preview images, and corrected light/dark table colors and contrast across built-in presentation themes.
+- Improved review anchoring for multiline and multi-item component selections and fixed standalone presentation record layouts.
+- Updated dependencies and corrected presentation slide controls and host-themed panel scrollbars.
 
 ## [1.3.0] - 2026-10-24
 

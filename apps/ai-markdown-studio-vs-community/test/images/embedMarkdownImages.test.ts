@@ -1,10 +1,16 @@
 import MarkdownIt from 'markdown-it';
 import { describe, expect, it, vi } from 'vitest';
-import { embedMarkdownImages } from '../../src/images/embedMarkdownImages';
+import { embedMarkdownImages, hasEmbeddableLinkedImages } from '../../src/images/embedMarkdownImages';
 
 const data = 'data:image/png;base64,aGVsbG8=';
 
 describe('embedMarkdownImages', () => {
+  it('detects only linked Markdown and HTML images that can be embedded', () => {
+    expect(hasEmbeddableLinkedImages('Text only, [a link](image.png), and `![code](ignored.png)`.')).toBe(false);
+    expect(hasEmbeddableLinkedImages('![embedded](' + data + ')')).toBe(false);
+    expect(hasEmbeddableLinkedImages('![linked][image]\n\n[image]: image.png\n\n<img src="other.png">')).toBe(true);
+  });
+
   it('embeds inline and reference images while preserving code and normal links', async () => {
     const source = [
       '---', 'document: presentation', '---', '# Images',

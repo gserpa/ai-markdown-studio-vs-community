@@ -127,8 +127,13 @@ body.presentation-is-immersive .md-review-overlays {
   margin: 0;
 }
 
-.md-review-visibility {
+.md-review-visibility,
+.md-review-revise {
   margin-bottom: 8px;
+}
+
+.md-review-revise {
+  margin-left: 6px;
 }
 
 .md-review-panel-item {

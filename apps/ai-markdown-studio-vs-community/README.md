@@ -14,7 +14,12 @@ AI Markdown Studio Community is licensed under the MIT License and is useful ent
 
 If AI Markdown Studio Community is useful to you, consider [supporting the project through GitHub Sponsors](https://github.com/sponsors/gserpa).
 
-For a complete end-user walkthrough, see [user-guide.md](./docs/user/user-guide.md). For a focused comparison of what Pro adds, see [upgrade-to-pro.md](./docs/user/upgrade-to-pro.md).
+## Get Started
+
+- [Create your first Markdown document](./docs/user/first-document.md)
+- [Create your first presentation](./docs/user/first-presentation.md)
+- [Full user guide](./docs/user/user-guide.md)
+- [Compare Community and Pro](./docs/user/upgrade-to-pro.md)
 
 ## See It In Action
 
@@ -105,6 +110,7 @@ export, so your Markdown knowledge base stays useful to both people and AI every
 
 ## User Guide Index
 
+- [Get Started](#get-started)
 - [Installation](#installation)
 - [Features](#features)
 - [Usage & Commands](#usage)
@@ -139,11 +145,10 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```bash
-code --install-extension markdown-ai-studio-1.3.0.vsix
+code --install-extension markdown-ai-studio-1.4.0.vsix
 ```
 
-If you are working on the repository itself, use the workspace root README for build
-and verification commands.
+For repository information, see the [repository README](https://github.com/gserpa/ai-markdown-studio-vs-community#readme).
 
 ## Features
 
@@ -166,7 +171,7 @@ and verification commands.
 - **Basic DOCX export** - export rendered Markdown to DOCX through the Community DOCX path.
 - **Front matter toggle** - show or hide a rendered front-matter summary in the preview.
 - **Table formatting and preview layouts** - auto-align Markdown tables with a single command, also available through **Format Document**; preview tables can stay wide and scroll horizontally or wrap to the available width.
-- **HTML export** - share a reviewable HTML snapshot of a document or presentation.
+- **HTML export** - share an HTML snapshot of a document or presentation.
 - **Command launcher** - quick access to the extension's main actions from the editor title bar. The launcher is extensible: when a compatible feature extension such as AI Markdown Studio Pro is installed, its commands appear alongside the Community commands.
 - **Command palette settings shortcut** - jump directly to the extension's settings with **Change Settings...**.
 - **Single-tab per file** - always one tab per file; switching modes closes the other surface.
@@ -177,14 +182,15 @@ and verification commands.
 
 - Opening a Markdown file uses the `markdownAiStudio.markdownPreview` custom editor by default.
 - **Preview Markdown** is available from the editor title bar and command list when a Markdown text editor is active.
-- **Edit Markdown** is available from the preview title bar and the command list. Switching modes closes the other surface for that file.
+- **Document Editor** opens VS Code's WYSIWYG editor; **Edit Markdown** opens the Markdown source. Both are available from the command list and Explorer file context menu; **Document Editor** is also available in the preview title bar.
 
 All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and the most common ones appear as icons in the **editor title bar** when a `.md` file is open.
 
 | Command                                           | Description                                                                         | Where                                                                        |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **Preview Markdown**                              | Opens or focuses preview for the current Markdown file                              | Title bar, command palette, command list                                     |
-| **Edit Markdown**                                 | Switches the current file to the text editor, closing the preview surface first     | Preview title bar, Explorer file context menu, command palette, command list |
+| **Preview Markdown**                              | Opens or focuses the studio preview for the current Markdown file                   | Title bar, Explorer and tab context menus (Open Preview), command palette, command list |
+| **Document Editor**                               | Opens the native VS Code WYSIWYG Markdown editor                                    | Title bar, Explorer file context menu, command palette, command list         |
+| **Edit Markdown**                                 | Switches the current file to the text editor                                       | Explorer file context menu, command palette, command list                    |
 | **Format Markdown Tables**                        | Auto-aligns all tables in the active file                                           | Command palette, command list, Format Document                               |
 | **`markdownAiStudio.formatTablesOnSave`**         | `false`                                                                             | Automatically formats Markdown tables when you save a Markdown file.         |
 | **Generate Document (AI)**                        | Creates a new Markdown document from a prompt                                       | Command palette, command list                                                |
@@ -208,7 +214,7 @@ The live preview renders your Markdown document in real time as you edit. By def
 To switch between preview and edit modes:
 
 - Use **Preview Markdown** from the editor title bar or command list when a Markdown text editor is active.
-- Use the pencil icon (**Edit Markdown**) in the preview tab's title bar, or the Explorer file context menu, to switch to edit mode.
+- Use the pencil icon (**Document Editor**) for WYSIWYG editing. For source editing, choose **Edit Markdown** from the Explorer file context menu or command list.
 - Use the command list (**Show AI Markdown Studio Commands**) to switch modes from anywhere.
 
 The preview supports:
@@ -266,7 +272,7 @@ The presentation preview follows the same Markdown structure used by AI Markdown
 
 ### Table Formatting
 
-The **Format Markdown Tables** command automatically aligns all Markdown tables in the active file for consistent, readable source formatting.
+The **Format Markdown Tables** command is available while editing Markdown source and automatically aligns all tables for consistent, readable formatting.
 If you want tables formatted automatically on save, enable **`markdownAiStudio.formatTablesOnSave`** in the settings.
 
 1. Open a `.md` file containing one or more Markdown tables.
@@ -283,11 +289,11 @@ Set the resource-scoped **`markdownAiStudio.documentTableLayout`** setting to ch
 
 ### HTML Export
 
-Run **Export Markdown as HTML** from the Command Palette or the command list to create a reviewable `.html` file for sharing outside VS Code. It contains the complete Markdown snapshot, front matter, and comments, all of which recipients can inspect. The original file is not changed.
+Run **Export Markdown as HTML** from the Command Palette or the command list to create an `.html` snapshot for sharing outside VS Code. It contains the complete Markdown snapshot, front matter, and comments, all of which recipients can inspect. The original file is not changed.
 
 Linked Markdown and HTML images are embedded in the snapshot where possible; permitted remote images are downloaded during export. When a remote download fails, its link is retained and a warning is logged. Local image failures stop the export. Comments whose markers occur inside image syntax that needs rewriting must be moved or reattached first. Media, chart images, and custom theme resources are not all embedded, so the file is not guaranteed to be fully offline.
 
-In a JavaScript-enabled desktop browser, select text to add comments and use **Review Comments** to navigate and manage them. Desktop Chrome and Edge have been tested. **Save reviewed HTML** downloads a new reviewable file; **Download Markdown** downloads the current annotated Markdown. The browser may prompt or cancel the download, and the page cannot confirm it was saved. It warns before leaving with changes where supported. Neither download updates the original automatically.
+In a JavaScript-enabled browser, use the top-right menu in a document or the bottom bar in a presentation to **Download Markdown** with its existing comments and embedded images. Browser exports do not show or edit review comments; VS Code review remains available. The browser may prompt or cancel the download, and the page cannot confirm it was saved. Existing HTML exports retain their previous behavior.
 
 The setting **`markdownAiStudio.allowRemoteResources`** controls remote image downloads and other resources. Linked images require network access and may be unavailable. When remote resources are disabled, the portable file blocks remote browser resources and warns if content is blocked. See the [user guide](https://github.com/gserpa/ai-markdown-studio-vs-community/blob/HEAD/apps/ai-markdown-studio-vs-community/docs/user/user-guide.md#html-export) for browser and resource limitations.
 
@@ -295,7 +301,7 @@ The setting **`markdownAiStudio.allowRemoteResources`** controls remote image do
 
 When GitHub Copilot is configured in VS Code, AI Markdown Studio Community can create new Markdown documents or presentation decks from prompts. With the default `markdownAiStudio.aiAccess: "ask"` state, the Copilot-backed commands stay visible and the disclosure appears only when an extension-initiated model request actually tries to run. If `markdownAiStudio.aiAccess` is `denied`, those Copilot-backed commands hide again except for **Enable AI Features...**.
 
-AI actions are user-triggered and use the model made available through the user's VS Code/Copilot setup. The preferred model is configurable with `markdownAiStudio.aiModel`; if it is unavailable or unsuccessful, the extension tries `gpt-5.4-mini` and then the first available Copilot model. Depending on the Copilot plan or configured AI provider, requests may consume token quota or incur usage charges. The **Enable AI Features...** authorization notice explains this and requires the user to accept responsibility for those costs before AI features are enabled.
+AI actions are user-triggered and use models available through the user's VS Code/Copilot setup. `markdownAiStudio.aiGenerationModel` controls document and presentation workflows, including repairs; it defaults to `claude-opus-5.5` and falls back to Opus 5.5, Sonnet 5.5, Luna, mini, and then other available Copilot models. `markdownAiStudio.aiModel` controls conversions and other AI actions, defaults to `gpt-5.6-luna`, and falls back to `gpt-5.4-mini` and then other available Copilot models. Fallbacks apply when models are unavailable or fail; generation reports when a fallback succeeds. Depending on the Copilot plan, requests may consume token quota or incur usage charges. The **Enable AI Features...** authorization notice explains this and requires the user to accept responsibility for those costs before AI features are enabled.
 
 - **Generate Document (AI)** creates a new Markdown document from a prompt.
 - **Generate Presentation (AI)** creates a new presentation-style Markdown deck from a prompt. It is also available without Copilot, or after Copilot access is denied: it copies the same complete MPS prompt locally for use in Claude, Codex, or another assistant.

@@ -2,7 +2,7 @@
 
 1. Install **AI Markdown Studio Community** in VS Code.
 2. Create a file named `first-document.md` and add the text below.
-3. Open the file. Community opens its document preview; use **Edit Markdown** to return to the source and **Preview Markdown** to return to the preview.
+3. Open the file. Community opens its document preview; use **Document Editor** for WYSIWYG editing or **Edit Markdown** for the source, and **Preview Markdown** to return to the preview.
 4. Choose a bundled document theme, then try **Export to HTML** from the Command Palette.
 
 ```markdown

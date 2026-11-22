@@ -5,6 +5,9 @@ import { createReviewCommentActions } from '@mfo/review';
 
 const mock = vi.hoisted(() => ({
   commands: new Map<string, (...args: any[]) => Promise<void>>(),
+  executeCommand: vi.fn(),
+  onDocumentChange: vi.fn(),
+  onEditorChange: vi.fn(),
   disposable: () => ({ dispose() {} }),
   document: {
     version: 1, languageId: 'markdown', getText: vi.fn(), uri: undefined as unknown,
@@ -29,11 +32,11 @@ vi.mock('vscode', () => ({
   workspace: {
     openTextDocument: mock.openDocument,
     applyEdit: mock.applyEdit,
-    onDidChangeTextDocument: mock.disposable,
+    onDidChangeTextDocument: mock.onDocumentChange,
     registerTextDocumentContentProvider: mock.disposable,
   },
   commands: {
-    executeCommand: vi.fn(),
+    executeCommand: mock.executeCommand,
     registerCommand: (id: string, action: (...args: any[]) => Promise<void>) => {
       mock.commands.set(id, action);
       return mock.disposable();
@@ -43,7 +46,7 @@ vi.mock('vscode', () => ({
   window: {
     showQuickPick: mock.choose,
     registerTreeDataProvider: mock.treeProvider,
-    onDidChangeActiveTextEditor: mock.disposable,
+    onDidChangeActiveTextEditor: mock.onEditorChange,
     onDidChangeActiveColorTheme: mock.disposable,
     showInformationMessage: mock.showInfo,
     showWarningMessage: mock.showWarning,
@@ -92,6 +95,8 @@ describe('review command AI access and prompt copy', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mock.commands.clear();
+    mock.onDocumentChange.mockImplementation(mock.disposable);
+    mock.onEditorChange.mockImplementation(mock.disposable);
     mock.document.version = 1;
     mock.document.isClosed = false;
     mock.document.isDirty = false;
@@ -127,6 +132,15 @@ describe('review command AI access and prompt copy', () => {
       'markdownAiStudio.implementSelectedReviews', 'markdownAiStudio.clearResolvedReviewComments',
       'markdownAiStudio.clearAllReviewComments',
     ]));
+    expect(manifest.contributes.commands).not.toContainEqual(expect.objectContaining({ command: 'markdownAiStudio.viewReviewComments' }));
+    expect(manifest.contributes.commands).toContainEqual(expect.objectContaining({
+      command: 'markdownAiStudio.toggleReviewComments', icon: expect.anything(),
+    }));
+    expect(menus['editor/title']).toContainEqual(expect.objectContaining({
+      command: 'markdownAiStudio.toggleReviewComments',
+      when: expect.stringContaining('markdownAiStudio.reviewHasComments'),
+      group: 'navigation@2.9',
+    }));
   });
 
   describe('review replacements', () => {
@@ -368,6 +382,62 @@ describe('review command AI access and prompt copy', () => {
     disposers.forEach(dispose => dispose());
   });
 
+  it('runs the same review command for the originating presentation and rejects stale previews', async () => {
+    let receive!: (request: unknown) => Promise<void>;
+    let dispose!: () => void;
+    const postMessage = vi.fn().mockResolvedValue(true);
+    const panel = {
+      active: false,
+      webview: { postMessage, onDidReceiveMessage: (callback: typeof receive) => { receive = callback; return mock.disposable(); } },
+      onDidChangeViewState: mock.disposable,
+      onDidDispose: (callback: () => void) => { dispose = callback; },
+    };
+    const updater = { getReviewPage: vi.fn().mockReturnValueOnce({ version: 1, blocks: [] }).mockReturnValueOnce(undefined) };
+    attachReviewPreview(panel as never, updater as never, () => mock.document as never);
+    const request = { command: 'previewReview', sessionId: 'session', version: 1, requestId: 1, action: 'revise' };
+    await receive(request);
+    expect(mock.executeCommand).toHaveBeenCalledWith('markdownAiStudio.reviewComments', uri);
+    expect(postMessage).toHaveBeenLastCalledWith({ command: 'reviewResult', requestId: 1 });
+    mock.executeCommand.mockClear();
+    await receive(request);
+    expect(mock.executeCommand).not.toHaveBeenCalled();
+    expect(postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ error: 'The preview changed. Select the text again.' }));
+    dispose();
+  });
+
+  it('updates title visibility for the active preview as comments change and previews switch', async () => {
+    const callbacks: Array<(event: { webviewPanel: { active: boolean } }) => void> = [];
+    const disposers: Array<() => void> = [];
+    const uri2 = { scheme: 'file', toString: () => 'file:///other.md' };
+    const other = { ...mock.document, uri: uri2, getText: () => markdown };
+    mock.openDocument.mockImplementation(async (requested: typeof uri) => requested.toString() === uri2.toString() ? other : mock.document);
+    for (const document of [mock.document, other]) {
+      const panel = {
+        active: false,
+        webview: { postMessage: vi.fn(), onDidReceiveMessage: mock.disposable },
+        onDidChangeViewState: (callback: typeof callbacks[number]) => { callbacks.push(callback); },
+        onDidDispose: (callback: () => void) => { disposers.push(callback); },
+      };
+      attachReviewPreview(panel as never, {} as never, () => document as never);
+    }
+    const context = (key: string) => mock.executeCommand.mock.calls.filter(call => call[0] === 'setContext' && call[1] === key).at(-1)?.[2];
+    callbacks[0]({ webviewPanel: { active: true } });
+    await vi.waitFor(() => expect(context('markdownAiStudio.reviewHasComments')).toBe(true));
+    expect(context('markdownAiStudio.reviewPending')).toBe(true);
+    mock.document.getText.mockReturnValue(markdown);
+    mock.onDocumentChange.mock.calls.at(-1)![0]();
+    await vi.waitFor(() => expect(context('markdownAiStudio.reviewHasComments')).toBe(false));
+    expect(context('markdownAiStudio.reviewPending')).toBe(false);
+    mock.document.getText.mockReturnValue(writeReviewComments(markdown, [open]));
+    callbacks[0]({ webviewPanel: { active: true } });
+    await vi.waitFor(() => expect(context('markdownAiStudio.reviewHasComments')).toBe(true));
+    callbacks[1]({ webviewPanel: { active: true } });
+    callbacks[0]({ webviewPanel: { active: false } });
+    await vi.waitFor(() => expect(context('markdownAiStudio.reviewHasComments')).toBe(false));
+    expect(context('markdownAiStudio.reviewPending')).toBe(false);
+    disposers.forEach(dispose => dispose());
+  });
+
   describe('sidebar actions', () => {
     const provider = () => mock.treeProvider.mock.calls.at(-1)![1] as {
       getChildren(): Promise<Array<{ comment: ReviewComment }>>;
@@ -462,7 +532,9 @@ describe('review command AI access and prompt copy', () => {
   });
 
   it('copies only eligible comments without calling the integrated model', async () => {
-    await run('copyReviewPrompt');
+    mock.getAiAccessState.mockReturnValue('ask');
+    mock.choose.mockResolvedValue({ value: 'clipboard' });
+    await run('reviewComments');
     const prompt = mock.clipboard.mock.calls[0][0];
     expect(prompt).toContain('Make the passage clearer.');
     expect(prompt).toContain('Passage for review.');
@@ -477,6 +549,12 @@ describe('review command AI access and prompt copy', () => {
     expect(mock.choose).not.toHaveBeenCalled();
     expect(mock.clipboard).toHaveBeenCalledOnce();
     expect(mock.generate).not.toHaveBeenCalled();
+  });
+
+  it('directs unavailable integrated review to the remaining prompt-copy workflow', async () => {
+    await run('runReviewComments');
+    expect(mock.showError).toHaveBeenCalledWith(expect.stringContaining('AI: Revise from Comments'));
+    expect(mock.clipboard).not.toHaveBeenCalled();
   });
 
   it('copies the review prompt from the generation chooser', async () => {

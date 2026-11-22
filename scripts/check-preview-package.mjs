@@ -34,7 +34,7 @@ await new Promise((resolve, reject) => {
 
 const manifest = JSON.parse(files.get(generated + 'asset-manifest.json')?.toString('utf8') ?? 'null');
 assert.equal(manifest?.schemaVersion, 2, 'Missing or invalid packaged preview manifest.');
-for (const name of ['previewCore', 'previewCoreRuntime', 'previewDocument', 'previewDocumentRuntime', 'previewPresentation', 'previewPresentationRuntime', 'previewReviewRuntime', 'previewReviewStyle', 'previewThemeRuntime', 'previewVisualizationsRuntime', 'previewVisualizationsNotices', 'portableReviewRenderer', 'portableReviewHostRuntime', 'portableReviewNotices']) {
+for (const name of ['previewCore', 'previewCoreRuntime', 'previewDocument', 'previewDocumentRuntime', 'previewPresentation', 'previewPresentationRuntime', 'previewReviewRuntime', 'previewReviewStyle', 'previewThemeRuntime', 'previewVisualizationsRuntime', 'previewVisualizationsNotices', 'htmlExportNotices']) {
   assert(manifest.assets[name], `Missing preview asset declaration: ${name}`);
 }
 for (const mode of ['document', 'presentation']) {
@@ -54,9 +54,9 @@ const hash = createHash('sha256').update(JSON.stringify({ assets: manifest.asset
 assert.equal(hash, manifest.assetSetHash, 'Incorrect packaged preview asset-set hash.');
 const notices = files.get('extension/assets/preview/' + manifest.assets.previewVisualizationsNotices.path).toString('utf8');
 for (const text of ['Markdown AI Studio Community', 'MIT License', 'vega@', 'vega-lite@', 'vega-interpreter@']) assert(notices.includes(text), `Missing chart notice: ${text}`);
-const portableNotices = files.get('extension/assets/preview/' + manifest.assets.portableReviewNotices.path).toString('utf8');
-for (const text of ['Markdown AI Studio Community', 'markdown-it@', 'launder@', 'Apostrophe Technologies', 'katex@', 'SIL OPEN FONT LICENSE']) {
-  assert(portableNotices.includes(text), `Missing portable review notice: ${text}`);
+const exportNotices = files.get('extension/assets/preview/' + manifest.assets.htmlExportNotices.path).toString('utf8');
+for (const text of ['Markdown AI Studio Community', 'katex', 'mermaid', 'SIL OPEN FONT LICENSE']) {
+  assert(exportNotices.includes(text), `Missing HTML export notice: ${text}`);
 }
 const skill = files.get(required[0])?.toString('utf8');
 assert(skill?.includes('references/visualizations.md'), `Missing packaged visualization reference link: ${required[0]}`);

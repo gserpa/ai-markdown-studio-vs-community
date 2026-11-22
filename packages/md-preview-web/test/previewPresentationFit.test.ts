@@ -85,6 +85,53 @@ describe('presentation content fitting', () => {
     } finally { dom.window.close(); }
   });
 
+  it('updates the speaker notes empty state when navigating between slides', async () => {
+    const dom = new JSDOM(`<body data-preview-mode="presentation">
+      <section class="presentation-preview">
+        <header class="presentation-header">
+          <button data-presentation-action="previous"></button>
+          <button data-presentation-action="next"></button>
+        </header>
+        <div class="presentation-stage">
+          <section class="presentation-slide"></section>
+          <section class="presentation-slide"></section>
+          <section class="presentation-slide"></section>
+        </div>
+        <div class="presentation-bottom-bar" data-presentation-bottom-bar>
+          <button class="presentation-tab" data-panel="notes">Speaker Notes</button>
+          <div class="presentation-bottom-panel" data-panel="notes" hidden>
+            <div class="presentation-bottom-panel-notes markdown-body" data-presentation-panel-notes></div>
+          </div>
+        </div>
+        <script type="application/json" data-presentation-slide-data>[{"notesHtml":""},{"notesHtml":"<p>Presenter <strong>note</strong></p>"},{}]</script>
+      </section>
+    </body>`, { runScripts: 'outside-only', pretendToBeVisual: true });
+    try {
+      Object.assign(dom.window, { __previewBridge: { getState: () => ({}), setState: vi.fn() } });
+      await dom.window.eval(runtime);
+      await dom.window.eval('window.__mfoPreviewModeRuntime.startPresentation()');
+      const document = dom.window.document;
+      const notes = document.querySelector<HTMLElement>('[data-presentation-panel-notes]')!;
+      const tab = document.querySelector<HTMLButtonElement>('.presentation-tab[data-panel="notes"]')!;
+      const next = document.querySelector<HTMLButtonElement>('[data-presentation-action="next"]')!;
+      const previous = document.querySelector<HTMLButtonElement>('[data-presentation-action="previous"]')!;
+
+      tab.click();
+      expect(notes.textContent).toBe('No speaker notes.');
+      next.click();
+      expect(notes.querySelector('strong')?.textContent).toBe('note');
+      expect(notes.textContent).toBe('Presenter note');
+      next.click();
+      expect(notes.textContent).toBe('No speaker notes.');
+      previous.click();
+      expect(notes.textContent).toBe('Presenter note');
+      tab.click();
+      previous.click();
+      tab.click();
+      expect(notes.textContent).toBe('No speaker notes.');
+    } finally { dom.window.close(); }
+  });
+
   it('navigates once per vertical wheel gesture without intercepting scrollable content', async () => {
     const dom = new JSDOM(`<body data-preview-mode="presentation">
       <section class="presentation-preview"><div class="presentation-stage">

@@ -10,7 +10,31 @@ export type ImageEmbeddingResult = {
 type ImageUse = { start: number; end: number; source: string; replacement: (data: string) => string };
 
 /** Rewrite parsed image uses only, leaving code, normal links and reference definitions intact. */
+export function hasEmbeddableLinkedImages(markdown: string): boolean {
+  return collectImageUses(markdown).some((use) => !/^data:image\//iu.test(use.source));
+}
+
 export async function embedMarkdownImages(markdown: string, load: (source: string) => Promise<string>): Promise<ImageEmbeddingResult> {
+  const uses = collectImageUses(markdown);
+  const cache = new Map<string, Promise<string>>();
+  const replacements: ImageEmbeddingResult['replacements'] = [];
+  const failures: ImageEmbeddingResult['failures'] = [];
+  for (const use of uses) {
+    if (/^data:image\//iu.test(use.source)) continue;
+    try {
+      let pending = cache.get(use.source);
+      if (!pending) { pending = load(use.source); cache.set(use.source, pending); }
+      replacements.push({ start: use.start, end: use.end, value: use.replacement(await pending) });
+    } catch (error) {
+      if (!failures.some((failure) => failure.source === use.source)) failures.push({ source: use.source, message: error instanceof Error ? error.message : String(error) });
+    }
+  }
+  let result = markdown;
+  for (const edit of replacements.sort((a, b) => b.start - a.start)) result = result.slice(0, edit.start) + edit.value + result.slice(edit.end);
+  return { markdown: result, embedded: replacements.length, failures, replacements };
+}
+
+function collectImageUses(markdown: string): ImageUse[] {
   const md = new MarkdownIt({ html: true });
   const uses: ImageUse[] = [];
   const lines = markdown.split('\n');
@@ -91,22 +115,7 @@ export async function embedMarkdownImages(markdown: string, load: (source: strin
     }
   });
   md.parse(markdown, {});
-  const cache = new Map<string, Promise<string>>();
-  const replacements: ImageEmbeddingResult['replacements'] = [];
-  const failures: ImageEmbeddingResult['failures'] = [];
-  for (const use of uses) {
-    if (/^data:image\//iu.test(use.source)) continue;
-    try {
-      let pending = cache.get(use.source);
-      if (!pending) { pending = load(use.source); cache.set(use.source, pending); }
-      replacements.push({ start: use.start, end: use.end, value: use.replacement(await pending) });
-    } catch (error) {
-      if (!failures.some((failure) => failure.source === use.source)) failures.push({ source: use.source, message: error instanceof Error ? error.message : String(error) });
-    }
-  }
-  let result = markdown;
-  for (const edit of replacements.sort((a, b) => b.start - a.start)) result = result.slice(0, edit.start) + edit.value + result.slice(edit.end);
-  return { markdown: result, embedded: replacements.length, failures, replacements };
+  return uses;
 }
 
 function mapContent(token: { content: string }, range: [number, number], lines: string[], offsets: number[], mappedUntil: number): number[] {

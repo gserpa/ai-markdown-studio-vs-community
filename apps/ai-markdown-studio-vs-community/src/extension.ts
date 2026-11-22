@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import type { CommunityApiV2 } from '@mfo/community-api';
 import {
   createMarkdownTableFormattingProvider,
+  editAsTextCommand,
   exportDocxBasicCommand,
   exportHtmlCommand,
   embedLinkedImagesCommand,
@@ -9,6 +10,7 @@ import {
   formatTablesCommand,
   openSettingsCommand,
   openNativeMarkdownEditorCommand,
+  getActiveNativeMarkdownEditorUri,
   openPreviewCommand,
   showCommandListCommand,
 } from './commands/markdownCommands';
@@ -19,6 +21,7 @@ import { registerLanguageModelTools } from './ai/languageModelTools';
 import { generateDocumentCommand } from './generate/documentGenerationCommand';
 import { generatePresentationCommand } from './generate/presentationGenerationCommand';
 import { installPresentationSkillInWorkspace } from './skills/presentationSkillInstaller';
+import { hasEmbeddableLinkedImages } from './images/embedMarkdownImages';
 import { createCommunityApi } from './api/communityApi';
 import { getBundledDocumentThemeDirectory } from './document/documentThemeSupport';
 import { MarkdownPreviewCustomEditor } from './panel/MarkdownPreviewCustomEditor';
@@ -35,6 +38,11 @@ import {
 } from './panel/frontMatterDisplayState';
 
 export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
+  const refreshEmbedLinkedImagesContext = (): void => {
+    const document = vscode.window.activeTextEditor?.document;
+    const visible = document?.languageId === 'markdown' && hasEmbeddableLinkedImages(document.getText());
+    void vscode.commands.executeCommand('setContext', 'markdownAiStudio.activeDocumentHasEmbeddableLinkedImages', visible);
+  };
   const previews = new Map<string, MarkdownPreviewPanel>();
   const markdownTableFormattingProvider = createMarkdownTableFormattingProvider();
   const customEditor = new MarkdownPreviewCustomEditor(context.extensionUri);
@@ -60,6 +68,8 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
     await refreshPreviewFrontMatterContext(document);
   };
   void vscode.commands.executeCommand('setContext', 'markdownAiStudio.proInstalled', false);
+  void vscode.commands.executeCommand('setContext', 'hasCustomMarkdownPreview', true);
+  refreshEmbedLinkedImagesContext();
   void initializeAiConsent();
   void refreshCopilotConfiguredContext();
   registerLanguageModelTools(context);
@@ -102,16 +112,20 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
     vscode.commands.registerCommand('markdownAiStudio.openPreview', async (resource?: vscode.Uri) => {
       await openPreviewCommand(context.extensionUri, previews, resource);
     }),
+    vscode.commands.registerCommand('markdownAiStudio.openPreviewFromContext', async (resource?: vscode.Uri) => {
+      await openPreviewCommand(context.extensionUri, previews, resource);
+    }),
     vscode.commands.registerCommand('markdownAiStudio.openNativeMarkdownEditor', async (resource?: vscode.Uri) => {
       const target = (resource?.scheme === 'file' ? resource : undefined)
         ?? MarkdownPreviewCustomEditor.getActiveDocumentUri()
         ?? MarkdownPreviewPanel.getActivePreviewDocumentUri()
+        ?? getActiveNativeMarkdownEditorUri()
         ?? vscode.window.activeTextEditor?.document.uri;
       if (!target) {
+        await openNativeMarkdownEditorCommand();
         return;
       }
 
-      customEditor.closeForUri(target);
       await openNativeMarkdownEditorCommand(target);
     }),
     vscode.commands.registerCommand('markdownAiStudio.formatTables', async (resource?: vscode.Uri) => {
@@ -124,7 +138,7 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
     vscode.commands.registerCommand('markdownAiStudio.exportDocxBasic', async (resource?: vscode.Uri) => {
       await exportDocxBasicCommand(context.extensionUri, resource);
     }),
-    vscode.commands.registerCommand('markdownAiStudio.generateDocument', generateDocumentCommand),
+    vscode.commands.registerCommand('markdownAiStudio.generateDocument', (resource?: vscode.Uri) => generateDocumentCommand(context.extensionUri, resource)),
     vscode.commands.registerCommand('markdownAiStudio.generatePresentation', (resource?: vscode.Uri) => generatePresentationCommand(resource, context)),
     vscode.commands.registerCommand('markdownAiStudio.installPresentationSkill', (resource?: vscode.Uri) => installPresentationSkillInWorkspace(context, resource)),
     vscode.commands.registerCommand('markdownAiStudio.pasteAsMarkdown', pasteAsMarkdownCommand),
@@ -134,9 +148,10 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
     }),
     vscode.commands.registerCommand('markdownAiStudio.showCommandList', async (resource?: vscode.Uri) => {
       const targetResource = (resource?.scheme === 'file' ? resource : undefined)
-        ?? vscode.window.activeTextEditor?.document.uri
         ?? MarkdownPreviewCustomEditor.getActiveDocumentUri()
-        ?? MarkdownPreviewPanel.getActivePreviewDocumentUri();
+        ?? MarkdownPreviewPanel.getActivePreviewDocumentUri()
+        ?? getActiveNativeMarkdownEditorUri()
+        ?? vscode.window.activeTextEditor?.document.uri;
       await showCommandListCommand(targetResource);
     }),
     vscode.commands.registerCommand('markdownAiStudio.toggleFrontMatter', async (resource?: vscode.Uri) => {
@@ -167,19 +182,13 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
       await setFrontMatterVisibilityAndRefresh(resource, false);
     }),
     vscode.commands.registerCommand('markdownAiStudio.editAsText', async (resource?: vscode.Uri) => {
-      const target = (resource?.scheme === 'file' ? resource : undefined)
-        ?? MarkdownPreviewCustomEditor.getActiveDocumentUri()
-        ?? MarkdownPreviewPanel.getActivePreviewDocumentUri();
-      if (!target) {
-        return;
-      }
-
-      // Close the preview tab first so we do a clean mode switch rather
-      // than leaving two tabs open for the same file.
-      customEditor.closeForUri(target);
-      await vscode.window.showTextDocument(target, { preview: false });
+      await editAsTextCommand(resource);
     }),
     vscode.workspace.onDidChangeTextDocument(async (event) => {
+      if (vscode.window.activeTextEditor?.document === event.document) {
+        refreshEmbedLinkedImagesContext();
+      }
+
       const preview = previews.get(event.document.uri.toString());
       if (preview) {
         await preview.refresh(event.document, true);
@@ -220,6 +229,7 @@ export function activate(context: vscode.ExtensionContext): CommunityApiV2 {
       await customEditor.refreshAll();
     }),
     vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+      refreshEmbedLinkedImagesContext();
       if (!editor || editor.document.languageId !== 'markdown') {
         return;
       }

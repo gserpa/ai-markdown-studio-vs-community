@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { formatMarkdownTables, isMarkdownPresentationSource } from '@mfo/core';
+import { formatMarkdownTables, isMarkdownPresentationSource, readReviewComments } from '@mfo/core';
+import { isAiReviewEligible } from '@mfo/review';
 import { listFeatureContributions } from '../api/featureContributions';
 import { getAiAccessState, type AiAccessState } from '../ai/aiConsent';
 import { hasConfiguredCopilotAccount } from '../ai/copilotAvailability';
@@ -8,7 +9,7 @@ import { exportMarkdownAsHtml } from '../export/html/htmlExporter';
 import { hasDisplayableFrontMatter } from '../panel/frontMatterDisplayState';
 import { MarkdownPreviewCustomEditor } from '../panel/MarkdownPreviewCustomEditor';
 import { MarkdownPreviewPanel } from '../panel/MarkdownPreviewPanel';
-import { embedMarkdownImages } from '../images/embedMarkdownImages';
+import { embedMarkdownImages, hasEmbeddableLinkedImages } from '../images/embedMarkdownImages';
 import { imageDataUri } from '../images/imageDataUri';
 import { commandEntries } from './generatedCommandEntries';
 
@@ -24,8 +25,13 @@ type CommandListEntry = {
 type CommandListContext = {
   documentUri: vscode.Uri;
   isPreviewMode: boolean;
+  isNativeEditorMode: boolean;
+  isTextEditorMode: boolean;
   hasFrontMatter: boolean;
   isPresentation: boolean;
+  hasEmbeddableLinkedImages: boolean;
+  hasReviewComments: boolean;
+  hasEligibleReviewComments: boolean;
   copilotConfigured: boolean;
   aiAccessState: AiAccessState;
 };
@@ -33,8 +39,8 @@ type CommandListContext = {
 // Feature contributions provide their own order; Community owns only its built-in entries.
 const QUICK_PICK_COMMAND_ORDER: Readonly<Record<string, number>> = {
   'markdownAiStudio.openPreview': 0,
-  'markdownAiStudio.editAsText': 1,
-  'markdownAiStudio.openNativeMarkdownEditor': 2,
+  'markdownAiStudio.openNativeMarkdownEditor': 1,
+  'markdownAiStudio.editAsText': 2,
   'markdownAiStudio.toggleFrontMatter': 3,
   'markdownAiStudio.formatTables': 4,
   'markdownAiStudio.embedLinkedImages': 5,
@@ -45,9 +51,7 @@ const QUICK_PICK_COMMAND_ORDER: Readonly<Record<string, number>> = {
   'markdownAiStudio.exportHtml': 11,
   'markdownAiStudio.exportDocxBasic': 12,
   'markdownAiStudio.reviewComments': 21,
-  'markdownAiStudio.viewReviewComments': 21.05,
   'markdownAiStudio.toggleReviewComments': 21.06,
-  'markdownAiStudio.copyReviewPrompt': 21.1,
   'markdownAiStudio.installPresentationSkill': 22,
   'markdownAiStudio.enableAiFeatures': 23,
   'markdownAiStudio.openSettings': 24,
@@ -76,19 +80,37 @@ export function getMarkdownTableFormattingEdits(document: vscode.TextDocument): 
 }
 
 export async function openPreviewCommand(extensionUri: vscode.Uri, _previews: Map<string, MarkdownPreviewPanel>, targetUri?: vscode.Uri): Promise<void> {
-  const uri = targetUri ?? vscode.window.activeTextEditor?.document.uri;
+  const uri = targetUri ?? MarkdownPreviewCustomEditor.getActiveDocumentUri()
+    ?? getActiveNativeMarkdownEditorUri() ?? vscode.window.activeTextEditor?.document.uri;
   if (!uri) {
     void vscode.window.showInformationMessage('Open a Markdown file to preview it.');
     return;
   }
   const document = await vscode.workspace.openTextDocument(uri);
-  const activeEditor = vscode.window.activeTextEditor;
-  if (activeEditor?.document.uri.toString() === document.uri.toString()) {
-    await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+  await openMarkdownEditor(document.uri, MarkdownPreviewCustomEditor.viewType);
+}
+
+async function openMarkdownEditor(uri: vscode.Uri, viewType: string): Promise<void> {
+  const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+  if ((input instanceof vscode.TabInputText || input instanceof vscode.TabInputCustom) && input.uri.toString() === uri.toString()) {
+    if ((input instanceof vscode.TabInputCustom && input.viewType === viewType)
+      || (input instanceof vscode.TabInputText && viewType === 'default')) {
+      return;
+    }
+    // VS Code's reopen command replaces the active editor while retaining the document's working copy.
+    await vscode.commands.executeCommand('reopenActiveEditorWith', viewType);
+  } else if (viewType === 'default') {
+    await vscode.window.showTextDocument(uri, { preview: false });
+  } else {
+    await vscode.commands.executeCommand('vscode.openWith', uri, viewType, { preview: false });
   }
-  await vscode.commands.executeCommand('vscode.openWith', document.uri, MarkdownPreviewCustomEditor.viewType, {
-    preview: false,
-  });
+}
+
+export function getActiveNativeMarkdownEditorUri(): vscode.Uri | undefined {
+  const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+  return input instanceof vscode.TabInputCustom && input.viewType === 'vscode.markdown.editor'
+    ? input.uri
+    : undefined;
 }
 
 export async function openNativeMarkdownEditorCommand(targetUri?: vscode.Uri): Promise<void> {
@@ -97,9 +119,15 @@ export async function openNativeMarkdownEditorCommand(targetUri?: vscode.Uri): P
     return;
   }
 
-  await vscode.commands.executeCommand('vscode.openWith', document.uri, 'vscode.markdown.editor', {
-    preview: false,
-  });
+  await openMarkdownEditor(document.uri, 'vscode.markdown.editor');
+}
+
+export async function editAsTextCommand(resource?: vscode.Uri): Promise<void> {
+  const document = await resolveMarkdownDocument(resource);
+  if (!document) {
+    return;
+  }
+  await openMarkdownEditor(document.uri, 'default');
 }
 
 export async function formatTablesCommand(resource?: vscode.Uri): Promise<void> {
@@ -195,6 +223,7 @@ async function resolveCurrentMarkdownUri(resource?: vscode.Uri): Promise<vscode.
     ? resource
     : MarkdownPreviewCustomEditor.getActiveDocumentUri()
       ?? MarkdownPreviewPanel.getActivePreviewDocumentUri()
+      ?? getActiveNativeMarkdownEditorUri()
       ?? vscode.window.activeTextEditor?.document.uri;
   if (!uri) {
     return undefined;
@@ -215,11 +244,19 @@ async function resolveCommandListContext(resource?: vscode.Uri): Promise<Command
   const copilotConfigured = await hasConfiguredCopilotAccount();
   const documentUri = document.uri;
   const activePreviewUri = MarkdownPreviewCustomEditor.getActiveDocumentUri() ?? MarkdownPreviewPanel.getActivePreviewDocumentUri();
+  const activeInput = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+  const source = document.getText();
+  const review = readReviewComments(source);
   return {
     documentUri,
     isPreviewMode: activePreviewUri?.toString() === documentUri.toString(),
-    hasFrontMatter: hasDisplayableFrontMatter(document.getText()),
-    isPresentation: isMarkdownPresentationSource(document.getText()),
+    isNativeEditorMode: getActiveNativeMarkdownEditorUri()?.toString() === documentUri.toString(),
+    isTextEditorMode: activeInput instanceof vscode.TabInputText && activeInput.uri.toString() === documentUri.toString(),
+    hasFrontMatter: hasDisplayableFrontMatter(source),
+    isPresentation: isMarkdownPresentationSource(source),
+    hasEmbeddableLinkedImages: hasEmbeddableLinkedImages(source),
+    hasReviewComments: !review.error && review.comments.length > 0,
+    hasEligibleReviewComments: !review.error && review.comments.some(isAiReviewEligible),
     copilotConfigured,
     aiAccessState: getAiAccessState(),
   };
@@ -275,10 +312,17 @@ function shouldShowCommand(entry: CommandListEntry, context: CommandListContext)
   }
 
   if (command === 'markdownAiStudio.editAsText') {
-    return context.isPreviewMode;
+    return context.isPreviewMode || context.isNativeEditorMode;
   }
 
-  if (command === 'markdownAiStudio.toggleReviewComments') return context.isPreviewMode;
+  if (command === 'markdownAiStudio.openNativeMarkdownEditor') {
+    return !context.isNativeEditorMode;
+  }
+
+  if (command === 'markdownAiStudio.formatTables') return context.isTextEditorMode;
+  if (command === 'markdownAiStudio.toggleReviewComments') return context.isPreviewMode && context.hasReviewComments;
+  if (command === 'markdownAiStudio.reviewComments') return context.hasEligibleReviewComments;
+  if (command === 'markdownAiStudio.embedLinkedImages') return context.hasEmbeddableLinkedImages;
 
   if (command === 'markdownAiStudio.toggleFrontMatter') {
     return context.isPreviewMode && context.hasFrontMatter;

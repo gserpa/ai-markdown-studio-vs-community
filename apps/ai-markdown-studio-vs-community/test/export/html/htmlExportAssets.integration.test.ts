@@ -25,7 +25,7 @@ vi.mock('vscode', async () => {
   };
 });
 
-import { buildExportHtmlArtifact, buildPortableReviewHtml, exportMarkdownAsHtml } from '../../../src/export/html/htmlExporter';
+import { buildExportHtmlArtifact, buildPortableHtml, exportMarkdownAsHtml } from '../../../src/export/html/htmlExporter';
 import { buildPreviewHtml } from '../../../src/panel/previewHtmlBuilder';
 import { loadPreviewAssetManifest, selectPreviewStylesheetAssets } from '../../../src/util/previewAssetManifest';
 import * as vscode from 'vscode';
@@ -57,49 +57,7 @@ function stylesIn(html: string): string {
 }
 
 describe('HTML export with real built assets', () => {
-  it('saves a multi-item component review in portable HTML', async () => {
-    const source = '---\ndocument: presentation\n---\n\n# Slide\n\n~~~component\ntype: fact-cards\nversion: 1\ndata:\n'
-      + '  cards:\n    - label: First\n      value: One\n    - label: Second\n      value: Two\n~~~\n';
-    const html = await buildPortableReviewHtml(extension, documentFor(source));
-    const downloads: Blob[] = [];
-    const browser = new JSDOM(html, {
-      runScripts: 'dangerously', pretendToBeVisual: true,
-      beforeParse(window) {
-        Object.assign(window, { TextEncoder, TextDecoder, Blob });
-        Object.defineProperty(window.crypto, 'subtle', { value: webcrypto.subtle });
-        window.URL.createObjectURL = (blob: Blob) => { downloads.push(blob); return 'blob:portable-test'; };
-        window.URL.revokeObjectURL = () => {};
-        window.HTMLAnchorElement.prototype.click = () => {};
-        window.HTMLElement.prototype.scrollIntoView = () => {};
-        Object.assign(window.Range.prototype, {
-          getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
-          getClientRects: () => [],
-        });
-      },
-    });
-    try {
-      const page = browser.window.document;
-      await vi.waitFor(() => expect(page.getElementById('ams-portable-controls')?.hidden).toBe(false), { timeout: 10000 });
-      const labels = page.querySelectorAll('.md-fact-label');
-      const range = page.createRange();
-      range.setStart(labels[0].firstChild!, 0);
-      range.setEnd(labels[1].firstChild!, labels[1].firstChild!.textContent!.length);
-      browser.window.getSelection()!.addRange(range);
-      page.dispatchEvent(new browser.window.Event('selectionchange'));
-      page.querySelector<HTMLButtonElement>('.md-review-popover button')!.click();
-      const textarea = page.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
-      textarea.value = 'Review both cards';
-      textarea.dispatchEvent(new browser.window.Event('input', { bubbles: true }));
-      page.querySelector<HTMLFormElement>('.md-review-composer')!.requestSubmit();
-      await vi.waitFor(() => expect(JSON.parse(page.querySelector('[data-review-state]')!.getAttribute('data-review-state')!).comments).toHaveLength(1));
-      page.querySelector<HTMLButtonElement>('#ams-save-markdown')!.click();
-      const stored = readReviewComments(await downloads[0].text());
-      expect(stored.markdown).toBe(source);
-      expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toContain('label: Second');
-    } finally { browser.window.close(); }
-  }, 20000);
-
-  it('exports the reviewable snapshot through the public HTML command without changing the source', async () => {
+  it('exports the snapshot through the public HTML command without changing the source', async () => {
     const directory = mkdtempSync(path.join(tmpdir(), 'ams-export-command-'));
     const dialog = vi.spyOn(vscode.window, 'showSaveDialog');
     try {
@@ -122,7 +80,7 @@ describe('HTML export with real built assets', () => {
         expect(stored.comments[0].body).toBe('Review note');
         expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe('target');
         expect(stored.markdown).toContain('data:image/png;base64,');
-        expect(dom.window.document.getElementById('ams-save-html')).not.toBeNull();
+        expect(dom.window.document.getElementById('ams-save-html')).toBeNull();
       } finally { dom.window.close(); }
       expect(readFileSync(fsPath, 'utf8')).toBe(annotated);
     } finally { dialog.mockRestore(); rmSync(directory, { recursive: true, force: true }); }
@@ -169,7 +127,7 @@ describe('HTML export with real built assets', () => {
         expect(stored.markdown).toContain('data:image/png;base64,');
         expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe('target');
         expect(dom.window.document.querySelector(`img[src="${url}"]`)).not.toBeNull();
-        expect(dom.window.document.getElementById('ams-save-html')).not.toBeNull();
+        expect(dom.window.document.getElementById('ams-save-html')).toBeNull();
       } finally { dom.window.close(); }
       expect(warning).not.toHaveBeenCalled();
       expect(log).toHaveBeenCalledWith(expect.stringContaining('Could not embed 1 remote image(s)'), ['Image download failed (HTTP 429).']);
@@ -189,14 +147,8 @@ describe('HTML export with real built assets', () => {
       });
       try {
         const page = browser.window.document;
-        await vi.waitFor(() => expect(page.getElementById('ams-portable-controls')?.hidden).toBe(false), { timeout: 10000 });
         expect(page.querySelector(`.presentation-slide img[src="${url}"]`)).not.toBeNull();
-        page.querySelector<HTMLButtonElement>('.md-review-panel-item')!.click();
-        const text = page.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
-        text.value = 'Edited review';
-        text.dispatchEvent(new browser.window.Event('input', { bubbles: true }));
-        page.querySelector<HTMLFormElement>('.md-review-composer')!.requestSubmit();
-        await vi.waitFor(() => expect(JSON.parse(page.querySelector('[data-review-state]')!.getAttribute('data-review-state')!).comments[0].body).toBe('Edited review'));
+        expect(page.querySelector('[data-review-state], .md-review-panel')).toBeNull();
       } finally { browser.window.close(); }
     } finally { dialog.mockRestore(); warning.mockRestore(); log.mockRestore(); fetch.mockRestore(); rmSync(directory, { recursive: true, force: true }); }
   });
@@ -250,7 +202,7 @@ describe('HTML export with real built assets', () => {
       get: (key: string, fallback: unknown) => key === 'allowRemoteResources' ? false : fallback,
     } as never);
     try {
-      await expect(buildPortableReviewHtml(extension, documentFor('# Media\n\n' + markup))).rejects.toThrow('remote media is disabled');
+      await expect(buildPortableHtml(extension, documentFor('# Media\n\n' + markup))).rejects.toThrow('remote media is disabled');
     } finally { config.mockRestore(); }
   });
 
@@ -264,7 +216,7 @@ describe('HTML export with real built assets', () => {
     } as never);
     const read = vi.spyOn(vscode.workspace.fs, 'readFile');
     try {
-      await expect(buildPortableReviewHtml(extension, documentFor('# Images\n\n' + markup))).rejects.toThrow('Remote resources are disabled');
+      await expect(buildPortableHtml(extension, documentFor('# Images\n\n' + markup))).rejects.toThrow('Remote resources are disabled');
       expect(read).not.toHaveBeenCalled();
     } finally { read.mockRestore(); config.mockRestore(); }
   });
@@ -292,9 +244,23 @@ describe('HTML export with real built assets', () => {
       const fsPath = path.join(directory, 'missing.md');
       const source = '# Test\n\n![Missing](missing.png)\n';
       const document = { fileName: fsPath, uri: { fsPath, scheme: 'file', toString: () => pathToFileURL(fsPath).href }, getText: () => source };
-      await expect(buildPortableReviewHtml(extension, document as never)).rejects.toThrow('missing.png');
+      await expect(buildPortableHtml(extension, document as never)).rejects.toThrow('missing.png');
       expect(document.getText()).toBe(source);
     } finally { rmSync(directory, { recursive: true, force: true }); }
+  });
+
+  it.each(['document', 'presentation'] as const)('reports an invalid embedded snapshot in a %s', async mode => {
+    const source = `${mode === 'presentation' ? '---\ndocument: presentation\n---\n\n' : ''}# Heading\n`;
+    const html = await buildPortableHtml(extension, documentFor(source));
+    const broken = html.replace(/(<script type="application\/octet-stream" id="ams-portable-source">)[^<]*/u, '$1invalid!');
+    const browser = new JSDOM(broken, {
+      runScripts: 'dangerously', pretendToBeVisual: true,
+      beforeParse(window) { Object.assign(window, { TextDecoder }); },
+    });
+    try {
+      expect(browser.window.document.getElementById('ams-portable-status')!.textContent).toContain('Cannot initialize Markdown download');
+      expect(browser.window.document.getElementById('ams-save-markdown')!.hidden).toBe(true);
+    } finally { browser.window.close(); }
   });
 
   it.each([
@@ -305,7 +271,7 @@ describe('HTML export with real built assets', () => {
       get: (key: string, fallback: unknown) => key === 'allowRemoteResources' ? allowRemote : fallback,
     } as never);
     try {
-      const source = `---\n${mode === 'presentation' ? 'document: presentation' : 'title: Document'}\n---\n\n# Slide\n\nA target and $x^2$.\n\n![Pixel](pixel.png)\n\n\`</script><script>window.injected=true</script>\`\n`;
+      const source = `---\n${mode === 'presentation' ? 'document: presentation' : 'title: Document'}\n---\n\n# Slide\n\nA target and $x^2$.\n\n![Pixel](pixel.png)\n\n\`</script><script>window.injected=true</script>\`\n${mode === 'presentation' ? '\n<!--notes: Presenter note-->\n\n---\n\n# Second slide\n\nSecond content.\n' : ''}`;
       const start = source.indexOf('target');
       const annotated = writeReviewComments(source, [
         { id: '1', body: 'Keep </script> as data', state: 'open', includeInAi: false, range: { start, end: start + 6 } },
@@ -314,25 +280,25 @@ describe('HTML export with real built assets', () => {
       writeFileSync(path.join(directory, 'pixel.png'), pixel);
       const fsPath = path.join(directory, 'deck.md');
       const document = { fileName: fsPath, uri: { fsPath, scheme: 'file', toString: () => pathToFileURL(fsPath).href }, getText: () => annotated } as never;
-      const html = await buildPortableReviewHtml(extension, document);
+      const html = await buildPortableHtml(extension, document);
+      let markdown: string;
       const dom = new JSDOM(html);
       try {
         const sourceData = dom.window.document.getElementById('ams-portable-source')!.textContent!;
-        const markdown = JSON.parse(Buffer.from(sourceData, 'base64').toString('utf8'));
+        markdown = JSON.parse(Buffer.from(sourceData, 'base64').toString('utf8'));
         const store = readReviewComments(markdown);
         expect(markdown).toContain('data:image/png;base64,');
         expect(store.comments[0]).toMatchObject({ body: 'Keep </script> as data', includeInAi: false });
         expect(store.markdown.slice(store.comments[0].range!.start, store.comments[0].range!.end)).toBe('target');
         expect(annotated).toContain('pixel.png');
-        expect(dom.window.document.querySelector('script[data-ams-runtime="renderer"]')?.getAttribute('type')).toBe('application/x-ams-runtime');
-        expect(dom.window.document.querySelectorAll('script:not([type])')).toHaveLength(allowRemote ? 1 : 2);
+        expect(dom.window.document.querySelector('[data-ams-runtime="renderer"], [data-review-state], .md-review-panel, #ams-save-html')).toBeNull();
         const assets = [...dom.window.document.querySelectorAll<HTMLScriptElement>('script[data-ams-export-asset]')];
         expect(assets.length).toBeGreaterThan(0);
-        expect(assets.every(script => script.type === 'application/x-ams-runtime')).toBe(true);
+        expect(assets.every(script => !script.type)).toBe(true);
         expect(dom.window.document.querySelector('main.markdown-body, .presentation-slide')?.textContent).toContain('A target');
         if (mode === 'presentation') {
           expect(dom.window.document.querySelector('.presentation-export-fallback input:checked')).not.toBeNull();
-          expect(dom.window.document.querySelector('script[data-presentation-slide-data]')).toBeNull();
+          expect(dom.window.document.querySelector('script[data-presentation-slide-data]')).not.toBeNull();
         }
         const policy = dom.window.document.querySelector('meta[http-equiv="Content-Security-Policy"]');
         if (allowRemote) expect(policy).toBeNull();
@@ -342,9 +308,8 @@ describe('HTML export with real built assets', () => {
           expect(policy?.getAttribute('content')).toContain("script-src 'unsafe-inline' 'unsafe-eval' blob: data:");
         }
         const notices = dom.window.document.querySelector<HTMLTemplateElement>('template[data-ams-portable-notices]')!.content.textContent!;
-        expect(notices).toContain('launder@1.7.2');
-        expect(notices).toContain('Apostrophe Technologies');
-        expect(notices).toContain('katex@');
+        expect(notices).toContain('katex');
+        expect(notices).toContain('mermaid');
         expect(notices).toContain('SIL OPEN FONT LICENSE');
         expect(stylesIn(html)).not.toContain('cdn.jsdelivr.net/npm/katex');
         expect(stylesIn(html)).toContain('data:font/woff2;base64,');
@@ -372,66 +337,61 @@ describe('HTML export with real built assets', () => {
       });
       try {
         const page = browser.window.document;
-        await vi.waitFor(() => expect(page.getElementById('ams-portable-controls')?.hidden).toBe(false), { timeout: 10000 });
         expect(Reflect.get(browser.window, 'injected')).toBeUndefined();
-        const controls = page.getElementById('ams-portable-controls')!;
-        const saveHtml = page.querySelector<HTMLButtonElement>('#ams-save-html')!;
         const saveMarkdown = page.querySelector<HTMLButtonElement>('#ams-save-markdown')!;
         if (mode === 'presentation') {
-          expect(controls.parentElement?.classList.contains('presentation-bottom-bar-tabs')).toBe(true);
-          expect(saveHtml.classList.contains('presentation-tab')).toBe(true);
+          await vi.waitFor(() => expect(page.body.dataset.amsPresentationReady).toBe('true'));
+          expect(saveMarkdown.parentElement?.classList.contains('presentation-bottom-bar-tabs')).toBe(true);
           expect(saveMarkdown.classList.contains('presentation-tab')).toBe(true);
-          expect(saveHtml.querySelector('svg path')?.getAttribute('d')).not.toBe(saveMarkdown.querySelector('svg path')?.getAttribute('d'));
+          const notesTab = page.querySelector<HTMLButtonElement>('.presentation-tab[data-panel="notes"]')!;
+          notesTab.click();
+          expect(page.querySelector('[data-presentation-panel-notes]')?.textContent).toContain('Presenter note');
+          page.querySelector<HTMLButtonElement>('[data-presentation-action="next"]')!.click();
+          expect(page.querySelectorAll('.presentation-slide')[1].classList.contains('is-active')).toBe(true);
+          expect(page.querySelector('[data-presentation-panel-notes]')?.textContent).not.toContain('Presenter note');
         } else {
+          const controls = page.getElementById('ams-portable-controls')!;
           expect(controls.parentElement).toBe(page.body);
-          expect(saveHtml.classList.contains('presentation-tab')).toBe(false);
+          expect(controls.hidden).toBe(false);
           expect(saveMarkdown.classList.contains('presentation-tab')).toBe(false);
+          const menuButton = page.querySelector<HTMLButtonElement>('#ams-export-menu')!;
+          const menu = page.getElementById('ams-export-menu-items')!;
+          page.dispatchEvent(new browser.window.MouseEvent('pointermove', { clientX: browser.window.innerWidth - 150, clientY: 50 }));
+          expect(controls.classList.contains('is-revealed')).toBe(true);
+          page.dispatchEvent(new browser.window.MouseEvent('pointermove', { clientX: 10, clientY: 200 }));
+          expect(controls.classList.contains('is-revealed')).toBe(false);
+          menuButton.focus();
+          expect(page.activeElement).toBe(menuButton);
+          menuButton.click();
+          expect(menu.hidden).toBe(false);
+          expect(menuButton.getAttribute('aria-expanded')).toBe('true');
+          page.dispatchEvent(new browser.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+          expect(menu.hidden).toBe(true);
+          expect(page.activeElement).toBe(menuButton);
+          menuButton.click();
+          page.body.dispatchEvent(new browser.window.Event('pointerdown', { bubbles: true }));
+          expect(menu.hidden).toBe(true);
+          menuButton.click();
         }
         if (!allowRemote) {
           page.dispatchEvent(new browser.window.Event('securitypolicyviolation'));
-          expect(page.getElementById('ams-portable-resource-warning')!.textContent).toContain('blocked');
+          await vi.waitFor(() => expect(page.getElementById('ams-portable-resource-warning')!.textContent).toContain('blocked'));
         }
-        if (mode === 'presentation') page.querySelector<HTMLButtonElement>('.md-review-panel-item')!.click();
-        else {
-          page.querySelector<HTMLButtonElement>('button[aria-label="Review Comments"]')!.click();
-          [...page.querySelectorAll<HTMLButtonElement>('aside button')].find(button => button.textContent === 'Edit')!.click();
-        }
-        const text = page.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
-        text.value = 'Edited offline';
-        text.dispatchEvent(new browser.window.Event('input', { bubbles: true }));
-        page.querySelector<HTMLFormElement>('.md-review-composer')!.requestSubmit();
-        await vi.waitFor(() => expect(JSON.parse(page.querySelector('[data-review-state]')!.getAttribute('data-review-state')!).comments[0].body).toBe('Edited offline'));
         const unload = new browser.window.Event('beforeunload', { cancelable: true });
         browser.window.dispatchEvent(unload);
-        expect(unload.defaultPrevented).toBe(true);
+        expect(unload.defaultPrevented).toBe(false);
         const notesTab = page.querySelector<HTMLButtonElement>('.presentation-tab[data-panel="notes"]');
-        notesTab?.click();
-        saveHtml.click();
-        if (notesTab) expect(notesTab.classList.contains('is-active')).toBe(true);
-        expect(downloads).toHaveLength(1);
-        expect(openLink).not.toHaveBeenCalled();
-        const savedHtml = await downloads[0].text();
-        const saved = new JSDOM(savedHtml);
-        try {
-          const encoded = saved.window.document.getElementById('ams-portable-source')!.textContent!;
-          const savedSource = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'));
-          const savedReview = readReviewComments(savedSource);
-          expect(savedReview.comments[0].body).toBe('Edited offline');
-          expect(savedReview.markdown.slice(savedReview.comments[0].range!.start, savedReview.comments[0].range!.end)).toBe('target');
-          expect(saved.window.document.querySelector('.md-review-panel')).toBeNull();
-          expect(saved.window.document.querySelector<HTMLTemplateElement>('template[data-ams-portable-notices]')!.content.textContent).toContain('launder@1.7.2');
-          expect(!!saved.window.document.querySelector('meta[http-equiv="Content-Security-Policy"]')).toBe(!allowRemote);
-        } finally { saved.window.close(); }
         saveMarkdown.click();
         if (notesTab) expect(notesTab.classList.contains('is-active')).toBe(true);
-        expect(readReviewComments(await downloads[1].text()).comments[0].body).toBe('Edited offline');
+        expect(downloads).toHaveLength(1);
+        expect(await downloads[0].text()).toBe(markdown!);
         expect(page.getElementById('ams-portable-status')!.textContent).toContain('Confirm that your browser saved');
         if (!allowRemote) expect(page.getElementById('ams-portable-resource-warning')!.textContent).toContain('blocked');
         expect(openLink).not.toHaveBeenCalled();
         browser.window.URL.createObjectURL = () => { throw new Error('Download unavailable'); };
-        page.querySelector<HTMLButtonElement>('#ams-save-html')!.click();
+        saveMarkdown.click();
         expect(page.getElementById('ams-portable-status')!.textContent).toContain('Download unavailable');
-        expect(JSON.parse(page.querySelector('[data-review-state]')!.getAttribute('data-review-state')!).comments[0].body).toBe('Edited offline');
+        expect(page.getElementById('ams-portable-source')!.textContent).toBe(Buffer.from(JSON.stringify(markdown!), 'utf8').toString('base64'));
       } finally { browser.window.close(); }
     } finally { config.mockRestore(); rmSync(directory, { recursive: true, force: true }); }
   }, 20000);

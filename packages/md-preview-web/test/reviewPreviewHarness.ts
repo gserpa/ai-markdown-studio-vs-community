@@ -1,8 +1,8 @@
 import { createMarkdownRenderer, isMarkdownPresentationSource, readReviewComments, sanitizeRenderedHtml } from '@mfo/core';
 import { createReviewActionHandler, createReviewPreviewTools, reviewContentKeySource, type ReviewRequest } from '@mfo/review';
-import { renderDocumentPreviewBody } from './document/documentPreviewBody';
-import { renderPresentationPreview } from './presentation/presentationPreview';
-import { loadPreviewThemeRegistryFromData, type PreviewThemeMode, type PreviewThemeRegistry } from './presentation/previewThemeRegistry';
+import { renderDocumentPreviewBody } from '../src/document/documentPreviewBody';
+import { renderPresentationPreview } from '../src/presentation/presentationPreview';
+import { loadPreviewThemeRegistryFromData, type PreviewThemeMode, type PreviewThemeRegistry } from '../src/presentation/previewThemeRegistry';
 
 export { loadPreviewThemeRegistryFromData };
 

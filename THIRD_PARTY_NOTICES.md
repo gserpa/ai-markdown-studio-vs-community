@@ -36,10 +36,8 @@ license texts are distributed alongside the fonts under
 
 ## Bundled fonts
 
-Complete license texts for the portable review renderer, its transitive
-dependencies, and bundled fonts ship in the generated
-`portable-review-notices.*.txt` asset and in portable review HTML. The published
-dependency license texts are included in that notice asset.
+License texts for the embedded preview fonts, KaTeX, and Mermaid ship in the
+generated `html-export-notices.*.txt` asset and in exported HTML.
 
 Complete license texts for the chart bundle and its transitive dependencies ship
 in the generated `preview-visualizations-notices.*.txt` asset. The preview asset

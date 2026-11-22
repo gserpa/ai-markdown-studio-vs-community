@@ -2448,7 +2448,10 @@ function updatePresentationBottomPanel({
   }
 
   if (activePanelTab === 'notes' && notesContainer instanceof HTMLElement) {
-    notesContainer.innerHTML = typeof currentSlideData?.notesHtml === 'string' ? currentSlideData.notesHtml : '';
+    const notesHtml = currentSlideData?.notesHtml;
+    notesContainer.innerHTML = typeof notesHtml === 'string' && notesHtml.trim()
+      ? notesHtml
+      : '<p class="presentation-notes-empty">No speaker notes.</p>';
   }
 
   if (activePanelTab === 'info' && infoContainer instanceof HTMLElement) {

@@ -38,6 +38,7 @@
     "theme": "dark"
   },
   "activationEvents": [
+    "onStartupFinished",
     "onLanguage:markdown",
     "onLanguageModelTool:markdown_ai_studio_build_presentation_prompt",
     "onLanguageModelTool:markdown_ai_studio_validate_presentation",
@@ -53,16 +54,21 @@
         "icon": "$(eye)"
       },
       {
-        "command": "markdownAiStudio.editAsText",
-        "title": "Edit Markdown",
+        "command": "markdownAiStudio.openPreviewFromContext",
+        "title": "Open Preview",
+        "category": "AI Markdown Studio"
+      },
+      {
+        "command": "markdownAiStudio.openNativeMarkdownEditor",
+        "title": "Document Editor",
         "category": "AI Markdown Studio",
         "icon": "$(pencil)"
       },
       {
-        "command": "markdownAiStudio.openNativeMarkdownEditor",
-        "title": "Open Native WYSIWYG Markdown Editor",
+        "command": "markdownAiStudio.editAsText",
+        "title": "Edit Markdown",
         "category": "AI Markdown Studio",
-        "icon": "$(layout)"
+        "icon": "$(code)"
       },
       {
         "command": "markdownAiStudio.formatTables",
@@ -102,12 +108,8 @@
       {
         "command": "markdownAiStudio.toggleReviewComments",
         "title": "Toggle Review Comments",
-        "category": "AI Markdown Studio"
-      },
-      {
-        "command": "markdownAiStudio.viewReviewComments",
-        "title": "View Review Comments",
-        "category": "AI Markdown Studio"
+        "category": "AI Markdown Studio",
+        "icon": "$(comment-discussion)"
       },
       {
         "command": "markdownAiStudio.revealReviewComment",
@@ -165,11 +167,6 @@
         "title": "Revise from Comments",
         "category": "AI Markdown Studio",
         "icon": "$(sparkle)"
-      },
-      {
-        "command": "markdownAiStudio.copyReviewPrompt",
-        "title": "Copy Review Prompt",
-        "category": "AI Markdown Studio"
       },
       {
         "command": "markdownAiStudio.applyReviewRevision",
@@ -369,6 +366,18 @@
     "menus": {
       "commandPalette": [
         {
+          "command": "markdownAiStudio.formatTables",
+          "when": "activeEditor == workbench.editors.files.textFileEditor && resourceLangId == markdown"
+        },
+        {
+          "command": "markdownAiStudio.openPreviewFromContext",
+          "when": "false"
+        },
+        {
+          "command": "markdownAiStudio.embedLinkedImages",
+          "when": "markdownAiStudio.activeDocumentHasEmbeddableLinkedImages"
+        },
+        {
           "command": "markdownAiStudio.revealReviewComment",
           "when": "false"
         },
@@ -495,14 +504,31 @@
       ],
       "explorer/context": [
         {
+          "command": "markdownAiStudio.openPreviewFromContext",
+          "when": "resourceExtname == .md && !explorerResourceIsFolder",
+          "group": "navigation@0"
+        },
+        {
+          "command": "markdownAiStudio.openNativeMarkdownEditor",
+          "when": "resourceExtname == .md && !explorerResourceIsFolder",
+          "group": "navigation@1"
+        },
+        {
           "command": "markdownAiStudio.editAsText",
           "when": "resourceExtname == .md && !explorerResourceIsFolder",
-          "group": "navigation"
+          "group": "navigation@2"
         },
         {
           "command": "markdownAiStudio.pasteAsMarkdown",
           "when": "explorerResourceIsFolder && markdownAiStudio.copilotConfigured && !markdownAiStudio.aiAccessDenied",
           "group": "z_markdownAiStudio@999"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "markdownAiStudio.openPreviewFromContext",
+          "when": "resourceExtname == .md",
+          "group": "1_open@1"
         }
       ],
       "editor/title": [
@@ -527,14 +553,9 @@
           "group": "navigation"
         },
         {
-          "command": "markdownAiStudio.editAsText",
-          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' || activeCustomEditorId == 'vscode.markdown.editor'",
-          "group": "navigation@1"
-        },
-        {
           "command": "markdownAiStudio.openNativeMarkdownEditor",
           "when": "resourceExtname == .md && activeCustomEditorId != 'vscode.markdown.editor'",
-          "group": "navigation@1.5"
+          "group": "navigation@1"
         },
         {
           "command": "markdownAiStudio.showFrontMatter",
@@ -545,6 +566,11 @@
           "command": "markdownAiStudio.hideFrontMatter",
           "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' && markdownAiStudio.activePreviewHasFrontMatter && markdownAiStudio.activePreviewFrontMatterVisible",
           "group": "navigation@2"
+        },
+        {
+          "command": "markdownAiStudio.toggleReviewComments",
+          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' && markdownAiStudio.reviewHasComments",
+          "group": "navigation@2.9"
         },
         {
           "command": "markdownAiStudio.showCommandList",
@@ -593,9 +619,17 @@
           },
           "markdownAiStudio.aiModel": {
             "type": "string",
+            "order": 1,
             "default": "gpt-5.6-luna",
             "scope": "application",
-            "description": "Preferred Copilot model family. If unavailable or unsuccessful, AI Markdown Studio tries gpt-5.4-mini and then the first available Copilot model."
+            "description": "Preferred Copilot model family for conversions, AI Paste, review, and theme generation. If unavailable or unsuccessful, tries gpt-5.4-mini and then other available Copilot models."
+          },
+          "markdownAiStudio.aiGenerationModel": {
+            "type": "string",
+            "order": 2,
+            "default": "claude-opus-5.5",
+            "scope": "application",
+            "description": "Preferred Copilot model family or ID for document and presentation generation, including repairs. If unavailable or unsuccessful, tries claude-opus-5.5, claude-sonnet-5.5, gpt-5.6-luna, gpt-5.4-mini, and then other available Copilot models."
           }
         }
       },
