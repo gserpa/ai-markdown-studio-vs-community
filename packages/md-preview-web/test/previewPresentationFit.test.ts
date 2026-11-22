@@ -84,4 +84,38 @@ describe('presentation content fitting', () => {
       expect(dom.window.document.querySelector('#forged-slide')?.classList.contains('is-active')).toBe(false);
     } finally { dom.window.close(); }
   });
+
+  it('navigates once per vertical wheel gesture without intercepting scrollable content', async () => {
+    const dom = new JSDOM(`<body data-preview-mode="presentation">
+      <section class="presentation-preview"><div class="presentation-stage">
+        <section class="presentation-slide"><div id="scrollable" style="overflow-y: auto"><span>Content</span></div></section>
+        <section class="presentation-slide"></section><section class="presentation-slide"></section>
+      </div></section></body>`, { runScripts: 'outside-only', pretendToBeVisual: true });
+    try {
+      Object.assign(dom.window, { __previewBridge: { getState: () => ({}), setState: vi.fn() } });
+      await dom.window.eval(runtime);
+      await dom.window.eval('window.__mfoPreviewModeRuntime.startPresentation()');
+      const stage = dom.window.document.querySelector('.presentation-stage')!;
+      const slides = [...stage.querySelectorAll('.presentation-slide')];
+      const wheel = (target: Element, options: WheelEventInit) => {
+        const event = new dom.window.WheelEvent('wheel', { bubbles: true, cancelable: true, ...options });
+        target.dispatchEvent(event);
+        return event;
+      };
+      expect(wheel(stage, { deltaY: 100 }).defaultPrevented).toBe(true);
+      expect(slides[1].classList.contains('is-active')).toBe(true);
+      wheel(stage, { deltaY: 10 });
+      expect(slides[1].classList.contains('is-active')).toBe(true);
+      await new Promise(resolve => setTimeout(resolve, 220));
+      wheel(stage, { deltaY: -100 });
+      expect(slides[0].classList.contains('is-active')).toBe(true);
+      await new Promise(resolve => setTimeout(resolve, 220));
+      const scrollable = dom.window.document.querySelector<HTMLElement>('#scrollable')!;
+      Object.defineProperties(scrollable, { scrollHeight: { value: 200 }, clientHeight: { value: 100 } });
+      expect(wheel(scrollable.querySelector('span')!, { deltaY: 100 }).defaultPrevented).toBe(false);
+      expect(wheel(stage, { deltaY: 100, ctrlKey: true }).defaultPrevented).toBe(false);
+      expect(wheel(stage, { deltaX: 100, deltaY: 10 }).defaultPrevented).toBe(false);
+      expect(slides[0].classList.contains('is-active')).toBe(true);
+    } finally { dom.window.close(); }
+  });
 });

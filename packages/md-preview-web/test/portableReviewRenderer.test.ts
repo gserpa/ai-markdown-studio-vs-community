@@ -296,3 +296,78 @@ it('anchors repeated text on the selected presentation slide', async () => {
     dom.window.close();
   }
 });
+
+it.each(['document', 'presentation'] as const)('adds and restores a component text comment in a %s', async mode => {
+  const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
+  Object.assign(dom.window.Range.prototype, {
+    getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
+    getClientRects: () => [],
+  });
+
+  vi.stubGlobal('document', dom.window.document);
+  vi.stubGlobal('crypto', webcrypto);
+  try {
+    const source = (mode === 'presentation' ? '---\ndocument: presentation\n---\n\n# Slide\n\n' : '')
+      + '~~~component\ntype: fact-cards\nversion: 1\ndata:\n  cards:\n'
+      + '    - label: Repeated\n      value: First\n    - label: Repeated\n      value: Second\n~~~\n';
+    const host = await createPortableReviewHost(source, 'session', options);
+    dom.window.document.body.innerHTML = host.snapshot().body;
+    const root = dom.window.document.querySelector('[data-review-state]')!;
+    root.querySelector('.presentation-slide')?.classList.add('is-active');
+    Object.assign(dom.window, { __previewBridge: createPortableReviewBridge(host, root, 'session') });
+    dom.window.eval(readFileSync(new URL('../assets/preview-review.js', import.meta.url), 'utf8'));
+    const text = root.querySelectorAll('.md-fact-label')[1].firstChild!;
+    const range = dom.window.document.createRange();
+    range.selectNodeContents(text);
+    dom.window.getSelection()!.addRange(range);
+    dom.window.document.dispatchEvent(new dom.window.Event('selectionchange'));
+    const popover = dom.window.document.querySelector<HTMLElement>('.md-review-popover')!;
+    expect(popover.hidden).toBe(false);
+    popover.querySelector<HTMLButtonElement>('button')!.click();
+    const textarea = popover.querySelector<HTMLTextAreaElement>('textarea')!;
+    textarea.value = 'Check this label';
+    textarea.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    popover.querySelector<HTMLFormElement>('form')!.requestSubmit();
+    await vi.waitFor(() => expect(host.snapshot().version).toBe(2));
+    const stored = readReviewComments(host.snapshot().markdown);
+    expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe('Repeated');
+    expect(stored.comments[0].range!.start).toBe(stored.markdown.lastIndexOf('Repeated'));
+    expect(host.snapshot().markdown).toContain('component: true');
+    const template = dom.window.document.createElement('template');
+    template.innerHTML = host.snapshot().body;
+    const state = JSON.parse(template.content.firstElementChild!.getAttribute('data-review-state')!);
+    expect(state.comments[0].placement).toBeDefined();
+    expect(template.content.querySelectorAll('.md-fact-label')[1].textContent).toBe('Repeated');
+  } finally {
+    vi.unstubAllGlobals();
+    dom.window.close();
+  }
+});
+
+it.each([
+  ['record-list', 'data:\n  records:\n    - title: Example item\n      detail: Supporting detail', '.md-record-detail', 'Supporting'],
+  ['status-matrix', 'data:\n  columns: [Scope, Design]\n  rows:\n    - label: Example row\n      cells: { Scope: Active, Design: Pending }', 'tbody th', 'Example'],
+] as const)('anchors rendered %s text to its YAML', async (type, data, selector, quote) => {
+  const dom = new JSDOM('');
+  vi.stubGlobal('document', dom.window.document);
+  vi.stubGlobal('crypto', webcrypto);
+  try {
+    const source = `~~~component\ntype: ${type}\nversion: 1\n${data}\n~~~\n`;
+    const host = await createPortableReviewHost(source, 'session', options);
+    const template = dom.window.document.createElement('template');
+    template.innerHTML = host.snapshot().body;
+    const element = template.content.querySelector(selector)!;
+    const block = element.closest('[data-review-block]')!;
+    const start = block.textContent!.indexOf(quote);
+    await host.review({ action: 'add', body: 'Check this', version: 1, requestId: 1, sessionId: 'session',
+      selection: [{ id: block.getAttribute('data-review-block')!, start, end: start + quote.length }] });
+    const stored = readReviewComments(host.snapshot().markdown);
+    expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe(quote);
+    template.innerHTML = host.snapshot().body;
+    const state = JSON.parse(template.content.firstElementChild!.getAttribute('data-review-state')!);
+    expect(state.comments[0].placement).toBeDefined();
+  } finally {
+    vi.unstubAllGlobals();
+    dom.window.close();
+  }
+});

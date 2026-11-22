@@ -4,7 +4,7 @@ import {
   type ReviewComment, type ReviewRange,
 } from '@mfo/core';
 
-type ReviewBlock = { id: string; text: string; startLine: number; endLine: number };
+type ReviewBlock = { id: string; text: string; startLine: number; endLine: number; component?: boolean };
 export type ReviewPreview = {
   version: number;
   blocks: ReviewBlock[];
@@ -49,7 +49,15 @@ export function renderReviewMarkdown(
   const { rules } = renderer.renderer;
   const fence = rules.fence;
   const code = rules.code_block;
-  if (fence) rules.fence = (...args) => markCodeBlock(fence(...args), args[0][args[1]].attrGet('data-review-block'));
+  if (fence) rules.fence = (...args) => {
+    const token = args[0][args[1]];
+    const html = fence(...args);
+    const component = token.info.trim().split(/\s+/u)[0]?.toLowerCase() === 'component';
+    const marker = token.attrGet('data-review-block');
+    return component && marker && /^\w+:\d+:\d+$/u.test(marker)
+      ? html.replace(/^<(section|table)\b/u, '<$1 data-review-block="' + marker + '" data-review-component="true"')
+      : markCodeBlock(html, marker);
+  };
   if (code) rules.code_block = (...args) => markCodeBlock(code(...args), args[0][args[1]].attrGet('data-review-block'));
   try {
     return adapters.sanitize(renderer.renderer.render(tokens, renderer.options, env));
@@ -84,7 +92,7 @@ function buildReviewPreview(adapters: ReviewPreviewAdapters, body: string, store
       }
       const id = String(blocks.length);
       node.setAttribute('data-review-block', id);
-      blocks.push({ id, text, startLine, endLine });
+      blocks.push({ id, text, startLine, endLine, ...(node.getAttribute('data-review-component') === 'true' ? { component: true } : {}) });
     }
     const comments = store.comments.map(comment => ({
       id: comment.id, body: comment.body, state: comment.state, includeInAi: comment.includeInAi,
@@ -112,13 +120,32 @@ function locatePlacement(adapters: ReviewPreviewAdapters, markdown: string, comm
     const source = markdown.slice(from, to);
     const start = Math.max(from, comment.range!.start) - from;
     const end = Math.min(to, comment.range!.end) - from;
-    const slice = renderedSlice(adapters, source, start, end, block.text);
+    const slice = renderedSlice(adapters, source, start, end, block.text, block.component);
     return slice ? { id: block.id, ...slice } : undefined;
   });
   return pieces.length && pieces.every(piece => piece !== undefined) ? { slices: pieces, ...lines } : undefined;
 }
 
-function renderedSlice(adapters: ReviewPreviewAdapters, source: string, start: number, end: number, blockText: string) {
+function renderedSlice(adapters: ReviewPreviewAdapters, source: string, start: number, end: number, blockText: string, component = false) {
+  if (component) {
+    const open = '<!--review:1-->';
+    const close = '<!--/review:1-->';
+    const marked = source.slice(0, start) + open + source.slice(start, end) + close + source.slice(end);
+    const dom = adapters.createDocument('<body>' + adapters.renderAnchor(marked) + '</body>');
+    try {
+      const text = dom.document.body.textContent ?? '';
+      const first = text.indexOf(open);
+      const last = text.indexOf(close);
+      if (first < 0 || last < first || text.indexOf(open, first + open.length) !== -1
+        || text.indexOf(close, last + close.length) !== -1) return undefined;
+      const plain = text.slice(0, first) + text.slice(first + open.length, last) + text.slice(last + close.length);
+      const blockOffset = plain.indexOf(blockText);
+      if (blockOffset < 0 || first < blockOffset || last - open.length > blockOffset + blockText.length) return undefined;
+      return { start: first - blockOffset, end: last - open.length - blockOffset };
+    } finally {
+      dom.dispose();
+    }
+  }
   const atLineStart = start === 0 || source[start - 1] === '\n';
   const previousLineStart = source.lastIndexOf('\n', start - 2) + 1;
   const previousLine = source.slice(previousLineStart, start).trim();
@@ -172,7 +199,7 @@ export function readPreviewSelection(adapters: ReviewPreviewAdapters, markdown: 
       candidates.push(position);
     }
     const matches = candidates.filter(position => {
-      const slice = renderedSlice(adapters, source, position, position + quote.length, block.text);
+      const slice = renderedSlice(adapters, source, position, position + quote.length, block.text, block.component);
       return slice !== undefined && slice.start === value.start && slice.end === value.end;
     });
     if (matches.length !== 1) {

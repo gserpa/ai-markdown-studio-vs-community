@@ -35,6 +35,13 @@ function codeRanges(source: string): ReviewRange[] {
   return ranges;
 }
 
+function componentRanges(source: string): ReviewRange[] {
+  const offsets = lineOffsets(source);
+  return parser.parse(source, {}).flatMap(token => token.type === 'fence' && token.map
+    && token.info.trim().split(/\s+/u)[0]?.toLowerCase() === 'component'
+    ? [{ start: offsets[token.map[0]], end: offsets[token.map[1]] ?? source.length }] : []);
+}
+
 function frontMatter(source: string): FrontMatter | undefined {
   const opening = source.match(/^\uFEFF?---[ \t]*\r?\n/u);
   if (!opening) return undefined;
@@ -63,6 +70,7 @@ export function readReviewComments(source: string): {
       || !pair.key.range || !pair.value.range) throw new Error();
     const data: unknown = document.toJS()[key];
     if (!Array.isArray(data)) throw new Error();
+    const componentIds = new Set<string>();
     const comments: ReviewComment[] = data.map(entry => {
       if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw new Error();
       const entries = Object.entries(entry);
@@ -70,10 +78,12 @@ export function readReviewComments(source: string): {
       const [id, value] = entries[0];
       if (typeof value === 'string' && value.trim()) return { id, body: value, state: 'open', includeInAi: true };
       if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error();
-      const detail = value as { text?: unknown; ai?: unknown; state?: unknown };
+      const detail = value as { text?: unknown; ai?: unknown; state?: unknown; component?: unknown };
       if (typeof detail.text !== 'string' || !detail.text.trim()
         || (detail.ai !== undefined && typeof detail.ai !== 'boolean')
+        || (detail.component !== undefined && typeof detail.component !== 'boolean')
         || (detail.state !== undefined && detail.state !== 'open' && detail.state !== 'resolved')) throw new Error();
+      if (detail.component === true) componentIds.add(id);
       return { id, body: detail.text, state: detail.state ?? 'open', includeInAi: detail.ai ?? true };
     });
     if (new Set(comments.map(comment => comment.id)).size !== comments.length) throw new Error();
@@ -83,17 +93,21 @@ export function readReviewComments(source: string): {
     const ids = new Set(comments.map(comment => comment.id));
     const positions = new Map<string, { open: number[]; close: number[] }>();
     const protectedRanges = codeRanges(withoutMetadata);
+    const components = componentRanges(withoutMetadata);
     let markdown = '';
     let last = 0;
     for (const match of withoutMetadata.matchAll(marker)) {
+      const inCode = protectedRanges.some(range => match.index >= range.start && match.index < range.end);
+      const inComponent = components.some(range => match.index >= range.start && match.index < range.end);
       if (!ids.has(match[2]) || match.index < front.end - (end - start)
-        || protectedRanges.some(range => match.index >= range.start && match.index < range.end)) continue;
+        || (inCode && !(componentIds.has(match[2]) && inComponent))) continue;
       markdown += withoutMetadata.slice(last, match.index);
       const position = positions.get(match[2]) ?? { open: [], close: [] };
       const after = match.index + match[0].length;
       const newline = withoutMetadata.slice(after).match(/^\r?\n/u)?.[0] ?? '';
-      const standaloneOpen = !match[1] && newline && (match.index === 0 || withoutMetadata[match.index - 1] === '\n');
-      (match[1] ? position.close : position.open).push(markdown.length + (!match[1] && newline && !standaloneOpen ? newline.length : 0));
+      const componentMarker = inComponent && componentIds.has(match[2]);
+      const standaloneOpen = !componentMarker && !match[1] && newline && (match.index === 0 || withoutMetadata[match.index - 1] === '\n');
+      (match[1] ? position.close : position.open).push(markdown.length + (!componentMarker && !match[1] && newline && !standaloneOpen ? newline.length : 0));
       positions.set(match[2], position);
       last = after + (standaloneOpen ? newline.length : 0);
     }
@@ -118,7 +132,9 @@ export function writeReviewComments(source: string, comments: readonly ReviewCom
     || comments.some(comment => !validId(comment.id) || !comment.body.trim())) {
     throw new Error('Review comments must have unique numeric IDs and non-empty text.');
   }
-  const events: { offset: number; text: string; order: number }[] = [];
+  const events: { offset: number; text: string; order: number; component: boolean }[] = [];
+  const componentIds = new Set<string>();
+  const components = componentRanges(clean);
   const eol = clean.includes('\r\n') ? '\r\n' : '\n';
   for (const comment of comments) {
     if (!comment.range) continue;
@@ -126,27 +142,31 @@ export function writeReviewComments(source: string, comments: readonly ReviewCom
     if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || start >= end || end > clean.length) {
       throw new Error('The review selection is no longer valid. Reattach the comment.');
     }
+    const component = components.find(range => start >= range.start && end <= range.end);
+    if (component) componentIds.add(comment.id);
     const atLineStart = start === 0 || clean[start - 1] === '\n';
     const previousLineStart = clean.lastIndexOf('\n', start - 2) + 1;
     const previousLine = clean.slice(previousLineStart, start).trim();
-    const standalone = atLineStart && (start === 0 || !previousLine || previousLine === '---');
-    const openOffset = atLineStart && !standalone ? start - (clean[start - 2] === '\r' ? 2 : 1) : start;
-    events.push({ offset: openOffset, text: `<!--review:${comment.id}-->` + (standalone ? eol : ''), order: 0 });
-    events.push({ offset: end, text: `<!--/review:${comment.id}-->`, order: 1 });
+    const standalone = !component && atLineStart && (start === 0 || !previousLine || previousLine === '---');
+    const openOffset = !component && atLineStart && !standalone ? start - (clean[start - 2] === '\r' ? 2 : 1) : start;
+    events.push({ offset: openOffset, text: `<!--review:${comment.id}-->` + (standalone ? eol : ''), order: 0, component: Boolean(component) });
+    events.push({ offset: end, text: `<!--/review:${comment.id}-->`, order: 1, component: Boolean(component) });
   }
   let marked = clean;
+  let validation = clean;
   for (const event of events.sort((a, b) => b.offset - a.offset || a.order - b.order)) {
     marked = marked.slice(0, event.offset) + event.text + marked.slice(event.offset);
+    if (!event.component) validation = validation.slice(0, event.offset) + event.text + validation.slice(event.offset);
   }
-  if (parser.render(marked).replace(/^<!--review:[1-9]\d*-->\r?\n/gmu, '').replace(marker, '')
+  if (parser.render(validation).replace(/^<!--review:[1-9]\d*-->\r?\n/gmu, '').replace(marker, '')
     !== parser.render(clean).replace(marker, '')) {
     throw new Error('This selection cannot be marked without changing the Markdown rendering. Select text within a Markdown text block.');
   }
   if (!comments.length) return marked;
   const entries = comments.map(comment => {
     const value = JSON.stringify(comment.body);
-    if (comment.includeInAi && comment.state === 'open') return `  - ${comment.id}: ${value}`;
-    return `  - ${comment.id}:${eol}      text: ${value}${comment.includeInAi ? '' : `${eol}      ai: false`}${comment.state === 'open' ? '' : `${eol}      state: resolved`}`;
+    if (comment.includeInAi && comment.state === 'open' && !componentIds.has(comment.id)) return `  - ${comment.id}: ${value}`;
+    return `  - ${comment.id}:${eol}      text: ${value}${comment.includeInAi ? '' : `${eol}      ai: false`}${comment.state === 'open' ? '' : `${eol}      state: resolved`}${componentIds.has(comment.id) ? `${eol}      component: true` : ''}`;
   });
   const block = [key + ':', ...entries, ''].join(eol);
   const front = frontMatter(marked);

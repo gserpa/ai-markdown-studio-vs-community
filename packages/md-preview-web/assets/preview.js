@@ -2814,6 +2814,23 @@ function initializePresentationPreview(bridge) {
 
   stage?.addEventListener('click', navigateFromStageTap);
 
+  let wheelGestureTimer;
+  stage?.addEventListener('wheel', (event) => {
+    if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey
+      || !event.deltaY || Math.abs(event.deltaX) >= Math.abs(event.deltaY)
+      || !(event.target instanceof Element) || isInteractiveTapTarget(event.target)) return;
+
+    for (let element = event.target; element && element !== stage; element = element.parentElement) {
+      const overflow = getComputedStyle(element).overflowY;
+      if ((overflow === 'auto' || overflow === 'scroll') && element.scrollHeight > element.clientHeight) return;
+    }
+
+    event.preventDefault();
+    if (wheelGestureTimer === undefined) setActiveSlide(currentIndex + Math.sign(event.deltaY));
+    window.clearTimeout(wheelGestureTimer);
+    wheelGestureTimer = window.setTimeout(() => { wheelGestureTimer = undefined; }, 200);
+  }, { passive: false });
+
   window.addEventListener('keydown', (event) => {
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey
       || (event.target instanceof Element && isInteractiveTapTarget(event.target))) return;

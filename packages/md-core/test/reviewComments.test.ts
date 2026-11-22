@@ -56,6 +56,30 @@ describe('compact review comments', () => {
     expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe('selected text');
   });
 
+  it.each(['\n', '\r\n'])('stores component markers without interpreting ordinary code with %j endings', eol => {
+    const markdown = ['---', 'title: Example', '---', '', '~~~component', 'type: fact-cards', 'version: 1', 'data:', '  cards:',
+      '    - label: selected text', '      value: 4', '~~~', '', '```', '<!--review:1-->example<!--/review:1-->', '```', ''].join(eol);
+    const saved = writeReviewComments(markdown, [comment(markdown)]);
+    expect(saved).toContain('component: true');
+    expect(saved).toContain('<!--review:1-->selected text<!--/review:1-->');
+    const stored = readReviewComments(saved);
+    expect(stored.markdown).toBe(markdown);
+    expect(stored.comments).toEqual([comment(markdown)]);
+    expect(writeReviewComments(saved, [])).toBe(markdown);
+    const edited = readReviewComments(saved.replace('selected text', 'updated text'));
+    expect(edited.markdown.slice(edited.comments[0].range!.start, edited.comments[0].range!.end)).toBe('updated text');
+  });
+
+  it('keeps component and ordinary review anchors separate', () => {
+    const markdown = '---\ntitle: Example\n---\n\nOrdinary text.\n\n~~~component\ntype: fact-cards\nversion: 1\ndata:\n  cards:\n    - label: Component text\n      value: 4\n~~~\n';
+    const comments = [comment(markdown, 'Ordinary'), { ...comment(markdown, 'Component'), id: '2' }];
+    const saved = writeReviewComments(markdown, comments);
+    const stored = readReviewComments(saved);
+    expect(stored.markdown).toBe(markdown);
+    expect(stored.comments).toEqual(comments);
+    expect(writeReviewComments(saved, [])).toBe(markdown);
+  });
+
   it('rejects malformed or duplicate review data without removing content', () => {
     const markdown = '---\nreview-comments:\n  - 1: first\n  - 1: second\n---\nA sentence.\n';
     expect(readReviewComments(markdown).error).toBeDefined();
