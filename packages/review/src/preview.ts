@@ -207,7 +207,7 @@ export function readPreviewSelection(adapters: ReviewPreviewAdapters, markdown: 
       return slice !== undefined && slice.start === value.start && slice.end === value.end;
     });
     if (matches.length !== 1) {
-      if (input.length === 1 && block.component && 'multipleObjects' in value && value.multipleObjects === true) {
+      if (input.length === 1 && block.component) {
         const wholeComponent = componentReviewRange(source);
         if (wholeComponent) return { start: start + wholeComponent.start, end: start + wholeComponent.end };
       }

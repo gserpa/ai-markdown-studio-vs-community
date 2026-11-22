@@ -203,7 +203,6 @@
     const range = browserSelection.getRangeAt(0);
     if (!content.contains(range.startContainer) || !content.contains(range.endContainer)) return;
     const slices = [];
-    const objects = new Map();
     const walker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
     for (let node = walker.root.nodeType === Node.TEXT_NODE ? walker.root : walker.nextNode(); node; node = walker.nextNode()) {
       if (!node.length || !range.intersectsNode(node)) continue;
@@ -219,16 +218,10 @@
       prefix.setEnd(node, start);
       const offset = prefix.toString().length;
       const id = block.dataset.reviewBlock;
-      const object = block.dataset.reviewComponent === 'true' ? parent.closest('[data-review-object]') : null;
-      if (object && block.contains(object)) {
-        if (!objects.has(id)) objects.set(id, new Set());
-        objects.get(id).add(object);
-      }
       const previous = slices.at(-1);
       if (previous?.id === id) previous.end = offset + end - start;
       else slices.push({ id, start: offset, end: offset + end - start });
     }
-    for (const slice of slices) if (objects.get(slice.id)?.size > 1) slice.multipleObjects = true;
     if (!slices.length || !range.toString().trim()) {
       selection = undefined;
       if (!selectedComment) popover.hidden = true;

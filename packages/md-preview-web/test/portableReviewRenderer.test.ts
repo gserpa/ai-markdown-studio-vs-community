@@ -418,6 +418,7 @@ it.each([
     getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
     getClientRects: () => [],
   });
+
   vi.stubGlobal('document', dom.window.document);
   vi.stubGlobal('crypto', webcrypto);
   try {
@@ -458,6 +459,59 @@ it.each([
     expect(state.comments[0].placement.slices).toEqual([{ id: block.getAttribute('data-review-block'), start: 0, end: block.textContent!.length }]);
     await reopened.review({ action: 'delete', id: '1', version: 1, requestId: 1, sessionId: 'reopened' });
     expect(reopened.snapshot().markdown).toBe(source);
+  } finally {
+    vi.unstubAllGlobals();
+    dom.window.close();
+  }
+});
+
+it.each([
+  ['document', 'fact-cards', 'data:\n  cards:\n    - label: First card\n      value: One', '.md-fact-label', '.md-fact-value strong'],
+  ['presentation', 'fact-cards', 'data:\n  cards:\n    - label: First card\n      value: One', '.md-fact-label', '.md-fact-value strong'],
+  ['document', 'fact-cards', 'data:\n  cards:\n    - label: First card\n      value: One\n      detail: |\n        First line\n        Second line', '.md-fact-detail', '.md-fact-detail'],
+  ['document', 'record-list', 'data:\n  records:\n    - title: First record\n      detail: Supporting detail', '.md-record-title strong', '.md-record-detail'],
+  ['presentation', 'status-matrix', 'data:\n  columns: [Scope]\n  rows:\n    - label: First row\n      cells: { Scope: Active }', 'tbody th', 'tbody .md-matrix-status'],
+  ['presentation', 'status-matrix', 'data:\n  markdown-table: |\n    | Item | Scope |\n    | --- | --- |\n    | First row | Active |\n    | Second row | Pending |', 'thead .md-matrix-stage-label', 'tbody th'],
+] as const)('anchors multiple lines of one %s %s item to the whole component', async (mode, type, data, firstSelector, lastSelector) => {
+  const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
+  Object.assign(dom.window.Range.prototype, {
+    getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
+    getClientRects: () => [],
+  });
+  vi.stubGlobal('document', dom.window.document);
+  vi.stubGlobal('crypto', webcrypto);
+  try {
+    const source = `---\n${mode === 'presentation' ? 'document: presentation\n' : 'title: Example\n'}---\n\n`
+      + (mode === 'presentation' ? '# Slide\n\n' : '')
+      + `~~~component\ntype: ${type}\nversion: 1\n${data}\n~~~\n`;
+    const host = await createPortableReviewHost(source, 'session', options);
+    dom.window.document.body.innerHTML = host.snapshot().body;
+    const root = dom.window.document.querySelector('[data-review-state]')!;
+    root.querySelector('.presentation-slide')?.classList.add('is-active');
+    Object.assign(dom.window, { __previewBridge: createPortableReviewBridge(host, root, 'session') });
+    dom.window.eval(readFileSync(new URL('../assets/preview-review.js', import.meta.url), 'utf8'));
+    const first = root.querySelector(firstSelector)!.firstChild!;
+    const last = root.querySelector(lastSelector)!.firstChild!;
+    const range = dom.window.document.createRange();
+    range.setStart(first, 0);
+    range.setEnd(last, last.textContent!.length);
+    dom.window.getSelection()!.addRange(range);
+    dom.window.document.dispatchEvent(new dom.window.Event('selectionchange'));
+    const popover = dom.window.document.querySelector<HTMLElement>('.md-review-popover')!;
+    popover.querySelector<HTMLButtonElement>('button')!.click();
+    const textarea = popover.querySelector<HTMLTextAreaElement>('textarea')!;
+    textarea.value = 'Review these lines';
+    textarea.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    popover.querySelector<HTMLFormElement>('form')!.requestSubmit();
+    await vi.waitFor(() => expect(host.snapshot().version).toBe(2), { timeout: 500 });
+    const stored = readReviewComments(host.snapshot().markdown);
+    expect(stored.markdown).toBe(source);
+    expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe(`type: ${type}\nversion: 1\n${data}`);
+    const template = dom.window.document.createElement('template');
+    template.innerHTML = host.snapshot().body;
+    const state = JSON.parse(template.content.firstElementChild!.getAttribute('data-review-state')!);
+    const block = template.content.querySelector('[data-review-component]')!;
+    expect(state.comments[0].placement.slices).toEqual([{ id: block.getAttribute('data-review-block'), start: 0, end: block.textContent!.length }]);
   } finally {
     vi.unstubAllGlobals();
     dom.window.close();

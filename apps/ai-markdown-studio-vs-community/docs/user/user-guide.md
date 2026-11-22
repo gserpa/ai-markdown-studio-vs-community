@@ -146,7 +146,7 @@ Select rendered text in a Markdown document or an MPS slide, then choose **Add R
 
 Comments travel inside the Markdown file as short `<!--review:1-->` and `<!--/review:1-->` markers around the selected text, with their text in the `review-comments` front-matter list. Hover a marker in the preview to preview the comment; click it or the comment text to edit. In a presentation preview, open **Review Comments** in the bottom panel and select a comment to navigate to its slide and edit it. Review overlays are hidden in full-screen presentation mode. Press **Ctrl+Enter** or click outside to save a non-empty comment, or **Escape** to cancel. Clear **Include in AI review** to handle an open comment manually.
 
-For component text, markers are placed inside the component's YAML and identified in review metadata. AI Markdown Studio removes them before rendering; other component processors may need the markers removed first. When a selection spans multiple component items and cannot be mapped precisely, the comment attaches to the whole component. Some other selections cannot be mapped safely; select a smaller passage if prompted.
+For component text, markers are placed inside the component's YAML and identified in review metadata. AI Markdown Studio removes them before rendering; other component processors may need the markers removed first. When a selection within one component cannot be mapped precisely, the comment attaches to the whole component. Some other selections cannot be mapped safely; select a smaller passage if prompted.
 
 Use **Hide Review Comments** or **Show Review Comments** in the presentation's Review Comments panel to toggle markers across previews of the same file. The panel list remains available for navigation.
 

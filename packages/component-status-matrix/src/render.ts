@@ -21,7 +21,7 @@ export function renderMatrix(model: Matrix, options: MatrixOptions): string {
     '"><span class="md-matrix-group-label">' + escape(group.label) + '</span></th>').join('');
   const head = '<tr><th scope="col"' + (groups ? ' rowspan="2"' : '') + '>' + escape(rowHeader ?? 'Item') +
     '</th>' + indicatorHeading + (groupHeaders ?? leafHeaders) + noteHeading + '</tr>' + (groups ? '<tr>' + leafHeaders + '</tr>' : '');
-  const body = rows.map(row => '<tr data-review-object><th scope="row">' + escape(row.label) +
+  const body = rows.map(row => '<tr><th scope="row">' + escape(row.label) +
     (row.detail ? '<span class="md-matrix-detail">' + escape(row.detail) + '</span>' : '') + '</th>' +
     (hasIndicators ? '<td class="md-matrix-indicator-cell">' + (row.indicator ? '<span class="md-matrix-indicator md-matrix-' + row.indicator.style + '"><span class="md-matrix-indicator-label">' + escape(row.indicator.label) + '</span></span>' : '<span aria-label="Unknown">—</span>') + '</td>' : '') +
     row.cells.map((cell, index) => {
