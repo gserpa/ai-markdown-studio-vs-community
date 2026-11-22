@@ -1,11 +1,11 @@
 ---
 date: 2026-11-22
-version: 1.1.2
+version: 1.4.0
 ---
 
 # Security Review — AI Markdown Studio Community
 
-**Document version:** 1.1.2 (document last updated 2026-11-22)
+**Application version reviewed:** 1.4.0 (review updated 2026-11-22)
 
 ## Disclaimer and Scope of This Review
 
@@ -20,7 +20,7 @@ This review is part of the developer's ongoing due diligence to keep AI Markdown
 
 - A certification, warranty, or guarantee that the software is free of vulnerabilities.
 - A substitute for an independent third-party security audit, particularly before use with sensitive, confidential, or regulated content.
-- A living document — it reflects the code as of the document version and date above. Later code, dependency, or configuration changes are not automatically reflected here.
+- A point-in-time review — it reflects the code and dependencies for the application version and review date above. Later code, dependency, or configuration changes are not automatically reflected here.
 
 **No liability.** This review is provided "as is", without warranty of any kind. To the fullest extent permitted by applicable law, the developer disclaims all liability for any security incident, data loss, or other damages arising from use of AI Markdown Studio, whether or not the underlying issue is discussed in this document. Use of this software is governed by the [Community MIT License](https://github.com/gserpa/ai-markdown-studio-vs-community/blob/main/LICENSE).
 
