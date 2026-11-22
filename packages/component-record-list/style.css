@@ -164,7 +164,10 @@
   color: var(--presentation-component-badge-color, var(--presentation-body-color, currentColor));
 }
 
-.presentation-slide-body .md-record-list-standalone { gap: 0; }
+.presentation-slide-body .md-record-list-standalone {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
 .presentation-slide-body .md-record-list-standalone > .md-record-group {
   padding: 0;
   border: 0;
