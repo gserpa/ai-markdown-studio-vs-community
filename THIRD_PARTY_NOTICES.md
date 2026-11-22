@@ -27,6 +27,7 @@ license texts are distributed alongside the fonts under
 | highlight.js | BSD-3-Clause |
 | katex | MIT |
 | html-to-docx | MIT |
+| punycode | MIT |
 | jsdom | MIT |
 | yaml | ISC |
 | d3 and related modules (via mermaid) | BSD-3-Clause / ISC |
