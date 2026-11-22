@@ -38,8 +38,7 @@ license texts are distributed alongside the fonts under
 Complete license texts for the portable review renderer, its transitive
 dependencies, and bundled fonts ship in the generated
 `portable-review-notices.*.txt` asset and in portable review HTML. The published
-`launder@1.7.1` package omits its MIT license file; the matching upstream license
-is retained under `packages/md-preview-web/licenses/`.
+dependency license texts are included in that notice asset.
 
 Complete license texts for the chart bundle and its transitive dependencies ship
 in the generated `preview-visualizations-notices.*.txt` asset. The preview asset

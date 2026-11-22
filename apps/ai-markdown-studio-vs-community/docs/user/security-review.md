@@ -1,11 +1,11 @@
 ---
-date: 2026-08-12
-version: 1.1.1
+date: 2026-11-22
+version: 1.1.2
 ---
 
 # Security Review — AI Markdown Studio Community
 
-**Document version:** 1.1.1 (document last updated 2026-08-12)
+**Document version:** 1.1.2 (document last updated 2026-11-22)
 
 ## Disclaimer and Scope of This Review
 
@@ -40,7 +40,7 @@ Community deliberately contains no PDF/PPTX export, Microsoft Word/PowerShell au
   - scoped `localResourceRoots` rather than full-workspace exposure
   - an automated boundary check that rejects Pro source, Pro dependencies, Pro commands, and packaged source/test files from the Community VSIX
   - workspace-confined MPS tool reads and confirmed, collision-free Markdown saves
-- `npm audit --omit=dev` reported **0 known vulnerabilities** on 2026-07-31 after applying patched dependency resolutions.
+- `npm audit --omit=dev` reported **0 known vulnerabilities** on 2026-11-22 after applying patched dependency updates.
 - Extension-initiated model features use only the GitHub Copilot service already configured in VS Code. If Copilot is not configured, those model features stay hidden. If Copilot is configured, the default `markdownAiStudio.aiAccess` state keeps them visible and shows the consent flow only when an extension-initiated model request actually runs. If the user denies access, those features hide again except for **Enable AI Features...**. AI Markdown Studio does not connect to any other third-party AI service and does not bring its own AI account or credentials.
 - The main residual risks are **content-trust risks** associated with rendering Markdown that references remote or local resources.
 
@@ -106,14 +106,14 @@ This review used:
 
 1. manual static code inspection
 2. dependency inspection from the workspace and extension manifests
-3. `npm audit --json`
+3. `npm audit --omit=dev`
 4. a third-party license inventory across the packaged dependency tree
 5. architecture and trust-boundary analysis
 6. attack-surface review for preview, export, AI generation/paste, theme-loading, and API flows
 
 ### Automated dependency result
 
-`npm audit --omit=dev` reported **0 vulnerabilities** (0 critical / 0 high / 0 moderate / 0 low) on 2026-07-31. This is a point-in-time result and should be re-run before each release.
+`npm audit --omit=dev` reported **0 vulnerabilities** (0 critical / 0 high / 0 moderate / 0 low) on 2026-11-22 after updating affected production dependencies. This is a point-in-time result and should be re-run before each release.
 
 ### License inventory result
 

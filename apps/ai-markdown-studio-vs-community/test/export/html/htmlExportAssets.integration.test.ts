@@ -300,7 +300,7 @@ describe('HTML export with real built assets', () => {
           expect(policy?.getAttribute('content')).toContain("script-src 'unsafe-inline' 'unsafe-eval' blob: data:");
         }
         const notices = dom.window.document.querySelector<HTMLTemplateElement>('template[data-ams-portable-notices]')!.content.textContent!;
-        expect(notices).toContain('launder@1.7.1');
+        expect(notices).toContain('launder@1.7.2');
         expect(notices).toContain('Apostrophe Technologies');
         expect(notices).toContain('katex@');
         expect(notices).toContain('SIL OPEN FONT LICENSE');
@@ -377,7 +377,7 @@ describe('HTML export with real built assets', () => {
           expect(savedReview.comments[0].body).toBe('Edited offline');
           expect(savedReview.markdown.slice(savedReview.comments[0].range!.start, savedReview.comments[0].range!.end)).toBe('target');
           expect(saved.window.document.querySelector('.md-review-panel')).toBeNull();
-          expect(saved.window.document.querySelector<HTMLTemplateElement>('template[data-ams-portable-notices]')!.content.textContent).toContain('launder@1.7.1');
+          expect(saved.window.document.querySelector<HTMLTemplateElement>('template[data-ams-portable-notices]')!.content.textContent).toContain('launder@1.7.2');
           expect(!!saved.window.document.querySelector('meta[http-equiv="Content-Security-Policy"]')).toBe(!allowRemote);
         } finally { saved.window.close(); }
         saveMarkdown.click();

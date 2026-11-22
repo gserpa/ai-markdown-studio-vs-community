@@ -29,7 +29,7 @@
     "@mfo/review": "*",
     "html-to-docx": "^1.8.0",
     "jsdom": "^26.0.0",
-    "katex": "^0.16.22",
+    "katex": "^0.19.1",
     "mermaid": "^11.16.1"
   },
   "devDependencies": {
@@ -42,7 +42,9 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
-    "dompurify": "3.4.13",
+    "dompurify": "3.4.18",
+    "image-size": "2.1.0",
+    "katex": "^0.19.1",
     "linkify-it": "5.0.2",
     "postcss": "8.5.25"
   },

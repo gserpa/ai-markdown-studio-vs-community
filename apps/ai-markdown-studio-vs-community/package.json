@@ -732,7 +732,7 @@
     "@mfo/preview-web": "*",
     "html-to-docx": "^1.8.0",
     "jsdom": "^26.0.0",
-    "katex": "^0.16.22",
+    "katex": "^0.19.1",
     "mermaid": "^11.16.1"
   },
   "repository": {

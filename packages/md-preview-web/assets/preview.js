@@ -2577,21 +2577,24 @@ function escapePresentationHtml(value) {
 }
 
 function initializePresentationPreview(bridge) {
-  const slides = [...document.querySelectorAll('.presentation-slide')];
+  const previewRoot = document.querySelector('.presentation-preview');
+  const stage = previewRoot?.querySelector(':scope > .presentation-stage');
+  const slides = [...stage?.querySelectorAll(':scope > .presentation-slide') ?? []];
   if (slides.length === 0) {
     return;
   }
 
-  const thumbnails = [...document.querySelectorAll('.presentation-thumb')];
-  const currentLabel = document.querySelector('[data-presentation-current]');
-  const previousButton = document.querySelector('[data-presentation-action="previous"]');
-  const nextButton = document.querySelector('[data-presentation-action="next"]');
-  const fullscreenButton = document.querySelector('[data-presentation-action="fullscreen"]');
-  const bottomBar = document.querySelector('[data-presentation-bottom-bar]');
-  const notesContainer = document.querySelector('[data-presentation-panel-notes]');
-  const infoContainer = document.querySelector('[data-presentation-panel-info]');
-  const previewRoot = document.querySelector('.presentation-preview');
-  const stage = document.querySelector('.presentation-stage');
+  const thumbnails = [...previewRoot?.querySelectorAll(
+    ':scope > .presentation-bottom-bar > .presentation-bottom-panel[data-panel="slides"] > nav.presentation-filmstrip > button.presentation-thumb[data-slide-target]',
+  ) ?? []];
+  const header = previewRoot?.querySelector(':scope > .presentation-header');
+  const currentLabel = header?.querySelector('[data-presentation-current]');
+  const previousButton = header?.querySelector('[data-presentation-action="previous"]');
+  const nextButton = header?.querySelector('[data-presentation-action="next"]');
+  const fullscreenButton = header?.querySelector('[data-presentation-action="fullscreen"]');
+  const bottomBar = previewRoot?.querySelector(':scope > .presentation-bottom-bar[data-presentation-bottom-bar]');
+  const notesContainer = bottomBar?.querySelector('[data-presentation-panel-notes]');
+  const infoContainer = bottomBar?.querySelector('[data-presentation-panel-info]');
   const slidePanelData = parsePresentationSlideData(previewRoot);
   const state = bridge.getState() ?? {};
   const fitScheduler = createPresentationFrameFitScheduler(slides);
