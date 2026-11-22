@@ -57,6 +57,48 @@ function stylesIn(html: string): string {
 }
 
 describe('HTML export with real built assets', () => {
+  it('saves a multi-item component review in portable HTML', async () => {
+    const source = '---\ndocument: presentation\n---\n\n# Slide\n\n~~~component\ntype: fact-cards\nversion: 1\ndata:\n'
+      + '  cards:\n    - label: First\n      value: One\n    - label: Second\n      value: Two\n~~~\n';
+    const html = await buildPortableReviewHtml(extension, documentFor(source));
+    const downloads: Blob[] = [];
+    const browser = new JSDOM(html, {
+      runScripts: 'dangerously', pretendToBeVisual: true,
+      beforeParse(window) {
+        Object.assign(window, { TextEncoder, TextDecoder, Blob });
+        Object.defineProperty(window.crypto, 'subtle', { value: webcrypto.subtle });
+        window.URL.createObjectURL = (blob: Blob) => { downloads.push(blob); return 'blob:portable-test'; };
+        window.URL.revokeObjectURL = () => {};
+        window.HTMLAnchorElement.prototype.click = () => {};
+        window.HTMLElement.prototype.scrollIntoView = () => {};
+        Object.assign(window.Range.prototype, {
+          getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
+          getClientRects: () => [],
+        });
+      },
+    });
+    try {
+      const page = browser.window.document;
+      await vi.waitFor(() => expect(page.getElementById('ams-portable-controls')?.hidden).toBe(false), { timeout: 10000 });
+      const labels = page.querySelectorAll('.md-fact-label');
+      const range = page.createRange();
+      range.setStart(labels[0].firstChild!, 0);
+      range.setEnd(labels[1].firstChild!, labels[1].firstChild!.textContent!.length);
+      browser.window.getSelection()!.addRange(range);
+      page.dispatchEvent(new browser.window.Event('selectionchange'));
+      page.querySelector<HTMLButtonElement>('.md-review-popover button')!.click();
+      const textarea = page.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
+      textarea.value = 'Review both cards';
+      textarea.dispatchEvent(new browser.window.Event('input', { bubbles: true }));
+      page.querySelector<HTMLFormElement>('.md-review-composer')!.requestSubmit();
+      await vi.waitFor(() => expect(JSON.parse(page.querySelector('[data-review-state]')!.getAttribute('data-review-state')!).comments).toHaveLength(1));
+      page.querySelector<HTMLButtonElement>('#ams-save-markdown')!.click();
+      const stored = readReviewComments(await downloads[0].text());
+      expect(stored.markdown).toBe(source);
+      expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toContain('label: Second');
+    } finally { browser.window.close(); }
+  }, 20000);
+
   it('exports the reviewable snapshot through the public HTML command without changing the source', async () => {
     const directory = mkdtempSync(path.join(tmpdir(), 'ams-export-command-'));
     const dialog = vi.spyOn(vscode.window, 'showSaveDialog');

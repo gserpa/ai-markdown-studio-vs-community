@@ -1,5 +1,5 @@
 import {
-  lineOffsets, readReviewComments, reviewRangeLines,
+  componentReviewRange, lineOffsets, readReviewComments, reviewRangeLines,
   type createMarkdownRenderer,
   type ReviewComment, type ReviewRange,
 } from '@mfo/core';
@@ -120,6 +120,10 @@ function locatePlacement(adapters: ReviewPreviewAdapters, markdown: string, comm
     const source = markdown.slice(from, to);
     const start = Math.max(from, comment.range!.start) - from;
     const end = Math.min(to, comment.range!.end) - from;
+    const wholeComponent = block.component ? componentReviewRange(source) : undefined;
+    if (wholeComponent && start === wholeComponent.start && end === wholeComponent.end) {
+      return { id: block.id, start: 0, end: block.text.length };
+    }
     const slice = renderedSlice(adapters, source, start, end, block.text, block.component);
     return slice ? { id: block.id, ...slice } : undefined;
   });
@@ -203,6 +207,10 @@ export function readPreviewSelection(adapters: ReviewPreviewAdapters, markdown: 
       return slice !== undefined && slice.start === value.start && slice.end === value.end;
     });
     if (matches.length !== 1) {
+      if (input.length === 1 && block.component && 'multipleObjects' in value && value.multipleObjects === true) {
+        const wholeComponent = componentReviewRange(source);
+        if (wholeComponent) return { start: start + wholeComponent.start, end: start + wholeComponent.end };
+      }
       throw new Error('This selection cannot be mapped uniquely to Markdown. Select a smaller passage.');
     }
     return { start: start + matches[0], end: start + matches[0] + quote.length };

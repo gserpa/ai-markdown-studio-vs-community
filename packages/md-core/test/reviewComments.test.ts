@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readReviewComments, stripReviewComments, writeReviewComments, type ReviewComment } from '../src';
+import { componentReviewRange, readReviewComments, stripReviewComments, writeReviewComments, type ReviewComment } from '../src';
 
 function comment(source: string, text = 'selected text'): ReviewComment {
   const start = source.indexOf(text);
@@ -78,6 +78,39 @@ describe('compact review comments', () => {
     expect(stored.markdown).toBe(markdown);
     expect(stored.comments).toEqual(comments);
     expect(writeReviewComments(saved, [])).toBe(markdown);
+  });
+
+  it.each(['\n', '\r\n'])('round-trips an entire quoted component with %j endings', eol => {
+    const component = ['> ~~~component', '> type: fact-cards', '> version: 1', '> data:', '>   cards:',
+      '>     - label: First', '>       value: One', '>     - label: Second', '>       value: Two', '> ~~~', ''].join(eol);
+    const range = componentReviewRange(component)!;
+    expect(component.slice(range.start, range.end)).toContain('label: Second');
+    const markdown = ['---', 'title: Example', '---', '', component].join(eol);
+    const start = markdown.indexOf(component);
+    const saved = writeReviewComments(markdown, [{ ...comment(markdown, 'First'),
+      range: { start: start + range.start, end: start + range.end } }]);
+    const stored = readReviewComments(saved);
+    expect(stored.markdown).toBe(markdown);
+    expect(stored.comments[0].range).toEqual({ start: start + range.start, end: start + range.end });
+    expect(writeReviewComments(saved, [])).toBe(markdown);
+  });
+
+  it('does not make a whole-component range for an unclosed fence', () => {
+    expect(componentReviewRange('~~~component\ntype: fact-cards\n')).toBeUndefined();
+  });
+
+  it('preserves a precise comment nested inside a whole-component comment', () => {
+    const component = '~~~component\ntype: fact-cards\nversion: 1\ndata:\n  cards:\n    - label: First\n      value: One\n    - label: Second\n      value: Two\n~~~\n';
+    const markdown = '---\ntitle: Example\n---\n\n' + component;
+    const offset = markdown.indexOf(component);
+    const whole = componentReviewRange(component)!;
+    const comments = [
+      { ...comment(markdown, 'First'), id: '1' },
+      { ...comment(markdown, 'Second'), id: '2', range: { start: offset + whole.start, end: offset + whole.end } },
+    ];
+    const stored = readReviewComments(writeReviewComments(markdown, comments));
+    expect(stored.markdown).toBe(markdown);
+    expect(stored.comments).toEqual(comments);
   });
 
   it('rejects malformed or duplicate review data without removing content', () => {

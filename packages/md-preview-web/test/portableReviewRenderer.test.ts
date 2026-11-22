@@ -406,3 +406,60 @@ it.each([
     dom.window.close();
   }
 });
+
+it.each([
+  ['document', 'fact-cards', 'data:\n  cards:\n    - label: First card\n      value: One\n    - label: Second card\n      value: Two', '[data-fact-card] .md-fact-label'],
+  ['presentation', 'fact-cards', 'data:\n  cards:\n    - label: First card\n      value: One\n    - label: Second card\n      value: Two', '[data-fact-card] .md-fact-label'],
+  ['document', 'record-list', 'data:\n  records:\n    - title: First record\n    - title: Second record', '[data-record-item] .md-record-title strong'],
+  ['presentation', 'status-matrix', 'data:\n  columns: [Scope]\n  rows:\n    - label: First row\n      cells: { Scope: Active }\n    - label: Second row\n      cells: { Scope: Pending }', 'tbody th'],
+] as const)('anchors a multi-item %s %s selection to the whole component', async (mode, type, data, selector) => {
+  const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
+  Object.assign(dom.window.Range.prototype, {
+    getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
+    getClientRects: () => [],
+  });
+  vi.stubGlobal('document', dom.window.document);
+  vi.stubGlobal('crypto', webcrypto);
+  try {
+    const source = `---\n${mode === 'presentation' ? 'document: presentation\n' : 'title: Example\n'}---\n\n`
+      + (mode === 'presentation' ? '# Slide\n\n' : '')
+      + `~~~component\ntype: ${type}\nversion: 1\n${data}\n~~~\n`;
+    const host = await createPortableReviewHost(source, 'session', options);
+    dom.window.document.body.innerHTML = host.snapshot().body;
+    const root = dom.window.document.querySelector('[data-review-state]')!;
+    root.querySelector('.presentation-slide')?.classList.add('is-active');
+    Object.assign(dom.window, { __previewBridge: createPortableReviewBridge(host, root, 'session') });
+    dom.window.eval(readFileSync(new URL('../assets/preview-review.js', import.meta.url), 'utf8'));
+    const nodes = root.querySelectorAll(selector);
+    const first = nodes[0].firstChild!;
+    const second = nodes[1].firstChild!;
+    const range = dom.window.document.createRange();
+    range.setStart(first, 0);
+    range.setEnd(second, second.textContent!.length);
+    dom.window.getSelection()!.addRange(range);
+    dom.window.document.dispatchEvent(new dom.window.Event('selectionchange'));
+    const popover = dom.window.document.querySelector<HTMLElement>('.md-review-popover')!;
+    expect(popover.hidden).toBe(false);
+    popover.querySelector<HTMLButtonElement>('button')!.click();
+    const textarea = popover.querySelector<HTMLTextAreaElement>('textarea')!;
+    textarea.value = 'Review the component';
+    textarea.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    popover.querySelector<HTMLFormElement>('form')!.requestSubmit();
+    await vi.waitFor(() => expect(host.snapshot().version).toBe(2));
+    const saved = host.snapshot().markdown;
+    const stored = readReviewComments(saved);
+    expect(stored.markdown).toBe(source);
+    expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe(`type: ${type}\nversion: 1\n${data}`);
+    const reopened = await createPortableReviewHost(saved, 'reopened', options);
+    const template = dom.window.document.createElement('template');
+    template.innerHTML = reopened.snapshot().body;
+    const state = JSON.parse(template.content.firstElementChild!.getAttribute('data-review-state')!);
+    const block = template.content.querySelector('[data-review-component]')!;
+    expect(state.comments[0].placement.slices).toEqual([{ id: block.getAttribute('data-review-block'), start: 0, end: block.textContent!.length }]);
+    await reopened.review({ action: 'delete', id: '1', version: 1, requestId: 1, sessionId: 'reopened' });
+    expect(reopened.snapshot().markdown).toBe(source);
+  } finally {
+    vi.unstubAllGlobals();
+    dom.window.close();
+  }
+});

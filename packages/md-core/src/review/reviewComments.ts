@@ -42,6 +42,30 @@ function componentRanges(source: string): ReviewRange[] {
     ? [{ start: offsets[token.map[0]], end: offsets[token.map[1]] ?? source.length }] : []);
 }
 
+export function componentReviewRange(source: string): ReviewRange | undefined {
+  const offsets = lineOffsets(source);
+  const token = parser.parse(source, {}).find(item => item.type === 'fence' && item.map?.[0] === 0
+    && item.info.trim().split(/\s+/u)[0]?.toLowerCase() === 'component');
+  if (!token?.map) return undefined;
+  const closingLine = source.slice(offsets[token.map[1] - 1], offsets[token.map[1]] ?? source.length)
+    .replace(/^\s*(?:>\s*)*/u, '').trim();
+  if (!closingLine.startsWith(token.markup) || [...closingLine].some(character => character !== token.markup[0])) return undefined;
+  const lines = token.content.split('\n');
+  const first = lines.findIndex(line => line.trim());
+  let last = lines.length - 1;
+  while (last >= 0 && !lines[last].trim()) last--;
+  if (first < 0 || last < first || last >= token.map[1] - 2) return undefined;
+  const position = (index: number) => {
+    const lineStart = offsets[index + 1];
+    const line = source.slice(lineStart, offsets[index + 2] ?? source.length).replace(/\r?\n$/u, '');
+    const column = line.lastIndexOf(lines[index]);
+    return column < 0 ? undefined : lineStart + column;
+  };
+  const start = position(first);
+  const end = position(last);
+  return start === undefined || end === undefined ? undefined : { start, end: end + lines[last].length };
+}
+
 function frontMatter(source: string): FrontMatter | undefined {
   const opening = source.match(/^\uFEFF?---[ \t]*\r?\n/u);
   if (!opening) return undefined;

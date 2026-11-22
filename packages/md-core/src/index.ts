@@ -1,4 +1,4 @@
-export { readReviewComments, writeReviewComments, stripReviewComments, reviewRangeLines, lineOffsets } from './review/reviewComments';
+export { readReviewComments, writeReviewComments, stripReviewComments, reviewRangeLines, lineOffsets, componentReviewRange } from './review/reviewComments';
 export type { ReviewComment, ReviewRange } from './review/reviewComments';
 
 // Markdown rendering
