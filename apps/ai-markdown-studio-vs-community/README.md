@@ -145,7 +145,7 @@ code --install-extension GustavoSerpa.markdown-ai-studio
 Or install a packaged build directly from a `.vsix` file:
 
 ```bash
-code --install-extension markdown-ai-studio-1.4.0.vsix
+code --install-extension markdown-ai-studio-1.4.1.vsix
 ```
 
 For repository information, see the [repository README](https://github.com/gserpa/ai-markdown-studio-vs-community#readme).
