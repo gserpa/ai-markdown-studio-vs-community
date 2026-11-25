@@ -13,6 +13,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The workspace skill installer now installs both presentation and review skills for the selected agent, without overwriting existing skills.
 - Revise from Comments now prepares a Chat request using the bundled review skill instead of the local excerpt-based revision workflow. Chat can consult workspace context and propose changes throughout the reviewed document.
 - Refreshed review comment presentation in previews, the sidebar, and the presentation panel, with clearer comment and resolution formatting.
 

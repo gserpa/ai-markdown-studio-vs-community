@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 const SKILL_FILE_NAME = 'SKILL.md';
 const PORTABLE_SKILL_NAME = 'markdown-ai-studio-presentation';
 const COPILOT_SKILL_NAME = 'markdown-ai-studio-presentation-copilot';
+const REVIEW_SKILL_NAME = 'revise-from-comments';
 const RECOMMENDATION_DISMISSED_KEY = 'markdownAiStudio.presentationSkill.recommendationDismissed';
 
 type PresentationSkillTarget = {
@@ -57,7 +58,7 @@ export async function offerPresentationSkillInstallation(
     'Not Now',
   );
   if (selected === 'Install Skill') {
-    await installPresentationSkillInWorkspace(context, resource, workspaceFolder);
+    await installSkillsInWorkspace(context, resource, workspaceFolder, false);
     return;
   }
 
@@ -67,38 +68,78 @@ export async function offerPresentationSkillInstallation(
 export async function installPresentationSkillInWorkspace(
   context: vscode.ExtensionContext,
   resource?: vscode.Uri,
-  preferredWorkspaceFolder?: vscode.WorkspaceFolder,
+): Promise<void> {
+  await installSkillsInWorkspace(context, resource, undefined, true);
+}
+
+async function installSkillsInWorkspace(
+  context: vscode.ExtensionContext,
+  resource: vscode.Uri | undefined,
+  preferredWorkspaceFolder: vscode.WorkspaceFolder | undefined,
+  includeReview: boolean,
 ): Promise<void> {
   const workspaceFolder = preferredWorkspaceFolder ?? await resolveWorkspaceFolder(resource, true);
   if (!workspaceFolder) {
     return;
   }
 
-  const targetProfile = await chooseSkillTarget();
+  const targetProfile = await chooseSkillTarget(includeReview);
   if (!targetProfile) {
     return;
   }
 
-  const target = skillFileUri(workspaceFolder, targetProfile);
-  const referenceTarget = vscode.Uri.joinPath(workspaceFolder.uri, ...targetProfile.workspacePath, 'references', 'visualizations.md');
-  if (await uriExists(target) || await uriExists(referenceTarget)) {
-    void vscode.window.showInformationMessage(`${targetProfile.label} presentation skill already exists in this workspace. It was not changed.`);
-    return;
+  const skills = [{
+    label: 'presentation',
+    sourceName: targetProfile.sourceSkillName,
+    workspacePath: targetProfile.workspacePath,
+    reference: true,
+  }, ...(includeReview ? [{
+    label: 'review',
+    sourceName: REVIEW_SKILL_NAME,
+    workspacePath: [...targetProfile.workspacePath.slice(0, -1), REVIEW_SKILL_NAME],
+    reference: false,
+  }] : [])];
+  const pending: typeof skills = [];
+  const existing: string[] = [];
+  for (const skill of skills) {
+    const target = vscode.Uri.joinPath(workspaceFolder.uri, ...skill.workspacePath, SKILL_FILE_NAME);
+    const reference = vscode.Uri.joinPath(workspaceFolder.uri, ...skill.workspacePath, 'references', 'visualizations.md');
+    if (await uriExists(target) || (skill.reference && await uriExists(reference))) {
+      existing.push(skill.label);
+    } else {
+      pending.push(skill);
+    }
   }
 
-  const source = vscode.Uri.joinPath(context.extensionUri, 'skills', targetProfile.sourceSkillName, SKILL_FILE_NAME);
-  const referenceSource = vscode.Uri.joinPath(context.extensionUri, 'skills', targetProfile.sourceSkillName, 'references', 'visualizations.md');
-  const [content, reference] = await Promise.all([vscode.workspace.fs.readFile(source), vscode.workspace.fs.readFile(referenceSource)]);
-  await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(workspaceFolder.uri, ...targetProfile.workspacePath, 'references'));
-  await vscode.workspace.fs.writeFile(referenceTarget, reference);
-  await vscode.workspace.fs.writeFile(target, content);
-  void vscode.window.showInformationMessage(`Installed the ${targetProfile.label} presentation skill at ${target.fsPath}.`);
+  const contents = await Promise.all(pending.map(async (skill) => ({
+    skill,
+    content: await vscode.workspace.fs.readFile(vscode.Uri.joinPath(context.extensionUri, 'skills', skill.sourceName, SKILL_FILE_NAME)),
+    reference: skill.reference
+      ? await vscode.workspace.fs.readFile(vscode.Uri.joinPath(context.extensionUri, 'skills', skill.sourceName, 'references', 'visualizations.md'))
+      : undefined,
+  })));
+  for (const { skill, content, reference } of contents) {
+    const directory = vscode.Uri.joinPath(workspaceFolder.uri, ...skill.workspacePath);
+    if (reference) {
+      const referenceDirectory = vscode.Uri.joinPath(directory, 'references');
+      await vscode.workspace.fs.createDirectory(referenceDirectory);
+      await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(referenceDirectory, 'visualizations.md'), reference);
+    } else {
+      await vscode.workspace.fs.createDirectory(directory);
+    }
+    await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(directory, SKILL_FILE_NAME), content);
+  }
+  const messages = [
+    pending.length ? `Installed ${targetProfile.label} ${pending.map(skill => skill.label).join(' and ')} ${pending.length === 1 ? 'skill' : 'skills'}.` : '',
+    existing.length ? `Existing ${existing.join(' and ')} ${existing.length === 1 ? 'skill was' : 'skills were'} not changed.` : '',
+  ].filter(Boolean);
+  void vscode.window.showInformationMessage(messages.join(' '));
 }
 
-async function chooseSkillTarget(): Promise<PresentationSkillTarget | undefined> {
+async function chooseSkillTarget(includeReview: boolean): Promise<PresentationSkillTarget | undefined> {
   const selected = await vscode.window.showQuickPick(
     SKILL_TARGETS.map((target) => ({ label: target.label, description: target.description, target })),
-    { placeHolder: 'Choose the AI agent that should receive the presentation skill' },
+    { placeHolder: `Choose the AI agent that should receive the ${includeReview ? 'presentation and review skills' : 'presentation skill'}` },
   );
   return selected?.target;
 }
@@ -128,7 +169,7 @@ async function resolveWorkspaceFolder(
   }
 
   if (showMissingWorkspaceMessage) {
-    void vscode.window.showInformationMessage('Open a workspace folder before installing the presentation skill.');
+    void vscode.window.showInformationMessage('Open a workspace folder before installing agent skills.');
   }
   return undefined;
 }
@@ -154,7 +195,8 @@ async function uriExists(uri: vscode.Uri): Promise<boolean> {
   try {
     await vscode.workspace.fs.stat(uri);
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    if (error instanceof vscode.FileSystemError && error.code === 'FileNotFound') return false;
+    throw error;
   }
 }

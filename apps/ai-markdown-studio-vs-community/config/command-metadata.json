@@ -21,7 +21,7 @@
   { "command": "markdownAiStudio.clearResolvedReviewComments", "title": "Clear All Resolved", "category": "AI Markdown Studio" },
   { "command": "markdownAiStudio.clearAllReviewComments", "title": "Clear All Comments", "category": "AI Markdown Studio", "icon": "$(trash)" },
   { "command": "markdownAiStudio.runReviewComments", "title": "Revise from Comments", "category": "AI Markdown Studio", "icon": "$(sparkle)" },
-  { "command": "markdownAiStudio.installPresentationSkill", "title": "Install Presentation Agent Skill in Workspace", "category": "AI Markdown Studio", "quickPickTitle": "AI: Install Presentation Skill" },
+  { "command": "markdownAiStudio.installPresentationSkill", "title": "Install Agent Skills in Workspace", "category": "AI Markdown Studio", "quickPickTitle": "AI: Install Agent Skills" },
   { "command": "markdownAiStudio.reviewSlideTypeMigration", "title": "Review Slide Type Migration", "category": "AI Markdown Studio", "quickPickTitle": "Presentation: Review Slide Type Migration" },
   { "command": "markdownAiStudio.pasteAsMarkdown", "title": "Paste as New Markdown File", "category": "AI Markdown Studio" },
   { "command": "markdownAiStudio.enableAiFeatures", "title": "Enable AI Features...", "category": "AI Markdown Studio", "quickPickTitle": "AI: Enable Features..." },

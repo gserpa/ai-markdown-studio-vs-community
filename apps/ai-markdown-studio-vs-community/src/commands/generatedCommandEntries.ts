@@ -12,7 +12,7 @@ export const commandEntries = [
   { command: "markdownAiStudio.generatePresentation", title: "AI: Generate Presentation" },
   { command: "markdownAiStudio.reviewComments", title: "AI: Revise from Comments" },
   { command: "markdownAiStudio.toggleReviewComments", title: "Hide / Show Review Comments" },
-  { command: "markdownAiStudio.installPresentationSkill", title: "AI: Install Presentation Skill" },
+  { command: "markdownAiStudio.installPresentationSkill", title: "AI: Install Agent Skills" },
   { command: "markdownAiStudio.reviewSlideTypeMigration", title: "Presentation: Review Slide Type Migration" },
   { command: "markdownAiStudio.enableAiFeatures", title: "AI: Enable Features..." },
   { command: "markdownAiStudio.openSettings", title: "Change Settings..." },

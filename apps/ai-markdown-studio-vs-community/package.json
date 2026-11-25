@@ -170,7 +170,7 @@
       },
       {
         "command": "markdownAiStudio.installPresentationSkill",
-        "title": "Install Presentation Agent Skill in Workspace",
+        "title": "Install Agent Skills in Workspace",
         "category": "AI Markdown Studio"
       },
       {

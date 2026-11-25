@@ -195,7 +195,7 @@ All commands are available from the **Command Palette** (`Ctrl+Shift+P`), and th
 | **`markdownAiStudio.formatTablesOnSave`**         | `false`                                                                             | Automatically formats Markdown tables when you save a Markdown file.         |
 | **Generate Document (AI)**                        | Creates a new Markdown document from a prompt                                       | Command palette, command list                                                |
 | **Generate Presentation (AI)**                    | Generates a deck with Copilot or copies a complete MPS prompt for another assistant | Command palette, command list                                                |
-| **Install Presentation Agent Skill in Workspace** | Installs the selected Copilot, Claude, or Codex MPS skill in the workspace          | Command palette, command list                                                |
+| **Install Agent Skills in Workspace** | Installs presentation and review skills for Copilot, Claude, or Codex in the workspace | Command palette, command list |
 | **Paste as New Markdown File**                    | Converts clipboard text into a new Markdown file                                    | Explorer folder context menu, command palette                                |
 | **Export Markdown as HTML**                       | Saves the rendered document as a standalone `.html` file                            | Command palette, command list                                                |
 | **Embed Linked Images in File**                   | Embeds local and remote images into the current Markdown file                       | Command palette, command list                                                |
@@ -318,11 +318,17 @@ Community contributes three Language Model Tools so a VS Code chat agent can com
 
 In a VS Code chat agent, ask for a presentation and allow the agent to chain prompt building, deck generation, validation, and saving. You can also reference any tool explicitly with the names above. The tools are local; the agent provider receives their inputs and results only as part of the chat request the user starts. Native Copilot generation still requires AI access.
 
-Use **Install Presentation Agent Skill in Workspace** when you want an agent to retain the MPS workflow in the current workspace:
+Use **Install Agent Skills in Workspace** to install presentation and review skills for an agent in the current workspace:
 
 - **GitHub Copilot** installs a manual, tool-first skill at `.github/skills/markdown-ai-studio-presentation-copilot/SKILL.md`. It directs Copilot to build the canonical prompt, validate the deck, and confirm before saving.
 - **Claude** installs a complete standalone MPS skill at `.claude/skills/markdown-ai-studio-presentation/SKILL.md`.
 - **Codex in VS Code** installs that standalone skill at `.agents/skills/markdown-ai-studio-presentation/SKILL.md`.
+
+The command also installs `revise-from-comments/SKILL.md` under the selected agent's
+skills directory. Existing skills are not overwritten; a missing skill is installed
+even if the other already exists. In Claude Code, invoke `/revise-from-comments`
+and identify the Markdown file. The extension's **Revise from Comments** command
+opens VS Code Chat rather than the separate Claude Code extension.
 
 The standalone skill contains the presentation syntax and authoring rules, so it works with agents that cannot call extension tools. The Copilot skill is manually invoked, so it does not replace normal Copilot tool selection. **Generate Presentation (AI)** always offers a no-tool fallback: its copied prompt contains the same front matter, slide, layout, notes, image, and validation guidance needed to create a valid MPS deck.
 
