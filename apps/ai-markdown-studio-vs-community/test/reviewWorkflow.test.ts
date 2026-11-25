@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { parse as parseYaml } from 'yaml';
 import { readReviewComments, writeReviewComments, type ReviewComment } from '@mfo/core';
 import { createReviewCommentActions } from '@mfo/review';
 
@@ -84,7 +85,7 @@ vi.mock('../src/ai/aiConsent', () => ({
 vi.mock('../src/ai/copilotAvailability', () => ({ hasConfiguredCopilotAccount: mock.hasAccount }));
 vi.mock('../src/ai/languageModel', () => ({ generateTextWithLanguageModel: mock.generate, isLanguageModelAvailable: mock.available }));
 
-import { applyReplacements, attachReviewPreview, registerReviewWorkflow } from '../src/review/reviewWorkflow';
+import { attachReviewPreview, registerReviewWorkflow } from '../src/review/reviewWorkflow';
 import { readPreviewSelection } from '../src/review/reviewPreview';
 
 const updateComments = createReviewCommentActions(readPreviewSelection);
@@ -97,9 +98,10 @@ const open: ReviewComment = {
 const uri = { scheme: 'file', path: '/review.md', toString: () => 'file:///review.md' };
 const run = (id: string, ...args: unknown[]) => mock.commands.get('markdownAiStudio.' + id)!(...args);
 
-describe('review command AI access and prompt copy', () => {
+describe('review comments and Chat handoff', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mock.executeCommand.mockReset();
     mock.commands.clear();
     mock.activeTabGroup.activeTab = undefined;
     mock.onDocumentChange.mockImplementation(mock.disposable);
@@ -150,155 +152,43 @@ describe('review command AI access and prompt copy', () => {
     }));
   });
 
-  describe('review replacements', () => {
-    it('replaces only the selected source and keeps the comment attached', () => {
-      const source = 'Before selected text after.\n';
-      const start = source.indexOf('selected text');
-      const saved = writeReviewComments(source, [{
-        id: '1', body: 'Clarify.', state: 'open', includeInAi: true,
-        range: { start, end: start + 'selected text'.length },
-      }]);
-      const revised = applyReplacements(saved, [{ id: '1', original: 'Before selected text', text: 'Earlier clearer words', anchor: 'clearer words' }]);
-      expect(revised).toContain('Earlier <!--review:1-->clearer words<!--/review:1--> after.');
-      expect(revised).toContain('  - 1: "Clarify."');
-    });
+  it('contributes an automatically discoverable review skill matching the Chat shortcut', () => {
+    const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+    const skillPath = './skills/revise-from-comments/SKILL.md';
+    expect(manifest.contributes.chatSkills).toContainEqual({ path: skillPath });
+    const skill = readFileSync(new URL('../skills/revise-from-comments/SKILL.md', import.meta.url), 'utf8');
+    const header = /^---\r?\n([\s\S]*?)\r?\n---/u.exec(skill);
+    expect(header).not.toBeNull();
+    const metadata = parseYaml(header![1]);
+    expect(metadata.name).toBe('revise-from-comments');
+    expect(metadata.description).toMatch(/review comments/iu);
+    expect(metadata['disable-model-invocation']).not.toBe(true);
+    expect(metadata['user-invocable']).not.toBe(false);
+  });
 
-    it('combines overlapping comments into one revision with separate anchors', () => {
-      const source = 'Before selected text after.\n';
-      const start = source.indexOf('selected text');
-      const saved = writeReviewComments(source, [
-        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 13 } },
-        { id: '2', body: 'Check.', state: 'open', includeInAi: true, range: { start: start + 2, end: start + 6 } },
-      ]);
-      const result = readReviewComments(applyReplacements(saved, [
-        { id: '1', original: 'selected text', text: 'clearer words', anchor: 'clearer words' },
-        { id: '2', original: 'selected text', text: 'clearer words', anchor: 'words' },
-      ]));
-      expect(result.markdown).toContain('Before clearer words after.');
-      expect(result.comments.map(item => result.markdown.slice(item.range!.start, item.range!.end)))
-        .toEqual(['clearer words', 'words']);
+  it('prefills Chat with the selected document without sending a request', async () => {
+    await run('reviewComments', uri);
+    expect(mock.executeCommand).toHaveBeenCalledWith('workbench.action.chat.open', {
+      query: expect.stringContaining('/revise-from-comments'),
+      isPartialQuery: true,
+      attachFiles: [uri],
     });
+    expect(mock.generate).not.toHaveBeenCalled();
+  });
 
-    it('preserves unaddressed overlapping anchors when possible and detaches ambiguous ones', () => {
-      const source = 'Before selected text after.\n';
-      const start = source.indexOf('selected text');
-      const saved = writeReviewComments(source, [
-        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 13 } },
-        { id: '2', body: 'Keep.', state: 'resolved', includeInAi: true, range: { start: start + 9, end: start + 13 } },
-        { id: '3', body: 'Manual.', state: 'open', includeInAi: false, range: { start, end: start + 8 } },
-        { id: '4', body: 'Surrounding.', state: 'open', includeInAi: false, range: { start: start - 7, end: start + 19 } },
-      ]);
-      const result = readReviewComments(applyReplacements(saved, [
-        { id: '1', original: 'selected text', text: 'clearer text', anchor: 'clearer' },
-      ]));
-      expect(result.comments[1].state).toBe('resolved');
-      expect(result.markdown.slice(result.comments[1].range!.start, result.comments[1].range!.end)).toBe('text');
-      expect(result.comments[2].range).toBeUndefined();
-      expect(result.markdown.slice(result.comments[3].range!.start, result.comments[3].range!.end)).toBe('Before clearer text after');
-    });
+  it('does not open Chat without an eligible comment', async () => {
+    mock.document.getText.mockReturnValue(writeReviewComments(markdown, [{ ...open, includeInAi: false }]));
+    await run('reviewComments', uri);
+    expect(mock.executeCommand).not.toHaveBeenCalledWith('workbench.action.chat.open', expect.anything());
+    expect(mock.showInfo).toHaveBeenCalledWith(expect.stringContaining('no open AI review comments'));
+  });
 
-    it('detaches an unaddressed anchor when its unchanged text is ambiguous', () => {
-      const source = 'Before selected text after.\n';
-      const start = source.indexOf('selected text');
-      const saved = writeReviewComments(source, [
-        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 13 } },
-        { id: '2', body: 'Manual.', state: 'open', includeInAi: false, range: { start: start + 9, end: start + 13 } },
-      ]);
-      const result = readReviewComments(applyReplacements(saved, [
-        { id: '1', original: 'selected text', text: 'text and text', anchor: 'and' },
-      ]));
-      expect(result.comments[1].range).toBeUndefined();
+  it('surfaces errors opening Chat', async () => {
+    mock.executeCommand.mockImplementation(async (id: string) => {
+      if (id === 'workbench.action.chat.open') throw new Error('Chat is unavailable');
     });
-
-    it('combines overlapping selections spanning more than one context window', () => {
-      const source = Array.from({ length: 14 }, (_, index) => `Line ${index + 1}.\n`).join('');
-      const first = source.indexOf('Line 2.');
-      const middle = source.indexOf('Line 6.');
-      const endFirst = source.indexOf('Line 8.') + 'Line 8.'.length;
-      const endSecond = source.indexOf('Line 12.') + 'Line 12.'.length;
-      const original = source.slice(first, endSecond);
-      const saved = writeReviewComments(source, [
-        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start: first, end: endFirst } },
-        { id: '2', body: 'Improve.', state: 'open', includeInAi: true, range: { start: middle, end: endSecond } },
-      ]);
-      const result = readReviewComments(applyReplacements(saved, [
-        { id: '1', original, text: 'Updated first section and second section.', anchor: 'first section' },
-        { id: '2', original, text: 'Updated first section and second section.', anchor: 'second section' },
-      ]));
-      expect(result.markdown).toContain('Updated first section and second section.');
-      expect(result.comments.map(item => result.markdown.slice(item.range!.start, item.range!.end)))
-        .toEqual(['first section', 'second section']);
-    });
-
-    it('rejects conflicting overlapping edits without changing the source', () => {
-      const source = 'Before selected text after.\n';
-      const start = source.indexOf('selected text');
-      const saved = writeReviewComments(source, [
-        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 8 } },
-        { id: '2', body: 'Check.', state: 'open', includeInAi: true, range: { start: start + 9, end: start + 13 } },
-      ]);
-      expect(() => applyReplacements(saved, [
-        { id: '1', original: 'selected text', text: 'clearer words', anchor: 'clearer' },
-        { id: '2', original: 'text after', text: 'words afterwards', anchor: 'words' },
-      ])).toThrow('conflicting overlapping edits');
-      expect(readReviewComments(saved).markdown).toContain(source);
-    });
-
-    it('requires confirmation before applying a revision that detaches another comment', async () => {
-      const source = 'Before selected text after.\n';
-      const start = source.indexOf('selected text');
-      const original = writeReviewComments(source, [
-        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 13 } },
-        { id: '2', body: 'Manual.', state: 'open', includeInAi: false, range: { start, end: start + 8 } },
-      ]);
-      mock.document.getText.mockReturnValue(original);
-      mock.getAiAccessState.mockReturnValue('ask');
-      mock.consent.mockResolvedValue(true);
-      mock.withProgress.mockImplementation(async (_options, task) => task({}, {}));
-      mock.generate.mockResolvedValue(JSON.stringify({ replacements: [
-        { id: '1', original: 'selected text', text: 'clearer words', anchor: 'clearer' },
-      ] }));
-      let modified: { uri: { toString: () => string }; getText: () => string } | undefined;
-      mock.openDocument.mockImplementation(async (input: { content?: string }) => {
-        if (typeof input.content !== 'string') return mock.document;
-        modified = { uri: { toString: () => 'review-draft' }, getText: () => input.content! };
-        return modified;
-      });
-      await run('runReviewComments');
-      expect(modified).toBeDefined();
-      mock.activeTabGroup.activeTab = { input: new mock.Diff(modified!.uri) };
-      mock.choose.mockResolvedValue([{ id: '1' }]);
-      await run('applyReviewRevision');
-      expect(mock.showError).not.toHaveBeenCalled();
-      expect(mock.showWarning).toHaveBeenCalledWith(
-        expect.stringContaining('1 review comment will become detached'),
-        expect.objectContaining({ modal: true }), 'Apply Anyway',
-      );
-      expect(mock.applyEdit).not.toHaveBeenCalled();
-      mock.showWarning.mockResolvedValue('Apply Anyway');
-      mock.applyEdit.mockResolvedValue(true);
-      await run('applyReviewRevision');
-      expect(mock.applyEdit).toHaveBeenCalledOnce();
-      expect(mock.showError).not.toHaveBeenCalled();
-    });
-
-    it('applies separate contextual edits and retains both anchors with CRLF', () => {
-      const source = 'First selected text ends.\r\n\r\nSecond target text ends.\r\n';
-      const first = source.indexOf('selected text');
-      const second = source.indexOf('target text');
-      const saved = writeReviewComments(source, [
-        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start: first, end: first + 13 } },
-        { id: '2', body: 'Improve.', state: 'open', includeInAi: true, range: { start: second, end: second + 11 } },
-      ]);
-      const revised = applyReplacements(saved, [
-        { id: '1', original: 'First selected text', text: 'Earlier clear wording', anchor: 'clear wording' },
-        { id: '2', original: 'Second target text', text: 'Another improved passage', anchor: 'improved passage' },
-      ]);
-      const result = readReviewComments(revised);
-      expect(result.markdown).toContain('Earlier clear wording ends.\r\n\r\nAnother improved passage ends.');
-      expect(result.comments.map(item => result.markdown.slice(item.range!.start, item.range!.end)))
-        .toEqual(['clear wording', 'improved passage']);
-    });
+    await run('reviewComments', uri);
+    expect(mock.showError).toHaveBeenCalledWith('Chat is unavailable');
   });
 
   it('resolves and reopens without deleting, and deletes only on request', () => {
@@ -589,6 +479,13 @@ describe('review command AI access and prompt copy', () => {
       dispose?.();
     });
 
+    it('opens the originating document in Chat from the sidebar', async () => {
+      await run('implementSelectedReviews', await entry('2'));
+      expect(mock.executeCommand).toHaveBeenCalledWith('workbench.action.chat.open', expect.objectContaining({
+        isPartialQuery: true, attachFiles: [uri],
+      }));
+    });
+
     it('toggles AI selection, resolves and reopens, then removes only the chosen comment', async () => {
       expect(provider().getTreeItem(await entry('1')).contextValue).toBe('reviewCommentOpenAi');
       await run('selectReviewCommentForManual', await entry('1'));
@@ -635,69 +532,7 @@ describe('review command AI access and prompt copy', () => {
       expect(mock.showError).toHaveBeenCalledWith(expect.stringContaining('changed'));
     });
 
-    it('sends only AI-selected, open and attached comments to the integrated review', async () => {
-      mock.getAiAccessState.mockReturnValue('ask');
-      mock.consent.mockResolvedValue(true);
-      mock.withProgress.mockImplementation(async (_options, task) => task({}, {}));
-      mock.generate.mockRejectedValue(new Error('Stopped after capturing prompt'));
-      await run('implementSelectedReviews', await entry('2'));
-      const prompt = mock.generate.mock.calls[0][0];
-      expect(prompt).toContain('Make the passage clearer.');
-      expect(prompt).not.toMatch(/Private manual|Previously resolved|Detached note/u);
-    });
+
   });
 
-  it('copies only eligible comments without calling the integrated model', async () => {
-    mock.getAiAccessState.mockReturnValue('ask');
-    mock.choose.mockResolvedValue({ value: 'clipboard' });
-    await run('reviewComments');
-    const prompt = mock.clipboard.mock.calls[0][0];
-    expect(prompt).toContain('Make the passage clearer.');
-    expect(prompt).toContain('Passage for review.');
-    expect(prompt).not.toMatch(/Private manual|Previously resolved|Detached note|markdown-ai-studio-review/u);
-    expect(mock.hasAccount).not.toHaveBeenCalled();
-    expect(mock.consent).not.toHaveBeenCalled();
-    expect(mock.generate).not.toHaveBeenCalled();
-  });
-
-  it('offers prompt copy as the review workflow when access is denied', async () => {
-    await run('reviewComments');
-    expect(mock.choose).not.toHaveBeenCalled();
-    expect(mock.clipboard).toHaveBeenCalledOnce();
-    expect(mock.generate).not.toHaveBeenCalled();
-  });
-
-  it('directs unavailable integrated review to the remaining prompt-copy workflow', async () => {
-    await run('runReviewComments');
-    expect(mock.showError).toHaveBeenCalledWith(expect.stringContaining('AI: Revise from Comments'));
-    expect(mock.clipboard).not.toHaveBeenCalled();
-  });
-
-  it('copies the review prompt from the generation chooser', async () => {
-    mock.getAiAccessState.mockReturnValue('ask');
-    mock.choose.mockResolvedValue({ value: 'clipboard' });
-    await run('reviewComments');
-    expect(mock.clipboard).toHaveBeenCalledOnce();
-    expect(mock.clipboard.mock.calls[0][0]).toContain('Make the passage clearer.');
-    expect(mock.consent).not.toHaveBeenCalled();
-    expect(mock.generate).not.toHaveBeenCalled();
-  });
-
-  it('copies the prompt when no model is available', async () => {
-    mock.available.mockResolvedValue(false);
-    await run('reviewComments');
-    expect(mock.clipboard).toHaveBeenCalledOnce();
-    expect(mock.choose).not.toHaveBeenCalled();
-    expect(mock.consent).not.toHaveBeenCalled();
-  });
-
-  it('asks for AI consent after the integrated option is selected', async () => {
-    mock.getAiAccessState.mockReturnValue('ask');
-    mock.choose.mockResolvedValue({ value: 'generate' });
-    mock.consent.mockResolvedValue(false);
-    await run('reviewComments');
-    expect(mock.choose.mock.calls[0][0].map((option: { value: string }) => option.value)).toEqual(['generate', 'clipboard']);
-    expect(mock.consent).toHaveBeenCalledOnce();
-    expect(mock.generate).not.toHaveBeenCalled();
-  });
 });

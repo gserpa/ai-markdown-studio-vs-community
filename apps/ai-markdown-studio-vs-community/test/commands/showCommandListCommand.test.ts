@@ -213,7 +213,7 @@ describe('showCommandListCommand', () => {
     expect(labels).not.toContain('AI: Revise from Comments');
   });
 
-  it('keeps review prompt copy reachable when integrated AI is disabled', async () => {
+  it('keeps the Chat review entry reachable when integrated AI is disabled', async () => {
     const documentUri = vscode.Uri.file('C:/workspace/current.md');
     const source = '# Example\n\nReview this text.\n';
     const start = source.indexOf('Review this text');

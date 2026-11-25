@@ -169,18 +169,6 @@
         "icon": "$(sparkle)"
       },
       {
-        "command": "markdownAiStudio.applyReviewRevision",
-        "title": "Apply Revision",
-        "category": "AI Markdown Studio",
-        "icon": "$(check)"
-      },
-      {
-        "command": "markdownAiStudio.discardReviewRevision",
-        "title": "Discard Revision",
-        "category": "AI Markdown Studio",
-        "icon": "$(close)"
-      },
-      {
         "command": "markdownAiStudio.installPresentationSkill",
         "title": "Install Presentation Agent Skill in Workspace",
         "category": "AI Markdown Studio"
@@ -353,6 +341,9 @@
       },
       {
         "path": "./skills/markdown-ai-studio-presentation-copilot/SKILL.md"
+      },
+      {
+        "path": "./skills/revise-from-comments/SKILL.md"
       }
     ],
     "views": {
@@ -412,14 +403,6 @@
         {
           "command": "markdownAiStudio.clearAllReviewComments",
           "when": "false"
-        },
-        {
-          "command": "markdownAiStudio.applyReviewRevision",
-          "when": "markdownAiStudio.reviewDraftActive"
-        },
-        {
-          "command": "markdownAiStudio.discardReviewRevision",
-          "when": "markdownAiStudio.reviewDraftActive"
         },
         {
           "command": "markdownAiStudio.enableAiFeatures",
@@ -534,18 +517,8 @@
       "editor/title": [
         {
           "command": "markdownAiStudio.runReviewComments",
-          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' && markdownAiStudio.reviewPending && markdownAiStudio.aiAccessEnabled && markdownAiStudio.copilotConfigured",
+          "when": "activeCustomEditorId == 'markdownAiStudio.markdownPreview' && markdownAiStudio.reviewPending",
           "group": "navigation@2.5"
-        },
-        {
-          "command": "markdownAiStudio.applyReviewRevision",
-          "when": "textCompareEditorActive && markdownAiStudio.reviewDraftActive",
-          "group": "navigation@1"
-        },
-        {
-          "command": "markdownAiStudio.discardReviewRevision",
-          "when": "textCompareEditorActive && markdownAiStudio.reviewDraftActive",
-          "group": "navigation@2"
         },
         {
           "command": "markdownAiStudio.openPreview",

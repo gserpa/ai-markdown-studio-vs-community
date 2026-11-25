@@ -26,6 +26,7 @@ const packagedReadmePath = 'extension/readme.md';
 const requiredPackageEntries = [
   'extension/skills/markdown-ai-studio-presentation/SKILL.md',
   'extension/skills/markdown-ai-studio-presentation-copilot/SKILL.md',
+  'extension/skills/revise-from-comments/SKILL.md',
   'extension/assets/vendor/katex/dist/katex.min.css',
   'extension/assets/vendor/mermaid/dist/mermaid.esm.min.mjs',
   'extension/assets/vendor/mermaid/dist/mermaid.min.js',

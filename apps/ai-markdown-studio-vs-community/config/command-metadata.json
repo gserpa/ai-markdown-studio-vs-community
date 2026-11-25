@@ -21,8 +21,6 @@
   { "command": "markdownAiStudio.clearResolvedReviewComments", "title": "Clear All Resolved", "category": "AI Markdown Studio" },
   { "command": "markdownAiStudio.clearAllReviewComments", "title": "Clear All Comments", "category": "AI Markdown Studio", "icon": "$(trash)" },
   { "command": "markdownAiStudio.runReviewComments", "title": "Revise from Comments", "category": "AI Markdown Studio", "icon": "$(sparkle)" },
-  { "command": "markdownAiStudio.applyReviewRevision", "title": "Apply Revision", "category": "AI Markdown Studio", "icon": "$(check)" },
-  { "command": "markdownAiStudio.discardReviewRevision", "title": "Discard Revision", "category": "AI Markdown Studio", "icon": "$(close)" },
   { "command": "markdownAiStudio.installPresentationSkill", "title": "Install Presentation Agent Skill in Workspace", "category": "AI Markdown Studio", "quickPickTitle": "AI: Install Presentation Skill" },
   { "command": "markdownAiStudio.reviewSlideTypeMigration", "title": "Review Slide Type Migration", "category": "AI Markdown Studio", "quickPickTitle": "Presentation: Review Slide Type Migration" },
   { "command": "markdownAiStudio.pasteAsMarkdown", "title": "Paste as New Markdown File", "category": "AI Markdown Studio" },

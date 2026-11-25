@@ -7,6 +7,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Revise from Comments now prepares a Chat request using the bundled review skill instead of the local excerpt-based revision workflow. Chat can consult workspace context and propose changes throughout the reviewed document.
+
 ## [1.4.0] - 2026-11-22
 
 ### Added
