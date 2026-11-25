@@ -27,6 +27,9 @@ const mock = vi.hoisted(() => ({
   consent: vi.fn(),
   generate: vi.fn(),
   available: vi.fn(),
+  showDocument: vi.fn(),
+  activeTabGroup: { activeTab: undefined as unknown },
+  Diff: class { constructor(public modified: unknown) {} },
 }));
 vi.mock('vscode', () => ({
   workspace: {
@@ -51,9 +54,10 @@ vi.mock('vscode', () => ({
     showInformationMessage: mock.showInfo,
     showWarningMessage: mock.showWarning,
     showErrorMessage: mock.showError,
+    showTextDocument: mock.showDocument,
     withProgress: mock.withProgress,
     tabGroups: {
-      activeTabGroup: {},
+      activeTabGroup: mock.activeTabGroup,
       onDidChangeTabs: mock.disposable,
       onDidChangeTabGroups: mock.disposable,
     },
@@ -68,6 +72,8 @@ vi.mock('vscode', () => ({
   },
   Range: class { constructor(public start: number, public end: number) {} },
   CancellationError: class extends Error {},
+  TabInputTextDiff: mock.Diff,
+  Uri: { from: () => ({ toString: () => 'review-base' }) },
   Disposable: { from: mock.disposable },
 }));
 vi.mock('../src/ai/aiConsent', () => ({
@@ -88,13 +94,14 @@ const open: ReviewComment = {
   id: '1', range: { start, end: start + 'Passage for review.'.length },
   includeInAi: true, state: 'open', body: 'Make the passage clearer.',
 };
-const uri = { scheme: 'file', toString: () => 'file:///review.md' };
+const uri = { scheme: 'file', path: '/review.md', toString: () => 'file:///review.md' };
 const run = (id: string, ...args: unknown[]) => mock.commands.get('markdownAiStudio.' + id)!(...args);
 
 describe('review command AI access and prompt copy', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mock.commands.clear();
+    mock.activeTabGroup.activeTab = undefined;
     mock.onDocumentChange.mockImplementation(mock.disposable);
     mock.onEditorChange.mockImplementation(mock.disposable);
     mock.document.version = 1;
@@ -156,14 +163,123 @@ describe('review command AI access and prompt copy', () => {
       expect(revised).toContain('  - 1: "Clarify."');
     });
 
-    it('rejects replacements that overlap other comments', () => {
+    it('combines overlapping comments into one revision with separate anchors', () => {
       const source = 'Before selected text after.\n';
       const start = source.indexOf('selected text');
       const saved = writeReviewComments(source, [
         { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 13 } },
         { id: '2', body: 'Check.', state: 'open', includeInAi: true, range: { start: start + 2, end: start + 6 } },
       ]);
-      expect(() => applyReplacements(saved, [{ id: '1', original: 'selected text', text: 'clearer words', anchor: 'words' }])).toThrow('Overlapping review comments');
+      const result = readReviewComments(applyReplacements(saved, [
+        { id: '1', original: 'selected text', text: 'clearer words', anchor: 'clearer words' },
+        { id: '2', original: 'selected text', text: 'clearer words', anchor: 'words' },
+      ]));
+      expect(result.markdown).toContain('Before clearer words after.');
+      expect(result.comments.map(item => result.markdown.slice(item.range!.start, item.range!.end)))
+        .toEqual(['clearer words', 'words']);
+    });
+
+    it('preserves unaddressed overlapping anchors when possible and detaches ambiguous ones', () => {
+      const source = 'Before selected text after.\n';
+      const start = source.indexOf('selected text');
+      const saved = writeReviewComments(source, [
+        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 13 } },
+        { id: '2', body: 'Keep.', state: 'resolved', includeInAi: true, range: { start: start + 9, end: start + 13 } },
+        { id: '3', body: 'Manual.', state: 'open', includeInAi: false, range: { start, end: start + 8 } },
+        { id: '4', body: 'Surrounding.', state: 'open', includeInAi: false, range: { start: start - 7, end: start + 19 } },
+      ]);
+      const result = readReviewComments(applyReplacements(saved, [
+        { id: '1', original: 'selected text', text: 'clearer text', anchor: 'clearer' },
+      ]));
+      expect(result.comments[1].state).toBe('resolved');
+      expect(result.markdown.slice(result.comments[1].range!.start, result.comments[1].range!.end)).toBe('text');
+      expect(result.comments[2].range).toBeUndefined();
+      expect(result.markdown.slice(result.comments[3].range!.start, result.comments[3].range!.end)).toBe('Before clearer text after');
+    });
+
+    it('detaches an unaddressed anchor when its unchanged text is ambiguous', () => {
+      const source = 'Before selected text after.\n';
+      const start = source.indexOf('selected text');
+      const saved = writeReviewComments(source, [
+        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 13 } },
+        { id: '2', body: 'Manual.', state: 'open', includeInAi: false, range: { start: start + 9, end: start + 13 } },
+      ]);
+      const result = readReviewComments(applyReplacements(saved, [
+        { id: '1', original: 'selected text', text: 'text and text', anchor: 'and' },
+      ]));
+      expect(result.comments[1].range).toBeUndefined();
+    });
+
+    it('combines overlapping selections spanning more than one context window', () => {
+      const source = Array.from({ length: 14 }, (_, index) => `Line ${index + 1}.\n`).join('');
+      const first = source.indexOf('Line 2.');
+      const middle = source.indexOf('Line 6.');
+      const endFirst = source.indexOf('Line 8.') + 'Line 8.'.length;
+      const endSecond = source.indexOf('Line 12.') + 'Line 12.'.length;
+      const original = source.slice(first, endSecond);
+      const saved = writeReviewComments(source, [
+        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start: first, end: endFirst } },
+        { id: '2', body: 'Improve.', state: 'open', includeInAi: true, range: { start: middle, end: endSecond } },
+      ]);
+      const result = readReviewComments(applyReplacements(saved, [
+        { id: '1', original, text: 'Updated first section and second section.', anchor: 'first section' },
+        { id: '2', original, text: 'Updated first section and second section.', anchor: 'second section' },
+      ]));
+      expect(result.markdown).toContain('Updated first section and second section.');
+      expect(result.comments.map(item => result.markdown.slice(item.range!.start, item.range!.end)))
+        .toEqual(['first section', 'second section']);
+    });
+
+    it('rejects conflicting overlapping edits without changing the source', () => {
+      const source = 'Before selected text after.\n';
+      const start = source.indexOf('selected text');
+      const saved = writeReviewComments(source, [
+        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 8 } },
+        { id: '2', body: 'Check.', state: 'open', includeInAi: true, range: { start: start + 9, end: start + 13 } },
+      ]);
+      expect(() => applyReplacements(saved, [
+        { id: '1', original: 'selected text', text: 'clearer words', anchor: 'clearer' },
+        { id: '2', original: 'text after', text: 'words afterwards', anchor: 'words' },
+      ])).toThrow('conflicting overlapping edits');
+      expect(readReviewComments(saved).markdown).toContain(source);
+    });
+
+    it('requires confirmation before applying a revision that detaches another comment', async () => {
+      const source = 'Before selected text after.\n';
+      const start = source.indexOf('selected text');
+      const original = writeReviewComments(source, [
+        { id: '1', body: 'Clarify.', state: 'open', includeInAi: true, range: { start, end: start + 13 } },
+        { id: '2', body: 'Manual.', state: 'open', includeInAi: false, range: { start, end: start + 8 } },
+      ]);
+      mock.document.getText.mockReturnValue(original);
+      mock.getAiAccessState.mockReturnValue('ask');
+      mock.consent.mockResolvedValue(true);
+      mock.withProgress.mockImplementation(async (_options, task) => task({}, {}));
+      mock.generate.mockResolvedValue(JSON.stringify({ replacements: [
+        { id: '1', original: 'selected text', text: 'clearer words', anchor: 'clearer' },
+      ] }));
+      let modified: { uri: { toString: () => string }; getText: () => string } | undefined;
+      mock.openDocument.mockImplementation(async (input: { content?: string }) => {
+        if (typeof input.content !== 'string') return mock.document;
+        modified = { uri: { toString: () => 'review-draft' }, getText: () => input.content! };
+        return modified;
+      });
+      await run('runReviewComments');
+      expect(modified).toBeDefined();
+      mock.activeTabGroup.activeTab = { input: new mock.Diff(modified!.uri) };
+      mock.choose.mockResolvedValue([{ id: '1' }]);
+      await run('applyReviewRevision');
+      expect(mock.showError).not.toHaveBeenCalled();
+      expect(mock.showWarning).toHaveBeenCalledWith(
+        expect.stringContaining('1 review comment will become detached'),
+        expect.objectContaining({ modal: true }), 'Apply Anyway',
+      );
+      expect(mock.applyEdit).not.toHaveBeenCalled();
+      mock.showWarning.mockResolvedValue('Apply Anyway');
+      mock.applyEdit.mockResolvedValue(true);
+      await run('applyReviewRevision');
+      expect(mock.applyEdit).toHaveBeenCalledOnce();
+      expect(mock.showError).not.toHaveBeenCalled();
     });
 
     it('applies separate contextual edits and retains both anchors with CRLF', () => {
