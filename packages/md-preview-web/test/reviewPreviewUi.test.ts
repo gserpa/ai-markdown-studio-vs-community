@@ -131,7 +131,7 @@ it('connects the standalone document review UI without replacing its root or exp
   const source = '# Title\n\nA target here.\n';
   const start = source.indexOf('target');
   const annotated = writeReviewComments(source, [
-    { id: '1', body: 'Original', state: 'open', includeInAi: false, range: { start, end: start + 6 } },
+    { id: '1', body: 'Original', state: 'open', includeInAi: false, resolution: 'Added <img src=x> examples.', range: { start, end: start + 6 } },
   ]);
   const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
   Object.assign(dom.window.Range.prototype, {
@@ -154,14 +154,43 @@ it('connects the standalone document review UI without replacing its root or exp
     const aside = dom.window.document.querySelector('aside.md-review-list')!;
     expect(aside.hidden).toBe(false);
     expect(aside.textContent).not.toContain('Include in AI review');
+    expect(aside.querySelector('.md-review-comment')?.textContent).toBe('Comment: Original');
+    expect(aside.querySelector('.md-review-comment svg[aria-hidden="true"]')).not.toBeNull();
+    expect(aside.querySelector('.md-review-resolution')?.textContent).toBe('Resolution: Added <img src=x> examples.');
+    expect(aside.querySelector('.md-review-resolution svg[aria-hidden="true"]')).not.toBeNull();
+    expect(aside.querySelector('.md-review-resolution img')).toBeNull();
     [...aside.querySelectorAll('button')].find(button => button.textContent === 'Edit')!.click();
+    const resolution = dom.window.document.querySelector('.md-review-composer .md-review-resolution')!;
+    expect(resolution.querySelector('strong')?.textContent).toBe('Resolution');
+    expect(resolution.querySelector('.md-review-resolution-text')?.textContent).toBe('Added <img src=x> examples.');
+    expect(resolution.querySelector('img')).toBeNull();
+    const changedState = JSON.parse(root.getAttribute('data-review-state')!);
+    changedState.comments[0].resolution = 'Updated summary.';
+    root.setAttribute('data-review-state', JSON.stringify(changedState));
+    dom.window.document.dispatchEvent(new dom.window.Event('md-document-updated'));
+    expect(resolution.querySelector('.md-review-resolution-text')?.textContent).toBe('Updated summary.');
+    expect(aside.querySelector('.md-review-resolution .is-reopened')).toBeNull();
+    changedState.comments[0].resolutionReopened = true;
+    root.setAttribute('data-review-state', JSON.stringify(changedState));
+    dom.window.document.dispatchEvent(new dom.window.Event('md-document-updated'));
+    expect(aside.querySelector('.md-review-resolution .is-reopened')?.textContent).toBe('Updated summary.');
+    changedState.comments[0].state = 'resolved';
+    root.setAttribute('data-review-state', JSON.stringify(changedState));
+    dom.window.document.dispatchEvent(new dom.window.Event('md-document-updated'));
+    expect(aside.querySelector('.md-review-resolution .is-reopened')).toBeNull();
+    changedState.comments[0].state = 'open';
+    delete changedState.comments[0].resolutionReopened;
+    root.setAttribute('data-review-state', JSON.stringify(changedState));
+    dom.window.document.dispatchEvent(new dom.window.Event('md-document-updated'));
     const textarea = dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
     expect(dom.window.document.querySelector('.md-review-composer')!.textContent).not.toContain('Include in AI review');
     textarea.value = 'Updated in browser';
     textarea.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     dom.window.document.querySelector<HTMLFormElement>('.md-review-composer')!.requestSubmit();
     await vi.waitFor(() => expect(host.snapshot().version).toBe(2));
-    expect(readReviewComments(host.snapshot().markdown).comments[0]).toMatchObject({ body: 'Updated in browser', includeInAi: false });
+    expect(readReviewComments(host.snapshot().markdown).comments[0]).toMatchObject({
+      body: 'Updated in browser', includeInAi: false, resolution: 'Added <img src=x> examples.',
+    });
     expect(dom.window.document.querySelector('[data-review-state]')).toBe(root);
     expect(JSON.parse(root.getAttribute('data-review-state')!).comments[0].body).toBe('Updated in browser');
     expect(changes).toBe(1);
@@ -177,11 +206,178 @@ it('connects the standalone document review UI without replacing its root or exp
   }
 });
 
+it('saves before another review action without consuming outside clicks or losing a failed edit', async () => {
+  const source = '# Title\n\nAlpha Beta.\n';
+  const comments = ['Alpha', 'Beta'].map((word, index) => {
+    const start = source.indexOf(word);
+    return { id: String(index + 1), body: word, state: 'open' as const, includeInAi: true,
+      range: { start, end: start + word.length } };
+  });
+  const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
+  Object.assign(dom.window.Range.prototype, {
+    getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
+    getClientRects: () => [],
+  });
+  vi.stubGlobal('document', dom.window.document);
+  vi.stubGlobal('crypto', webcrypto);
+  try {
+    const host = await createPortableReviewHost(writeReviewComments(source, comments), 'session', options);
+    dom.window.document.body.innerHTML = host.snapshot().body;
+    const requests: Array<{ action: string; requestId: number; body?: string }> = [];
+    Object.assign(dom.window, { __previewBridge: {
+      reviewStandalone: true, getState: () => ({}), review: (request: typeof requests[number]) => requests.push(request),
+    } });
+    dom.window.eval(readFileSync(new URL('../assets/preview-review.js', import.meta.url), 'utf8'));
+    dom.window.document.querySelector<HTMLButtonElement>('button[aria-label="Review Comments"]')!.click();
+    const editButtons = [...dom.window.document.querySelectorAll<HTMLButtonElement>('.md-review-card button')]
+      .filter(button => button.textContent === 'Edit');
+    editButtons[0].click();
+    const text = dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
+    text.value = 'Changed Alpha';
+    text.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    const clickOutside = (target: HTMLElement) => {
+      const down = new dom.window.MouseEvent('pointerdown', { bubbles: true, cancelable: true, button: 0 });
+      Object.defineProperty(down, 'isPrimary', { value: true });
+      target.dispatchEvent(down);
+      target.click();
+    };
+    clickOutside(editButtons[1]);
+    const first = requests.filter(request => request.action === 'edit').at(-1)!;
+    expect(first.body).toBe('Changed Alpha');
+    expect(dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!.value).toBe('Changed Alpha');
+    dom.window.dispatchEvent(new dom.window.MessageEvent('message', {
+      data: { command: 'reviewResult', requestId: first.requestId, error: 'Could not save' },
+    }));
+    expect(dom.window.document.querySelector('.md-review-status')?.textContent)
+      .toBe('Could not save The selected review action was not performed.');
+    expect(text.disabled).toBe(false);
+    clickOutside(editButtons[1]);
+    const retry = requests.filter(request => request.action === 'edit').at(-1)!;
+    dom.window.dispatchEvent(new dom.window.MessageEvent('message', {
+      data: { command: 'reviewResult', requestId: retry.requestId },
+    }));
+    expect(dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!.value).toBe('Beta');
+
+    const outside = dom.window.document.createElement('button');
+    let clicks = 0;
+    outside.addEventListener('click', () => { clicks++; });
+    dom.window.document.body.append(outside);
+    clickOutside(outside);
+    expect(clicks).toBe(1);
+    expect(requests.filter(request => request.action === 'edit').at(-1)?.body).toBe('Beta');
+  } finally {
+    vi.unstubAllGlobals();
+    dom.window.close();
+  }
+});
+
+it('keeps resolved comments read-only and marks previous resolutions after reopening', async () => {
+  const source = '# Title\n\nA target here.\n';
+  const start = source.indexOf('target');
+  const annotated = writeReviewComments(source, [
+    { id: '1', body: 'Original', state: 'resolved', includeInAi: true, resolution: 'Added an example.',
+      range: { start, end: start + 6 } },
+  ]);
+  const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
+  Object.assign(dom.window.Range.prototype, {
+    getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
+    getClientRects: () => [],
+  });
+  dom.window.HTMLElement.prototype.scrollIntoView = () => {};
+  vi.stubGlobal('document', dom.window.document);
+  vi.stubGlobal('crypto', webcrypto);
+  try {
+    const host = await createPortableReviewHost(annotated, 'session', options);
+    dom.window.document.body.innerHTML = host.snapshot().body;
+    const root = dom.window.document.querySelector('[data-review-state]')!;
+    Object.assign(dom.window, { __previewBridge: createPortableReviewBridge(host, root, 'session') });
+    dom.window.eval(readFileSync(new URL('../assets/preview-review.js', import.meta.url), 'utf8'));
+    const reveal = () => dom.window.dispatchEvent(new dom.window.MessageEvent('message', {
+      data: { command: 'revealReviewComment', id: '1' },
+    }));
+    reveal();
+    const text = dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
+    expect(text.readOnly).toBe(true);
+    text.click();
+    text.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(text.readOnly).toBe(true);
+    expect(dom.window.document.querySelector<HTMLButtonElement>('.md-review-actions > button')!.hidden).toBe(true);
+    expect(dom.window.document.querySelector('.md-review-resolution-text')!.classList.contains('is-reopened')).toBe(false);
+    dom.window.document.querySelector<HTMLButtonElement>('[aria-label="Reopen comment"]')!.click();
+    await vi.waitFor(() => expect(host.snapshot().version).toBe(2));
+    expect(readReviewComments(host.snapshot().markdown).comments[0]).toMatchObject({
+      state: 'open', resolution: 'Added an example.', resolutionReopened: true,
+    });
+    reveal();
+    expect(dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!.readOnly).toBe(false);
+    expect(dom.window.document.querySelector('.md-review-resolution-text')!.classList.contains('is-reopened')).toBe(true);
+    dom.window.document.querySelector<HTMLButtonElement>('[aria-label="Mark resolved"]')!.click();
+    await vi.waitFor(() => expect(host.snapshot().version).toBe(3));
+    expect(readReviewComments(host.snapshot().markdown).comments[0].resolutionReopened).toBeUndefined();
+    reveal();
+    expect(dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!.readOnly).toBe(true);
+    expect(dom.window.document.querySelector('.md-review-resolution-text')!.classList.contains('is-reopened')).toBe(false);
+  } finally {
+    vi.unstubAllGlobals();
+    dom.window.close();
+  }
+});
+
+it('preserves an edit when the comment is resolved elsewhere and lets the user reopen it', async () => {
+  const source = '# Title\n\nA target here.\n';
+  const start = source.indexOf('target');
+  const annotated = writeReviewComments(source, [
+    { id: '1', body: 'Original', state: 'open', includeInAi: true, resolution: 'Previously addressed.',
+      range: { start, end: start + 6 } },
+  ]);
+  const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
+  Object.assign(dom.window.Range.prototype, {
+    getBoundingClientRect: () => ({ top: 20, bottom: 30, left: 20, right: 30, height: 10 }),
+    getClientRects: () => [],
+  });
+  dom.window.HTMLElement.prototype.scrollIntoView = () => {};
+  vi.stubGlobal('document', dom.window.document);
+  vi.stubGlobal('crypto', webcrypto);
+  try {
+    const host = await createPortableReviewHost(annotated, 'session', options);
+    dom.window.document.body.innerHTML = host.snapshot().body;
+    const root = dom.window.document.querySelector('[data-review-state]')!;
+    const bridge = createPortableReviewBridge(host, root, 'session');
+    Object.assign(dom.window, { __previewBridge: bridge });
+    dom.window.eval(readFileSync(new URL('../assets/preview-review.js', import.meta.url), 'utf8'));
+    dom.window.dispatchEvent(new dom.window.MessageEvent('message', {
+      data: { command: 'revealReviewComment', id: '1' },
+    }));
+    const text = dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
+    text.value = 'Unsaved draft';
+    text.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    await bridge.review({ action: 'resolve', id: '1', version: 1, requestId: 99 });
+    expect(text.readOnly).toBe(true);
+    expect(text.value).toBe('Unsaved draft');
+    expect(dom.window.document.querySelector('.md-review-status')?.textContent).toContain('resolved while editing');
+    dom.window.document.body.click();
+    expect(dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')?.value).toBe('Unsaved draft');
+    dom.window.document.querySelector<HTMLButtonElement>('[aria-label="Reopen comment"]')!.click();
+    await vi.waitFor(() => expect(host.snapshot().version).toBe(3));
+    expect(text.readOnly).toBe(false);
+    expect(text.value).toBe('Unsaved draft');
+    expect(dom.window.document.querySelector('.md-review-resolution-text')!.classList.contains('is-reopened')).toBe(true);
+    dom.window.document.querySelector<HTMLFormElement>('.md-review-composer')!.requestSubmit();
+    await vi.waitFor(() => expect(host.snapshot().version).toBe(4));
+    expect(readReviewComments(host.snapshot().markdown).comments[0]).toMatchObject({
+      body: 'Unsaved draft', state: 'open', resolutionReopened: true,
+    });
+  } finally {
+    vi.unstubAllGlobals();
+    dom.window.close();
+  }
+});
+
 it('retains the presentation review panel and its edited comment on the stable root', async () => {
   const source = '---\ndocument: presentation\n---\n\n# Slide\n\nA target here.\n';
   const start = source.indexOf('target');
   const annotated = writeReviewComments(source, [
-    { id: '1', body: 'Original', state: 'open', includeInAi: true, range: { start, end: start + 6 } },
+    { id: '1', body: 'Original', state: 'open', includeInAi: true, resolution: 'Added an example.', range: { start, end: start + 6 } },
   ]);
   const dom = new JSDOM('', { runScripts: 'outside-only', pretendToBeVisual: true });
   Object.assign(dom.window.Range.prototype, {
@@ -201,13 +397,35 @@ it('retains the presentation review panel and its edited comment on the stable r
     const panel = root.querySelector('.md-review-panel')!;
     expect(panel).not.toBeNull();
     expect(panel.querySelector('.md-review-revise')).toBeNull();
+    expect(panel.querySelector('.md-review-comment')?.textContent).toBe('Comment: Original');
+    expect(panel.querySelector('.md-review-comment svg[aria-hidden="true"]')).not.toBeNull();
+    expect(panel.querySelector('.md-review-resolution')?.textContent).toBe('Resolution: Added an example.');
+    expect(panel.querySelector('.md-review-resolution svg[aria-hidden="true"]')).not.toBeNull();
+    expect(panel.querySelector('.md-review-resolution .is-reopened')).toBeNull();
+    const state = JSON.parse(root.getAttribute('data-review-state')!);
+    state.comments[0].resolutionReopened = true;
+    root.setAttribute('data-review-state', JSON.stringify(state));
+    dom.window.document.dispatchEvent(new dom.window.Event('md-document-updated'));
+    expect(panel.querySelector('.md-review-resolution .is-reopened')?.textContent).toBe('Added an example.');
+    state.comments[0].state = 'resolved';
+    root.setAttribute('data-review-state', JSON.stringify(state));
+    dom.window.document.dispatchEvent(new dom.window.Event('md-document-updated'));
+    expect(panel.querySelector('.md-review-resolution .is-reopened')).toBeNull();
+    state.comments[0].state = 'open';
+    delete state.comments[0].resolutionReopened;
+    root.setAttribute('data-review-state', JSON.stringify(state));
+    dom.window.document.dispatchEvent(new dom.window.Event('md-document-updated'));
     panel.querySelector<HTMLButtonElement>('.md-review-panel-item')!.click();
+    expect(dom.window.document.querySelector('.md-review-composer .md-review-resolution-text')?.textContent)
+      .toBe('Added an example.');
     const textarea = dom.window.document.querySelector<HTMLTextAreaElement>('.md-review-composer textarea')!;
     textarea.value = 'Updated on slide';
     textarea.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     dom.window.document.querySelector<HTMLFormElement>('.md-review-composer')!.requestSubmit();
     await vi.waitFor(() => expect(host.snapshot().version).toBe(2));
-    expect(readReviewComments(host.snapshot().markdown).comments[0]).toMatchObject({ body: 'Updated on slide', includeInAi: true });
+    expect(readReviewComments(host.snapshot().markdown).comments[0]).toMatchObject({
+      body: 'Updated on slide', includeInAi: true, resolution: 'Added an example.',
+    });
     expect(dom.window.document.querySelector('[data-review-state]')).toBe(root);
     expect(root.querySelector('.md-review-panel-item')!.textContent).toContain('Updated on slide');
   } finally {

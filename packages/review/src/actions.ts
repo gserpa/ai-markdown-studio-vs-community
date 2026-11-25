@@ -23,6 +23,14 @@ export type ReviewSnapshot = {
 
 export type ApplyReviewEdit = (markdown: string, expectedVersion: number, sessionId: string) => Promise<boolean>;
 
+export function setReviewCommentState(comment: ReviewComment, state: 'open' | 'resolved'): ReviewComment {
+  const { resolutionReopened, ...rest } = comment;
+  if (state === 'open' && (resolutionReopened || (comment.state === 'resolved' && comment.resolution))) {
+    return { ...rest, state, resolutionReopened: true };
+  }
+  return { ...rest, state };
+}
+
 export function createReviewActionHandler(
   readSelection: (markdown: string, preview: ReviewPreview, selection: unknown) => ReviewRange,
 ) {
@@ -73,18 +81,18 @@ export function createReviewCommentActions(
     switch (request.action) {
       case 'edit':
         comments[index] = { ...comment, body, includeInAi: request.includeInAi !== false };
-        if (request.afterEdit === 'resolve') comments[index].state = 'resolved';
-        else if (request.afterEdit === 'reopen') comments[index].state = 'open';
+        if (request.afterEdit === 'resolve') comments[index] = setReviewCommentState(comments[index], 'resolved');
+        else if (request.afterEdit === 'reopen') comments[index] = setReviewCommentState(comments[index], 'open');
         else if (request.afterEdit === 'delete') comments.splice(index, 1);
         break;
       case 'toggle':
         comments[index] = { ...comment, includeInAi: request.includeInAi === true };
         break;
       case 'resolve':
-        comments[index] = { ...comment, state: 'resolved' };
+        comments[index] = setReviewCommentState(comment, 'resolved');
         break;
       case 'reopen':
-        comments[index] = { ...comment, state: 'open' };
+        comments[index] = setReviewCommentState(comment, 'open');
         break;
       case 'delete':
         comments.splice(index, 1);

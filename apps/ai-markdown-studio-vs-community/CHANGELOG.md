@@ -7,9 +7,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added per-comment resolution summaries in Markdown front matter and review views. AI revisions can record partial work without resolving the comment.
+
 ### Changed
 
 - Revise from Comments now prepares a Chat request using the bundled review skill instead of the local excerpt-based revision workflow. Chat can consult workspace context and propose changes throughout the reviewed document.
+- Refreshed review comment presentation in previews, the sidebar, and the presentation panel, with clearer comment and resolution formatting.
 
 ## [1.4.0] - 2026-11-22
 

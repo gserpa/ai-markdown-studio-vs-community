@@ -36,6 +36,45 @@ describe('compact review comments', () => {
     expect(readReviewComments(edited.replace('<!--/review:1-->', '')).comments[0].range).toBeUndefined();
   });
 
+  it.each(['\n', '\r\n'])('round-trips resolutions with overlapping and component anchors using %j endings', eol => {
+    const markdown = ['---', 'title: Example', '---', '', 'A selected text here.', '',
+      '~~~component', 'type: fact-cards', 'version: 1', 'data:', '  label: Component', '~~~', ''].join(eol);
+    const comments: ReviewComment[] = [
+      { ...comment(markdown), resolution: 'Explained "this".\nAdded examples: <one>.' },
+      { ...comment(markdown, 'text'), id: '2', state: 'resolved', includeInAi: false, resolution: 'Clarified the text.' },
+      { ...comment(markdown, 'Component'), id: '3', resolution: 'Updated the label.' },
+    ];
+    const saved = writeReviewComments(markdown, comments);
+    expect(saved).toContain('component: true');
+    expect(saved).toContain('resolution:');
+    const stored = readReviewComments(saved);
+    expect(stored.markdown).toBe(markdown);
+    expect(stored.comments).toEqual(comments);
+    expect(readReviewComments(writeReviewComments(saved, stored.comments)).comments).toEqual(comments);
+  });
+
+  it.each(['null', '123', '[]', '""', '"   "'])('rejects malformed resolution %s without rewriting the source', resolution => {
+    const source = `---\nreview-comments:\n  - 1:\n      text: "Review"\n      resolution: ${resolution}\n---\nText.\n`;
+    expect(readReviewComments(source).error).toBeDefined();
+    expect(() => writeReviewComments(source, [])).toThrow('could not be read');
+  });
+
+  it('rejects an empty resolution when writing', () => {
+    const markdown = 'A selected text here.\n';
+    expect(() => writeReviewComments(markdown, [{ ...comment(markdown), resolution: ' ' }]))
+      .toThrow('resolutions must be non-empty text');
+  });
+
+  it('round-trips the reopened-resolution marker without marking a partial resolution', () => {
+    const markdown = '---\ntitle: Example\n---\n\nA selected text here.\n';
+    const reopened = { ...comment(markdown), resolution: 'Previously addressed.', resolutionReopened: true };
+    const partial = { ...comment(markdown, 'text'), id: '2', resolution: 'Partly addressed.' };
+    const saved = writeReviewComments(markdown, [reopened, partial]);
+    expect(saved).toContain('resolution-reopened: true');
+    expect(readReviewComments(saved).comments).toEqual([reopened, partial]);
+    expect(readReviewComments(saved.replace('resolution-reopened: true', 'resolution-reopened: invalid')).error).toBeDefined();
+  });
+
   it('preserves unrelated front-matter comments and fields when deleting a review', () => {
     const markdown = '---\ntitle: Example # title note\n# author note\nauthor: Someone\n---\n\nA selected text here.\n';
     const saved = writeReviewComments(markdown, [comment(markdown)]);

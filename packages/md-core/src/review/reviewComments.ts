@@ -7,6 +7,8 @@ export type ReviewComment = {
   body: string;
   state: 'open' | 'resolved';
   includeInAi: boolean;
+  resolution?: string;
+  resolutionReopened?: boolean;
   range?: ReviewRange;
 };
 
@@ -102,13 +104,17 @@ export function readReviewComments(source: string): {
       const [id, value] = entries[0];
       if (typeof value === 'string' && value.trim()) return { id, body: value, state: 'open', includeInAi: true };
       if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error();
-      const detail = value as { text?: unknown; ai?: unknown; state?: unknown; component?: unknown };
+      const detail = value as { text?: unknown; ai?: unknown; state?: unknown; component?: unknown; resolution?: unknown; 'resolution-reopened'?: unknown };
       if (typeof detail.text !== 'string' || !detail.text.trim()
         || (detail.ai !== undefined && typeof detail.ai !== 'boolean')
         || (detail.component !== undefined && typeof detail.component !== 'boolean')
+        || (detail.resolution !== undefined && (typeof detail.resolution !== 'string' || !detail.resolution.trim()))
+        || (detail['resolution-reopened'] !== undefined && typeof detail['resolution-reopened'] !== 'boolean')
         || (detail.state !== undefined && detail.state !== 'open' && detail.state !== 'resolved')) throw new Error();
       if (detail.component === true) componentIds.add(id);
-      return { id, body: detail.text, state: detail.state ?? 'open', includeInAi: detail.ai ?? true };
+      return { id, body: detail.text, state: detail.state ?? 'open', includeInAi: detail.ai ?? true,
+        ...(typeof detail.resolution === 'string' ? { resolution: detail.resolution } : {}),
+        ...(detail['resolution-reopened'] === true ? { resolutionReopened: true } : {}) };
     });
     if (new Set(comments.map(comment => comment.id)).size !== comments.length) throw new Error();
     const start = front.contentStart + pair.key.range[0];
@@ -156,6 +162,13 @@ export function writeReviewComments(source: string, comments: readonly ReviewCom
     || comments.some(comment => !validId(comment.id) || !comment.body.trim())) {
     throw new Error('Review comments must have unique numeric IDs and non-empty text.');
   }
+  if (comments.some(comment => comment.resolution !== undefined
+    && (typeof comment.resolution !== 'string' || !comment.resolution.trim()))) {
+    throw new Error('Review comment resolutions must be non-empty text.');
+  }
+  if (comments.some(comment => comment.resolutionReopened !== undefined && typeof comment.resolutionReopened !== 'boolean')) {
+    throw new Error('Review comment resolution-reopened must be a boolean.');
+  }
   const events: { offset: number; text: string; order: number; component: boolean }[] = [];
   const componentIds = new Set<string>();
   const components = componentRanges(clean);
@@ -189,8 +202,8 @@ export function writeReviewComments(source: string, comments: readonly ReviewCom
   if (!comments.length) return marked;
   const entries = comments.map(comment => {
     const value = JSON.stringify(comment.body);
-    if (comment.includeInAi && comment.state === 'open' && !componentIds.has(comment.id)) return `  - ${comment.id}: ${value}`;
-    return `  - ${comment.id}:${eol}      text: ${value}${comment.includeInAi ? '' : `${eol}      ai: false`}${comment.state === 'open' ? '' : `${eol}      state: resolved`}${componentIds.has(comment.id) ? `${eol}      component: true` : ''}`;
+    if (comment.includeInAi && comment.state === 'open' && !componentIds.has(comment.id) && comment.resolution === undefined && !comment.resolutionReopened) return `  - ${comment.id}: ${value}`;
+    return `  - ${comment.id}:${eol}      text: ${value}${comment.includeInAi ? '' : `${eol}      ai: false`}${comment.state === 'open' ? '' : `${eol}      state: resolved`}${componentIds.has(comment.id) ? `${eol}      component: true` : ''}${comment.resolution === undefined ? '' : `${eol}      resolution: ${JSON.stringify(comment.resolution)}`}${comment.resolutionReopened ? `${eol}      resolution-reopened: true` : ''}`;
   });
   const block = [key + ':', ...entries, ''].join(eol);
   const front = frontMatter(marked);
@@ -202,6 +215,8 @@ export function writeReviewComments(source: string, comments: readonly ReviewCom
     || comments.some(comment => {
       const actual = verified.comments.find(item => item.id === comment.id);
       return !actual || actual.body !== comment.body || actual.state !== comment.state || actual.includeInAi !== comment.includeInAi
+        || actual.resolution !== comment.resolution
+        || Boolean(actual.resolutionReopened) !== Boolean(comment.resolutionReopened)
         || (comment.range && (!actual.range || clean.slice(comment.range.start, comment.range.end)
           !== verified.markdown.slice(actual.range.start, actual.range.end)));
     })) {

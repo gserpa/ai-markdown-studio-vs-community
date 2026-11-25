@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { readReviewComments, reviewRangeLines, writeReviewComments, type ReviewComment } from '@mfo/core';
-import { createReviewActionHandler, isAiReviewEligible, type ReviewRequest } from '@mfo/review';
+import { createReviewActionHandler, isAiReviewEligible, setReviewCommentState, type ReviewRequest } from '@mfo/review';
 import type { PreviewDocumentUpdater } from '../panel/PreviewDocumentUpdater';
 import { readPreviewSelection } from './reviewPreview';
 
@@ -172,7 +172,17 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
       const { comment } = entry;
       const item = new vscode.TreeItem(comment.body, vscode.TreeItemCollapsibleState.None);
       item.description = entry.location + ' · ' + (comment.state === 'resolved' ? 'Resolved' : 'Open') + (comment.includeInAi ? ' · AI' : ' · Manual');
-      item.tooltip = comment.body;
+      const reopened = comment.state === 'open' && comment.resolutionReopened === true;
+      if (comment.resolution) item.description += ' · ' + (reopened ? 'Previous resolution: ' : 'Resolution: ') + comment.resolution.replace(/\s+/gu, ' ');
+      item.iconPath = new vscode.ThemeIcon(comment.state === 'resolved' ? 'check' : 'comment-discussion',
+        new vscode.ThemeColor(comment.state === 'resolved' ? 'testing.iconPassed' : 'editorInfo.foreground'));
+      const tooltip = new vscode.MarkdownString();
+      tooltip.appendMarkdown('**Comment:** *').appendText(comment.body).appendMarkdown('*');
+      if (comment.resolution) {
+        tooltip.appendMarkdown('  \n**Resolution:** ' + (reopened ? '~~*' : '*'))
+          .appendText(comment.resolution).appendMarkdown(reopened ? '*~~' : '*');
+      }
+      item.tooltip = tooltip;
       item.contextValue = 'reviewComment' + (comment.state === 'open' ? 'Open' : 'Resolved') + (comment.includeInAi ? 'Ai' : 'Manual');
       item.command = { command: 'markdownAiStudio.revealReviewComment', title: 'Go to Comment', arguments: [entry] };
       return item;
@@ -214,7 +224,7 @@ export function registerReviewWorkflow(resolveUri: () => vscode.Uri | undefined)
       if (comment.id !== entry.comment.id) return [comment];
       if (action === 'delete') return [];
       if (action === 'selectAi' || action === 'selectManual') return [{ ...comment, includeInAi: action === 'selectAi' }];
-      return [{ ...comment, state: action === 'resolve' ? 'resolved' as const : 'open' as const }];
+      return [setReviewCommentState(comment, action === 'resolve' ? 'resolved' : 'open')];
     });
     await replaceDocument(target.document, target.version, writeReviewComments(target.original, comments), true);
   };

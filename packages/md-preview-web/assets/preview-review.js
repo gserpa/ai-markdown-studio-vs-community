@@ -19,24 +19,30 @@
     element.addEventListener('click', onClick);
     return element;
   };
-  const iconButton = (path, label, onClick) => {
-    const element = button('', onClick, label);
-    element.classList.add('md-review-icon-button');
+  const icon = path => {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('aria-hidden', 'true');
     const shape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     shape.setAttribute('d', path);
     svg.append(shape);
-    element.append(svg);
+    return svg;
+  };
+  const iconButton = (path, label, onClick) => {
+    const element = button('', onClick, label);
+    element.classList.add('md-review-icon-button');
+    element.append(icon(path));
     return element;
   };
   const icons = {
+    comment: 'M4 5h16v11H9l-5 4V5zm4 4h8m-8 3h5',
+    resolution: 'M13 4H5v16h14v-8m-11 2 3 3 10-11',
     resolve: 'M5 12l4 4L19 6',
     reopen: 'M4 10V4m0 6h6M4 10a8 8 0 1 1 1 7',
     delete: 'M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 10v7m4-7v7',
     reattach: 'M8 12l6-6a4 4 0 0 1 6 6l-8 8a6 6 0 0 1-8-8l8-8',
   };
+  const resolvedDraftMessage = 'This comment was resolved while editing. Reopen it to continue, or cancel to discard the draft.';
   const toolbar = make('div', 'md-review-toolbar');
   const overlays = make('div', 'md-review-overlays');
   toolbar.dataset.reviewUi = overlays.dataset.reviewUi = '';
@@ -105,6 +111,7 @@
   let reattach;
   let pressed = false;
   let frame;
+  let composerFrame;
   let selectedComment;
   let pending;
   let requestId = 0;
@@ -113,7 +120,7 @@
   let composerForm;
   let activateComposer;
   let resumeComposer;
-  let suppressOutsideClick = false;
+  let resizeObserver;
 
   function cancelHide() {
     clearTimeout(hideTimer);
@@ -144,10 +151,19 @@
     toolbar.append(listButton);
     document.body.append(toolbar);
   }
-  function send(action, details = {}) {
-    if (pending || !state) return;
+  function send(action, details = {}, retainComposer = false) {
+    if (pending) {
+      if (pending.outside) pending.followUp = () => send(action, details);
+      return;
+    }
+    if (!state) return;
+    if (editing && selectedComment && state.comments.find(comment => comment.id === selectedComment)?.state === 'resolved'
+      && !retainComposer) {
+      status.textContent = resolvedDraftMessage;
+      return;
+    }
     status.textContent = '';
-    pending = { requestId: ++requestId, action, version: state.version };
+    pending = { requestId: ++requestId, action, version: state.version, retainComposer };
     bridge.review({ action, version: state.version, requestId, ...details });
   }
 
@@ -163,6 +179,7 @@
     }
     state = next;
     if (selectedComment && !state.comments.some(comment => comment.id === selectedComment)) closePopover();
+    if (composerForm && selectedComment) updateComposerDetails(state.comments.find(comment => comment.id === selectedComment));
     if (reattach && !state.comments.some(comment => comment.id === reattach)) reattach = undefined;
     if (state.error) status.textContent = state.error;
     refresh();
@@ -253,14 +270,17 @@
   function openComposer(comment, writable = true) {
     const form = make('form', 'md-review-composer');
     const header = make('div', 'md-review-composer-header');
-    const title = make('strong', '', 'Review Comments');
+    const heading = make('div', 'md-review-composer-heading');
+    heading.append(make('strong', '', comment ? 'Review comment' : 'New review comment'));
+    if (comment) heading.append(make('span', 'md-review-composer-state'));
     const hint = make('div', 'md-review-composer-hint');
+    const commentField = make('label', 'md-review-composer-field');
     const text = make('textarea');
     text.value = comment?.body ?? '';
     text.maxLength = 20_000;
-    text.rows = 3;
+    text.rows = 1;
     text.placeholder = 'Write a review comment';
-    text.setAttribute('aria-label', 'Review comment');
+    commentField.append(composerFieldLabel('Comment', icons.comment), text);
     const check = make('input');
     check.type = 'checkbox';
     check.checked = comment?.includeInAi ?? true;
@@ -271,22 +291,28 @@
     });
     const label = make('label', 'md-review-ai-option');
     label.append('Include in AI review', check);
-    header.append(title);
+    header.append(heading);
     if (!standalone) header.append(label);
     const actions = make('div', 'md-review-actions');
     const tools = make('div', 'md-review-comment-tools');
     const saveActions = make('div', 'md-review-save-actions');
+    const edit = button('Edit', () => activateComposer());
     const submit = button('Save', () => {});
     submit.type = 'submit';
     submit.disabled = !text.value.trim();
     text.addEventListener('input', () => {
       submit.disabled = !text.value.trim();
+      resizeText();
     });
     const cancel = button('Cancel', closePopover);
     saveActions.append(cancel, submit);
     let afterEdit;
     const performAction = action => {
       if (pending) return;
+      if (editing && action === 'reopen') {
+        send('reopen', { id: comment.id }, true);
+        return;
+      }
       if (editing) {
         if (!text.value.trim()) {
           status.textContent = 'Enter a comment of up to 20,000 characters.';
@@ -304,28 +330,29 @@
     if (comment) {
       const resolve = iconButton(comment.state === 'open' ? icons.resolve : icons.reopen,
         comment.state === 'open' ? 'Mark resolved' : 'Reopen comment', () =>
-          performAction(comment.state === 'open' ? 'resolve' : 'reopen'));
+          performAction(state.comments.find(item => item.id === comment.id)?.state === 'open' ? 'resolve' : 'reopen'));
       resolve.classList.add('md-review-resolve');
       tools.append(resolve, iconButton(icons.delete, 'Delete comment', () => performAction('delete')),
         iconButton(icons.reattach, 'Reattach comment', () => performAction('reattach')));
     }
-    actions.append(tools, saveActions);
-    form.append(header, text, hint, actions);
+    actions.append(tools, edit, saveActions);
+    form.append(header, commentField, hint, actions);
     activateComposer = () => {
-      if (editing) return;
+      if (editing || (comment && state.comments.find(item => item.id === comment.id)?.state !== 'open')) return;
       cancelHide();
       editing = { version: state.version };
       text.readOnly = false;
-      hint.textContent = 'Esc cancels · Ctrl+Enter saves · Click outside to save';
+      hint.hidden = false;
+      edit.hidden = true;
       saveActions.hidden = false;
+      resizeText();
       text.focus({ preventScroll: true });
     };
     text.readOnly = true;
-    hint.textContent = 'Click to edit';
+    hint.textContent = 'Esc cancels · Ctrl+Enter saves · Click outside to save';
+    hint.hidden = true;
     saveActions.hidden = true;
-    form.addEventListener('click', event => {
-      if (!editing && !event.target.closest('button')) activateComposer();
-    });
+    text.addEventListener('click', () => activateComposer());
     text.addEventListener('keydown', event => {
       if (!editing && (event.key === 'Enter' || event.key === ' ')) {
         event.preventDefault();
@@ -334,6 +361,10 @@
     });
     form.addEventListener('submit', event => {
       event.preventDefault();
+      if (comment && state.comments.find(item => item.id === comment.id)?.state !== 'open') {
+        status.textContent = 'This comment is resolved. Reopen it before editing.';
+        return;
+      }
       if (!text.value.trim()) {
         closePopover();
         return;
@@ -359,23 +390,95 @@
       for (const control of tools.querySelectorAll('button')) control.disabled = false;
     };
     popover.classList.add('is-composer');
+    if (comment) updateComposerDetails(comment);
     popover.style.width = '';
     popover.style.height = '';
     popover.replaceChildren(form);
     popover.hidden = false;
+    const resizeText = () => {
+      text.style.height = 'auto';
+      text.style.height = (text.scrollHeight + text.offsetHeight - text.clientHeight) + 'px';
+      if (composerFrame !== undefined) return;
+      composerFrame = requestAnimationFrame(() => {
+        composerFrame = undefined;
+        if (composerForm !== form || popover.hidden) return;
+        if (selection) position(popover, selection.range);
+        else if (selectedComment) {
+          const ranges = commentRanges(state.comments.find(item => item.id === selectedComment));
+          if (ranges.length) position(popover, ranges[0]);
+        }
+      });
+    };
+    resizeText();
+    if (window.ResizeObserver) {
+      let width = popover.clientWidth;
+      resizeObserver = new ResizeObserver(() => {
+        if (width === popover.clientWidth) return;
+        width = popover.clientWidth;
+        resizeText();
+      });
+      resizeObserver.observe(popover);
+    }
     if (selection) position(popover, selection.range);
     else if (comment) {
       const ranges = commentRanges(comment);
       if (ranges.length) position(popover, ranges[0]);
       else position(popover);
     }
-    popover.style.minWidth = popover.offsetWidth + 'px';
-    popover.style.minHeight = popover.offsetHeight + 'px';
     if (writable) activateComposer();
+  }
+
+  function composerFieldLabel(text, path) {
+    const label = make('strong');
+    label.append(icon(path), text);
+    return label;
+  }
+
+  function updateComposerDetails(comment) {
+    const badge = composerForm.querySelector('.md-review-composer-state');
+    badge.textContent = comment.state === 'resolved' ? 'Resolved' : 'Open';
+    composerForm.dataset.commentState = comment.state;
+    const resolved = comment.state === 'resolved';
+    const text = composerForm.querySelector('textarea');
+    const checkbox = composerForm.querySelector('input[type="checkbox"]');
+    const resolve = composerForm.querySelector('.md-review-resolve');
+    const label = resolved ? 'Reopen comment' : 'Mark resolved';
+    resolve.setAttribute('aria-label', label);
+    resolve.title = label;
+    resolve.querySelector('path').setAttribute('d', resolved ? icons.reopen : icons.resolve);
+    if (!pending) {
+      text.readOnly = resolved || !editing;
+      if (checkbox) checkbox.disabled = resolved;
+      composerForm.querySelector('button[type="submit"]').disabled = resolved || !text.value.trim();
+      for (const control of composerForm.querySelectorAll('.md-review-comment-tools button:not(.md-review-resolve)')) {
+        control.disabled = resolved && !!editing;
+      }
+    }
+    if (!editing) composerForm.querySelector('.md-review-actions > button').hidden = resolved;
+    else if (resolved) status.textContent = resolvedDraftMessage;
+    else if (status.textContent === resolvedDraftMessage) status.textContent = '';
+    let resolution = composerForm.querySelector('.md-review-resolution');
+    if (comment.resolution) {
+      if (!resolution) {
+        resolution = make('div', 'md-review-composer-field md-review-resolution');
+        resolution.append(composerFieldLabel('Resolution', icons.resolution), make('div', 'md-review-resolution-text'));
+        composerForm.querySelector('.md-review-composer-hint').before(resolution);
+      }
+      resolution.lastElementChild.textContent = comment.resolution;
+      resolution.lastElementChild.classList.toggle('is-reopened', comment.state === 'open' && comment.resolutionReopened === true);
+      resolution.lastElementChild.title = comment.state === 'open' && comment.resolutionReopened
+        ? 'Previous resolution; this comment was reopened.' : '';
+    } else {
+      resolution?.remove();
+    }
   }
 
   function closePopover() {
     cancelHide();
+    if (composerFrame !== undefined) cancelAnimationFrame(composerFrame);
+    composerFrame = undefined;
+    resizeObserver?.disconnect();
+    resizeObserver = undefined;
     composerForm = undefined;
     activateComposer = undefined;
     resumeComposer = undefined;
@@ -392,6 +495,14 @@
   }
 
   function beginReattach(id) {
+    if (editing && selectedComment && state.comments.find(comment => comment.id === selectedComment)?.state === 'resolved') {
+      status.textContent = resolvedDraftMessage;
+      return;
+    }
+    if (pending?.outside) {
+      pending.followUp = () => beginReattach(id);
+      return;
+    }
     if (reattach === id) return;
     closePopover();
     reattach = id;
@@ -475,7 +586,20 @@
     updateCommentHighlight();
   }
 
-  function openComment(comment, focus = true) {
+  function openComment(comment, focus = true, navigate = true) {
+    if (editing && selectedComment !== comment.id
+      && state.comments.find(item => item.id === selectedComment)?.state === 'resolved') {
+      status.textContent = resolvedDraftMessage;
+      return;
+    }
+    if (pending?.outside) {
+      pending.followUp = () => {
+        const current = state.comments.find(item => item.id === comment.id);
+        if (current) openComment(current, focus, navigate);
+        else status.textContent = 'This comment is no longer in the document.';
+      };
+      return;
+    }
     if (selectedComment === comment.id && composerForm && !popover.hidden) {
       if (focus) activateComposer?.();
       return;
@@ -484,7 +608,7 @@
     selectedComment = comment.id;
     const ranges = commentRanges(comment);
     const block = ranges[0]?.startContainer.parentElement;
-    if (block && focus) {
+    if (block && focus && navigate) {
       const slide = block.closest('.presentation-slide');
       if (slide && !slide.classList.contains('is-active')) {
         root.querySelector('[data-slide-target="' + slide.dataset.slideIndex + '"]')?.click();
@@ -512,7 +636,9 @@
       const lines = comment.placement ?? comment.originalLines;
       const location = !lines.startLine ? 'Location unavailable' : (lines.startLine === lines.endLine ? 'Line ' + lines.startLine : 'Lines ' + lines.startLine + '–' + lines.endLine);
       const caption = location + ' · ' + (comment.state === 'open' ? 'Open' : 'Resolved') + (comment.placement ? '' : ' · Detached');
-      item.append(make('strong', '', caption), make('span', 'md-review-panel-quote', comment.originalQuote), make('span', '', comment.body));
+      item.append(make('strong', '', caption), make('span', 'md-review-panel-quote', comment.originalQuote),
+        summaryField('Comment', icons.comment, comment.body, 'span', 'md-review-comment'));
+      if (comment.resolution) item.append(resolutionSummary(comment, 'span'));
       return item;
     }));
   }
@@ -523,7 +649,9 @@
     const location = !lines.startLine ? 'Location unavailable' : (lines.startLine === lines.endLine ? 'Line ' + lines.startLine : 'Lines ' + lines.startLine + '–' + lines.endLine);
     const caption = location + ' · ' + (comment.state === 'open' ? 'Open' : 'Resolved') + (comment.placement ? '' : ' · Detached');
     card.append(button(caption, () => openComment(comment)));
-    card.append(make('blockquote', '', comment.originalQuote), make('p', '', comment.body));
+    card.append(make('blockquote', '', comment.originalQuote),
+      summaryField('Comment', icons.comment, comment.body, 'p', 'md-review-comment'));
+    if (comment.resolution) card.append(resolutionSummary(comment, 'p'));
     const check = make('input');
     check.type = 'checkbox';
     check.checked = comment.includeInAi;
@@ -532,10 +660,8 @@
     label.append(check, ' Include in AI review');
     const actions = make('div', 'md-review-actions');
     actions.append(
-      button('Edit', () => {
-        closePopover();
-        selectedComment = comment.id;
-        openComposer(comment);
+      button(comment.state === 'resolved' ? 'View' : 'Edit', () => {
+        openComment(comment, true, false);
       }),
       iconButton(comment.state === 'open' ? icons.resolve : icons.reopen,
         comment.state === 'open' ? 'Mark resolved' : 'Reopen comment', () =>
@@ -552,6 +678,24 @@
     return card;
   }
 
+  function summaryField(label, path, value, tag, className) {
+    const summary = make(tag, 'md-review-summary-field ' + className);
+    const heading = make('strong', '', label + ': ');
+    heading.prepend(icon(path));
+    summary.append(heading, make('span', 'md-review-summary-text', value));
+    return summary;
+  }
+
+  function resolutionSummary(comment, tag) {
+    const summary = summaryField('Resolution', icons.resolution, comment.resolution, tag, 'md-review-resolution');
+    const text = summary.lastElementChild;
+    if (comment.state === 'open' && comment.resolutionReopened) {
+      text.classList.add('is-reopened');
+      text.title = 'Previous resolution; this comment was reopened.';
+    }
+    return summary;
+  }
+
   window.addEventListener('message', ({ data }) => {
     if (data?.command === 'reviewVisibility') {
       commentsVisible = data.visible !== false;
@@ -563,48 +707,53 @@
     } else if (data?.command === 'beginReviewReattach') {
       beginReattach(data.id);
     } else if (data?.command === 'reviewResult' && pending?.requestId === data.requestId) {
-      const action = pending.action;
+      const completed = pending;
+      const action = completed.action;
       pending = undefined;
       if (data.error) {
         resumeComposer?.();
-        status.textContent = data.error;
+        if (composerForm && selectedComment) updateComposerDetails(state.comments.find(comment => comment.id === selectedComment));
+        status.textContent = data.error + (completed.followUp ? ' The selected review action was not performed.' : '');
+      }
+      else if (completed.retainComposer && composerForm && selectedComment) {
+        updateComposerDetails(state.comments.find(comment => comment.id === selectedComment));
       }
       else if (['add', 'edit', 'reattach', 'resolve', 'reopen', 'delete', 'toggle'].includes(action)) {
         reattach = undefined;
-        window.getSelection()?.removeAllRanges();
+        if (!completed.outside) window.getSelection()?.removeAllRanges();
         closePopover();
+        if (completed.followUp) completed.followUp();
+        else if (completed.outside) requestAnimationFrame(readSelection);
       }
     }
   });
   document.addEventListener('pointerdown', event => {
-    suppressOutsideClick = false;
     if (!event.isPrimary || event.button !== 0) return;
     if (editing && composerForm && !popover.contains(event.target)) {
-      suppressOutsideClick = true;
-      event.preventDefault();
-      if (pending) return;
-      if (composerForm.querySelector('button[type="submit"]').disabled) {
-        closePopover();
-        return;
-      }
-      composerForm.requestSubmit();
-      return;
+      window.getSelection()?.removeAllRanges();
     }
     if (event.target.closest?.('[data-review-ui]')) return;
-    if (selectedComment) closePopover();
+    if (selectedComment && !editing) closePopover();
     pressed = true;
-  });
+  }, true);
   document.addEventListener('click', event => {
-    if (!suppressOutsideClick) return;
-    suppressOutsideClick = false;
-    event.preventDefault();
-    event.stopPropagation();
+    if (event.button !== 0 || !editing || !composerForm || popover.contains(event.target) || pending) return;
+    if (selectedComment && state.comments.find(comment => comment.id === selectedComment)?.state === 'resolved') {
+      status.textContent = resolvedDraftMessage;
+      return;
+    }
+    if (composerForm.querySelector('button[type="submit"]').disabled) {
+      closePopover();
+    } else {
+      composerForm.requestSubmit();
+      if (pending) pending.outside = true;
+    }
   }, true);
   window.addEventListener('pointerup', () => {
     pressed = false;
     requestAnimationFrame(readSelection);
   });
-  window.addEventListener('pointercancel', () => { pressed = false; suppressOutsideClick = false; });
+  window.addEventListener('pointercancel', () => { pressed = false; });
   window.addEventListener('blur', () => { pressed = false; });
   document.addEventListener('selectionchange', readSelection);
   document.addEventListener('keydown', event => {

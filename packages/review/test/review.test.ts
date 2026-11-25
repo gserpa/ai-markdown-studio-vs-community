@@ -156,4 +156,45 @@ describe('shared review', () => {
     expect(stored.comments[0]).toMatchObject({ state: 'resolved', includeInAi: false, body: 'Check Beta' });
     expect(stored.markdown.slice(stored.comments[0].range!.start, stored.comments[0].range!.end)).toBe('Beta');
   });
+
+  it('preserves a resolution through comment actions and source serialization', async () => {
+    let document = writeReviewComments('Alpha Beta\n', [
+      { id: '1', body: 'Review', state: 'open', includeInAi: true, resolution: 'Added an example.' },
+    ]);
+    const handler = createReviewActionHandler(markdown => {
+      const start = markdown.indexOf('Beta');
+      return { start, end: start + 4 };
+    });
+    const actions = [
+      { action: 'edit', body: 'Updated', includeInAi: true },
+      { action: 'toggle', includeInAi: false },
+      { action: 'reattach', selection: [{}] },
+      { action: 'resolve' },
+      { action: 'reopen' },
+      { action: 'edit', body: 'Updated again', includeInAi: false, afterEdit: 'resolve' as const },
+      { action: 'edit', body: 'Reopened', includeInAi: false, afterEdit: 'reopen' as const },
+    ];
+    for (const [index, action] of actions.entries()) {
+      const version = index + 1;
+      await handler(
+        { markdown: document, version, sessionId: 'session', preview: { version, blocks: [] } },
+        { ...action, id: '1', sessionId: 'session', version, requestId: version },
+        async updated => { document = updated; return true; },
+      );
+      expect(readReviewComments(document).comments[0].resolution).toBe('Added an example.');
+    }
+    expect(readReviewComments(document).comments[0]).toMatchObject({ body: 'Reopened', state: 'open', includeInAi: false });
+  });
+
+  it('marks a resolved summary as reopened until resolved again', () => {
+    const update = createReviewCommentActions(() => ({ start: 0, end: 1 }));
+    const preview = { version: 1, blocks: [] };
+    const partial = { id: '1', body: 'Review', state: 'open' as const, includeInAi: true, resolution: 'Partial work.' };
+    expect(update('a', [partial], preview, { action: 'reopen', id: '1' })[0].resolutionReopened).toBeUndefined();
+    const resolved = update('a', [partial], preview, { action: 'resolve', id: '1' });
+    const reopened = update('a', resolved, preview, { action: 'reopen', id: '1' });
+    expect(reopened[0]).toMatchObject({ state: 'open', resolution: 'Partial work.', resolutionReopened: true });
+    expect(update('a', reopened, preview, { action: 'toggle', id: '1', includeInAi: false })[0].resolutionReopened).toBe(true);
+    expect(update('a', reopened, preview, { action: 'resolve', id: '1' })[0].resolutionReopened).toBeUndefined();
+  });
 });

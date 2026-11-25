@@ -65,6 +65,14 @@ vi.mock('vscode', () => ({
   },
   EventEmitter: class { event() {} fire() {} dispose() {} },
   TreeItem: class { constructor(public label: string) {} },
+  ThemeColor: class { constructor(public id: string) {} },
+  ThemeIcon: class { constructor(public id: string, public color: { id: string }) {} },
+  MarkdownString: class {
+    value = '';
+    parts: Array<{ kind: string; value: string }> = [];
+    appendMarkdown(value: string) { this.parts.push({ kind: 'markdown', value }); this.value += value; return this; }
+    appendText(value: string) { this.parts.push({ kind: 'text', value }); this.value += value; return this; }
+  },
   TreeItemCollapsibleState: { None: 0 },
   ProgressLocation: { Notification: 1 },
   WorkspaceEdit: class {
@@ -164,6 +172,36 @@ describe('review comments and Chat handoff', () => {
     expect(metadata.description).toMatch(/review comments/iu);
     expect(metadata['disable-model-invocation']).not.toBe(true);
     expect(metadata['user-invocable']).not.toBe(false);
+  });
+
+  it('shows a resolution alongside comment state and location in the sidebar', async () => {
+    mock.document.getText.mockReturnValue(writeReviewComments(markdown, [
+      { ...open, resolution: 'Added an example.\nClarified wording.' },
+      { ...open, id: '2', state: 'resolved' },
+      { ...open, id: '3', body: 'See [details](command:unsafe)', resolution: '*Old* summary', resolutionReopened: true },
+    ]));
+    const provider = mock.treeProvider.mock.calls.at(-1)![1] as {
+      getChildren(): Promise<Array<{ comment: ReviewComment }>>;
+      getTreeItem(entry: unknown): {
+        label: string; description: string; iconPath: { id: string; color: { id: string } };
+        tooltip: { value: string; parts: Array<{ kind: string; value: string }> };
+      };
+    };
+    const entries = await provider.getChildren();
+    const item = provider.getTreeItem(entries[0]);
+    expect(item.label).toBe(open.body);
+    expect(item.description).toMatch(/Line \d+ · Open · AI · Resolution: Added an example\. Clarified wording\./u);
+    expect(item.iconPath).toMatchObject({ id: 'comment-discussion', color: { id: 'editorInfo.foreground' } });
+    expect(item.tooltip.value).toBe('**Comment:** *Make the passage clearer.*  \n**Resolution:** *Added an example.\nClarified wording.*');
+    const resolved = provider.getTreeItem(entries[1]);
+    expect(resolved.description).not.toContain('Resolution:');
+    expect(resolved.tooltip.value).toBe('**Comment:** *Make the passage clearer.*');
+    expect(resolved.iconPath).toMatchObject({ id: 'check', color: { id: 'testing.iconPassed' } });
+    const reopened = provider.getTreeItem(entries[2]);
+    expect(reopened.description).toContain('Previous resolution: *Old* summary');
+    expect(reopened.tooltip.value).toContain('**Resolution:** ~~**Old* summary*~~');
+    expect(reopened.tooltip.parts).toContainEqual({ kind: 'text', value: 'See [details](command:unsafe)' });
+    expect(reopened.tooltip.parts).toContainEqual({ kind: 'text', value: '*Old* summary' });
   });
 
   it('prefills Chat with the selected document without sending a request', async () => {
@@ -499,6 +537,20 @@ describe('review comments and Chat handoff', () => {
       expect(readReviewComments(mock.document.getText()).comments[0].state).toBe('open');
       await run('removeReviewComment', await entry('1'));
       expect(readReviewComments(mock.document.getText()).comments.map(item => item.id)).toEqual(['2', '3', '4']);
+    });
+
+    it('marks a retained resolution as reopened in sidebar actions and clears the marker on resolve', async () => {
+      const stored = readReviewComments(mock.document.getText());
+      const comments = stored.comments.map(comment => comment.id === '1' ? { ...comment, resolution: 'Added an example.' } : comment);
+      const source = mock.document.getText();
+      await mock.applyEdit({ change: { range: { start: 0, end: source.length }, text: writeReviewComments(source, comments) } });
+      await run('resolveReviewComment', await entry('1'));
+      await run('reopenReviewComment', await entry('1'));
+      expect(readReviewComments(mock.document.getText()).comments[0]).toMatchObject({
+        state: 'open', resolution: 'Added an example.', resolutionReopened: true,
+      });
+      await run('resolveReviewComment', await entry('1'));
+      expect(readReviewComments(mock.document.getText()).comments[0].resolutionReopened).toBeUndefined();
     });
 
     it.each(['context menu', 'view title'])('clears only resolved comments from the %s', async menu => {

@@ -96,7 +96,8 @@ function buildReviewPreview(adapters: ReviewPreviewAdapters, body: string, store
       blocks.push({ id, text, startLine, endLine, ...(node.getAttribute('data-review-component') === 'true' ? { component: true } : {}) });
     }
     const comments = store.comments.map(comment => ({
-      id: comment.id, body: comment.body, state: comment.state, includeInAi: comment.includeInAi,
+      id: comment.id, body: comment.body, state: comment.state, includeInAi: comment.includeInAi, resolution: comment.resolution,
+      resolutionReopened: comment.resolutionReopened,
       eligibleForAi: !store.error && isAiReviewEligible(comment),
       originalQuote: comment.range ? store.markdown.slice(comment.range.start, comment.range.end) : 'Selection unavailable',
       originalLines: comment.range ? reviewRangeLines(store.markdown, comment.range) : { startLine: 0, endLine: 0 },
